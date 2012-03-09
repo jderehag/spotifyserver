@@ -45,8 +45,9 @@ private:
 	std::deque<Track> tracks_;
 	bool isCollaborative_;
 	bool isStarred_;
-
+	bool nullObject_;
 public:
+    Playlist(const std::string& name, const std::string& link,bool nullObject);
 	Playlist(const std::string& name, const std::string& link);
 	Playlist(const char* name, const char* link);
 	virtual ~Playlist();
@@ -59,13 +60,14 @@ public:
 	const std::deque<Track>& getTracks() const;
 
     Tlv* toTlv() const;
+    Tlv* trackstoTlv() const;
 
-	bool operator==(const Playlist& rhs) const;
+    bool operator==(const Playlist& rhs) const;
 	bool operator!=(const Playlist& rhs) const;
 	friend std::ostream& operator <<(std::ostream& os, const Playlist& rhs);
+	bool nullObject() const;
+
 };
-
-
 
 }
 

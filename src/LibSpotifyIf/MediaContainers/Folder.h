@@ -56,13 +56,14 @@ public:
 	void addPlaylist(Playlist& playlist);
 	Folder* getParentFolder();
 
+	Playlist findPlaylist(const std::string& playlist);
+
 	const std::string& getName() const;
 	std::deque<Playlist>& getPlaylists();
 	std::vector<Folder>& getFolders();
 	void getAllTracks(std::deque<Track>& allTracks) const;
 
-	int writePlaylist(const char* playlist, class MessageEncoder* msg);
-    Tlv* toTlv() const;
+   Tlv* toTlv() const;
 
 	bool operator!=(const Folder& rhs) const;
 	bool operator==(const Folder& rhs) const;

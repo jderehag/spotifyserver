@@ -66,8 +66,12 @@ private:
     Platform::Mutex messageQueueMtx;
     std::queue<Message*> messageQueue;
 
-public:
     Socket* socket_; /*todo hide me*/
+
+    MessageEncoder* messageEncoder_;
+    unsigned int wLen_;
+
+public:
 
     Client(Socket* socket, LibSpotifyIf& spotifyif);
     virtual ~Client();
@@ -76,6 +80,7 @@ public:
     int doWrite();
 
     bool pendingSend();
+    Socket* getSocket() const;
 };
 
 #endif /* CLIENT_H_ */

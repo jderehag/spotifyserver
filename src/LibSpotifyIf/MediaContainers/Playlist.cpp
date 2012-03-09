@@ -34,7 +34,9 @@
 namespace LibSpotify
 {
 
-Playlist::Playlist(const std::string& name, const std::string& link) : name_(name), link_(link) { }
+Playlist::Playlist(const std::string& name, const std::string& link) : name_(name), link_(link), nullObject_(false) { }
+Playlist::Playlist(const std::string& name, const std::string& link, bool nullObject) : name_(name), link_(link) , nullObject_(nullObject) { }
+
 Playlist::Playlist(const char* name, const char* link) : name_(name), link_(link) { }
 Playlist::~Playlist(){ }
 
@@ -98,5 +100,9 @@ std::ostream& operator <<(std::ostream &os, const Playlist& rhs)
 	return os;
 }
 
+bool Playlist::nullObject() const
+{
+    return nullObject_;
+}
 
 }

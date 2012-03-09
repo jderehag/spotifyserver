@@ -88,9 +88,9 @@ void ClientHandler::run()
 
         for (it = clients_.begin(); it != clients_.end(); it++)
         {
-            readsockets.insert((*it)->socket_);
+            readsockets.insert((*it)->getSocket());
             if ((*it)->pendingSend())
-                writesockets.insert((*it)->socket_);
+                writesockets.insert((*it)->getSocket());
         }
 
         rc = select(&readsockets, &writesockets, &errsockets, 100);
@@ -120,7 +120,7 @@ void ClientHandler::run()
         it = clients_.begin();
         while ( it != clients_.end() )
         {
-            if (readsockets.find((*it)->socket_) != readsockets.end())
+            if (readsockets.find((*it)->getSocket()) != readsockets.end())
             {
                 if ((*it)->doRead() < 0)
                 {
@@ -130,7 +130,7 @@ void ClientHandler::run()
                     continue;
                 }
             }
-            if (writesockets.find((*it)->socket_) != writesockets.end())
+            if (writesockets.find((*it)->getSocket()) != writesockets.end())
             {
                 if ((*it)->doWrite() < 0)
                 {

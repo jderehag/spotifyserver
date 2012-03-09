@@ -31,11 +31,15 @@
 #include "MessageFactory/MessageEncoder.h"
 #include "MessageFactory/MessageDecoder.h"
 
+#define WRITE_MAX_BYTES (2048)
 
 Client::Client(Socket* socket, LibSpotifyIf& spotifyif) : requestId(0),
                                                           spotify_(spotifyif),
                                                           reader_(socket),
-                                                          socket_(socket)
+                                                          socket_(socket),
+                                                          messageEncoder_(NULL),
+                                                          wLen_(0)
+
 {
     spotify_.registerForCallbacks(*this);
 }
@@ -96,19 +100,53 @@ int Client::doWrite()
 {
     log(LOG_DEBUG);
 
-    messageQueueMtx.lock();
-    Message* msg = messageQueue.front();
-    messageQueue.pop();
-    messageQueueMtx.unlock();
+    if (!messageEncoder_)
+    {
+        messageQueueMtx.lock();
+        Message* msg = messageQueue.front();
+        messageQueue.pop();
+        messageQueueMtx.unlock();
 
-    MessageEncoder* encoder = msg->encode();
-    log(LOG_DEBUG) << *msg;
-    delete msg;
+        messageEncoder_ = msg->encode();
+        messageEncoder_->printHex();
 
-    encoder->printHex();
-    socket_->Send( encoder->getBuffer(), encoder->getLength() ); /*todo: check return value and handle partial send*/
+        log(LOG_DEBUG) << *msg;
+        delete msg;
+    }
 
-    delete encoder;
+    int toWrite =  messageEncoder_->getLength() - wLen_;
+
+    if (toWrite > WRITE_MAX_BYTES)
+        toWrite = WRITE_MAX_BYTES;
+
+    const char *fromBuf =  messageEncoder_->getBuffer()+wLen_;
+    int len = socket_->Send(fromBuf, toWrite);
+
+    bool next=false;
+
+    if (len > 0)
+    {
+        wLen_ += len ;
+        log(LOG_DEBUG) << "Send: " << len << " bytes";
+
+        if (wLen_  == messageEncoder_->getLength())
+        {
+            log(LOG_DEBUG) << "Send done";
+            next=true;
+        }
+    }
+    else if (len < 0)
+    {
+        log(LOG_DEBUG) << "Send error";
+        next=true;
+    }
+
+    if (next)
+    {
+        delete messageEncoder_;
+        messageEncoder_ = NULL;
+        wLen_ = 0 ;
+    }
 
     return 0;
 }
@@ -134,20 +172,26 @@ void Client::processMessage(const Message* msg)
         {
             GetTracksReq* req = (GetTracksReq*)msg;
 
-            MessageEncoder* msg2 = new MessageEncoder(GET_TRACKS_RSP);
-            msg2->setId(req->getId());
+            Message* rsp  = new Message(GET_TRACKS_RSP);
+            rsp->setId(req->getId());
 
             log(LOG_DEBUG) << "get tracks: " << req->getPlaylist();
-            spotify_.getRootFolder().writePlaylist(req->getPlaylist().c_str(), msg2);
 
-            msg2->finalize();
+            Playlist pl = spotify_.getRootFolder().findPlaylist(req->getPlaylist().c_str());
 
-            msg2->printHex();
+            if (pl.nullObject() != false)
+            {
+                const std::deque<Track> &trackList = pl.getTracks();
 
-            socket_->Send( msg2->getBuffer(), msg2->getLength() );
+                for (std::deque<Track>::const_iterator t = trackList.begin(); t != trackList.end(); *t++)
+                {
+                    rsp->addTlv((*t).toTlv());
+                }
 
-            delete msg2;
+            }
 
+
+            queueMessage(rsp);
         }
         break;
 
@@ -305,7 +349,7 @@ bool Client::pendingSend()
 {
     bool ret;
     messageQueueMtx.lock();
-    ret = !messageQueue.empty();
+    ret = ((messageQueue.empty() == false) || (messageEncoder_ != NULL));
     messageQueueMtx.unlock();
     return ret;
 }
@@ -400,4 +444,9 @@ void Client::genericSearchCallback(unsigned int reqId, std::deque<Track>& tracks
         pendingMessageMap_.erase(msgIt);
     }
     else log(LOG_WARN) << "Could not match the genericSearchCallback() to a pending response";
+}
+
+Socket* Client::getSocket() const
+{
+    return socket_;
 }
