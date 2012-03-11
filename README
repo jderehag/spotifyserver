@@ -1,0 +1,41 @@
+The spotifyserver project
+
+spotifyserver is intended as a way to interface your spotify account from anywhere.
+The typcial use case would be that you are running a HTPC which conviniently is placed right next to your stereo.
+By running spotifyserver on the HTPC you are able to remote control spotifyserver to play your tracks/playlists/whatever using any number of clients.
+
+spotifyserver is intended to be as lightweight and portable as possible, meaning that the number of included libraries is kept to a minimum.
+As of now, the only required libraries are the libspotify library itself, as well as some form of audio endpoint (for now, ALSA or OpenAL is supported).
+
+Client support:
+Right now there is a limited client support, but this is intended to increase with time.
+1. Android client
+2. c/c++ client
+    Right now its basically just a test app, but will with time be like the unix-way where you pipe stuff between processes.
+3. python api:
+      tkinter client
+      xbmc client (in development)
+
+Background:
+The spotifyserver project started as side project during a "24h hackthlon" where a number of collegues and hangarounds gathered to spend an evening of programming (as good an excuse for drinking beer as anything).
+The original intention was basically to "play around" with libspotify to see what it was capable of ir where some of us also wanted to have peek at android development among other things. So the spotifyserver was more intended as a unifying project so that all of us could focus on whatever he or she wanted to learn more about.
+That being said, spotifyserver is not intended as a get-rich-quick scheme. We know that you could solve the same problem using a number of different approaches, vnc, apple airplay, mopidus, whatever. 
+It was (and still is) intended as a playground for learning the spotify api.
+
+That being said, we know that there are some shortcomings in the implementation (even disregarding all the functionality that is missing).
+It is written almost entirely in C++, in hindsight that was probably a bad decision. A lot of simplifications could have been done keeping to the original api pattern and centering everything around the api. Instead we have tried to turn it into a threadsafe c++ OOP API..
+Another probably bad design decision was to cache all playlists inside the c++ API. There it would probably have made more sense to use libspotify's own functionality with ref counters on playlist objects and so on.
+
+Still, questioning ourselves then, why publish it?
+Well, why not?
+We still think spotifyserver brings something to the table. It IS fairly selfcontained, dependencies are at a minimum, also it is able to run on both windows and *nix.
+Also, it is worth mentioning that it is released under BSD license. So it's really free for anyone to steal this with pride. However, IF you steal it, please tell us so that we have something to brag about during our next beer session..
+
+
+Legal stuff:
+1. spotifyserver:
+   BSD 3-clause license ("New BSD License" or "Modified BSD License")
+
+2. libspotify:
+   This product uses SPOTIFY(R) CORE but is not endorsed, certified or otherwise approved in any way by Spotify. Spotify is the registered trade mark of the Spotify Group.”
+

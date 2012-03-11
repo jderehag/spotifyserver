@@ -1,0 +1,146 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCTargetsPath Condition="'$(VCTargetsPath11)' != '' and '$(VSVersion)' == '' and '$(VisualStudioVersion)' == ''">$(VCTargetsPath11)</VCTargetsPath>
+  </PropertyGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{A318C349-D5B8-4D84-A741-EF9EF237AB63}</ProjectGuid>
+    <RootNamespace>spotifyserver</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v100</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v100</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>lib\libspotify-10.1.16-win32-release\include;src;src\Logger;src\Utils;lib\OpenAL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>lib\libspotify-10.1.16-win32-release\lib;lib\OpenAL\libs\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libspotify.lib;Ws2_32.lib;OpenAL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <AdditionalIncludeDirectories>lib\libspotify-10.1.16-win32-release\include;src;src\Logger;src\Utils;lib\OpenAL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>libspotify.lib;Ws2_32.lib;OpenAL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>lib\libspotify-10.1.16-win32-release\lib;lib\OpenAL\libs\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="src\ClientHandler\Client.h" />
+    <ClInclude Include="src\ClientHandler\ClientHandler.h" />
+    <ClInclude Include="src\ConfigHandling\ConfigHandler.h" />
+    <ClInclude Include="src\ConfigHandling\ConfigParser.h" />
+    <ClInclude Include="src\LibSpotifyIf\ILibSpotifyIfCallbackSubscriber.h" />
+    <ClInclude Include="src\LibSpotifyIf\LibSpotifyIf.h" />
+    <ClInclude Include="src\LibSpotifyIf\LibSpotifyIfCallbackWrapper.h" />
+    <ClInclude Include="src\LibSpotifyIf\LibSpotifyIfHelpers.h" />
+    <ClInclude Include="src\LibSpotifyIf\LibSpotifyPlaybackHandler.h" />
+    <ClInclude Include="src\LibSpotifyIf\MediaContainers\Artist.h" />
+    <ClInclude Include="src\LibSpotifyIf\MediaContainers\Folder.h" />
+    <ClInclude Include="src\LibSpotifyIf\MediaContainers\Playlist.h" />
+    <ClInclude Include="src\LibSpotifyIf\MediaContainers\Track.h" />
+    <ClInclude Include="src\Logger\applog.h" />
+    <ClInclude Include="src\Logger\Logger.h" />
+    <ClInclude Include="src\Logger\LogLevels.h" />
+    <ClInclude Include="src\MessageFactory\Message.h" />
+    <ClInclude Include="src\MessageFactory\MessageDecoder.h" />
+    <ClInclude Include="src\MessageFactory\MessageEncoder.h" />
+    <ClInclude Include="src\MessageFactory\SocketReader.h" />
+    <ClInclude Include="src\MessageFactory\TlvDefinitions.h" />
+    <ClInclude Include="src\MessageFactory\Tlvs.h" />
+    <ClInclude Include="src\Platform\AudioEndpoints\AudioEndpoint.h" />
+    <ClInclude Include="src\Platform\AudioEndpoints\AudioFifo.h" />
+    <ClInclude Include="src\Platform\Socket\Socket.h" />
+    <ClInclude Include="src\Platform\Socket\Windows\WindowsSocket.h" />
+    <ClInclude Include="src\Platform\Threads\Condition.h" />
+    <ClInclude Include="src\Platform\Threads\Mutex.h" />
+    <ClInclude Include="src\Platform\Threads\Runnable.h" />
+    <ClInclude Include="src\Platform\Threads\Windows\WindowsMutexPimpl.h" />
+    <ClInclude Include="src\Platform\Utils\Utils.h" />
+    <ClInclude Include="src\Utils\CircularQueue.h" />
+    <ClInclude Include="src\Utils\FixedQueue.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="lib\appkey.c" />
+    <ClCompile Include="src\ClientHandler\Client.cpp" />
+    <ClCompile Include="src\ClientHandler\ClientHandler.cpp" />
+    <ClCompile Include="src\ConfigHandling\ConfigHandler.cpp" />
+    <ClCompile Include="src\ConfigHandling\ConfigParser.cpp" />
+    <ClCompile Include="src\ConfigHandling\Configs\AudioEndpointConfig.cpp" />
+    <ClCompile Include="src\ConfigHandling\Configs\LoggerConfig.cpp" />
+    <ClCompile Include="src\ConfigHandling\Configs\NetworkConfig.cpp" />
+    <ClCompile Include="src\ConfigHandling\Configs\SpotifyConfig.cpp" />
+    <ClCompile Include="src\LibSpotifyIf\LibSpotifyIf.cpp" />
+    <ClCompile Include="src\LibSpotifyIf\LibSpotifyIfCallbackWrapper.cpp" />
+    <ClCompile Include="src\LibSpotifyIf\LibSpotifyIfHelpers.cpp" />
+    <ClCompile Include="src\LibSpotifyIf\LibSpotifyPlaybackHandler.cpp" />
+    <ClCompile Include="src\LibSpotifyIf\MediaContainers\Artist.cpp" />
+    <ClCompile Include="src\LibSpotifyIf\MediaContainers\Folder.cpp" />
+    <ClCompile Include="src\LibSpotifyIf\MediaContainers\Playlist.cpp" />
+    <ClCompile Include="src\LibSpotifyIf\MediaContainers\Track.cpp" />
+    <ClCompile Include="src\Logger\Logger.cpp" />
+    <ClCompile Include="src\MessageFactory\Message.cpp" />
+    <ClCompile Include="src\MessageFactory\MessageDecoder.cpp" />
+    <ClCompile Include="src\MessageFactory\MessageEncoder.cpp" />
+    <ClCompile Include="src\MessageFactory\SocketReader.cpp" />
+    <ClCompile Include="src\MessageFactory\TlvDefinitions.cpp" />
+    <ClCompile Include="src\MessageFactory\Tlvs.cpp" />
+    <ClCompile Include="src\Platform\AudioEndpoints\AudioFifo.cpp" />
+    <ClCompile Include="src\Platform\AudioEndpoints\Endpoints\AudioEndpoint-OpenAL.cpp" />
+    <ClCompile Include="src\Platform\Socket\Windows\WindowsSocket.cpp" />
+    <ClCompile Include="src\Platform\Threads\Windows\WindowsCondition.cpp" />
+    <ClCompile Include="src\Platform\Threads\Windows\WindowsMutex.cpp" />
+    <ClCompile Include="src\Platform\Threads\Windows\WindowsRunnable.cpp" />
+    <ClCompile Include="src\Platform\Utils\Windows\WindowsUtils.cpp" />
+    <ClCompile Include="src\spotifyserver.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

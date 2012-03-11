@@ -1,0 +1,142 @@
+###########################################################################
+# Config format is comprised of a number of sections and their respective
+# subsections.
+# Each Section and SubSection must be terminated by an EndSection keyword.
+#
+# Ex.
+# Section "Example"
+# SubSection "SubSectionExample"
+# .. ATTRIBUTES ..
+# EndSubSection
+# EndSection
+#
+# Comments must begin with a #-sign
+############################################################################
+
+
+################################################################
+# Spotify section
+################################################################
+Section "Spotify"
+Username		"dummyname"
+Password		"dummypasswd"
+
+#---------------------------------------------------------------
+# CacheLocation attribute
+# Defines where spotify will store its cache (songs and so on)
+# Default="./tmp/"
+#---------------------------------------------------------------
+CacheLocation		"./tmp/"
+
+#---------------------------------------------------------------
+# SettingsLocation attribute
+# Defines where spotify will store its own settings
+# Default="./tmp/"
+#---------------------------------------------------------------
+SettingsLocation	"./tmp/"
+EndSection
+
+
+################################################################
+# Network section
+################################################################
+Section "Network"
+#---------------------------------------------------------------
+# BindType attribute
+# Defines how the server will open its sockets.
+# Depending on what is set here, the application will look
+# for additional attributes.
+#
+# Possible values ,and their sub-attribute dependencies are:
+#       DEVICE
+#          |-Device
+# 	IP
+#          |-Ip
+#
+# Default="IP"
+#---------------------------------------------------------------
+BindType	"IP"
+
+#---------------------------------------------------------------
+# Ip attribute
+# Only valid if BindType is set to "IP"
+# Possible values are:
+# 	ANY
+# 	x.x.x.x
+#
+# Where x.x.x.x is a valid ip address for ex. 192.168.0.1 
+# Default=ANY
+#---------------------------------------------------------------
+Ip		"ANY"
+
+#---------------------------------------------------------------
+# Port attribute
+# Defines the port to bind to, in decimal number 
+# Default=7788
+#---------------------------------------------------------------
+Port	"7788"
+
+
+#---------------------------------------------------------------
+# Device attribute
+# Only valid if BindType is set to "DEVICE"
+# Defines the device to bind to, for ex. /dev/eth0 
+# Default="/dev/eth0"
+#---------------------------------------------------------------
+Device		"/dev/eth0"
+EndSection
+
+
+
+################################################################
+# AudioEndpoint section
+################################################################
+Section "AudioEndpoint"
+#---------------------------------------------------------------
+# Type attribute
+# Defines which AudioEndpoint to use.
+# Possible values are:
+#	ALSA
+# All endpoint types require its own subsection (when configured)
+# Default=ALSA 
+#---------------------------------------------------------------
+Type		"ALSA"
+
+SubSection "ALSA"
+#---------------------------------------------------------------
+# Device attribute
+# Defines the ALSA device to bind to, for ex. /dev/audio
+# Default=default 
+#---------------------------------------------------------------
+Device		"default" 
+EndSubSection
+EndSection
+
+
+################################################################
+# Logger section
+################################################################
+Section "Logger"
+#---------------------------------------------------------------
+# LogLevel attribute
+#
+# Possible values are:
+# EMERG
+# WARN
+# NOTICE
+# DEBUG
+#
+# Default=NOTICE
+#---------------------------------------------------------------
+LogLevel	"DEBUG"
+
+#---------------------------------------------------------------
+# LogFile attribute
+# Defines the absolute or relative path (from the application) 
+# on where to store the log output.
+# Default="./output.log"
+#---------------------------------------------------------------
+LogFile		"./output.log"
+EndSection
+
+

@@ -1,0 +1,108 @@
+Short description of protocol.
+
+1. Introduction
+TCP/IP is used for this client-server protocol, which is build on request and response messages.
+Both clients and server should be able to send requests and responses at any time.
+
+A message consists of a 12-byte message header , followed by 0 or more bytes of TLV encoded data   
+
+
+2. Message Header Format
+Byte:
+0..3  Message Length 
+4..7  Message Type     
+8..11 Message Sequence Number
+
+
+2.1 Message length
+Total length of message including the header.
+
+
+2.2 Message Type
+32-bit value determining the message type.  
+Messages are either a request(req) or a response(rsp). 
+
+
+2.3 Message Sequence Number
+Both clients and server have their own sequence numbers.
+The sequence number should be increased for each request sent.
+When sending a response message, the sequence number from the request should be used.  
+
+
+3. The protocol is TLV based
+Each TLV consist of three fields 
+Type         32-bit  value
+Length       32-bit  value
+Value        Length bytes          
+
+The Length field should include the size of all data in sub-TLVs.
+
+
+4. Description of different messages
+
+* below means optionally.
+
+
+4.1 GET_PLAYLISTS_REQ
+Client call to get Folders and PlayLists
+This is only a header message, no TLVs needed. Total size 12 bytes
+
+
+4.2	GET_PLAYLISTS_RSP
+A playlist response always contains at least the "root" folder, which should contain all playlists if no
+extra folders are available 
+MessageHeader
+  TLV_FOLDER        root-folder. Required. May be the last TLV, if no sub folders or playlists exist.
+   	TLV_FOLDER_NAME      
+   	TLV_FOLDER 0..n        
+   	  TLV_FOLDER_NAME   
+   	  TLV_FOLDER 0..n    
+   	    TLV_FOLDER_NAME
+   	    TLV_PLAYLIST 0..n
+   	      TLV_PLAYLIST_NAME
+   	      TLV_PLAYLIST_LINK   
+    TLV_PLAYLIST 0..n     
+      TLV_PLAYLIST_NAME
+      TLV_PLAYLIST_LINK
+  TLV_PLAYLIST 0..n       
+    TLV_PLAYLIST_NAME
+    TLV_PLAYLIST_LINK
+
+4.3	GET_TRACKS_REQ
+Client call to get all tracks for a specific playlist.
+TLV_PLAYLIST 
+  TLV_PLAYLIST_LINK 
+
+
+4.4	GET_TRACKS_RSP
+Server response containing all tracks for a specific playlist
+can be only a header with NO TLV for an empty playlist
+TLV_TRACK              0..n
+  TLV_TRACK_LINK
+  TLV_TRACK_NAME
+  TLV_TRACK_ARTIST
+  TLV_TRACK_TIME
+  TLV_TRACK_ALBUM
+
+
+
+4.5 PLAY_TRACK_REQ
+This message requires 2 TLVs.
+TLV_TRACK
+  TLV_TRACK_LINK
+
+4.6	PLAY_TRACK_RSP
+Client call to request server start to play specified track
+No TLVs needed.
+
+4.7 GENERIC_SEARCH_REQ
+This message is a generic (i.e search not specific for track/artist/album)
+TLV_SEARCH_QUERY
+	
+4.8 GENERIC_SEARCH_RSP
+TLV_TRACK			0..n
+  TLV_TRACK_LINK
+  TLV_TRACK_NAME
+  TLV_TRACK_ARTIST
+  TLV_TRACK_TIME
+  TLV_TRACK_ALBUM
