@@ -46,6 +46,7 @@ COMMON_OBJECTS += spotifyserver.o \
 		  MessageEncoder.o \
 		  Message.o \
 		  SocketReader.o \
+		  SocketWriter.o \
 		  Tlvs.o \
 		  TlvDefinitions.o
 		  

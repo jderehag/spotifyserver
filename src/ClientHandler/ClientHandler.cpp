@@ -54,7 +54,7 @@ void ClientHandler::run()
 {
     Socket* clientsock;
     int rc = -1;
-
+    bool activity=false;;
     socket_ = new Socket();
 
     if (config_.getBindType() == ConfigHandling::NetworkConfig::IP)
@@ -92,11 +92,13 @@ void ClientHandler::run()
             if ((*it)->pendingSend())
                 writesockets.insert((*it)->getSocket());
         }
-
-        rc = select(&readsockets, &writesockets, &errsockets, 100);
+        activity=false;
+        rc = select(&readsockets, &writesockets, &errsockets, ((activity) ? 0 : 100));
 
         if ( rc < 0 )
             break;
+
+        activity = false;
 
         /* Check listen socket first */
         if (errsockets.find(socket_) != errsockets.end())
@@ -129,6 +131,7 @@ void ClientHandler::run()
                     it = clients_.erase(it);
                     continue;
                 }
+                activity = true;
             }
             if (writesockets.find((*it)->getSocket()) != writesockets.end())
             {
@@ -139,6 +142,7 @@ void ClientHandler::run()
                     it = clients_.erase(it);
                     continue;
                 }
+                activity = true;
             }
 
             it++;

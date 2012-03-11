@@ -30,6 +30,7 @@
 #include "MessageFactory/Message.h"
 #include <string.h>
 #include <iostream>
+#include "applog.h"
 
 namespace LibSpotify
 {
@@ -59,7 +60,7 @@ const std::string& Folder::getName() const
 	return name_;
 }
 
-Playlist Folder::findPlaylist(const std::string& playlist)
+const Playlist & Folder::findPlaylist(const std::string& playlist)
 {
     for (std::deque<LibSpotify::Playlist>::iterator p = playlists_.begin(); p != playlists_.end(); *p++)
     {
@@ -71,7 +72,8 @@ Playlist Folder::findPlaylist(const std::string& playlist)
 
     for (std::vector<Folder>::iterator f = folders_.begin(); f != folders_.end(); *f++)
     {
-        Playlist pl = f->findPlaylist(playlist);
+        const Playlist& pl = f->findPlaylist(playlist);
+
         if (!pl.nullObject())
             return pl ; /*found it*/
     }

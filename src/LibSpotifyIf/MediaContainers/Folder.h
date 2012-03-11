@@ -56,7 +56,7 @@ public:
 	void addPlaylist(Playlist& playlist);
 	Folder* getParentFolder();
 
-	Playlist findPlaylist(const std::string& playlist);
+	const Playlist & findPlaylist(const std::string& playlist);
 
 	const std::string& getName() const;
 	std::deque<Playlist>& getPlaylists();

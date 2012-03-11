@@ -28,9 +28,8 @@
 #ifndef SOCKETREADER_H_
 #define SOCKETREADER_H_
 
-#include "Platform/Socket/Socket.h"
 #include <stdint.h>
-
+class Socket;
 class SocketReader
 {
 private:

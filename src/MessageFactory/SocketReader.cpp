@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "Platform/Socket/Socket.h"
 #include "SocketReader.h"
 #include "MessageEncoder.h"
 #include "applog.h"

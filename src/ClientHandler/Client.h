@@ -33,6 +33,7 @@
 #include "MessageFactory/Message.h"
 #include "MessageFactory/MessageEncoder.h"
 #include "MessageFactory/SocketReader.h"
+#include "MessageFactory/SocketWriter.h"
 #include "Platform/Threads/Mutex.h"
 #include "Platform/Socket/Socket.h"
 #include <map>
@@ -48,6 +49,7 @@ private:
     LibSpotifyIf& spotify_;
 
     SocketReader reader_;
+    SocketWriter writer_;
 
     typedef std::map<unsigned int, Message*>  PendingMessageMap;
     PendingMessageMap pendingMessageMap_;
@@ -67,10 +69,6 @@ private:
     std::queue<Message*> messageQueue;
 
     Socket* socket_; /*todo hide me*/
-
-    MessageEncoder* messageEncoder_;
-    unsigned int wLen_;
-
 public:
 
     Client(Socket* socket, LibSpotifyIf& spotifyif);
@@ -81,6 +79,7 @@ public:
 
     bool pendingSend();
     Socket* getSocket() const;
+    Message* popMessage();
 };
 
 #endif /* CLIENT_H_ */
