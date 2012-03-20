@@ -48,6 +48,13 @@ private:
 
     LibSpotifyIf& spotify_;
 
+    bool loggedIn_;
+    std::string networkUsername_;
+    std::string networkPassword_;
+
+    uint32_t peerProtocolMajor_;
+    uint32_t peerProtocolMinor_;
+
     SocketReader reader_;
     SocketWriter writer_;
 
@@ -73,6 +80,9 @@ public:
 
     Client(Socket* socket, LibSpotifyIf& spotifyif);
     virtual ~Client();
+
+    void setUsername(std::string username);
+    void setPassword(std::string password);
 
     int doRead();
     int doWrite();

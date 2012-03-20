@@ -52,6 +52,8 @@ void ConfigHandler::parseConfigFile()
     std::string networkIp;
     std::string networkPort;
     std::string networkDevice;
+    std::string networkUsername;
+    std::string networkPassword;
     /* AudioEndpoint Section*/
     std::string audioEndpointType;
     std::string audioEndpointAlsaDevice;
@@ -74,6 +76,8 @@ void ConfigHandler::parseConfigFile()
         {1,     TYPE_ATTRIBUTE,               "Ip",                    &networkIp                  },
         {1,     TYPE_ATTRIBUTE,               "Port",                  &networkPort                },
         {1,     TYPE_ATTRIBUTE,               "Device",                &networkDevice              },
+        {1,     TYPE_ATTRIBUTE,               "Username",              &networkUsername            },
+        {1,     TYPE_ATTRIBUTE,               "Password",              &networkPassword            },
 
         /* AudioEndpoint Section*/
         {0,     TYPE_SECTION,                 "AudioEndpoint",         NULL                        },
@@ -100,6 +104,8 @@ void ConfigHandler::parseConfigFile()
 	networkConfig_.setIp(networkIp);
 	networkConfig_.setPort(networkPort);
 	networkConfig_.setDevice(networkDevice);
+    networkConfig_.setUsername(networkUsername);
+    networkConfig_.setPassword(networkPassword);
 
 	/* AudioEndpoint */
 	audioEndpointConfig_.setEndpointType(audioEndpointType);

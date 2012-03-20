@@ -77,9 +77,12 @@ std::string Tlv::print() const
  * StringTlv
  */
 
-StringTlv::StringTlv(TlvType_t type, const uint8_t* data, uint32_t len) : Tlv(type), data_((const char*) data, (size_t)len)
+StringTlv::StringTlv(TlvType_t type, const uint8_t* data, uint32_t len) : Tlv(type)
 {
-
+    if ( data[len-1] == '\0' )
+        data_ = std::string((const char*) data); //null is included in len, this will give incorrect std::str.length() if initialized with (data, len)
+    else
+        data_ = std::string((const char*) data, (size_t)len);
 }
 
 StringTlv::StringTlv(TlvType_t type, const std::string& data) : Tlv(type), data_(data)

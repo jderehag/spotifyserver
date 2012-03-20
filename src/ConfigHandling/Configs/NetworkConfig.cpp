@@ -59,6 +59,16 @@ int NetworkConfig::getPort() const
     return port_;
 }
 
+const std::string& NetworkConfig::getUsername() const
+{
+    return username_;
+}
+
+const std::string& NetworkConfig::getPassword() const
+{
+    return password_;
+}
+
 void NetworkConfig::setBindType(const std::string& bindType)
 {
     if(!bindType.empty())
@@ -92,4 +102,15 @@ void NetworkConfig::setPort(const std::string& port)
         if (!(s >> tmp).fail()) port_ = tmp;
     }
 }
+
+void NetworkConfig::setUsername(std::string& username)
+{
+    if(!username.empty())username_ = username;
+}
+
+void NetworkConfig::setPassword(std::string& password)
+{
+    if(!password.empty())password_ = password;
+}
+
 }/* namespace ConfigHandling */

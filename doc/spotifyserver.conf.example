@@ -84,6 +84,17 @@ Port	"7788"
 # Default="/dev/eth0"
 #---------------------------------------------------------------
 Device		"/dev/eth0"
+
+
+#---------------------------------------------------------------
+# Username and Password attributes
+# Defines username and/or password that must be provided by clients, if
+# specified. Empty or left out attribute will not be required by client.
+# Default=""
+#---------------------------------------------------------------
+Username		"dummyname"
+Password		"dummypasswd"
+
 EndSection
 
 

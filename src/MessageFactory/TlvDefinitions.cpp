@@ -27,6 +27,8 @@
 
 #include "TlvDefinitions.h"
 
+#define STR(n) case n: return #n
+
 const char* messageTypeToString(const MessageType_t type)
 {
     switch (type)
@@ -65,9 +67,11 @@ const char* messageTypeToString(const MessageType_t type)
             return "GET_IMAGE_REQ";
         case GET_IMAGE_RSP:
             return "GET_IMAGE_RSP";
-        default:
-            return "Unknown MessageType";
+
+        STR(HELLO_REQ);
+        STR(HELLO_RSP);
     }
+    return "Unknown MessageType";
 }
 
 const char* tlvTypeToString(const TlvType_t type)
@@ -108,9 +112,27 @@ const char* tlvTypeToString(const TlvType_t type)
             return "TLV_IMAGE_FORMAT";
         case TLV_IMAGE_DATA:
             return "TLV_IMAGE_DATA";
-        default:
-            return "Unknown TlvType";
+
+        STR( TLV_LOGIN_USERNAME );
+        STR( TLV_LOGIN_PASSWORD );
+        STR( TLV_PROTOCOL_VERSION_MAJOR );
+        STR( TLV_PROTOCOL_VERSION_MINOR );
+        STR( TLV_FAILURE );
     }
+    return "Unknown TlvType";
+}
+
+const char* failureCauseToString(const FailureCause_t type)
+{
+    switch(type)
+    {
+        STR( FAIL_GENERAL_ERROR );
+        STR( FAIL_BAD_LOGIN );
+        STR( FAIL_PROTOCOL_MISMATCH );
+        STR( FAIL_UNKNOWN_REQUEST );
+        STR( FAIL_MISSING_TLV );
+    }
+    return "Unknown FailureCause";
 }
 const char* playbackStateToString(const PlaybackState_t type)
 {
@@ -122,9 +144,8 @@ const char* playbackStateToString(const PlaybackState_t type)
             return "PLAYBACK_PLAYING";
         case PLAYBACK_PAUSED:
             return "PLAYBACK_PAUSED";
-        default:
-            return "Unknown PlaybackState";
     }
+    return "Unknown PlaybackState";
 }
 
 const char* playModeToString(const PlayMode_t type)
@@ -137,9 +158,8 @@ const char* playModeToString(const PlayMode_t type)
             return "PLAY_MODE_REPEAT";
         case PLAY_MODE_WONDERWALL_ONLY:
             return "PLAY_MODE_WONDERWALL_ONLY";
-        default:
-            return "Unknown PlayMode";
     }
+    return "Unknown PlayMode";
 }
 
 

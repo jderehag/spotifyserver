@@ -39,6 +39,8 @@
 #include "ConfigHandling/ConfigHandler.h"
 #include "Platform/Utils/Utils.h"
 
+
+
 void printUsage()
 {
     std::cout << "Usage: spotifyserver [-c config-file-path]" << std::endl;

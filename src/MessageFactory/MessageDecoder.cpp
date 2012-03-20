@@ -476,6 +476,8 @@ void MessageDecoder::decodeTlvs(TlvContainer* parent, uint32_t len)
 
             case TLV_SEARCH_QUERY:
             case TLV_LINK:
+            case TLV_LOGIN_USERNAME:
+            case TLV_LOGIN_PASSWORD:
             {
                 parent->addTlv(getCurrentTlv(), getTlvData(), getCurrentTlvLen());
                 nextTlv();
@@ -487,6 +489,9 @@ void MessageDecoder::decodeTlvs(TlvContainer* parent, uint32_t len)
             case TLV_STATE:
             case TLV_PROGRESS:
             case TLV_PLAY_OPERATION:
+            case TLV_PROTOCOL_VERSION_MAJOR:
+            case TLV_PROTOCOL_VERSION_MINOR:
+            case TLV_FAILURE:
             {
                 parent->addTlv(getCurrentTlv(), getTlvIntData());
                 nextTlv();

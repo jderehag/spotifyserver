@@ -31,8 +31,6 @@
 /*#include <iostream>*/
 #include <string.h>
 
-
-
 ClientHandler::ClientHandler(const ConfigHandling::NetworkConfig& config, LibSpotifyIf& spotifyif) : config_(config),
                                                                                                      spotify_(spotifyif),
                                                                                                      socket_(NULL)
@@ -55,6 +53,7 @@ void ClientHandler::run()
     Socket* clientsock;
     int rc = -1;
     bool activity=false;;
+
     socket_ = new Socket();
 
     if (config_.getBindType() == ConfigHandling::NetworkConfig::IP)
@@ -115,7 +114,10 @@ void ClientHandler::run()
             }
             else
             {
-                clients_.push_front(new Client(clientsock, spotify_));
+                Client* c = new Client(clientsock, spotify_);
+                c->setUsername(config_.getUsername());
+                c->setPassword(config_.getPassword());
+                clients_.push_front(c);
             }
         }
 

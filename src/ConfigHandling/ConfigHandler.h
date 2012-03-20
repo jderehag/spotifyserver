@@ -92,16 +92,24 @@ public:
     const std::string& getDevice() const;
     const std::string& getIp() const;
     int getPort() const;
+    const std::string& getUsername() const;
+    const std::string& getPassword() const;
     void setBindType(const std::string& bindType);
     void setDevice(const std::string& device);
     void setIp(const std::string& ip);
     void setPort(const std::string& port);
+    void setUsername(std::string& username);
+    void setPassword(std::string& password);
 private:
     BindType bindType_;
-    // IP is kept as string for now since ip represantation is different on different platforms
+    // IP is kept as string for now since ip representation is different on different platforms
     std::string ip_;
     std::string device_;
     int port_;
+
+    /*login stuff on client side*/
+    std::string username_;
+    std::string password_;
 };
 
 

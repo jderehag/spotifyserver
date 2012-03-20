@@ -33,6 +33,9 @@
 
 Client::Client(Socket* socket, LibSpotifyIf& spotifyif) : requestId(0),
                                                           spotify_(spotifyif),
+                                                          loggedIn_(false),
+                                                          networkUsername_(""),
+                                                          networkPassword_(""),
                                                           reader_(socket),
                                                           writer_(socket),
                                                           socket_(socket)
@@ -48,6 +51,9 @@ Client::~Client()
     delete socket_;
     spotify_.unRegisterForCallbacks(*this);
 }
+
+void Client::setUsername(std::string username) { networkUsername_ = username; }
+void Client::setPassword(std::string password) { networkPassword_ = password; }
 
 int Client::doRead()
 {
@@ -77,6 +83,13 @@ int Client::doRead()
 
             if (msg != NULL)
             {
+                /*require login before doing anything else (??if either username or password is set, for backward compatibility??)*/
+                if ( /*(!networkUsername_.empty() || !networkPassword_.empty()) && */!loggedIn_ && msg->getType() != HELLO_REQ )
+                {
+                    delete msg;
+                    return -1;
+                }
+
                 processMessage(msg);
                 delete msg;
             }
@@ -120,6 +133,55 @@ void Client::processMessage(const Message* msg)
 
     switch(msg->getType())
     {
+        case HELLO_REQ:
+        {
+            Message* rsp = new Message(HELLO_RSP);
+            rsp->setId( msg->getId() );
+            const IntTlv* protoMajorTlv = (const IntTlv*)msg->getTlvRoot()->getTlv(TLV_PROTOCOL_VERSION_MAJOR);
+            const IntTlv* protoMinorTlv = (const IntTlv*)msg->getTlvRoot()->getTlv(TLV_PROTOCOL_VERSION_MINOR);
+            if ( protoMajorTlv == NULL || protoMinorTlv == NULL )
+            {
+                /*we probably need to know the protocol version*/
+                rsp->addTlv(TLV_FAILURE, FAIL_MISSING_TLV);
+            }
+            else
+            {
+                peerProtocolMajor_ = protoMajorTlv->getVal();
+                peerProtocolMinor_ = protoMinorTlv->getVal();
+
+                if (peerProtocolMajor_ != PROTOCOL_VERSION_MAJOR)
+                {
+                    /*not compatible if major version differ, we accept differences in minor even though functionality might be missing*/
+                    rsp->addTlv(TLV_FAILURE, FAIL_PROTOCOL_MISMATCH);
+                }
+                else
+                {
+                    const StringTlv* usernameTlv = (const StringTlv*)msg->getTlvRoot()->getTlv(TLV_LOGIN_USERNAME);
+                    const StringTlv* passwordTlv = (const StringTlv*)msg->getTlvRoot()->getTlv(TLV_LOGIN_PASSWORD);
+                    std::string username = usernameTlv ? usernameTlv->getString() : std::string("");
+                    std::string password = passwordTlv ? passwordTlv->getString() : std::string("");
+                    if ( (!networkUsername_.empty() && networkUsername_ != username) ||
+                         (!networkPassword_.empty() && networkPassword_ != password)    )
+                    {
+                        /*incorrect login*/
+                        log(LOG_DEBUG) << networkUsername_.empty() << " " << networkUsername_ << " " << username;
+                        log(LOG_DEBUG) << networkPassword_.empty() << " " << networkPassword_ << " " << password;
+                        rsp->addTlv(TLV_FAILURE, FAIL_BAD_LOGIN);
+                    }
+                    else
+                    {
+                        /*all is well!*/
+                        loggedIn_ = true;
+                    }
+                }
+            }
+            rsp->addTlv(TLV_PROTOCOL_VERSION_MAJOR, PROTOCOL_VERSION_MAJOR);
+            rsp->addTlv(TLV_PROTOCOL_VERSION_MINOR, PROTOCOL_VERSION_MINOR);
+
+            queueMessage( rsp );
+        }
+        break;
+
         case GET_PLAYLISTS_REQ:
         {
             /*get playlist*/

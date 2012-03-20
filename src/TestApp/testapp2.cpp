@@ -131,7 +131,7 @@ void UIConsole::destroy()
 
 void UIConsole::run()
 {
-    int seqnum=0;
+    int seqnum=1;
     int n;
     char c;
 
@@ -306,6 +306,27 @@ int main(int argc, char *argv[])
         }
 
         std::cout << "Connected" << std::endl;
+
+        Message msg(HELLO_REQ);
+        msg.setId(0);
+
+        msg.addTlv(TLV_PROTOCOL_VERSION_MAJOR, PROTOCOL_VERSION_MAJOR);
+        msg.addTlv(TLV_PROTOCOL_VERSION_MINOR, PROTOCOL_VERSION_MINOR);
+        msg.addTlv(TLV_LOGIN_USERNAME, "wonder");
+        msg.addTlv(TLV_LOGIN_PASSWORD, "wall");
+
+        MessageEncoder* enc = msg.encode();
+        enc->printHex();
+
+        if (socket->Send(enc->getBuffer(), enc->getLength()) <= 0)
+        {
+            std::cout << "ERROR writing to socket" << std::endl;
+            delete enc;
+            socket->Close();
+            socket = NULL;
+            continue;
+        }
+        delete enc;
 
         //UIConsole ui;
         ui.setSocket(socket);

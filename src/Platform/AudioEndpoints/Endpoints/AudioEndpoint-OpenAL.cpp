@@ -73,7 +73,7 @@ void AudioEndpoint::flushAudioData()
 
 void AudioEndpoint::run()
 {
-    AudioFifoData* afd;
+    AudioFifoData* afd = NULL;
     unsigned int frame = 0;
     ALCdevice *device = NULL;
     ALCcontext *context = NULL;
@@ -84,78 +84,73 @@ void AudioEndpoint::run()
     ALint state;
     ALenum error;
     ALint rate;
+    ALint prevrate = -1;
     ALint channels;
-
-    device = alcOpenDevice(NULL); /* Use the default device */
-    if (!device) log(LOG_EMERG) << "failed to open device";
-
-    do
-    {
-        device = alcOpenDevice(NULL); /* Use the default device */
-        if (!device) 
-            log(LOG_EMERG) << "failed to open device";
-        Sleep(1000);
-    } while ( device == NULL && isCancellationPending() == false );
-
-    context = alcCreateContext(device, NULL);
-    alcMakeContextCurrent(context);
-    alListenerf(AL_GAIN, 1.0f);
-    alDistanceModel(AL_NONE);
-    alGenBuffers((ALsizei)NUM_BUFFERS, buffers);
-    alGenSources(1, &source);
+    ALint prevchannels = -1;
 
     while(isCancellationPending() == false)
     {
-        //int cnt = 0;
-
-        /* First prebuffer some audio */
-        if((afd = fifo.getFifoDataTimedWait(1)) == 0)
+        device = alcOpenDevice(NULL); /* Use the default device */
+        if (!device)
+        {
+            log(LOG_EMERG) << "failed to open device";
+            Sleep(1000);
             continue;
+        }
 
-        queue_buffer(source, afd, buffers[frame]);
-        frame++;
+        context = alcCreateContext(device, NULL);
+        alcMakeContextCurrent(context);
+        alListenerf(AL_GAIN, 1.0f);
+        alDistanceModel(AL_NONE);
+        alGenBuffers((ALsizei)NUM_BUFFERS, buffers);
+        alGenSources(1, &source);
 
-        if (frame < NUM_BUFFERS)
-            continue;
-
-        frame = 0; /*ready to start playing, reset frame counter*/
-        alSourcePlay(source);
         while(isCancellationPending() == false)
         {
+            if ((error = alcGetError(device)) != AL_NO_ERROR) 
+            {
+                log(LOG_EMERG) << "openal al error: " << error;
+                break;
+            }
+
             /* Wait for some audio to play */
-//            alGetSourcei(source, AL_BUFFERS_QUEUED, &curbuffers);
+            alGetSourcei(source, AL_BUFFERS_QUEUED, &curbuffers);
             alGetSourcei(source, AL_BUFFERS_PROCESSED, &processed); /*returns the number of buffer entries already processed*/
 
-            if (!processed)
+            if ( curbuffers == NUM_BUFFERS )
             {
-                if ((error = alcGetError(device)) != AL_NO_ERROR) 
+                /* if buffer is fully loaded we wait for some frame to finish */
+                if (!processed)
                 {
-                    log(LOG_EMERG) << "openal al error: " << error;
-                    //exit(1);
+                    if ((error = alcGetError(device)) != AL_NO_ERROR) 
+                    {
+                        log(LOG_EMERG) << "openal al error: " << error;
+                        //exit(1);
+                    }
+
+                    Sleep(1);
+                    continue;
                 }
 
-                Sleep(1);
+                /* Remove old audio from the queue.. */
+                alSourceUnqueueBuffers(source, 1, &buffers[frame % NUM_BUFFERS]);
+                //log(LOG_DEBUG) << "processed " << processed;
+            }
+
+            /* check if there's more audio available */
+            if ( ( afd = fifo.getFifoDataTimedWait(1) ) == NULL )
                 continue;
-            }
 
-            /* Remove old audio from the queue.. */
-            alSourceUnqueueBuffers(source, 1, &buffers[frame % NUM_BUFFERS]);
-            //log(LOG_DEBUG) << "processed " << processed;
-
-            /* wait for some more audio */
-            while((afd = fifo.getFifoDataTimedWait(1)) == NULL && isCancellationPending() == false);
-
-            if( isCancellationPending() == true )
-                break;
-
-            //log(LOG_DEBUG) << "loading new buffer " << frame;
-            alGetBufferi(buffers[frame % NUM_BUFFERS], AL_FREQUENCY, &rate);
-            alGetBufferi(buffers[frame % NUM_BUFFERS], AL_CHANNELS, &channels);
-            if (afd->rate != rate || afd->channels != channels)
+            if (prevrate != -1 && prevchannels != -1 && (afd->rate != prevrate || afd->channels != prevchannels) )
             {
-                log(LOG_DEBUG) << "rate or channel count changed, resetting";
-                break;
+                /* Format or rate changed, so we need to reset all buffers */
+                alSourcei(source, AL_BUFFER, 0);
+                alSourceStop(source);
+                frame = 0;
             }
+            prevrate = afd->rate;
+            prevchannels = afd->channels;
+
             alBufferData(buffers[frame % NUM_BUFFERS],
                     afd->channels == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16,
                             afd->samples,
@@ -163,64 +158,29 @@ void AudioEndpoint::run()
                             afd->rate);
 
             alSourceQueueBuffers(source, 1, &buffers[frame % NUM_BUFFERS]);
+            frame++;
 
             delete afd;
             afd = NULL;
 
-            if ((error = alcGetError(device)) != AL_NO_ERROR) 
-            {
-                log(LOG_EMERG) << "openal al error: " << error;
-                //exit(1);
-            }
-
             alGetSourcei(source, AL_SOURCE_STATE, &state);
-            if (state == AL_STOPPED && processed == 1) /* if stopped and we have just refilled last buffer*/
+            alGetSourcei(source, AL_BUFFERS_QUEUED, &curbuffers);
+            alGetSourcei(source, AL_BUFFERS_PROCESSED, &processed);
+            if (state == AL_STOPPED || state == AL_INITIAL)
             {
-                /* player will stop when it runs out of buffers so it has to be restarted */
-                log(LOG_DEBUG) << "Restarting playback";
+                log(LOG_DEBUG) << "Stopped, curbuffers = " << curbuffers << ", processed = " << processed;
+            }
+            /* start playback when all buffers are ready. player will also stop when it runs out of buffers so it has to be restarted */
+            if ((state == AL_STOPPED || state == AL_INITIAL) && curbuffers == NUM_BUFFERS && processed == 0)
+            {
+                log(LOG_DEBUG) << "Starting playback";
                 alSourcePlay(source);
             }
-
-            frame++;
         }
-
-        if( isCancellationPending() == true )
-            break;
-
-        /* Format or rate changed, so we need to reset all buffers */
-        alSourcei(source, AL_BUFFER, 0);
-        alSourceStop(source);
-
-        /* Make sure we don't lose the audio packet that caused the change */
-        alBufferData(buffers[0],
-                     afd->channels == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16,
-                     afd->samples,
-                     afd->nsamples * afd->channels * sizeof(short),
-                     afd->rate);
-
-        alSourceQueueBuffers(source, 1, &buffers[0]);
-
-        delete afd;
-        afd = NULL;
-
-        frame = 1;
     }
 
 	log(LOG_DEBUG) << "Exiting AudioEndpoint::run()";
 }
-
-static int queue_buffer(ALuint source, AudioFifoData* afd, ALuint buffer)
-{
-    alBufferData(buffer,
-         afd->channels == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16,
-         afd->samples,
-         afd->nsamples * afd->channels * sizeof(short),
-         afd->rate);
-    alSourceQueueBuffers(source, 1, &buffer);
-    free(afd);
-    return 1;
-}
-
 }
 
 
