@@ -67,9 +67,21 @@ private:
     void playingInd(Track& currentTrack);
     void pausedInd(Track& currentTrack);
     void trackEndedInd();
-    void getTrackResponse();
+    void getTrackResponse(unsigned int reqId, const std::deque<Track>& tracks);
     void getImageResponse(unsigned int reqId, const void* data, size_t dataSize);
     void genericSearchCallback(unsigned int reqId, std::deque<Track>& tracks, const std::string& didYouMean);
+
+    /* Message Handler functions*/
+    void handleGetTracksReq(const Message* msg);
+    void handleHelloReq(const Message* msg);
+    void handleGetPlaylistReq(const Message* msg);
+    void handleImageReq(const Message* msg);
+    void handleGetStatusReq(const Message* msg);
+    void handlePlayReq(const Message* msg);
+    void handlePlayTrackReq(const Message* msg);
+    void handlePlayControlReq(const Message* msg);
+    void handleGetImageReq(const Message* msg);
+    void handleGenericSearchReq(const Message* msg);
 
     void queueMessage(Message* msg);
     Platform::Mutex messageQueueMtx;

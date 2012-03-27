@@ -34,7 +34,6 @@
 
 namespace LibSpotify
 {
-Playlist nullPlayList("NULL NAME","NULL LINK",true);
 static void insertTabs(std::ostream& os, unsigned short numberOfTabs);
 
 Folder::Folder(const std::string& name, unsigned long long id, Folder* parentFolder) : name_(name), id_(id), parentFolder_(parentFolder) { }
@@ -60,24 +59,24 @@ const std::string& Folder::getName() const
 	return name_;
 }
 
-const Playlist & Folder::findPlaylist(const std::string& playlist)
+bool Folder::findPlaylist(const std::string& playlist, Playlist& pl)
 {
     for (std::deque<LibSpotify::Playlist>::iterator p = playlists_.begin(); p != playlists_.end(); *p++)
     {
         if((*p).getLink().compare(playlist) == 0)
         {
-            return *p; /*found it*/
+            pl = *p;
+            return true;
         }
     }
 
     for (std::vector<Folder>::iterator f = folders_.begin(); f != folders_.end(); *f++)
     {
-        const Playlist& pl = f->findPlaylist(playlist);
-
-        if (!pl.nullObject())
-            return pl ; /*found it*/
+        if (f->findPlaylist(playlist,pl)==true)
+            return true;
     }
-    return nullPlayList; /*nope, not in here*/
+
+    return false; /*nope, not in here*/
 }
 
 std::deque<Playlist>& Folder::getPlaylists()

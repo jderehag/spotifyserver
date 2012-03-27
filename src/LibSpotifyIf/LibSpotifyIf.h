@@ -190,7 +190,7 @@ public:
 	void logIn();
 	void logOut();
 
-	void getTracks(const char* playlist);
+	void getTracks(unsigned int reqId, std::string link, ILibSpotifyIfCallbackSubscriber& callbackSubscriber);
 	void genericSearch(unsigned int reqId, std::string query, ILibSpotifyIfCallbackSubscriber& callbackSubscriber);
     void getImage(unsigned int reqId, std::string link, ILibSpotifyIfCallbackSubscriber& callbackSubscriber);
 	LibSpotifyTrackStates getState() { return trackState_; }

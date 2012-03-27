@@ -33,7 +33,7 @@
 
 Client::Client(Socket* socket, LibSpotifyIf& spotifyif) : requestId(0),
                                                           spotify_(spotifyif),
-                                                          loggedIn_(false),
+                                                          loggedIn_(true),
                                                           networkUsername_(""),
                                                           networkPassword_(""),
                                                           reader_(socket),
@@ -133,228 +133,15 @@ void Client::processMessage(const Message* msg)
 
     switch(msg->getType())
     {
-        case HELLO_REQ:
-        {
-            Message* rsp = new Message(HELLO_RSP);
-            rsp->setId( msg->getId() );
-            const IntTlv* protoMajorTlv = (const IntTlv*)msg->getTlvRoot()->getTlv(TLV_PROTOCOL_VERSION_MAJOR);
-            const IntTlv* protoMinorTlv = (const IntTlv*)msg->getTlvRoot()->getTlv(TLV_PROTOCOL_VERSION_MINOR);
-            if ( protoMajorTlv == NULL || protoMinorTlv == NULL )
-            {
-                /*we probably need to know the protocol version*/
-                rsp->addTlv(TLV_FAILURE, FAIL_MISSING_TLV);
-            }
-            else
-            {
-                peerProtocolMajor_ = protoMajorTlv->getVal();
-                peerProtocolMinor_ = protoMinorTlv->getVal();
-
-                if (peerProtocolMajor_ != PROTOCOL_VERSION_MAJOR)
-                {
-                    /*not compatible if major version differ, we accept differences in minor even though functionality might be missing*/
-                    rsp->addTlv(TLV_FAILURE, FAIL_PROTOCOL_MISMATCH);
-                }
-                else
-                {
-                    const StringTlv* usernameTlv = (const StringTlv*)msg->getTlvRoot()->getTlv(TLV_LOGIN_USERNAME);
-                    const StringTlv* passwordTlv = (const StringTlv*)msg->getTlvRoot()->getTlv(TLV_LOGIN_PASSWORD);
-                    std::string username = usernameTlv ? usernameTlv->getString() : std::string("");
-                    std::string password = passwordTlv ? passwordTlv->getString() : std::string("");
-                    if ( (!networkUsername_.empty() && networkUsername_ != username) ||
-                         (!networkPassword_.empty() && networkPassword_ != password)    )
-                    {
-                        /*incorrect login*/
-                        log(LOG_DEBUG) << networkUsername_.empty() << " " << networkUsername_ << " " << username;
-                        log(LOG_DEBUG) << networkPassword_.empty() << " " << networkPassword_ << " " << password;
-                        rsp->addTlv(TLV_FAILURE, FAIL_BAD_LOGIN);
-                    }
-                    else
-                    {
-                        /*all is well!*/
-                        loggedIn_ = true;
-                    }
-                }
-            }
-            rsp->addTlv(TLV_PROTOCOL_VERSION_MAJOR, PROTOCOL_VERSION_MAJOR);
-            rsp->addTlv(TLV_PROTOCOL_VERSION_MINOR, PROTOCOL_VERSION_MINOR);
-
-            queueMessage( rsp );
-        }
-        break;
-
-        case GET_PLAYLISTS_REQ:
-        {
-            /*get playlist*/
-            Message* rsp = new Message(GET_PLAYLISTS_RSP);
-            rsp->setId( msg->getId() );
-            rsp->addTlv( spotify_.getRootFolder().toTlv() );
-            queueMessage( rsp );
-        }
-        break;
-
-        case GET_TRACKS_REQ:
-        {
-            GetTracksReq* req = (GetTracksReq*)msg;
-
-            Message* rsp  = new Message(GET_TRACKS_RSP);
-            rsp->setId(req->getId());
-
-            log(LOG_DEBUG) << "get tracks: " << req->getPlaylist();
-
-            const Playlist& pl = spotify_.getRootFolder().findPlaylist(req->getPlaylist());
-
-            if (pl.nullObject() == false)
-            {
-                const std::deque<Track> &trackList = pl.getTracks();
-
-                for (std::deque<Track>::const_iterator t = trackList.begin(); t != trackList.end(); *t++)
-                {
-                    rsp->addTlv((*t).toTlv());
-                }
-
-            }
-
-            queueMessage(rsp);
-        }
-        break;
-
-        case PLAY_REQ:
-        {
-            const StringTlv* url = (const StringTlv*)msg->getTlvRoot()->getTlv(TLV_LINK);
-
-            if ( url )
-            {
-                log(LOG_DEBUG) << "spotify_.play(" << url->getString() << ")";
-                spotify_.play(url->getString());
-            }
-
-            Message* rsp = new Message( PLAY_RSP );
-            rsp->setId( msg->getId() );
-            queueMessage(rsp);
-        }
-        break;
-
-        case PLAY_TRACK_REQ:
-        {
-            const TlvContainer* track = (const TlvContainer*) msg->getTlvRoot()->getTlv(TLV_TRACK);
-            const StringTlv* url = (const StringTlv*) track->getTlv(TLV_LINK);
-            log(LOG_DEBUG) << "spotify_.play(" << url->getString() << ")";
-            spotify_.play(url->getString());
-
-            Message* rsp = new Message( PLAY_TRACK_RSP );
-            rsp->setId( msg->getId() );
-            queueMessage(rsp);
-        }
-        break;
-
-        case PLAY_CONTROL_REQ:
-        {
-            for (TlvContainer::const_iterator it = msg->getTlvRoot()->begin() ; it != msg->getTlvRoot()->end() ; it++)
-            {
-                Tlv* tlv = (*it);
-                log(LOG_DEBUG) << *tlv;
-
-                switch(tlv->getType())
-                {
-                    case TLV_PLAY_OPERATION:
-                    {
-                        switch(((IntTlv*)tlv)->getVal())
-                        {
-                            case PLAY_OP_NEXT:
-                                spotify_.next();
-                                break;
-                            case PLAY_OP_PREV:
-                                spotify_.previous();
-                                break;
-                            case PLAY_OP_PAUSE:
-                                spotify_.pause();
-                                break;
-                            case PLAY_OP_RESUME:
-                                spotify_.resume();
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-                    break;
-
-                    default:
-                        break;
-                }
-            }
-            Message* rsp = new Message( PLAY_CONTROL_RSP );
-            rsp->setId( msg->getId() );
-            queueMessage(rsp);
-        }
-        break;
-
-        case GENERIC_SEARCH_REQ:
-        {
-            const StringTlv* query = (const StringTlv*) msg->getTlvRoot()->getTlv(TLV_SEARCH_QUERY);
-
-            if (query && query->getString() != "")
-            {
-                unsigned int headerId = msg->getId();
-                Message* rsp = new Message(GENERIC_SEARCH_RSP);
-                rsp->setId(headerId);
-
-                /* make sure that the pending message queue does not already contain such a message */
-                if (pendingMessageMap_.find(headerId) != pendingMessageMap_.end())
-                    break;
-
-                pendingMessageMap_[headerId] = rsp;
-
-                spotify_.genericSearch(headerId, query->getString(), *this);
-            }
-            else
-            {
-                /*error handling?*/
-            }
-        }
-        break;
-
-        case GET_STATUS_REQ:
-        {
-            Message* rsp = new Message( GET_STATUS_RSP );
-            rsp->setId( msg->getId() );
-            switch (spotify_.getState())
-            {
-                case LibSpotifyIf::TRACK_STATE_NOT_LOADED:
-                case LibSpotifyIf::TRACK_STATE_WAITING_METADATA:
-                    rsp->addTlv(TLV_STATE, PLAYBACK_IDLE);
-                    break;
-                case LibSpotifyIf::TRACK_STATE_PAUSED:
-                    rsp->addTlv(TLV_STATE, PLAYBACK_PAUSED);
-                    rsp->addTlv(spotify_.getCurrentTrack().toTlv());
-                    rsp->addTlv(TLV_PROGRESS, spotify_.getProgress());
-                    break;
-                case LibSpotifyIf::TRACK_STATE_PLAYING:
-                    rsp->addTlv(TLV_STATE, PLAYBACK_PLAYING);
-                    rsp->addTlv(spotify_.getCurrentTrack().toTlv());
-                    rsp->addTlv(TLV_PROGRESS, spotify_.getProgress());
-                    break;
-            }
-            queueMessage(rsp);
-        }
-        break;
-
-        case GET_IMAGE_REQ:
-        {
-            const StringTlv* link = (const StringTlv*) msg->getTlvRoot()->getTlv(TLV_LINK);
-
-            unsigned int headerId = msg->getId();
-            Message* rsp = new Message(GET_IMAGE_RSP);
-            rsp->setId(headerId);
-
-            /* make sure that the pending message queue does not already contain such a message */
-            if (pendingMessageMap_.find(headerId) != pendingMessageMap_.end())
-                break;
-
-            pendingMessageMap_[headerId] = rsp;
-
-            spotify_.getImage(headerId, link ? link->getString() : std::string(""), *this);
-        }
-        break;
+        case HELLO_REQ:          handleHelloReq(msg);         break;
+        case GET_PLAYLISTS_REQ:  handleGetPlaylistReq(msg);   break;
+        case GET_TRACKS_REQ:     handleGetTracksReq(msg);     break;
+        case PLAY_REQ:           handlePlayReq(msg);          break;
+        case PLAY_TRACK_REQ:     handlePlayTrackReq(msg);     break;
+        case PLAY_CONTROL_REQ:   handlePlayControlReq(msg);   break;
+        case GENERIC_SEARCH_REQ: handleGenericSearchReq(msg); break;
+        case GET_STATUS_REQ:     handleGetStatusReq(msg);     break;
+        case GET_IMAGE_REQ:      handleGetImageReq(msg);      break;
 
         default:
             break;
@@ -434,10 +221,28 @@ void Client::pausedInd(Track& currentTrack)
 
     queueMessage(msg);
 }
-void Client::getTrackResponse()
+void Client::getTrackResponse(unsigned int reqId, const std::deque<Track>& tracks)
 {
     log(LOG_DEBUG) << "Client::getTrackResponse()";
+
+    PendingMessageMap::iterator msgIt = pendingMessageMap_.find(reqId);
+       if (msgIt != pendingMessageMap_.end())
+       {
+           Message* msg = msgIt->second;
+           for (std::deque<Track>::const_iterator trackIt = tracks.begin(); trackIt != tracks.end(); trackIt++)
+           {
+               log(LOG_DEBUG) << "\t" << (*trackIt).getName();
+               msg->addTlv((*trackIt).toTlv());
+           }
+           log(LOG_DEBUG) << "#tracks found=" << tracks.size();
+
+           queueMessage(msg);
+           pendingMessageMap_.erase(msgIt);
+       }
+       else log(LOG_WARN) << "Could not match the getTrackResponse() to a pending response";
+
 }
+
 void Client::getImageResponse(unsigned int reqId, const void* data, size_t dataSize)
 {
     log(LOG_DEBUG) << "Client::getImageResponse() " << dataSize << " bytes";
@@ -458,6 +263,7 @@ void Client::getImageResponse(unsigned int reqId, const void* data, size_t dataS
     else log(LOG_WARN) << "Could not match the genericSearchCallback() to a pending response";
 
 }
+
 void Client::genericSearchCallback(unsigned int reqId, std::deque<Track>& tracks, const std::string& didYouMean)
 {
     log(LOG_DEBUG) << "\tdid you mean:" << didYouMean;
@@ -482,4 +288,214 @@ void Client::genericSearchCallback(unsigned int reqId, std::deque<Track>& tracks
 Socket* Client::getSocket() const
 {
     return socket_;
+}
+
+void Client::handleGetTracksReq(const Message* msg)
+{
+    GetTracksReq* req = (GetTracksReq*)msg;
+    log(LOG_DEBUG) << "get tracks: " << req->getPlaylist();
+
+    Message* rsp  = new Message(GET_TRACKS_RSP);
+    rsp->setId(req->getId());
+    unsigned int headerId = req->getId();
+    pendingMessageMap_[headerId] = rsp;
+
+    spotify_.getTracks(headerId, req->getPlaylist(), *this);
+}
+
+void Client::handleHelloReq(const Message* msg)
+{
+    Message* rsp = new Message(HELLO_RSP);
+    rsp->setId( msg->getId() );
+    const IntTlv* protoMajorTlv = (const IntTlv*)msg->getTlvRoot()->getTlv(TLV_PROTOCOL_VERSION_MAJOR);
+    const IntTlv* protoMinorTlv = (const IntTlv*)msg->getTlvRoot()->getTlv(TLV_PROTOCOL_VERSION_MINOR);
+
+    if ( protoMajorTlv == NULL || protoMinorTlv == NULL )
+    {
+        /*we probably need to know the protocol version*/
+        rsp->addTlv(TLV_FAILURE, FAIL_MISSING_TLV);
+    }
+    else
+    {
+        peerProtocolMajor_ = protoMajorTlv->getVal();
+        peerProtocolMinor_ = protoMinorTlv->getVal();
+
+        if (peerProtocolMajor_ != PROTOCOL_VERSION_MAJOR)
+        {
+            /*not compatible if major version differ, we accept differences in minor even though functionality might be missing*/
+            rsp->addTlv(TLV_FAILURE, FAIL_PROTOCOL_MISMATCH);
+        }
+        else
+        {
+            const StringTlv* usernameTlv = (const StringTlv*)msg->getTlvRoot()->getTlv(TLV_LOGIN_USERNAME);
+            const StringTlv* passwordTlv = (const StringTlv*)msg->getTlvRoot()->getTlv(TLV_LOGIN_PASSWORD);
+            std::string username = usernameTlv ? usernameTlv->getString() : std::string("");
+            std::string password = passwordTlv ? passwordTlv->getString() : std::string("");
+            if ( (!networkUsername_.empty() && networkUsername_ != username) ||
+                 (!networkPassword_.empty() && networkPassword_ != password)    )
+            {
+                /*incorrect login*/
+                log(LOG_DEBUG) << networkUsername_.empty() << " " << networkUsername_ << " " << username;
+                log(LOG_DEBUG) << networkPassword_.empty() << " " << networkPassword_ << " " << password;
+                rsp->addTlv(TLV_FAILURE, FAIL_BAD_LOGIN);
+            }
+            else
+            {
+                /*all is well!*/
+                loggedIn_ = true;
+            }
+        }
+    }
+    rsp->addTlv(TLV_PROTOCOL_VERSION_MAJOR, PROTOCOL_VERSION_MAJOR);
+    rsp->addTlv(TLV_PROTOCOL_VERSION_MINOR, PROTOCOL_VERSION_MINOR);
+
+    queueMessage( rsp );
+}
+
+void Client::handleGetPlaylistReq(const Message* msg)
+{
+    /*get playlist*/
+    Message* rsp = new Message(GET_PLAYLISTS_RSP);
+    rsp->setId( msg->getId() );
+    rsp->addTlv( spotify_.getRootFolder().toTlv() );
+    queueMessage( rsp );
+}
+
+void Client::handleGetStatusReq(const Message* msg)
+{
+    Message* rsp = new Message( GET_STATUS_RSP );
+    rsp->setId( msg->getId() );
+    switch (spotify_.getState())
+    {
+        case LibSpotifyIf::TRACK_STATE_NOT_LOADED:
+        case LibSpotifyIf::TRACK_STATE_WAITING_METADATA:
+            rsp->addTlv(TLV_STATE, PLAYBACK_IDLE);
+    break;
+    case LibSpotifyIf::TRACK_STATE_PAUSED:
+        rsp->addTlv(TLV_STATE, PLAYBACK_PAUSED);
+        rsp->addTlv(spotify_.getCurrentTrack().toTlv());
+        rsp->addTlv(TLV_PROGRESS, spotify_.getProgress());
+        break;
+    case LibSpotifyIf::TRACK_STATE_PLAYING:
+        rsp->addTlv(TLV_STATE, PLAYBACK_PLAYING);
+        rsp->addTlv(spotify_.getCurrentTrack().toTlv());
+        rsp->addTlv(TLV_PROGRESS, spotify_.getProgress());
+    break;
+    }
+    queueMessage(rsp);
+}
+
+void Client::handlePlayReq(const Message* msg)
+{
+    const StringTlv* url = (const StringTlv*)msg->getTlvRoot()->getTlv(TLV_LINK);
+
+    if ( url )
+    {
+        log(LOG_DEBUG) << "spotify_.play(" << url->getString() << ")";
+        spotify_.play(url->getString());
+    }
+
+    Message* rsp = new Message( PLAY_RSP );
+    rsp->setId( msg->getId() );
+    queueMessage(rsp);
+}
+
+void Client::handlePlayTrackReq(const Message* msg)
+{
+    const TlvContainer* track = (const TlvContainer*) msg->getTlvRoot()->getTlv(TLV_TRACK);
+    const StringTlv* url = (const StringTlv*) track->getTlv(TLV_LINK);
+    log(LOG_DEBUG) << "spotify_.play(" << url->getString() << ")";
+    spotify_.play(url->getString());
+
+    Message* rsp = new Message( PLAY_TRACK_RSP );
+    rsp->setId( msg->getId() );
+    queueMessage(rsp);
+}
+
+void Client::handlePlayControlReq(const Message* msg)
+{
+    for (TlvContainer::const_iterator it = msg->getTlvRoot()->begin() ; it != msg->getTlvRoot()->end() ; it++)
+    {
+        Tlv* tlv = (*it);
+        log(LOG_DEBUG) << *tlv;
+
+        switch(tlv->getType())
+        {
+            case TLV_PLAY_OPERATION:
+            {
+                switch(((IntTlv*)tlv)->getVal())
+                {
+                    case PLAY_OP_NEXT:
+                        spotify_.next();
+                    break;
+                    case PLAY_OP_PREV:
+                        spotify_.previous();
+                    break;
+                    case PLAY_OP_PAUSE:
+                        spotify_.pause();
+                        break;
+                    case PLAY_OP_RESUME:
+                        spotify_.resume();
+                        break;
+                    default:
+                        break;
+                }
+            }
+            break;
+
+            default:
+                break;
+        }
+    }
+    Message* rsp = new Message( PLAY_CONTROL_RSP );
+    rsp->setId( msg->getId() );
+    queueMessage(rsp);
+}
+
+
+void Client::handleGetImageReq(const Message* msg)
+{
+    const StringTlv* link = (const StringTlv*) msg->getTlvRoot()->getTlv(TLV_LINK);
+
+    unsigned int headerId = msg->getId();
+    Message* rsp = new Message(GET_IMAGE_RSP);
+    rsp->setId(headerId);
+
+    /* make sure that the pending message queue does not already contain such a message */
+    if (pendingMessageMap_.find(headerId) == pendingMessageMap_.end())
+    {
+        pendingMessageMap_[headerId] = rsp;
+        spotify_.getImage(headerId, link ? link->getString() : std::string(""), *this);
+    }
+    else
+    {
+        delete rsp;
+    }
+}
+
+void Client::handleGenericSearchReq(const Message* msg)
+{
+    const StringTlv* query = (const StringTlv*) msg->getTlvRoot()->getTlv(TLV_SEARCH_QUERY);
+
+    if (query && query->getString() != "")
+    {
+        unsigned int headerId = msg->getId();
+        Message* rsp = new Message(GENERIC_SEARCH_RSP);
+        rsp->setId(headerId);
+
+        /* make sure that the pending message queue does not already contain such a message */
+        if (pendingMessageMap_.find(headerId) == pendingMessageMap_.end())
+        {
+            pendingMessageMap_[headerId] = rsp;
+            spotify_.genericSearch(headerId, query->getString(), *this);
+        }
+        else
+        {
+            delete rsp;
+        }
+    }
+    else
+    {
+        /*error handling?*/
+    }
 }

@@ -26,6 +26,7 @@
  */
 
 #include "Track.h"
+#include "MessageFactory/Tlvs.h"
 
 namespace LibSpotify
 {

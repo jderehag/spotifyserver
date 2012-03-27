@@ -121,10 +121,10 @@ Folder& LibSpotifyIf::getRootFolder()
     return rootFolder_;
 }
 
-/*todo: not used yet*/
-void LibSpotifyIf::getTracks(const char* playlist)
+void LibSpotifyIf::getTracks(unsigned int reqId, std::string link, ILibSpotifyIfCallbackSubscriber& callbackSubscriber)
 {
-	postToEventThread(EVENT_GET_TRACKS, new std::string(playlist));
+    SpotifyQueryMsg* msg = new SpotifyQueryMsg(link, reqId, callbackSubscriber);
+	postToEventThread(EVENT_GET_TRACKS, msg);
 }
 
 void LibSpotifyIf::genericSearch(unsigned int reqId, std::string query, ILibSpotifyIfCallbackSubscriber& callbackSubscriber)
@@ -255,40 +255,45 @@ void LibSpotifyIf::stateMachineEventHandler(Event event, void* msg)
 			}
 			break;
 
-		/*todo: not used yet*/
 		case EVENT_GET_TRACKS:
 		{
-			std::string* playlist_uri = static_cast<std::string*>(msg);
-			if (state_ == STATE_LOGGED_IN)
+		    SpotifyQueryMsg* queryMsg = static_cast<SpotifyQueryMsg*>(msg);
+			const char* playlist_uri =   queryMsg->query_.c_str();
+		    if (state_ == STATE_LOGGED_IN)
 			{
-				sp_link* link = sp_link_create_from_string(playlist_uri->c_str());
+				sp_link* link = sp_link_create_from_string(playlist_uri);
 				if(link)
 				{
 					if(sp_link_type(link) == SP_LINKTYPE_PLAYLIST)
 					{
-						sp_playlist* playlist = NULL;//sp_link_as_playlist(link);
+						sp_playlist* playlist = sp_playlist_create(spotifySession_, link);
 
 						if (sp_playlist_is_loaded(playlist))
 						{
-							Playlist p(sp_playlist_name(playlist), playlist_uri->c_str());
-							log(LOG_DEBUG) << "Got playlist " << *playlist_uri;
+							log(LOG_DEBUG) << "Got playlist " << playlist_uri;
+
+	                         sp_playlist* playlist = sp_playlist_create(spotifySession_, link);
+	                         Playlist playlistObj = spotifyGetPlaylist(playlist, spotifySession_);
+
+
+	                        queryMsg->callbackSubscriber_.getTrackResponse(queryMsg->reqId_, playlistObj.getTracks());
 						}
 						else
 						{
 							/*not sure if we're waiting for metadata or playlist_state_changed here*/
 							sp_playlist_add_ref(playlist);
 							//waitingPlaylist_ = playlist;
-							log(LOG_DEBUG) << "Waiting for metadata for playlist " << *playlist_uri;
+							log(LOG_DEBUG) << "Waiting for metadata for playlist " << playlist_uri;
 						}
 					}
-					else log(LOG_WARN) << "Link is not a playlist: " << *playlist_uri;
+					else log(LOG_WARN) << "Link is not a playlist: " << playlist_uri;
 
 					sp_link_release(link);
 				}
-				else log(LOG_WARN) << "Bad link: " << *playlist_uri;
+				else log(LOG_WARN) << "Bad link: " << playlist_uri;
 
 			}
-			delete playlist_uri;
+			delete queryMsg;
 			break;
 		}
 

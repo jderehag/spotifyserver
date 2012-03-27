@@ -44,7 +44,7 @@ public:
     virtual void trackEndedInd() = 0;
 
     /* Metadata specific callbacks*/
-    virtual void getTrackResponse() = 0;
+    virtual void getTrackResponse(unsigned int reqId, const std::deque<Track>& tracks) = 0;
     virtual void getImageResponse(unsigned int reqId, const void* data, size_t dataSize) = 0;
 
     /* search callbacks */
