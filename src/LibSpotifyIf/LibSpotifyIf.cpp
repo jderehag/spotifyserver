@@ -271,8 +271,6 @@ void LibSpotifyIf::stateMachineEventHandler(Event event, void* msg)
 						if (sp_playlist_is_loaded(playlist))
 						{
 							log(LOG_DEBUG) << "Got playlist " << playlist_uri;
-
-	                         sp_playlist* playlist = sp_playlist_create(spotifySession_, link);
 	                         Playlist playlistObj = spotifyGetPlaylist(playlist, spotifySession_);
 
 
