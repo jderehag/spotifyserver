@@ -65,10 +65,10 @@ class LoggerStreamBuffer
 {
 private:
     Logger& log_;
-    std::stringstream* ss_;
     void flush();
 
 public:
+    std::stringstream* ss_; /*todo: hide me! private doesn't compile on windows*/
     friend class Logger;
     template<class T> friend LoggerStreamBuffer& operator<<(LoggerStreamBuffer& buff, const T& rhs);
 
