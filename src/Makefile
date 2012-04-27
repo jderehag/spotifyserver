@@ -39,6 +39,7 @@ COMMON_OBJECTS += spotifyserver.o \
 		  Playlist.o \
 		  Track.o \
 		  Artist.o \
+		  Album.o \
 		  ClientHandler.o \
 		  Client.o \
 		  AudioFifo.o \

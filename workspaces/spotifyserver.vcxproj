@@ -81,6 +81,7 @@
     <ClInclude Include="..\src\LibSpotifyIf\LibSpotifyIfCallbackWrapper.h" />
     <ClInclude Include="..\src\LibSpotifyIf\LibSpotifyIfHelpers.h" />
     <ClInclude Include="..\src\LibSpotifyIf\LibSpotifyPlaybackHandler.h" />
+    <ClInclude Include="..\src\LibSpotifyIf\MediaContainers\Album.h" />
     <ClInclude Include="..\src\LibSpotifyIf\MediaContainers\Artist.h" />
     <ClInclude Include="..\src\LibSpotifyIf\MediaContainers\Folder.h" />
     <ClInclude Include="..\src\LibSpotifyIf\MediaContainers\Playlist.h" />
@@ -121,6 +122,7 @@
     <ClCompile Include="..\src\LibSpotifyIf\LibSpotifyIfCallbackWrapper.cpp" />
     <ClCompile Include="..\src\LibSpotifyIf\LibSpotifyIfHelpers.cpp" />
     <ClCompile Include="..\src\LibSpotifyIf\LibSpotifyPlaybackHandler.cpp" />
+    <ClCompile Include="..\src\LibSpotifyIf\MediaContainers\Album.cpp" />
     <ClCompile Include="..\src\LibSpotifyIf\MediaContainers\Artist.cpp" />
     <ClCompile Include="..\src\LibSpotifyIf\MediaContainers\Folder.cpp" />
     <ClCompile Include="..\src\LibSpotifyIf\MediaContainers\Playlist.cpp" />

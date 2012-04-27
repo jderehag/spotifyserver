@@ -71,6 +71,7 @@ public:
 		EVENT_GET_TRACKS,
 		EVENT_GENERIC_SEARCH,
 		EVENT_GET_IMAGE,
+		EVENT_GET_ALBUM,
 
 		/* Playback Handling */
 		EVENT_PLAY_REQ,
@@ -87,7 +88,7 @@ public:
     enum LibSpotifyTrackStates
     {
         TRACK_STATE_NOT_LOADED = 0,
-        TRACK_STATE_WAITING_METADATA,
+        //TRACK_STATE_WAITING_METADATA,
         TRACK_STATE_PLAYING,
         TRACK_STATE_PAUSED
     };
@@ -160,6 +161,12 @@ private:
 	void libSpotifySessionCreate();
 	void updateRootFolder(sp_playlistcontainer* plContainer);
 
+   	/************************
+     * Metadata handling
+     ************************/
+    typedef std::pair<Event, void*> PendingMetadataItem;
+    std::set<PendingMetadataItem> pendingMetadata;
+
 	//callback wrapper
 	friend class LibSpotifyIfCallbackWrapper;
 	LibSpotifyIfCallbackWrapper itsCallbackWrapper_;
@@ -180,6 +187,7 @@ private:
 	/* search callbacks*/
 	void genericSearchCb(sp_search *search, void *userdata);
     void imageLoadedCb(sp_image* image, void *userdata);
+    void albumLoadedCb(sp_albumbrowse* result, void *userdata);
 	/* Util callbacks */
 	void logMessageCb(sp_session *session, const char *data);
 
@@ -193,11 +201,13 @@ public:
 	void getTracks(unsigned int reqId, std::string link, ILibSpotifyIfCallbackSubscriber& callbackSubscriber);
 	void genericSearch(unsigned int reqId, std::string query, ILibSpotifyIfCallbackSubscriber& callbackSubscriber);
     void getImage(unsigned int reqId, std::string link, ILibSpotifyIfCallbackSubscriber& callbackSubscriber);
-	LibSpotifyTrackStates getState() { return trackState_; }
+    void getAlbum(unsigned int reqId, std::string link, ILibSpotifyIfCallbackSubscriber& callbackSubscriber);
+
+    LibSpotifyTrackStates getState() { return trackState_; }
 	unsigned int getProgress() { return progress_/10; }
 	Track& getCurrentTrack() { return currentTrack_; }
 
-	void play(const std::string uri);
+	void play(unsigned int reqId, const std::string link, ILibSpotifyIfCallbackSubscriber& callbackSubscriber);
 	void stop();
     void playSearchResult(const char* searchString);
     void enqueueTrack(const char* track_uri);

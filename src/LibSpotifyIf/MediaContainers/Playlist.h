@@ -40,7 +40,7 @@ namespace LibSpotify
 
 class Playlist
 {
-private:
+protected:
 	std::string name_;
 	std::string link_;
 	std::deque<Track> tracks_;

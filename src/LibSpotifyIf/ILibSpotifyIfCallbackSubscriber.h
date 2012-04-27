@@ -29,6 +29,7 @@
 #define ILIBSPOTIFYIFCALLBACKSUBSCRIBER_H_
 
 #include "MediaContainers/Track.h"
+#include "MediaContainers/Album.h"
 #include <deque>
 #include <string.h>
 
@@ -46,6 +47,7 @@ public:
     /* Metadata specific callbacks*/
     virtual void getTrackResponse(unsigned int reqId, const std::deque<Track>& tracks) = 0;
     virtual void getImageResponse(unsigned int reqId, const void* data, size_t dataSize) = 0;
+    virtual void getAlbumResponse(unsigned int reqId, const Album& album) = 0;
 
     /* search callbacks */
     virtual void genericSearchCallback(unsigned int reqId, std::deque<Track>& listOfTracks, const std::string& didYouMean) = 0;

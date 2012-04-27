@@ -30,6 +30,7 @@
 
 #include "MediaContainers/Track.h"
 #include "MediaContainers/Playlist.h"
+#include "MediaContainers/Album.h"
 #include <libspotify/api.h>
 #include <string>
 
@@ -40,6 +41,9 @@ namespace LibSpotify
 
     Playlist spotifyGetPlaylist(std::string* playlist_uri, sp_session* session);
     Playlist spotifyGetPlaylist(sp_playlist* playlist, sp_session* session);
+
+    //Album spotifyGetAlbum(std::string* album_uri, sp_session* session);
+    Album spotifyGetAlbum(sp_albumbrowse* album, sp_session* session);
 
 } /* namespace LibSpotify */
 #endif /* LIBSPOTIFYIFHELPERS_H_ */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Jesper Derehag
+ * Copyright (c) 2012, Jens Nielsen
  * All rights reserved.
 
  * Redistribution and use in source and binary forms, with or without
@@ -16,7 +16,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL JESPER DEREHAG BE LIABLE FOR ANY
+ * DISCLAIMED. IN NO EVENT SHALL JENS NIELSEN BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -25,64 +25,43 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef TRACK_H_
-#define TRACK_H_
+#ifndef ALBUM_H_
+#define ALBUM_H_
 
-#include "Artist.h"
-#include "MessageFactory/MessageEncoder.h"
-#include "MessageFactory/Tlvs.h"
+#include "Playlist.h"
 #include <string>
-#include <vector>
 
 namespace LibSpotify
 {
-class Track
+
+class Artist;
+
+class Album : public Playlist
 {
 private:
-	std::string name_;
-	std::string link_;
-    std::vector<Artist> artistList_;
-    std::string album_;
-    std::string albumLink_;
-	bool isStarred_;
-	bool isLocal_;
-	bool isAutoLinked_;
-	unsigned int durationMillisecs_;
-    int index_; /* index in list when referenced by playlist or album */
-
+    int year_;
+    std::string review_;
+    bool isAvailable_;
+    Artist artist_;
 
 public:
-	Track(const std::string& name, const std::string& link);
-	Track(const char* name, const char* link);
-	virtual ~Track();
+    Album(const char* name, const char* link);
+    virtual ~Album();
 
-	const std::string& getLink() const;
-	const std::string& getName() const;
+    void setYear( int year );
+    int getYear() const;
 
-	const std::vector<Artist>& getArtists() const;
-	void addArtist(Artist& artist);
-	const std::string& getAlbum() const;
-	void setAlbum(const std::string& name);
-    const std::string& getAlbumLink() const;
-    void setAlbumLink(const std::string& link);
-	unsigned int getDurationMillisecs() const;
-	void setDurationMillisecs(unsigned int duration);
-	bool isStarred();
-	void setIsStarred(bool isStarred);
-	bool isLocal();
-	void setIsLocal(bool isStarred);
-	bool isAutoLinked();
-	void setIsAutoLinked(bool isStarred);
-	int getIndex();
-	void setIndex(int index);
+    void setReview( std::string review );
+    const std::string& getReview() const;
 
-	void write(MessageEncoder* msg) const;
-	Tlv* toTlv() const;
+    void setIsAvailable( bool isAvailable );
+    int getIsAvailable() const;
 
-	bool operator!=(const Track& rhs) const;
-	bool operator==(const Track& rhs) const;
+    void setArtist( Artist& artist );
+    const Artist& getArtist() const;
+
+    TlvContainer* toTlv() const;
 };
 
-}
-
-#endif /* TRACK_H_ */
+} /* namespace LibSpotify */
+#endif /* ALBUM_H_ */

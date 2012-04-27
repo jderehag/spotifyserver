@@ -142,12 +142,45 @@ Playlist spotifyGetPlaylist(sp_playlist* playlist, sp_session* session)
 
     for (int trackIndex = 0; trackIndex < sp_playlist_num_tracks(playlist); ++trackIndex)
     {
-            Track trackObj(spotifyGetTrack(sp_playlist_track(playlist, trackIndex), session));
-            playlistObj.addTrack(trackObj);
+        Track trackObj(spotifyGetTrack(sp_playlist_track(playlist, trackIndex), session));
+        trackObj.setIndex(trackIndex);
+        playlistObj.addTrack(trackObj);
     }
     return playlistObj;
 }
 
+
+Album spotifyGetAlbum(sp_albumbrowse* albumbrowse, sp_session* session)
+{
+    char uri[MAX_LINK_NAME_LENGTH];
+    sp_album* album = sp_albumbrowse_album( albumbrowse );
+    sp_link* link = sp_link_create_from_album(album);
+
+    sp_link_as_string(link, uri, sizeof(uri));
+    sp_link_release(link);
+
+    Album albumObj( sp_album_name(album), uri );
+
+    albumObj.setYear( sp_album_year( album ) );
+    albumObj.setReview( sp_albumbrowse_review( albumbrowse ) );
+    albumObj.setIsAvailable( sp_album_is_available( album ) );
+
+    sp_artist* artist = sp_albumbrowse_artist(albumbrowse);
+    Artist artistObj(sp_artist_name(artist));
+    sp_link* artistlink = sp_link_create_from_artist(artist);
+    sp_link_as_string(artistlink, uri, sizeof(uri));
+    sp_link_release(artistlink);
+    artistObj.setLink(uri);
+    albumObj.setArtist(artistObj);
+
+    for (int trackIndex = 0; trackIndex < sp_albumbrowse_num_tracks(albumbrowse); ++trackIndex)
+    {
+        Track trackObj(spotifyGetTrack(sp_albumbrowse_track(albumbrowse, trackIndex), session));
+        trackObj.setIndex(trackIndex);
+        albumObj.addTrack(trackObj);
+    }
+    return albumObj;
+}
 
 void LibSpotifyIf::libSpotifySessionCreate()
 {

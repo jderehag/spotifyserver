@@ -207,6 +207,18 @@ TlvContainer* MessageDecoder::decodeAlbum()
 
         switch(getCurrentTlv())
         {
+            case TLV_TRACK:
+            {
+                groupTlv->addTlv(decodeTrack());
+            }
+            break;
+
+            case TLV_ARTIST:
+            {
+                groupTlv->addTlv(decodeArtist());
+            }
+            break;
+
             case TLV_LINK:
             {
                 if(groupTlv->getNumTlv(getCurrentTlv()) == 0)
@@ -222,9 +234,19 @@ TlvContainer* MessageDecoder::decodeAlbum()
             }
             break;
 
+            case TLV_ALBUM_REVIEW:
             case TLV_NAME:
             {
                 groupTlv->addTlv(getCurrentTlv(), getTlvData(), getCurrentTlvLen());
+                nextTlv();
+            }
+            break;
+
+            /* Integer TLVs */
+            case TLV_ALBUM_RELEASE_YEAR:
+            case TLV_ALBUM_IS_AVAILABLE:
+            {
+                groupTlv->addTlv(getCurrentTlv(), getTlvIntData());
                 nextTlv();
             }
             break;
@@ -418,6 +440,7 @@ TlvContainer* MessageDecoder::decodeTrack()
 
             /* Integer TLVs */
             case TLV_TRACK_DURATION:
+            case TLV_TRACK_INDEX:
             {
                 groupTlv->addTlv(getCurrentTlv(), getTlvIntData());
                 nextTlv();
@@ -469,6 +492,18 @@ void MessageDecoder::decodeTlvs(TlvContainer* parent, uint32_t len)
             case TLV_IMAGE:
             {
                 parent->addTlv(decodeImage());
+            }
+            break;
+
+            case TLV_ALBUM:
+            {
+                parent->addTlv(decodeAlbum());
+            }
+            break;
+
+            case TLV_ARTIST:
+            {
+                parent->addTlv(decodeArtist());
             }
             break;
 

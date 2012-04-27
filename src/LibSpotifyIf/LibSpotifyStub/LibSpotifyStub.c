@@ -55,6 +55,13 @@ static sp_artist artist_array_2[] =
 
 };
 
+static sp_album best_oasis_album =
+{
+        .name = "Oasis, the second coming..",
+        .url = "spotify:album:Oasisthesecondcoming",
+        .releaseYear = 2012,
+};
+
 static sp_track track_array_1[] =
 {
 		{
@@ -64,7 +71,7 @@ static sp_track track_array_1[] =
 		.is_autolinked = 0,
 		.ref_count = 0,
 		.url = "spotify:track:Wonderwall",
-		.album = {"The best of Oasis", "spotify:album:Thebestofoasis"},
+		.album = &best_oasis_album,
 		.artist_array = artist_array_1,
 		.num_artist = sizeof(artist_array_1) / sizeof(artist_array_1[0]),
         //sp_link* link;
@@ -76,11 +83,18 @@ static sp_track track_array_1[] =
 		.is_autolinked = 0,
 		.ref_count = 0,
 		.url = "spotify:track:Wonderwall2",
-		.album = {"The best of Oasis", "spotify:album:Thebestofoasis"},
+		.album = &best_oasis_album,
 		.artist_array = artist_array_1,
         .num_artist = sizeof(artist_array_1) / sizeof(artist_array_1[0]),
 		//sp_link* link;
 		}
+};
+
+static sp_album second_coming_album =
+{
+        .name = "Oasis, the second coming..",
+        .url = "spotify:album:Oasisthesecondcoming",
+        .releaseYear = 2012,
 };
 
 static sp_track track_array_2[] =
@@ -92,7 +106,7 @@ static sp_track track_array_2[] =
 		.is_autolinked = 0,
 		.ref_count = 0,
 		.url = "spotify:track:Wonderwall3",
-		.album = {"Oasis, the second coming..", "spotify:album:Oasisthesecondcoming"},
+		.album = &second_coming_album,
 		.artist_array = artist_array_2,
         .num_artist = sizeof(artist_array_2) / sizeof(artist_array_2[0]),
 		//sp_link* link;
@@ -104,7 +118,7 @@ static sp_track track_array_2[] =
 		.is_autolinked = 0,
 		.ref_count = 0,
 		.url = "spotify:track:Wonderwall4",
-		.album = {"Oasis, the second coming..", "spotify:album:Oasisthesecondcoming"},
+		.album = &second_coming_album,
 		.artist_array = artist_array_2,
         .num_artist = sizeof(artist_array_2) / sizeof(artist_array_2[0]),
 		//sp_link* link;
@@ -143,6 +157,9 @@ static sp_playlist playlist_array[] =
 		}
 
 };
+
+static sp_album album_search_result = {"Oasis, the searchresult album", "spotify:album:Theoasissearchresult", 2012};
+
 static sp_track track_search_result[] =
 {
 		{
@@ -154,7 +171,7 @@ static sp_track track_search_result[] =
 			.url = "spotify:track:WonderwallSearchResult",
 		    .artist_array = artist_array_1,
 			.num_artist = sizeof(artist_array_1)/sizeof(artist_array_1[0]),
-		    .album = {"Oasis, the searchresult album", "spotify:album:Theoasissearchresult"}
+		    .album = &album_search_result,
 			//sp_link* link;
 		}
 };
@@ -168,6 +185,14 @@ static sp_search result =
 static sp_image image =
 {
         .data = "binary stuff",
+};
+
+static sp_albumbrowse albumbrowse_result =
+{
+        .album = &best_oasis_album,
+        .num_tracks = sizeof(track_array_1)/sizeof(track_array_1[0]),
+        .track_array = track_array_1,
+        .review = "The best album ever. Angels are weeping rainbows.",
 };
 
 /*************************************
@@ -333,7 +358,7 @@ sp_artist* sp_track_artist(sp_track *track, int index)
 
 sp_album* sp_track_album(sp_track *track)
 {
-    return &track->album;
+    return track->album;
 }
 
 int sp_track_duration(sp_track *track)
@@ -391,6 +416,57 @@ bool sp_album_is_loaded(sp_album* album)
 const byte* sp_album_cover(sp_album *album)
 {
     return (const byte*) "an image reference";
+}
+
+int sp_album_year(sp_album *album)
+{
+    return album->releaseYear;
+}
+
+bool sp_album_is_available(sp_album *album)
+{
+    return 1;
+}
+
+/* ************************************
+ * Albumbrowse stubs
+ * * *********************************/
+
+sp_albumbrowse * sp_albumbrowse_create(sp_session *session, sp_album *album, albumbrowse_complete_cb *callback, void *userdata)
+{
+    callback(&albumbrowse_result, userdata);
+    return &albumbrowse_result;
+}
+
+void sp_albumbrowse_release(sp_albumbrowse *alb)
+{
+    return;
+}
+
+sp_album * sp_albumbrowse_album(sp_albumbrowse *alb)
+{
+    return alb->album;
+}
+
+int sp_albumbrowse_num_tracks(sp_albumbrowse *alb)
+{
+    return alb->num_tracks;
+}
+
+sp_track* sp_albumbrowse_track(sp_albumbrowse *alb, int index)
+{
+    assert(sp_albumbrowse_num_tracks(alb) > index);
+    return &alb->track_array[index];
+}
+
+const char* sp_albumbrowse_review(sp_albumbrowse *alb)
+{
+    return alb->review;
+}
+
+sp_artist* sp_albumbrowse_artist(sp_albumbrowse* alb)
+{
+    return &artist_array_1[0];
 }
 
 /* ************************************
@@ -486,7 +562,7 @@ sp_track* sp_link_as_track(sp_link *link)
 
 sp_album* sp_link_as_album(sp_link *link)
 {
-    return &track_array_1[0].album;
+    return &best_oasis_album;
 }
 
 sp_linktype sp_link_type(sp_link *link)

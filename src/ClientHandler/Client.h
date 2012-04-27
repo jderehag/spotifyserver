@@ -68,6 +68,7 @@ private:
     void pausedInd(Track& currentTrack);
     void trackEndedInd();
     void getTrackResponse(unsigned int reqId, const std::deque<Track>& tracks);
+    void getAlbumResponse(unsigned int reqId, const Album& album);
     void getImageResponse(unsigned int reqId, const void* data, size_t dataSize);
     void genericSearchCallback(unsigned int reqId, std::deque<Track>& tracks, const std::string& didYouMean);
 
@@ -82,6 +83,7 @@ private:
     void handlePlayControlReq(const Message* msg);
     void handleGetImageReq(const Message* msg);
     void handleGenericSearchReq(const Message* msg);
+    void handleGetAlbumReq(const Message* msg);
 
     void queueMessage(Message* msg);
     Platform::Mutex messageQueueMtx;

@@ -139,6 +139,7 @@ void UIConsole::run()
     {
         std::cout << "'g' get playlists\n"
                      "'t' get tracks\n"
+                     "'a' get album\n"
                      "'p' load a play queue\n"
                      "'?' search using query\n"
                      "'s' get status\n"
@@ -215,6 +216,17 @@ void UIConsole::run()
 
             if (uri == "w") uri = "spotify:track:2CT3r93YuSHtm57mjxvjhH";
             msg.setType(PLAY_REQ);
+            msg.addTlv(TLV_LINK, uri);
+            break;
+        }
+        case 'a':
+        {
+            std::string uri;
+            std::cout << "Enter Spotify URI ('w' for wonderwall)" << std::endl;
+            std::cin >> uri;
+
+            if (uri == "w") uri = "spotify:album:1f4I0SpE0O8yg4Eg2ywwv1";
+            msg.setType(GET_ALBUM_REQ);
             msg.addTlv(TLV_LINK, uri);
             break;
         }

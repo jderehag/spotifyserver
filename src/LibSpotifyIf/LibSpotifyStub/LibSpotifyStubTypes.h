@@ -57,6 +57,7 @@ struct sp_album
 {
     char name[256];
     char url[256];
+    int  releaseYear;
 };
 
 struct sp_track
@@ -70,7 +71,7 @@ struct sp_track
 	int ref_count;
 	int num_artist;
 	sp_artist* artist_array;
-	sp_album album;
+	sp_album* album;
 	//sp_link* link;
 };
 
@@ -91,6 +92,14 @@ struct sp_playlistcontainer
 	sp_playlistcontainer_callbacks callbacks;
 	int num_playlists;
 	sp_playlist* playlist_array;
+};
+
+struct sp_albumbrowse
+{
+    sp_album* album;
+    int num_tracks;
+    sp_track* track_array;
+    char review[256];
 };
 
 struct sp_image

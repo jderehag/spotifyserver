@@ -142,6 +142,7 @@ void Client::processMessage(const Message* msg)
         case GENERIC_SEARCH_REQ: handleGenericSearchReq(msg); break;
         case GET_STATUS_REQ:     handleGetStatusReq(msg);     break;
         case GET_IMAGE_REQ:      handleGetImageReq(msg);      break;
+        case GET_ALBUM_REQ:      handleGetAlbumReq(msg);      break;
 
         default:
             break;
@@ -226,21 +227,46 @@ void Client::getTrackResponse(unsigned int reqId, const std::deque<Track>& track
     log(LOG_DEBUG) << "Client::getTrackResponse()";
 
     PendingMessageMap::iterator msgIt = pendingMessageMap_.find(reqId);
-       if (msgIt != pendingMessageMap_.end())
-       {
-           Message* msg = msgIt->second;
-           for (std::deque<Track>::const_iterator trackIt = tracks.begin(); trackIt != tracks.end(); trackIt++)
-           {
-               log(LOG_DEBUG) << "\t" << (*trackIt).getName();
-               msg->addTlv((*trackIt).toTlv());
-           }
-           log(LOG_DEBUG) << "#tracks found=" << tracks.size();
+    if (msgIt != pendingMessageMap_.end())
+    {
+        Message* msg = msgIt->second;
+        for (std::deque<Track>::const_iterator trackIt = tracks.begin(); trackIt != tracks.end(); trackIt++)
+        {
+            log(LOG_DEBUG) << "\t" << (*trackIt).getName();
+            msg->addTlv((*trackIt).toTlv());
+        }
+        log(LOG_DEBUG) << "#tracks found=" << tracks.size();
 
-           queueMessage(msg);
-           pendingMessageMap_.erase(msgIt);
-       }
-       else log(LOG_WARN) << "Could not match the getTrackResponse() to a pending response";
+        queueMessage(msg);
+        pendingMessageMap_.erase(msgIt);
+    }
+    else log(LOG_WARN) << "Could not match the getTrackResponse() to a pending response";
+}
 
+void Client::getAlbumResponse(unsigned int reqId, const Album& album)
+{
+    log(LOG_DEBUG) << "Client::getAlbumResponse()";
+
+    PendingMessageMap::iterator msgIt = pendingMessageMap_.find(reqId);
+    if (msgIt != pendingMessageMap_.end())
+    {
+        Message* msg = msgIt->second;
+        TlvContainer* albumTlv = album.toTlv();
+        const std::deque<Track>& tracks = album.getTracks();
+
+        for (std::deque<Track>::const_iterator trackIt = tracks.begin(); trackIt != tracks.end(); trackIt++)
+        {
+            log(LOG_DEBUG) << "\t" << (*trackIt).getName();
+            albumTlv->addTlv((*trackIt).toTlv());
+        }
+        log(LOG_DEBUG) << "#tracks found=" << tracks.size();
+
+        msg->addTlv(albumTlv);
+
+        queueMessage(msg);
+        pendingMessageMap_.erase(msgIt);
+    }
+    else log(LOG_WARN) << "Could not match the getAlbumResponse() to a pending response";
 }
 
 void Client::getImageResponse(unsigned int reqId, const void* data, size_t dataSize)
@@ -368,7 +394,7 @@ void Client::handleGetStatusReq(const Message* msg)
     switch (spotify_.getState())
     {
         case LibSpotifyIf::TRACK_STATE_NOT_LOADED:
-        case LibSpotifyIf::TRACK_STATE_WAITING_METADATA:
+//        case LibSpotifyIf::TRACK_STATE_WAITING_METADATA:
             rsp->addTlv(TLV_STATE, PLAYBACK_IDLE);
     break;
     case LibSpotifyIf::TRACK_STATE_PAUSED:
@@ -392,7 +418,7 @@ void Client::handlePlayReq(const Message* msg)
     if ( url )
     {
         log(LOG_DEBUG) << "spotify_.play(" << url->getString() << ")";
-        spotify_.play(url->getString());
+        spotify_.play(msg->getId(), url->getString(), *this);
     }
 
     Message* rsp = new Message( PLAY_RSP );
@@ -405,7 +431,7 @@ void Client::handlePlayTrackReq(const Message* msg)
     const TlvContainer* track = (const TlvContainer*) msg->getTlvRoot()->getTlv(TLV_TRACK);
     const StringTlv* url = (const StringTlv*) track->getTlv(TLV_LINK);
     log(LOG_DEBUG) << "spotify_.play(" << url->getString() << ")";
-    spotify_.play(url->getString());
+    spotify_.play(msg->getId(), url->getString(), *this);
 
     Message* rsp = new Message( PLAY_TRACK_RSP );
     rsp->setId( msg->getId() );
@@ -499,3 +525,24 @@ void Client::handleGenericSearchReq(const Message* msg)
         /*error handling?*/
     }
 }
+
+void Client::handleGetAlbumReq(const Message* msg)
+{
+    const StringTlv* link = (const StringTlv*) msg->getTlvRoot()->getTlv(TLV_LINK);
+
+    unsigned int headerId = msg->getId();
+    Message* rsp = new Message(GET_ALBUM_RSP);
+    rsp->setId(headerId);
+
+    /* make sure that the pending message queue does not already contain such a message */
+    if (pendingMessageMap_.find(headerId) == pendingMessageMap_.end())
+    {
+        pendingMessageMap_[headerId] = rsp;
+        spotify_.getAlbum(headerId, link ? link->getString() : std::string(""), *this);
+    }
+    else
+    {
+        delete rsp;
+    }
+}
+

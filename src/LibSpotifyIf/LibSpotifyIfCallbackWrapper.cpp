@@ -158,4 +158,9 @@ void SP_CALLCONV LibSpotifyIfCallbackWrapper::imageLoadedCallback(sp_image *imag
 {
     libSpotifyIfSingleton->imageLoadedCb(image, userdata);
 }
+
+void SP_CALLCONV LibSpotifyIfCallbackWrapper::albumLoadedCallback(sp_albumbrowse *result, void *userdata)
+{
+    libSpotifyIfSingleton->albumLoadedCb(result, userdata);
+}
 }

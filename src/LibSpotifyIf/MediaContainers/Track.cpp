@@ -31,8 +31,8 @@
 namespace LibSpotify
 {
 
-Track::Track(const std::string& name, const std::string& link) : name_(name), link_(link) { }
-Track::Track(const char* name, const char* link) : name_(name), link_(link) { }
+Track::Track(const std::string& name, const std::string& link) : name_(name), link_(link), index_(-1) { }
+Track::Track(const char* name, const char* link) : name_(name), link_(link), index_(-1) { }
 Track::~Track() { }
 
 const std::string& Track::getLink() const { return link_; }
@@ -60,31 +60,8 @@ void Track::setIsLocal(bool isLocal) { isLocal_ = isLocal; }
 bool Track::isAutoLinked() { return isAutoLinked_; }
 void Track::setIsAutoLinked(bool isAutoLinked) { isAutoLinked_ = isAutoLinked; }
 
-void Track::write(MessageEncoder* msg) const
-{
-	tlvgroup_t* g = msg->createNewGroup(TLV_TRACK);
-
-	msg->encode(TLV_LINK, link_);
-	msg->encode(TLV_NAME, name_);
-
-	for(std::vector<Artist>::const_iterator it = artistList_.begin(); it != artistList_.end(); it++)
-	{
-	    tlvgroup_t* artist = msg->createNewGroup(TLV_ARTIST);
-	    msg->encode(TLV_NAME, it->getName());
-	    msg->encode(TLV_LINK, it->getLink());
-	    msg->finalizeGroup(artist);
-	}
-
-	{
-	    tlvgroup_t* album = msg->createNewGroup(TLV_ALBUM);
-	    msg->encode(TLV_NAME, album_);
-	    msg->encode(TLV_LINK, albumLink_);
-	    msg->finalizeGroup(album);
-	}
-	msg->encode(TLV_TRACK_DURATION, durationMillisecs_);
-
-	msg->finalizeGroup(g);
-}
+int Track::getIndex() { return index_; }
+void Track::setIndex(int index) { index_ = index; }
 
 Tlv* Track::toTlv() const
 {
@@ -108,7 +85,10 @@ Tlv* Track::toTlv() const
         track->addTlv(album);
     }
     track->addTlv(TLV_TRACK_DURATION, durationMillisecs_);
-
+    if ( index_ >= 0 )
+    {
+        track->addTlv(TLV_TRACK_INDEX, index_);
+    }
     return track;
 }
 

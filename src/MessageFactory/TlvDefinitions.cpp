@@ -70,6 +70,10 @@ const char* messageTypeToString(const MessageType_t type)
 
         STR(HELLO_REQ);
         STR(HELLO_RSP);
+        STR(GET_ALBUM_REQ);
+        STR(GET_ALBUM_RSP);
+        STR(GET_ARTIST_REQ);
+        STR(GET_ARTIST_RSP);
     }
     return "Unknown MessageType";
 }
@@ -90,6 +94,8 @@ const char* tlvTypeToString(const TlvType_t type)
             return "TLV_ALBUM";
         case TLV_TRACK_DURATION:
             return "TLV_TRACK_DURATION";
+        STR( TLV_TRACK_INDEX );
+        
         case TLV_SEARCH_QUERY:
             return "TLV_SEARCH_QUERY";
         case TLV_STATE:
@@ -112,6 +118,11 @@ const char* tlvTypeToString(const TlvType_t type)
             return "TLV_IMAGE_FORMAT";
         case TLV_IMAGE_DATA:
             return "TLV_IMAGE_DATA";
+        
+        STR( TLV_ALBUM_RELEASE_YEAR );
+        STR( TLV_ALBUM_REVIEW );
+        STR( TLV_ALBUM_IS_AVAILABLE );
+        STR( TLV_ALBUM_TYPE );
 
         STR( TLV_LOGIN_USERNAME );
         STR( TLV_LOGIN_PASSWORD );

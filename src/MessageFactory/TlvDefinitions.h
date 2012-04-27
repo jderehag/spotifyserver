@@ -29,7 +29,7 @@
 #define TLVDEFINITIONS_H_
 
 #define PROTOCOL_VERSION_MAJOR 1 /*increase when not backwards compatible*/
-#define PROTOCOL_VERSION_MINOR 0 /*increase when adding new messages and/or TLV's*/
+#define PROTOCOL_VERSION_MINOR 1 /*increase when adding new messages and/or TLV's*/
 
 #define RSP_BIT 0x80000000
 #define IND_BIT 0x40000000
@@ -47,6 +47,8 @@ typedef enum
     REQ( GET_TRACKS,       0x202 )
     REQ( GET_IMAGE,        0x203 )
     REQ( GENERIC_SEARCH,   0x204 )
+    REQ( GET_ALBUM,        0x205 )
+    REQ( GET_ARTIST,       0x206 )
 
     /* Playback */
     REQ( PLAY_TRACK,       0x301 ) /* obsolete, use PLAY_REQ */
@@ -84,6 +86,7 @@ typedef enum
     TLV_TRACK_DURATION   = 0x304,
     /* TLV_TRACK_ALBUM      = 0x305, deprecated */
     /* TLV_TRACK_ALBUM_LINK = 0x306, deprecated */
+    TLV_TRACK_INDEX      = 0x307,
 
     /* Search TLV's */
     TLV_SEARCH_QUERY = 0x401,
@@ -107,6 +110,10 @@ typedef enum
 
     /* Album TLV's */
     /* reserved 0x900 range */
+    TLV_ALBUM_TYPE         = 0x901, /* TBD (sp_albumtype) */
+    TLV_ALBUM_RELEASE_YEAR = 0x902,
+    TLV_ALBUM_IS_AVAILABLE = 0x903,
+    TLV_ALBUM_REVIEW       = 0x904,
 
     /* Artist TLV's */
     /* reserved 0xa00 range */
