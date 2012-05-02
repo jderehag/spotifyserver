@@ -88,7 +88,6 @@ public:
     enum LibSpotifyTrackStates
     {
         TRACK_STATE_NOT_LOADED = 0,
-        //TRACK_STATE_WAITING_METADATA,
         TRACK_STATE_PLAYING,
         TRACK_STATE_PAUSED
     };

@@ -394,19 +394,18 @@ void Client::handleGetStatusReq(const Message* msg)
     switch (spotify_.getState())
     {
         case LibSpotifyIf::TRACK_STATE_NOT_LOADED:
-//        case LibSpotifyIf::TRACK_STATE_WAITING_METADATA:
             rsp->addTlv(TLV_STATE, PLAYBACK_IDLE);
-    break;
-    case LibSpotifyIf::TRACK_STATE_PAUSED:
-        rsp->addTlv(TLV_STATE, PLAYBACK_PAUSED);
-        rsp->addTlv(spotify_.getCurrentTrack().toTlv());
-        rsp->addTlv(TLV_PROGRESS, spotify_.getProgress());
-        break;
-    case LibSpotifyIf::TRACK_STATE_PLAYING:
-        rsp->addTlv(TLV_STATE, PLAYBACK_PLAYING);
-        rsp->addTlv(spotify_.getCurrentTrack().toTlv());
-        rsp->addTlv(TLV_PROGRESS, spotify_.getProgress());
-    break;
+            break;
+        case LibSpotifyIf::TRACK_STATE_PAUSED:
+            rsp->addTlv(TLV_STATE, PLAYBACK_PAUSED);
+            rsp->addTlv(spotify_.getCurrentTrack().toTlv());
+            rsp->addTlv(TLV_PROGRESS, spotify_.getProgress());
+            break;
+        case LibSpotifyIf::TRACK_STATE_PLAYING:
+            rsp->addTlv(TLV_STATE, PLAYBACK_PLAYING);
+            rsp->addTlv(spotify_.getCurrentTrack().toTlv());
+            rsp->addTlv(TLV_PROGRESS, spotify_.getProgress());
+            break;
     }
     queueMessage(rsp);
 }

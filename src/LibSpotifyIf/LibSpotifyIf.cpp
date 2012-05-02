@@ -258,11 +258,6 @@ void LibSpotifyIf::stateMachineEventHandler(Event event, void* msg)
 		case EVENT_METADATA_UPDATED:
 			updateRootFolder(sp_session_playlistcontainer(spotifySession_));
 
-			/*if(trackState_ == TRACK_STATE_WAITING_METADATA)
-			{
-			    postToEventThread(EVENT_PLAY_TRACK, new Track(currentTrack_));
-			}*/
-
             while(!pendingMetadata.empty())
             {
                 std::set<PendingMetadataItem>::iterator it = pendingMetadata.begin();
@@ -389,12 +384,9 @@ void LibSpotifyIf::stateMachineEventHandler(Event event, void* msg)
                         }
                         else
                         {
-                            /*todo I guess this means the track isn't loaded, which means the user probably is browsing an album, we should probably have another message for that*/
                             log(LOG_WARN) << "No metadata for album";
-                            pendingMetadata.insert(PendingMetadataItem(event, msg)); //
-
-                            //queryMsg->callbackSubscriber_.getImageResponse(queryMsg->reqId_, NULL, 0);
-                            //delete queryMsg;
+                            //pendingMetadata.insert(PendingMetadataItem(event, msg));
+                            sp_albumbrowse_create( spotifySession_, album, &LibSpotifyIfCallbackWrapper::albumLoadedCallback, queryMsg);
                         }
                     }
                     else
@@ -502,16 +494,14 @@ void LibSpotifyIf::stateMachineEventHandler(Event event, void* msg)
         case EVENT_STOP_REQ:
             if (trackState_ != TRACK_STATE_NOT_LOADED)
             {
-//                if (trackState_ != TRACK_STATE_WAITING_METADATA)
+                callbackSubscriberMtx_.lock();
+                for( std::set<ILibSpotifyIfCallbackSubscriber*>::iterator it = callbackSubscriberList_.begin();
+                        it != callbackSubscriberList_.end(); it++)
                 {
-                    callbackSubscriberMtx_.lock();
-                    for(std::set<ILibSpotifyIfCallbackSubscriber*>::iterator it = callbackSubscriberList_.begin();
-                            it != callbackSubscriberList_.end(); it++)
-                    {
-                        (*it)->trackEndedInd();
-                    }
-                    callbackSubscriberMtx_.unlock();
+                    (*it)->trackEndedInd();
                 }
+                callbackSubscriberMtx_.unlock();
+
                 sp_session_player_play(spotifySession_, 0);
                 endpoint_.flushAudioData();
                 trackState_ = TRACK_STATE_NOT_LOADED;
@@ -588,8 +578,6 @@ void LibSpotifyIf::stateMachineEventHandler(Event event, void* msg)
                     else if (err == SP_ERROR_IS_LOADING)
                     {
                         pendingMetadata.insert(PendingMetadataItem(event, new Track(*trackObj)));
-                        /*currentTrack_ = *trackObj;
-                        trackState_ = TRACK_STATE_WAITING_METADATA;*/
                         log(LOG_DEBUG) << "Waiting for metadata for track " << trackObj->getLink().c_str();
                     }
                     else
@@ -862,6 +850,9 @@ void LibSpotifyIf::albumLoadedCb(sp_albumbrowse* result, void *userdata)
             break;
         case EVENT_PLAY_REQ:
             playbackHandler_.playPlaylist(album);
+            break;
+        case EVENT_GET_IMAGE:
+            postToEventThread(EVENT_GET_IMAGE, new SpotifyQueryMsg(*msg));
             break;
         default:
             break;
