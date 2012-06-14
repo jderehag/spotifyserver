@@ -41,22 +41,7 @@
 namespace LibSpotify {
 
 
-class SpotifyQueryMsg
-{
-public:
-    LibSpotifyIf::Event event_;
-	unsigned int reqId_;
-	std::string query_;
-	ILibSpotifyIfCallbackSubscriber& callbackSubscriber_;
-	SpotifyQueryMsg(LibSpotifyIf::Event event, std::string query, unsigned int reqId, ILibSpotifyIfCallbackSubscriber& callbackSubscriber) :
-	                                                                        event_(event),
-																			reqId_(reqId),
-																			query_(query),
-																			callbackSubscriber_(callbackSubscriber)
-	{ };
-};
-
-static const char* getEventName(LibSpotifyIf::Event event);
+static const char* getEventName(LibSpotifyIf::EventItem* event);
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * *
  * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -110,12 +95,12 @@ void LibSpotifyIf::unRegisterForCallbacks(ILibSpotifyIfCallbackSubscriber& subsc
 
 void LibSpotifyIf::logIn()
 {
-	postToEventThread(EVENT_LOGGING_IN, NULL);
+    postToEventThread( new EventItem( EVENT_LOGGING_IN ) );
 }
 
 void LibSpotifyIf::logOut()
 {
-	postToEventThread(EVENT_LOGGING_OUT, NULL);
+    postToEventThread( new EventItem( EVENT_LOGGING_OUT ) );
 }
 
 Folder& LibSpotifyIf::getRootFolder()
@@ -125,33 +110,29 @@ Folder& LibSpotifyIf::getRootFolder()
 
 void LibSpotifyIf::getTracks(unsigned int reqId, std::string link, ILibSpotifyIfCallbackSubscriber& callbackSubscriber)
 {
-    SpotifyQueryMsg* msg = new SpotifyQueryMsg(EVENT_GET_TRACKS, link, reqId, callbackSubscriber);
-	postToEventThread(EVENT_GET_TRACKS, msg);
+    postToEventThread( new QueryReqEventItem( EVENT_GET_TRACKS, reqId, callbackSubscriber, link ) );
 }
 
 void LibSpotifyIf::genericSearch(unsigned int reqId, std::string query, ILibSpotifyIfCallbackSubscriber& callbackSubscriber)
 {
-    SpotifyQueryMsg* msg = new SpotifyQueryMsg(EVENT_GENERIC_SEARCH, query, reqId, callbackSubscriber);
-	postToEventThread(EVENT_GENERIC_SEARCH, msg);
+    postToEventThread( new QueryReqEventItem( EVENT_GENERIC_SEARCH, reqId, callbackSubscriber, query ) );
 }
 
 void LibSpotifyIf::getImage(unsigned int reqId, std::string link, ILibSpotifyIfCallbackSubscriber& callbackSubscriber)
 {
-    SpotifyQueryMsg* msg = new SpotifyQueryMsg(EVENT_GET_IMAGE, link, reqId, callbackSubscriber);
-    postToEventThread(EVENT_GET_IMAGE, msg);
+    postToEventThread( new QueryReqEventItem( EVENT_GET_IMAGE, reqId, callbackSubscriber, link ) );
 }
 
 void LibSpotifyIf::getAlbum(unsigned int reqId, std::string link, ILibSpotifyIfCallbackSubscriber& callbackSubscriber)
 {
-    SpotifyQueryMsg* msg = new SpotifyQueryMsg(EVENT_GET_ALBUM, link, reqId, callbackSubscriber);
-    postToEventThread(EVENT_GET_ALBUM, msg);
+    postToEventThread( new QueryReqEventItem( EVENT_GET_ALBUM, reqId, callbackSubscriber, link ) );
 }
 
 /* called from playbackHandler, used when a track is ACTUALLY to be played,
  * All others should just enqueue to the PlayBackHandler */
 void LibSpotifyIf::playTrack(const Track& track)
 {
-    postToEventThread(EVENT_PLAY_TRACK, new Track(track));
+    postToEventThread( new TrackEventItem(EVENT_PLAY_TRACK, track) );
 }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -161,30 +142,29 @@ void LibSpotifyIf::playTrack(const Track& track)
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
-void LibSpotifyIf::play(unsigned int reqId, const std::string link, ILibSpotifyIfCallbackSubscriber& callbackSubscriber)
+void LibSpotifyIf::play(unsigned int reqId, const std::string link, ILibSpotifyIfCallbackSubscriber& callbackSubscriber, int startIndex)
 {
-    SpotifyQueryMsg* msg = new SpotifyQueryMsg(EVENT_PLAY_REQ, link, reqId, callbackSubscriber);
-	postToEventThread(EVENT_PLAY_REQ, msg);
+    postToEventThread( new PlayReqEventItem(reqId, callbackSubscriber, link, startIndex) );
 }
 
 void LibSpotifyIf::stop()
 {
-    postToEventThread(EVENT_STOP_REQ, NULL);
+    postToEventThread( new EventItem( EVENT_STOP_REQ ) );
 }
 
 void LibSpotifyIf::enqueueTrack(const char* track_uri)
 {
-    postToEventThread(EVENT_ENQUEUE_TRACK_REQ, new std::string(track_uri));
+    //todo: we need a callback subscriber here, right?
 }
 
 void LibSpotifyIf::pause()
 {
-	postToEventThread(EVENT_PAUSE_PLAYBACK, NULL);
+    postToEventThread( new EventItem( EVENT_PAUSE_PLAYBACK ) );
 }
 
 void LibSpotifyIf::resume()
 {
-	postToEventThread(EVENT_RESUME_PLAYBACK, NULL);
+    postToEventThread( new EventItem( EVENT_RESUME_PLAYBACK ) );
 }
 
 void LibSpotifyIf::next()
@@ -217,62 +197,59 @@ void LibSpotifyIf::previous()
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
 void LibSpotifyIf::run()
 {
-	while(isCancellationPending() == false)
-	{
-		eventQueueMtx_.lock();
-		if (nextTimeoutForLibSpotify == 0)
-		{
-			while(eventQueue_.empty())cond_.wait(eventQueueMtx_);
-		}
-		else if(eventQueue_.empty())
-		{
-			cond_.timedWait(eventQueueMtx_, nextTimeoutForLibSpotify);
-		}
+    while(isCancellationPending() == false)
+    {
+        eventQueueMtx_.lock();
+        if (nextTimeoutForLibSpotify == 0)
+        {
+            while(eventQueue_.empty())cond_.wait(eventQueueMtx_);
+        }
+        else if(eventQueue_.empty())
+        {
+            cond_.timedWait(eventQueueMtx_, nextTimeoutForLibSpotify);
+        }
 
-		Event currentEvent;
-		void* msg;
-		if(eventQueue_.empty())
-		{
-			currentEvent = EVENT_ITERATE_MAIN_LOOP;
-			msg = NULL;
-		}
-		else
-		{
-			EventQueueMessage message = eventQueue_.front();
-			eventQueue_.pop();
-			currentEvent = message.event;
-			msg = message.data;
-		}
-		eventQueueMtx_.unlock();
-		stateMachineEventHandler(currentEvent, msg);
-	}
-	log(LOG_DEBUG) << "Exiting LibSpotifyIf::run()";
+        EventItem* currentEvent;
+
+        if(eventQueue_.empty())
+        {
+            currentEvent = new EventItem( EVENT_ITERATE_MAIN_LOOP );
+        }
+        else
+        {
+            currentEvent = eventQueue_.front();
+            eventQueue_.pop();
+        }
+        eventQueueMtx_.unlock();
+        stateMachineEventHandler(currentEvent);
+        delete currentEvent;
+    }
+    log(LOG_DEBUG) << "Exiting LibSpotifyIf::run()";
 }
 
-void LibSpotifyIf::stateMachineEventHandler(Event event, void* msg)
+void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
 {
-	if(event != EVENT_ITERATE_MAIN_LOOP)
+	if(event->event_ != EVENT_ITERATE_MAIN_LOOP)
 	    log(LOG_DEBUG) << "Event received:" << getEventName(event);
-	switch(event)
+	switch(event->event_)
 	{
 		case EVENT_METADATA_UPDATED:
 			updateRootFolder(sp_session_playlistcontainer(spotifySession_));
 
             while(!pendingMetadata.empty())
             {
-                std::set<PendingMetadataItem>::iterator it = pendingMetadata.begin();
-                PendingMetadataItem item = *it;
-                
-                postToEventThread(item.first, item.second);
-                pendingMetadata.erase(it);
+                EventItem* item = pendingMetadata.front();
+                postToEventThread(item);
+                pendingMetadata.pop();
             }
 
 			break;
 
 		case EVENT_GET_TRACKS:
 		{
-		    SpotifyQueryMsg* queryMsg = static_cast<SpotifyQueryMsg*>(msg);
-			const char* playlist_uri =   queryMsg->query_.c_str();
+		    QueryReqEventItem* reqEvent = static_cast<QueryReqEventItem*>( event );
+
+			const char* playlist_uri = reqEvent->query_.c_str();
 		    if (state_ == STATE_LOGGED_IN)
 			{
 				sp_link* link = sp_link_create_from_string(playlist_uri);
@@ -288,12 +265,12 @@ void LibSpotifyIf::stateMachineEventHandler(Event event, void* msg)
 	                         Playlist playlistObj = spotifyGetPlaylist(playlist, spotifySession_);
 
 
-	                        queryMsg->callbackSubscriber_.getTrackResponse(queryMsg->reqId_, playlistObj.getTracks());
+	                         reqEvent->callbackSubscriber_.getTrackResponse(reqEvent->reqId_, playlistObj.getTracks());
 						}
 						else
 						{
 							/*not sure if we're waiting for metadata or playlist_state_changed here*/
-                            pendingMetadata.insert(PendingMetadataItem(event, msg));
+                            pendingMetadata.push(new QueryReqEventItem(*reqEvent) );
 							log(LOG_DEBUG) << "Waiting for metadata for playlist " << playlist_uri;
 						}
 					}
@@ -304,14 +281,13 @@ void LibSpotifyIf::stateMachineEventHandler(Event event, void* msg)
 				else log(LOG_WARN) << "Bad link: " << playlist_uri;
 
 			}
-			delete queryMsg;
 			break;
 		}
 
         case EVENT_GET_ALBUM:
         {
-            SpotifyQueryMsg* queryMsg = static_cast<SpotifyQueryMsg*>(msg);
-            const char* album_uri = queryMsg->query_.c_str();
+            QueryReqEventItem* reqEvent = static_cast<QueryReqEventItem*>( event );
+            const char* album_uri = reqEvent->query_.c_str();
             if (state_ == STATE_LOGGED_IN)
             {
                 sp_link* link = sp_link_create_from_string(album_uri);
@@ -320,19 +296,17 @@ void LibSpotifyIf::stateMachineEventHandler(Event event, void* msg)
                     if (sp_link_type(link) == SP_LINKTYPE_ALBUM)
                     {
                         sp_album* album = sp_link_as_album(link);
-                        sp_albumbrowse_create( spotifySession_, album, &LibSpotifyIfCallbackWrapper::albumLoadedCallback, queryMsg);
+                        sp_albumbrowse_create( spotifySession_, album, &LibSpotifyIfCallbackWrapper::albumLoadedCallback, new QueryReqEventItem(*reqEvent));
                     }
                     else
                     {
                         log(LOG_WARN) << "Link is not an album: " << album_uri;
-                        delete queryMsg;
                     }
                     sp_link_release(link);
                 }
                 else
                 {
                     log(LOG_WARN) << "Bad link: " << album_uri;
-                    delete queryMsg;
                 }
             }
             break;
@@ -340,7 +314,7 @@ void LibSpotifyIf::stateMachineEventHandler(Event event, void* msg)
 
 		case EVENT_GENERIC_SEARCH:
 		{
-			SpotifyQueryMsg* searchQueryMsg = static_cast<SpotifyQueryMsg*>(msg);
+		    QueryReqEventItem* reqEvent = static_cast<QueryReqEventItem*>( event );
 			/* search, but only interested in the first 100 results,
 			 * 0, = track_offset
 			 * 100, = track_count
@@ -349,7 +323,7 @@ void LibSpotifyIf::stateMachineEventHandler(Event event, void* msg)
 			 * 0, = artist_offset
 			 * 100 = artist_count */
 			sp_search_create(spotifySession_,
-							searchQueryMsg->query_.c_str(),
+			                reqEvent->query_.c_str(),
 							0,
 							100,
 							0,
@@ -357,16 +331,16 @@ void LibSpotifyIf::stateMachineEventHandler(Event event, void* msg)
 							0,
 							100,
 							&LibSpotifyIfCallbackWrapper::genericSearchCallback,
-							searchQueryMsg);
+							new QueryReqEventItem(*reqEvent));
 
 			break;
 		}
 
 		case EVENT_GET_IMAGE:
 		{
-            SpotifyQueryMsg* queryMsg = static_cast<SpotifyQueryMsg*>(msg);
+            QueryReqEventItem* reqEvent = static_cast<QueryReqEventItem*>( event );
 
-            std::string linkStr = queryMsg->query_.empty() ? currentTrack_.getAlbumLink() : queryMsg->query_;
+            std::string linkStr = reqEvent->query_.empty() ? currentTrack_.getAlbumLink() : reqEvent->query_;
 
             if (!linkStr.empty())
             {
@@ -385,15 +359,13 @@ void LibSpotifyIf::stateMachineEventHandler(Event event, void* msg)
                         else
                         {
                             log(LOG_WARN) << "No metadata for album";
-                            //pendingMetadata.insert(PendingMetadataItem(event, msg));
-                            sp_albumbrowse_create( spotifySession_, album, &LibSpotifyIfCallbackWrapper::albumLoadedCallback, queryMsg);
+                            sp_albumbrowse_create( spotifySession_, album, &LibSpotifyIfCallbackWrapper::albumLoadedCallback, new QueryReqEventItem( *reqEvent ));
                         }
                     }
                     else
                     {
                         /*not supported yet*/
-                        queryMsg->callbackSubscriber_.getImageResponse(queryMsg->reqId_, NULL, 0);
-                        delete queryMsg;
+                        reqEvent->callbackSubscriber_.getImageResponse(reqEvent->reqId_, NULL, 0);
                     }
 
                     if (imgRef)
@@ -408,21 +380,19 @@ void LibSpotifyIf::stateMachineEventHandler(Event event, void* msg)
                             {
                                 size_t dataSize;
                                 const void* data = sp_image_data(img, &dataSize);
-                                queryMsg->callbackSubscriber_.getImageResponse(queryMsg->reqId_, data, dataSize);
+                                reqEvent->callbackSubscriber_.getImageResponse(reqEvent->reqId_, data, dataSize);
                                 sp_image_release(img);
-                                delete queryMsg;
                             }
                             else if ( error == SP_ERROR_IS_LOADING )
                             {
                                 log(LOG_DEBUG) << "waiting for image load";
-                                sp_image_add_load_callback(img, &LibSpotifyIfCallbackWrapper::imageLoadedCallback, queryMsg);
+                                sp_image_add_load_callback(img, &LibSpotifyIfCallbackWrapper::imageLoadedCallback, new QueryReqEventItem(*reqEvent));
                             }
                             else
                             {
                                 log(LOG_WARN) << "Image load error: " << sp_error_message(error);
-                                queryMsg->callbackSubscriber_.getImageResponse(queryMsg->reqId_, NULL, 0);
+                                reqEvent->callbackSubscriber_.getImageResponse(reqEvent->reqId_, NULL, 0);
                                 sp_image_release(img);
-                                delete queryMsg;
                             }
                         }
                     }
@@ -431,8 +401,7 @@ void LibSpotifyIf::stateMachineEventHandler(Event event, void* msg)
                 else
                 {
                     log(LOG_WARN) << "Bad link?" << linkStr;
-                    queryMsg->callbackSubscriber_.getImageResponse(queryMsg->reqId_, NULL, 0);
-                    delete queryMsg;
+                    reqEvent->callbackSubscriber_.getImageResponse(reqEvent->reqId_, NULL, 0);
                 }
 
             }
@@ -441,10 +410,10 @@ void LibSpotifyIf::stateMachineEventHandler(Event event, void* msg)
 
 		case EVENT_PLAY_REQ:
 		{
-		    SpotifyQueryMsg* queryMsg = static_cast<SpotifyQueryMsg*>(msg);
+		    PlayReqEventItem* reqEvent = static_cast<PlayReqEventItem*>( event );
 			if (state_ == STATE_LOGGED_IN)
 			{
-				sp_link* link = sp_link_create_from_string(queryMsg->query_.c_str());
+				sp_link* link = sp_link_create_from_string(reqEvent->query_.c_str());
 				if(link)
 				{
 				    switch(sp_link_type(link))
@@ -462,17 +431,16 @@ void LibSpotifyIf::stateMachineEventHandler(Event event, void* msg)
                             {
                                 sp_playlist* playlist = sp_playlist_create(spotifySession_, link);
                                 Playlist playlistObj(spotifyGetPlaylist(playlist, spotifySession_));
-                                playbackHandler_.playPlaylist(playlistObj);
-                                log(LOG_NOTICE) << "Adding " << queryMsg->query_ << " to playbackhandler";
+                                playbackHandler_.playPlaylist(playlistObj, reqEvent->startIndex_);
+                                log(LOG_NOTICE) << "Adding " << reqEvent->query_ << " to playbackhandler";
                             }
                             break;
 
                         case SP_LINKTYPE_ALBUM:
                             {
                                 sp_album* album = sp_link_as_album(link);
-                                sp_albumbrowse_create (spotifySession_, album, &LibSpotifyIfCallbackWrapper::albumLoadedCallback, queryMsg);
-                                log(LOG_NOTICE) << "Created sp_albumbrowse for " << queryMsg->query_ << ", waiting for load finished callback";
-                                queryMsg = NULL; /*avoid freeing below...*/
+                                sp_albumbrowse_create (spotifySession_, album, &LibSpotifyIfCallbackWrapper::albumLoadedCallback, new PlayReqEventItem( *reqEvent ) );
+                                log(LOG_NOTICE) << "Created sp_albumbrowse for " << reqEvent->query_ << ", waiting for load finished callback";
                             }
                             break;
 				        /* FALL_THROUGH */
@@ -486,8 +454,6 @@ void LibSpotifyIf::stateMachineEventHandler(Event event, void* msg)
 				}
 			}
 
-			if (queryMsg)
-			    delete queryMsg;
 			break;
 		}
 
@@ -544,7 +510,8 @@ void LibSpotifyIf::stateMachineEventHandler(Event event, void* msg)
 		case EVENT_PLAY_TRACK:
 		    {
 
-		        Track* trackObj = static_cast<Track*>(msg);
+		        TrackEventItem* trackEvent = static_cast<TrackEventItem*>(event);
+		        Track* trackObj = &trackEvent->track_;
 		        sp_link* link = sp_link_create_from_string(trackObj->getLink().c_str());
                 if(link)
                 {
@@ -557,6 +524,7 @@ void LibSpotifyIf::stateMachineEventHandler(Event event, void* msg)
                         if ((err = sp_session_player_load(spotifySession_, track)) == SP_ERROR_OK)
                         {
                             currentTrack_ = spotifyGetTrack(track, spotifySession_); //*trackObj; is not updated if we had to wait for metadata
+                            currentTrack_.setIndex(trackObj->getIndex()); /*kind of a hack.. but only trackObj know where it came from, and thus which index it has (if it has one) */
                             trackState_ = TRACK_STATE_PLAYING;
                             sp_session_player_play(spotifySession_, 1);
                             progress_ = 0;
@@ -577,7 +545,7 @@ void LibSpotifyIf::stateMachineEventHandler(Event event, void* msg)
                     }
                     else if (err == SP_ERROR_IS_LOADING)
                     {
-                        pendingMetadata.insert(PendingMetadataItem(event, new Track(*trackObj)));
+                        pendingMetadata.push(new TrackEventItem( *trackEvent ));
                         log(LOG_DEBUG) << "Waiting for metadata for track " << trackObj->getLink().c_str();
                     }
                     else
@@ -587,7 +555,6 @@ void LibSpotifyIf::stateMachineEventHandler(Event event, void* msg)
                     }
                 }
                 sp_link_release(link);
-                delete trackObj;
 	        }
 		    break;
 
@@ -630,14 +597,10 @@ void LibSpotifyIf::stateMachineEventHandler(Event event, void* msg)
 		sp_session_process_events(spotifySession_, &nextTimeoutForLibSpotify);
 	} while (nextTimeoutForLibSpotify == 0);
 }
-void LibSpotifyIf::postToEventThread(Event event, void* msg)
+void LibSpotifyIf::postToEventThread(EventItem* event)
 {
-	EventQueueMessage message;
-	message.event = event;
-	message.data = msg;
-
 	eventQueueMtx_.lock();
-	eventQueue_.push(message);
+	eventQueue_.push(event);
 	eventQueueMtx_.unlock();
 	cond_.signal();
 }
@@ -731,12 +694,12 @@ void LibSpotifyIf::loggedInCb(sp_session *session, sp_error error)
 													(cc >> 8) << (cc & 0xff) << ")";
 
 
-	postToEventThread(EVENT_LOGGED_IN, NULL);
+    postToEventThread( new EventItem( EVENT_LOGGED_IN ) );
 }
 
 void LibSpotifyIf::metadataUpdatedCb(sp_session *session)
 {
-	postToEventThread(EVENT_METADATA_UPDATED, NULL);
+    postToEventThread( new EventItem ( EVENT_METADATA_UPDATED ) );
 	/* Should perhaps use its own event?
 	 * metadataCb is (if I have understood it correctly)
 	 * only used for when additional track & playlist info has loaded into
@@ -773,7 +736,7 @@ void LibSpotifyIf::loggedOutCb(sp_session *session)
 {
 	/*sp_session_user returns NULL if logged out, no username to print*/
     log(LOG_DEBUG) << "Logged out";
-	postToEventThread(EVENT_LOGGED_OUT, NULL);
+	postToEventThread( new EventItem( EVENT_LOGGED_OUT ) );
 }
 
 void LibSpotifyIf::logMessageCb(sp_session *session, const char *data)
@@ -785,12 +748,12 @@ void LibSpotifyIf::connectionErrorCb(sp_session *session, sp_error error)
 {
 
     log(LOG_WARN) << sp_error_message(error);
-	postToEventThread(EVENT_CONNECTION_LOST, NULL);
+	postToEventThread( new EventItem( EVENT_CONNECTION_LOST ) );
 }
 
 void LibSpotifyIf::notifyLibSpotifyMainThreadCb(sp_session *session)
 {
-	postToEventThread(EVENT_ITERATE_MAIN_LOOP, NULL);
+	postToEventThread( new EventItem( EVENT_ITERATE_MAIN_LOOP ) );
 }
 
 int LibSpotifyIf::musicDeliveryCb(sp_session *sess, const sp_audioformat *format,
@@ -803,7 +766,7 @@ int LibSpotifyIf::musicDeliveryCb(sp_session *sess, const sp_audioformat *format
 
 void LibSpotifyIf::genericSearchCb(sp_search *search, void *userdata)
 {
-	SpotifyQueryMsg* msg = static_cast<SpotifyQueryMsg*>(userdata);
+	QueryReqEventItem* msg = static_cast<QueryReqEventItem*>(userdata);
 
 	std::deque<Track> searchReply;
 	std::string didYouMean(sp_search_did_you_mean(search));
@@ -832,42 +795,52 @@ void LibSpotifyIf::genericSearchCb(sp_search *search, void *userdata)
 
 void LibSpotifyIf::imageLoadedCb(sp_image* image, void *userdata)
 {
-    SpotifyQueryMsg* msg = static_cast<SpotifyQueryMsg*>(userdata);
-    postToEventThread(EVENT_GET_IMAGE, msg);
+    QueryReqEventItem* msg = static_cast<QueryReqEventItem*>(userdata);
+    postToEventThread( msg );
 }
 
 void LibSpotifyIf::albumLoadedCb(sp_albumbrowse* result, void *userdata)
 {
-    SpotifyQueryMsg* msg = static_cast<SpotifyQueryMsg*>(userdata);
+    EventItem* ev = static_cast<EventItem*>(userdata);
     Album album = spotifyGetAlbum(result, spotifySession_);
 
     log(LOG_NOTICE) << "Album \"" << album.getName() << "\" loaded";
 
-    switch ( msg->event_ )
+    switch ( ev->event_ )
     {
         case EVENT_GET_ALBUM:
+        {
+            QueryReqEventItem* msg = static_cast<QueryReqEventItem*>(userdata);
             msg->callbackSubscriber_.getAlbumResponse(msg->reqId_, album);
+            delete msg;
             break;
+        }
         case EVENT_PLAY_REQ:
-            playbackHandler_.playPlaylist(album);
+        {
+            PlayReqEventItem* msg = static_cast<PlayReqEventItem*>(userdata);
+            playbackHandler_.playAlbum(album, msg->startIndex_);
+            delete msg;
             break;
+        }
         case EVENT_GET_IMAGE:
-            postToEventThread(EVENT_GET_IMAGE, new SpotifyQueryMsg(*msg));
+        {
+            QueryReqEventItem* msg = static_cast<QueryReqEventItem*>(userdata);
+            postToEventThread( msg );
             break;
+        }
         default:
-            break;
+            assert(1);
     }
 
-    delete msg;
     sp_albumbrowse_release(result);
 }
 
 /* *****************
  * local helpers
  * *****************/
-const char* getEventName(LibSpotifyIf::Event event)
+const char* getEventName(LibSpotifyIf::EventItem* event)
 {
-	switch(event)
+	switch(event->event_)
 	{
 	    case LibSpotifyIf::EVENT_ITERATE_MAIN_LOOP:
             return "EVENT_ITERATE_MAIN_LOOP";

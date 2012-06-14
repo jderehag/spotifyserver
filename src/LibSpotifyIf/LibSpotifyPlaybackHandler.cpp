@@ -65,17 +65,36 @@ void LibSpotifyPlaybackHandler::playFolder(const Folder& folder)
     mtx_.unlock();
 }
 
-void LibSpotifyPlaybackHandler::playPlaylist(const Playlist& playlist)
+void LibSpotifyPlaybackHandler::playPlaylist( const Playlist& playlist, int startIndex )
 {
     mtx_.lock();
+    currentlyPlayingFromType_ = PLAYLIST;
+    loadPlaylist( playlist, startIndex );
+    if( enquedQueue_.empty()  && ( playQueueIter_ != playQueue_.end() ) )
+        libSpotifyIf_.playTrack(*playQueueIter_);
+    mtx_.unlock();
+
+}
+
+void LibSpotifyPlaybackHandler::playAlbum( const Album& album, int startIndex )
+{
+    mtx_.lock();
+    currentlyPlayingFromType_ = ALBUM;
+    loadPlaylist( album, startIndex );
+    if( enquedQueue_.empty()  && ( playQueueIter_ != playQueue_.end() ) )
+        libSpotifyIf_.playTrack(*playQueueIter_);
+    mtx_.unlock();
+}
+
+void LibSpotifyPlaybackHandler::loadPlaylist( const Playlist& playlist, int startIndex )
+{
     playQueue_.clear();
     currentlyPlayingFromName_ = playlist.getName();
     currentlyPlayingFromUri_ = playlist.getLink();
-    currentlyPlayingFromType_ = PLAYLIST;
     playQueue_.insert(playQueue_.end(), playlist.getTracks().begin(), playlist.getTracks().end());
     playQueueIter_ = playQueue_.begin();
-    if(enquedQueue_.empty())libSpotifyIf_.playTrack(playQueue_.front());
-    mtx_.unlock();
+    while ( ( playQueueIter_ != playQueue_.end() ) && ( (*playQueueIter_).getIndex() != startIndex ) )
+        playQueueIter_++;
 }
 
 void LibSpotifyPlaybackHandler::playSearchResult(const std::string& searchString,

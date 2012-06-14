@@ -579,6 +579,10 @@ sp_linktype sp_link_type(sp_link *link)
     {
         return SP_LINKTYPE_ARTIST;
     }
+    else if(strncmp(link->string, "spotify:playlist", strlen("spotify:playlist")) == 0)
+    {
+        return SP_LINKTYPE_PLAYLIST;
+    }
     else
     {
         return SP_LINKTYPE_INVALID;

@@ -416,8 +416,9 @@ void Client::handlePlayReq(const Message* msg)
 
     if ( url )
     {
+        const IntTlv* startIndex = (const IntTlv*)msg->getTlvRoot()->getTlv(TLV_TRACK_INDEX);
         log(LOG_DEBUG) << "spotify_.play(" << url->getString() << ")";
-        spotify_.play(msg->getId(), url->getString(), *this);
+        spotify_.play(msg->getId(), url->getString(), *this, startIndex ? startIndex->getVal() : 0 );
     }
 
     Message* rsp = new Message( PLAY_RSP );

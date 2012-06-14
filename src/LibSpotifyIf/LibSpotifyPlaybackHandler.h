@@ -31,6 +31,7 @@
 #include "MediaContainers/Track.h"
 #include "MediaContainers/Folder.h"
 #include "MediaContainers/Playlist.h"
+#include "MediaContainers/Album.h"
 #include "Platform/Threads/Mutex.h"
 #include <deque>
 #include "CircularQueue.h"
@@ -49,6 +50,7 @@ public:
         TRACK,
         FOLDER,
         PLAYLIST,
+        ALBUM,
         SEARCH
     }CurrentlyPlayingFromType;
 private:
@@ -68,13 +70,16 @@ private:
     TrackQueue::iterator playQueueIter_;
     TrackQueue playQueue_;
 
+    void loadPlaylist(const Playlist& playlist, int startIndex);
+
 public:
     LibSpotifyPlaybackHandler(class LibSpotifyIf& spotifyIf);
     virtual ~LibSpotifyPlaybackHandler();
 
     void playTrack(const Track& track);
     void playFolder(const Folder& folder);
-    void playPlaylist(const Playlist& playlist);
+    void playPlaylist(const Playlist& playlist, int startIndex = 0);
+    void playAlbum(const Album& album, int startIndex = 0);
     void playSearchResult(const std::string& searchString,
                           const std::string& searchLink,
                           const TrackQueue& searchResult);

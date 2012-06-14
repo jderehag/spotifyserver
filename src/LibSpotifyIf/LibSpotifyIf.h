@@ -82,8 +82,44 @@ public:
         EVENT_RESUME_PLAYBACK,
 
         /* Others */
-		EVENT_ITERATE_MAIN_LOOP
-	};
+        EVENT_ITERATE_MAIN_LOOP
+    };
+
+    class EventItem
+    {
+    public:
+        Event event_;
+        EventItem(Event event) : event_(event) {}
+    };
+
+    class TrackEventItem : public EventItem
+    {
+    public:
+        Track track_;
+        TrackEventItem(Event event, const Track& track) : EventItem(event), track_(track) {}
+    };
+
+    class ReqEventItem : public EventItem
+    {
+    public:
+        int reqId_;
+        ILibSpotifyIfCallbackSubscriber& callbackSubscriber_;
+        ReqEventItem(Event event, int reqId, ILibSpotifyIfCallbackSubscriber& callbackSubscriber) : EventItem(event), reqId_(reqId), callbackSubscriber_(callbackSubscriber) {}
+    };
+
+    class QueryReqEventItem : public ReqEventItem
+    {
+    public:
+        std::string query_;
+        QueryReqEventItem(Event event, int reqId, ILibSpotifyIfCallbackSubscriber& callbackSubscriber, std::string query) : ReqEventItem(event, reqId, callbackSubscriber), query_(query) {}
+    };
+
+    class PlayReqEventItem : public QueryReqEventItem
+    {
+    public:
+        int startIndex_;
+        PlayReqEventItem( int reqId, ILibSpotifyIfCallbackSubscriber& callbackSubscriber, std::string uri, int startIndex) : QueryReqEventItem(EVENT_PLAY_REQ, reqId, callbackSubscriber, uri), startIndex_(startIndex) {}
+    };
 
     enum LibSpotifyTrackStates
     {
@@ -93,11 +129,6 @@ public:
     };
 
 private:
-	typedef struct
-	{
-		Event event;
-		void* data;
-	}EventQueueMessage;
 
 	enum LibSpotifyStates
 	{
@@ -131,7 +162,7 @@ private:
 	 * Event queue
 	 ****************/
 	Platform::Mutex eventQueueMtx_;
-	typedef std::queue<EventQueueMessage> EventQueueMessageQueue;
+	typedef std::queue<EventItem*> EventQueueMessageQueue;
 	EventQueueMessageQueue eventQueue_;
 
 	/***********************
@@ -144,8 +175,8 @@ private:
 	/************************
 	 * Statemachine handling
 	 ************************/
-	void stateMachineEventHandler(Event event, void* msg);
-	void postToEventThread(Event event, void* msg);
+	void stateMachineEventHandler(EventItem* event);
+	void postToEventThread(EventItem* event);
 
 	/************************
      * Playback handling
@@ -163,8 +194,7 @@ private:
    	/************************
      * Metadata handling
      ************************/
-    typedef std::pair<Event, void*> PendingMetadataItem;
-    std::set<PendingMetadataItem> pendingMetadata;
+    std::queue<EventItem*> pendingMetadata;
 
 	//callback wrapper
 	friend class LibSpotifyIfCallbackWrapper;
@@ -206,7 +236,7 @@ public:
 	unsigned int getProgress() { return progress_/10; }
 	Track& getCurrentTrack() { return currentTrack_; }
 
-	void play(unsigned int reqId, const std::string link, ILibSpotifyIfCallbackSubscriber& callbackSubscriber);
+	void play(unsigned int reqId, const std::string link, ILibSpotifyIfCallbackSubscriber& callbackSubscriber, int startIndex = 0);
 	void stop();
     void playSearchResult(const char* searchString);
     void enqueueTrack(const char* track_uri);

@@ -527,6 +527,7 @@ void MessageDecoder::decodeTlvs(TlvContainer* parent, uint32_t len)
             case TLV_PROTOCOL_VERSION_MAJOR:
             case TLV_PROTOCOL_VERSION_MINOR:
             case TLV_FAILURE:
+            case TLV_TRACK_INDEX:
             {
                 parent->addTlv(getCurrentTlv(), getTlvIntData());
                 nextTlv();
