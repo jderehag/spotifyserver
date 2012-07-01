@@ -31,89 +31,26 @@
 #include "MessageFactory/MessageDecoder.h"
 #include "MessageFactory/MessageEncoder.h"
 #include "MessageFactory/SocketReader.h"
+#include "Messenger.h"
+#include "IUserInterface.h"
 #include "applog.h"
 
-class SocketListener : public Platform::Runnable
+
+
+class UIConsole : public Platform::Runnable, public IUserInterface
 {
 private:
-    Socket* socket_;
+    Messenger& m_; //remove me?
 public:
-    SocketListener(Socket* socket);
-    ~SocketListener();
-
-    void run();
-    void destroy();
-};
-
-SocketListener::SocketListener(Socket* socket) : socket_(socket)
-{
-    startThread();
-}
-SocketListener::~SocketListener()
-{
-}
-
-void SocketListener::destroy()
-{
-    cancelThread();
-    joinThread();
-}
-
-void SocketListener::run()
-{
-    SocketReader reader(socket_);
-
-    while(isCancellationPending() == false)
-    {
-        std::set<Socket*> l;
-        l.insert(socket_);
-
-        if ( select(&l, NULL, NULL, 100) < 0 )
-            cancelThread();
-
-        if ( reader.doread() < 0 )
-            cancelThread();
-
-        if(reader.done())
-        {
-            MessageDecoder m;
-
-            log(LOG_DEBUG) << "Receive complete";
-
-            printHexMsg(reader.getMessage(), reader.getLength());
-
-            Message* msg = m.decode(reader.getMessage());
-
-            if ( msg != NULL )
-            {
-                log(LOG_DEBUG) << *msg;
-                delete msg;
-            }
-
-            reader.reset();
-        }
-    }
-
-    log(LOG_WARN) << "Exiting";
-}
-
-
-class UIConsole : public Platform::Runnable
-{
-private:
-    Socket* socket_;
-public:
-    UIConsole();
+    UIConsole(Messenger& m);
     ~UIConsole();
 
-    void setSocket(Socket* socket) { socket_ = socket; }
-
     void run();
     void destroy();
 };
 
 
-UIConsole::UIConsole() : socket_(NULL)
+UIConsole::UIConsole(Messenger& m) : IUserInterface(m), m_(m)
 {
     startThread();
 }
@@ -127,7 +64,6 @@ void UIConsole::destroy()
     joinThread();
 }
 
-#define PUT(x, v) ((*(u_int32_t*)x) = htonl(v))
 
 void UIConsole::run()
 {
@@ -250,41 +186,14 @@ void UIConsole::run()
             continue;
         }
 
-        if(socket_)
-        {
-            msg.setId(seqnum++);
-
-            MessageEncoder* enc = msg.encode();
-            log(LOG_NOTICE) << "Sending: ";
-            enc->printHex();
-
-            n = socket_->Send(enc->getBuffer(), enc->getLength());
-            if (n <= 0)
-            {
-                std::cout << "ERROR writing to socket" << std::endl;
-            }
-            delete enc;
-        }
+        msg.setId(seqnum++);
+        m_.queueMessage(new Message(msg));
 
     }
 
     log(LOG_NOTICE) << "Exiting UI";
 }
 
-
-Socket* connect(std::string servaddr)
-{
-    Socket* socket;
-
-    socket = new Socket();
-    if (socket->Connect(servaddr, 7788) < 0)
-    {
-        delete socket;
-        socket = NULL;
-    }
-
-    return socket;
-}
 
 #include <unistd.h> /*todo*/
 
@@ -299,71 +208,19 @@ int main(int argc, char *argv[])
     if(argc > 1)
         servaddr = std::string(argv[1]);
 
-    /*for some freaky reason I have to try to connect once before UIConsole is created, otherwise it will segfault in getchar on cygwin....*/
-    socket = connect(servaddr);
-
-    UIConsole ui;
+    Messenger m(servaddr);
+    UIConsole ui(m);
 
     do
     {
-        if(socket == NULL)
-        {
-            //std::cout << "Trying to connect..." << std::endl;
-            socket = connect(servaddr);
-        }
-
-        if(socket == NULL)
-        {
-            continue;
-        }
-
-        std::cout << "Connected" << std::endl;
-
-        Message msg(HELLO_REQ);
-        msg.setId(0);
-
-        msg.addTlv(TLV_PROTOCOL_VERSION_MAJOR, PROTOCOL_VERSION_MAJOR);
-        msg.addTlv(TLV_PROTOCOL_VERSION_MINOR, PROTOCOL_VERSION_MINOR);
-        msg.addTlv(TLV_LOGIN_USERNAME, "wonder");
-        msg.addTlv(TLV_LOGIN_PASSWORD, "wall");
-
-        MessageEncoder* enc = msg.encode();
-        enc->printHex();
-
-        if (socket->Send(enc->getBuffer(), enc->getLength()) <= 0)
-        {
-            std::cout << "ERROR writing to socket" << std::endl;
-            delete enc;
-            socket->Close();
-            socket = NULL;
-            continue;
-        }
-        delete enc;
-
-        //UIConsole ui;
-        ui.setSocket(socket);
-
-        SocketListener listener(socket);
-
-        while ( !ui.isCancellationPending() && !listener.isCancellationPending() ) usleep(10000);
-
-        std::cout << "Disconnected" << std::endl;
-
-        ui.setSocket(NULL);
-
-        //ui.destroy();
-        listener.destroy();
-
-        delete socket;
-        socket = NULL;
-
-    //} while ( 1 );
+        usleep(10000);
     } while ( !ui.isCancellationPending() );
 
     std::cout << "Exiting" << std::endl;
 
     /* cleanup */
     ui.destroy();
+    m.destroy();
 
     return 0;
 }

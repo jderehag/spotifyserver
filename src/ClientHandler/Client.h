@@ -86,10 +86,11 @@ private:
     void handleGetAlbumReq(const Message* msg);
 
     void queueMessage(Message* msg);
+    Message* popMessage();
     Platform::Mutex messageQueueMtx;
     std::queue<Message*> messageQueue;
 
-    Socket* socket_; /*todo hide me*/
+    Socket* socket_;
 public:
 
     Client(Socket* socket, LibSpotifyIf& spotifyif);
@@ -103,7 +104,6 @@ public:
 
     bool pendingSend();
     Socket* getSocket() const;
-    Message* popMessage();
 };
 
 #endif /* CLIENT_H_ */

@@ -54,12 +54,15 @@ COMMON_OBJECTS += spotifyserver.o \
 COMMON_OBJECTS += $(ARCH_OBJECTS) $(AUDIO_OBJECTS)
 
 TESTAPP_OBJECTS +=  testapp2.o \
+					Messenger.o \
+					IUserInterface.o \
 					LoggerConfig.o \
 					Logger.o \
 					MessageDecoder.o \
 					MessageEncoder.o \
 					Message.o \
 					SocketReader.o \
+					SocketWriter.o \
 					Tlvs.o \
 					TlvDefinitions.o
 
