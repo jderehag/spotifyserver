@@ -259,9 +259,9 @@ class SpotifyClient(Thread):
             self.__getRspMsgObserversLock.release()
             self.fd.sendall(Message.GetTracksReqMsg(msgId, playlistUri).toByteStream())
     
-    def sendPlayReq(self, uri):
+    def sendPlayReq(self, uri, startAtIndex):
         if self.__isConnected.is_set():
-            self.fd.sendall(Message.PlayReqMsg(self.getNextMsgId(), uri).toByteStream())
+            self.fd.sendall(Message.PlayReqMsg(self.getNextMsgId(), uri, startAtIndex).toByteStream())
     
     def sendPlayOperation(self, playOp):
         if self.__isConnected.is_set():

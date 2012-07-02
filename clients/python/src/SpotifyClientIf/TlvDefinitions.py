@@ -74,6 +74,7 @@ class TlvContainerType:
     
     # Track TLV's
     TLV_TRACK_DURATION          = int('0x304', 16)
+    TLV_TRACK_INDEX             = int('0x307', 16)
     
     # Search TLV's */
     TLV_SEARCH_QUERY            = int('0x401', 16)
