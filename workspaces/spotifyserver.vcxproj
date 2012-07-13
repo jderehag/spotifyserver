@@ -139,6 +139,7 @@
     <ClCompile Include="..\src\Platform\AudioEndpoints\Endpoints\AudioEndpoint-OpenAL.cpp" />
     <ClCompile Include="..\src\Platform\Socket\Windows\WindowsSocket.cpp" />
     <ClCompile Include="..\src\Platform\Threads\Windows\WindowsCondition.cpp" />
+    <ClCompile Include="..\src\Platform\Threads\Windows\WindowsMessagebox.cpp" />
     <ClCompile Include="..\src\Platform\Threads\Windows\WindowsMutex.cpp" />
     <ClCompile Include="..\src\Platform\Threads\Windows\WindowsRunnable.cpp" />
     <ClCompile Include="..\src\Platform\Utils\Windows\WindowsUtils.cpp" />

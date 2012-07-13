@@ -34,7 +34,7 @@
 #include "MessageFactory/SocketWriter.h"
 #include "applog.h"
 
-Messenger::Messenger(std::string serveraddr) : serveraddr_(serveraddr), subscriber_(NULL)
+Messenger::Messenger(std::string serveraddr) : serveraddr_(serveraddr), subscriber_(NULL), messageId(0)
 {
     startThread();
 }
@@ -47,30 +47,41 @@ void Messenger::run()
 {
     while(isCancellationPending() == false)
     {
+#if 0
+        if ( pendingSend() )
+        {
+            Message* msg = popMessage();
+            subscriber_->receivedMessage( msg );
+            continue;
+        }
+#endif
         Socket socket;
 
         if (socket.Connect(serveraddr_ /*"192.168.5.98"*/, 7788) == 0)
         {
             log(LOG_NOTICE) << "Connected";
 
-            Message msg(HELLO_REQ);
-            msg.setId(0);
+            Message hello(HELLO_REQ);
 
-            msg.addTlv(TLV_PROTOCOL_VERSION_MAJOR, PROTOCOL_VERSION_MAJOR);
-            msg.addTlv(TLV_PROTOCOL_VERSION_MINOR, PROTOCOL_VERSION_MINOR);
-            msg.addTlv(TLV_LOGIN_USERNAME, "wonder");
-            msg.addTlv(TLV_LOGIN_PASSWORD, "wall");
+            hello.setId(messageId++);
 
-            MessageEncoder* enc = msg.encode();
+            hello.addTlv(TLV_PROTOCOL_VERSION_MAJOR, PROTOCOL_VERSION_MAJOR);
+            hello.addTlv(TLV_PROTOCOL_VERSION_MINOR, PROTOCOL_VERSION_MINOR);
+            hello.addTlv(TLV_LOGIN_USERNAME, "wonder");
+            hello.addTlv(TLV_LOGIN_PASSWORD, "wall");
+
+
+            MessageEncoder* enc = hello.encode();
             enc->printHex();
 
             if (socket.Send(enc->getBuffer(), enc->getLength()) <= 0)
             {
-                std::cout << "ERROR writing to socket" << std::endl;
+                log(LOG_WARN) << "Error writing to socket";
                 delete enc;
-                break;
+                continue;
             }
             delete enc;
+
 
             SocketReader reader(&socket);
             SocketWriter writer(&socket);
@@ -86,7 +97,7 @@ void Messenger::run()
                     writeset.insert( &socket );
                 }
 
-                if ( select(&readset, &writeset, NULL, 100) < 0 )
+                if ( select( &readset, &writeset, NULL, 100 ) < 0 )
                     break;
 
                 if ( reader.doread() < 0 )
@@ -94,13 +105,13 @@ void Messenger::run()
 
                 if(reader.done())
                 {
-                    MessageDecoder m;
+                    MessageDecoder decoder;
 
                     log(LOG_DEBUG) << "Receive complete";
 
                     printHexMsg(reader.getMessage(), reader.getLength());
 
-                    Message* msg = m.decode(reader.getMessage());
+                    Message* msg = decoder.decode(reader.getMessage());
 
                     if ( msg != NULL )
                     {
@@ -119,6 +130,7 @@ void Messenger::run()
                         Message* msg = popMessage();
                         if (msg != NULL )
                         {
+                            msg->setId(messageId++);
                             MessageEncoder* encoder = msg->encode();
                             encoder->printHex();
                             log(LOG_DEBUG) << *msg;
@@ -147,30 +159,31 @@ void Messenger::destroy()
 
 Message* Messenger::popMessage()
 {
-    log(LOG_DEBUG) << "Popping message";
-    sendQueueMtx.lock();
+/*    sendQueueMtx.lock();
     Message* msg = sendQueue.front();
     sendQueue.pop();
     sendQueueMtx.unlock();
-    return msg;
+    return msg;*/
+    return mb_.pop_front();
 }
 
 
 void Messenger::queueMessage(Message* msg)
 {
-    log(LOG_DEBUG) << "Queueing message";
-    sendQueueMtx.lock();
+    /*sendQueueMtx.lock();
     sendQueue.push(msg);
-    sendQueueMtx.unlock();
+    sendQueueMtx.unlock();*/
+    mb_.push_back(msg);
 }
 
 bool Messenger::pendingSend()
 {
-    bool ret;
+/*    bool ret;
     sendQueueMtx.lock();
     ret = (sendQueue.empty() == false);
     sendQueueMtx.unlock();
-    return ret;
+    return ret;*/
+    return !mb_.empty();
 }
 
 void Messenger::addSubscriber(IMessageSubscriber* subscriber)

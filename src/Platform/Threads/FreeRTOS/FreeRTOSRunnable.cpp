@@ -30,8 +30,11 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
+
 namespace Platform
 {
+
+static Runnable* instances;
 
 typedef struct ThreadHandle_t
 {
@@ -63,7 +66,8 @@ Runnable::~Runnable()
 
 void Runnable::startThread()
 {
-    xTaskCreate( runnableWrapper, ( signed char * ) "tsk", configMINIMAL_STACK_SIZE, this, tskIDLE_PRIORITY + 1UL, &threadHandle_->handle );
+    instances = this;
+    xTaskCreate( runnableWrapper, ( signed char * ) "tsk", 2000, this, tskIDLE_PRIORITY + 1UL, &threadHandle_->handle );
 }
 
 void Runnable::joinThread()
@@ -73,7 +77,7 @@ void Runnable::joinThread()
 
 bool Runnable::isCancellationPending()
 {
-	return isCancellationPending_;
+    return isCancellationPending_;
 }
 void Runnable::cancelThread()
 {
@@ -81,5 +85,4 @@ void Runnable::cancelThread()
 }
 
 
-
-} /* namespace LibSpotify */
+}

@@ -64,7 +64,12 @@ TESTAPP_OBJECTS +=  testapp2.o \
 					SocketReader.o \
 					SocketWriter.o \
 					Tlvs.o \
-					TlvDefinitions.o
+					TlvDefinitions.o \
+					Folder.o \
+					Playlist.o \
+					Track.o \
+					Artist.o \
+					Album.o
 
 TESTAPP_OBJECTS += $(ARCH_OBJECTS)
 

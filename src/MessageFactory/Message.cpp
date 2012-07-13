@@ -50,6 +50,7 @@ void Message::setId (uint32_t id) { id_ = id; }
 uint32_t Message::getId(void) const { return id_; }
 
 const TlvContainer* Message::getTlvRoot() const { return &tlvs; }
+const Tlv* Message::getTlv(TlvType_t tlv) const { return tlvs.getTlv(tlv); }
 
 void Message::addTlv(Tlv* tlv) { tlvs.addTlv(tlv); }
 void Message::addTlv(TlvType_t type, const std::string& str) { tlvs.addTlv(type, str); }

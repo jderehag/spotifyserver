@@ -60,6 +60,7 @@ public:
     {
         FILE,
         STDOUT,
+        NOWHERE,
     }LogTo;
 
     LoggerConfig();

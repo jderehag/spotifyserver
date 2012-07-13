@@ -269,5 +269,8 @@
     <ClCompile Include="..\src\LibSpotifyIf\MediaContainers\Album.cpp">
       <Filter>src\LibSpotifyIf\MediaContainers</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\Platform\Threads\Windows\WindowsMessagebox.cpp">
+      <Filter>src\Platform\Threads\Windows</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

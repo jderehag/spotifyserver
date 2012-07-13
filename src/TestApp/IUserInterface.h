@@ -29,13 +29,20 @@
 #define IUSERINTERFACE_H_
 
 #include "Messenger.h"
+#include "LibSpotifyIf/MediaContainers/Folder.h"
+#include "LibSpotifyIf/MediaContainers/Playlist.h"
+#include "MessageFactory/TlvDefinitions.h"
 #include <string>
 
+using namespace LibSpotify;
 
 class IUserInterface : public IMessageSubscriber
 {
 private:
     Messenger& messenger_;
+protected:
+    PlaybackState_t playbackState_;
+    Folder rootFolder_;
 
 public:
     IUserInterface(Messenger& messenger);
@@ -44,9 +51,20 @@ public:
     void receivedMessage( Message* msg );
 
 protected:
+    void getImage( std::string uri );
+    void previous();
+    void next();
+    void resume();
+    void pause();
+    void getStatus();
     void getPlaylists();
-    void play(std::string ref, int startIndex = 0);
+    void getTracks( std::string uri );
+    void play( std::string uri, int startIndex = 0 );
+    void getAlbum( std::string uri );
+    void search( std::string query );
 
+
+    virtual void updateRootFolder(Folder& f) {}
     virtual void status() {}
 };
 

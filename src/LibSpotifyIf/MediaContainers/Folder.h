@@ -38,13 +38,17 @@
 namespace LibSpotify
 {
 
+typedef std::vector<class Folder> FolderContainer;  //can't be deque since it's incomplete type and the template mumbojumbo can't handle that, 
+                                                    //it's undefined behaviour according to C++ std and doesn't compile in VS. For some reason vector is ok.
+typedef std::deque<Playlist> PlaylistContainer;
+
 class Folder
 {
 private:
 	std::string name_;
 	unsigned long long id_;
-	std::deque<Playlist> playlists_;
-	std::vector<Folder> folders_; //can't be deque, it's undefined behaviour according to C++ std and doesn't compile in VS
+	PlaylistContainer playlists_;
+	FolderContainer folders_;
 	Folder* parentFolder_;
 
 public:
@@ -59,8 +63,8 @@ public:
 	bool findPlaylist(const std::string& playlist , Playlist& pl);
 
 	const std::string& getName() const;
-	std::deque<Playlist>& getPlaylists();
-	std::vector<Folder>& getFolders();
+	PlaylistContainer& getPlaylists();
+	FolderContainer& getFolders();
 	void getAllTracks(std::deque<Track>& allTracks) const;
 
     Tlv* toTlv() const;

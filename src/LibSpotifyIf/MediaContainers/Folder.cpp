@@ -42,6 +42,7 @@ Folder::~Folder(){ }
 
 void Folder::addFolder(Folder& folder)
 {
+    folder.parentFolder_ = this;
 	folders_.push_back(folder);
 }
 void Folder::addPlaylist(Playlist& playlist)

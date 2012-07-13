@@ -25,62 +25,67 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MESSAGE_H_
-#define MESSAGE_H_
+#include "../Messagebox.h"
+#include "FreeRTOS.h"
+#include "queue.h"
 
-#include "Tlvs.h"
-#include "MessageEncoder.h"
-#include <stdint.h>
-#include <string>
-
-class Message
+namespace Platform
 {
-private:
-    MessageType_t type_;
-    uint32_t id_;
 
-protected:
-    TlvRoot tlvs;
 
-public:
-    Message();
-    Message(MessageType_t type);
-
-    void setType (MessageType_t type);
-    MessageType_t getType(void) const;
-
-    void setId (uint32_t id);
-    uint32_t getId(void) const;
-
-    const TlvContainer* getTlvRoot() const;
-    const Tlv* getTlv(TlvType_t tlv) const;
-
-    void addTlv(Tlv* tlv);
-    void addTlv(TlvType_t type, const std::string& str);
-    void addTlv(TlvType_t type, const uint8_t* str, uint32_t len);
-    void addTlv(TlvType_t type, uint32_t val);
-
-    virtual bool validate();
-
-    MessageEncoder* encode();
-
-    virtual ~Message();
-
-    friend class MessageDecoder;
-};
-
-class GetTracksReq : public Message
+template <typename T>
+struct messagebox_t
 {
-public:
-    const std::string getPlaylist();
-
-    GetTracksReq();
-    virtual ~GetTracksReq();
-
-    bool validate();
+    xQueueHandle hdl;
 };
 
 
-std::ostream& operator <<(std::ostream& os, const Message& rhs);
+template <typename T>
+Messagebox<T>::Messagebox()
+{
+    mb_ = new messagebox_t<T>;
+    mb_->hdl = xQueueCreate( 10, sizeof(T) );
+}
 
-#endif /* MESSAGE_H_ */
+template <typename T>
+Messagebox<T>::~Messagebox()
+{
+    vQueueDelete( mb_->hdl );
+    delete mb_;
+}
+
+template <typename T>
+void Messagebox<T>::push_back(const T& item_)
+{
+    portBASE_TYPE higherPrioTaskWoken;
+    xQueueSendToBackFromISR( mb_->hdl, &item_, &higherPrioTaskWoken ); //todo assert success
+
+    if ( higherPrioTaskWoken )
+    {
+        vPortYieldFromISR();
+    }
+}
+
+template <typename T>
+T Messagebox<T>::pop_front()
+{
+    T ret;
+
+    /*this will wait forever until there's something in the queue, just as with the stl containers you must check with empty() first*/
+    xQueueReceive( mb_->hdl, &ret, portMAX_DELAY );
+
+    return ret;
+}
+
+template <typename T>
+bool Messagebox<T>::empty()
+{
+    return uxQueueMessagesWaiting( mb_->hdl );
+}
+
+}
+
+template class Platform::Messagebox<class Message*>;
+
+
+

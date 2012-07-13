@@ -30,7 +30,7 @@
 
 #include "Platform/Threads/Runnable.h"
 #include "Platform/Threads/Mutex.h"
-//#include "MessageFactory/Message.h"
+#include "Platform/Threads/Messagebox.h"
 #include <string>
 #include <queue>
 
@@ -47,11 +47,11 @@ class Messenger : public Platform::Runnable
 private:
     std::string serveraddr_;
     IMessageSubscriber* subscriber_;
+    Platform::Messagebox<Message*> mb_;
+    uint32_t messageId;
 
     bool pendingSend();
     Message* popMessage();
-    Platform::Mutex sendQueueMtx;
-    std::queue<Message*> sendQueue;
 
 public:
     Messenger(std::string serveraddr);

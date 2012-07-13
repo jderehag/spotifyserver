@@ -25,62 +25,32 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MESSAGE_H_
-#define MESSAGE_H_
+#ifndef MESSAGEBOX_H_
+#define MESSAGEBOX_H_
 
-#include "Tlvs.h"
-#include "MessageEncoder.h"
-#include <stdint.h>
-#include <string>
 
-class Message
+namespace Platform
 {
-private:
-    MessageType_t type_;
-    uint32_t id_;
 
-protected:
-    TlvRoot tlvs;
 
+template <typename T>
+struct messagebox_t;
+
+
+
+template <typename T>
+class Messagebox
+{
+    messagebox_t<T>* mb_;
 public:
-    Message();
-    Message(MessageType_t type);
+    Messagebox();
+    virtual ~Messagebox();
 
-    void setType (MessageType_t type);
-    MessageType_t getType(void) const;
-
-    void setId (uint32_t id);
-    uint32_t getId(void) const;
-
-    const TlvContainer* getTlvRoot() const;
-    const Tlv* getTlv(TlvType_t tlv) const;
-
-    void addTlv(Tlv* tlv);
-    void addTlv(TlvType_t type, const std::string& str);
-    void addTlv(TlvType_t type, const uint8_t* str, uint32_t len);
-    void addTlv(TlvType_t type, uint32_t val);
-
-    virtual bool validate();
-
-    MessageEncoder* encode();
-
-    virtual ~Message();
-
-    friend class MessageDecoder;
+    void push_back(const T& item_);
+    T pop_front();
+    bool empty();
 };
 
-class GetTracksReq : public Message
-{
-public:
-    const std::string getPlaylist();
+}
 
-    GetTracksReq();
-    virtual ~GetTracksReq();
-
-    bool validate();
-};
-
-
-std::ostream& operator <<(std::ostream& os, const Message& rhs);
-
-#endif /* MESSAGE_H_ */
+#endif /* MESSAGEBOX_H_ */

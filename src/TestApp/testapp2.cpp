@@ -40,17 +40,22 @@
 class UIConsole : public Platform::Runnable, public IUserInterface
 {
 private:
-    Messenger& m_; //remove me?
+    LibSpotify::PlaylistContainer playlists;
+    LibSpotify::PlaylistContainer::iterator itPlaylists_;
 public:
     UIConsole(Messenger& m);
     ~UIConsole();
 
     void run();
     void destroy();
+
+    void updateRootFolder(Folder& f);
+
 };
 
 
-UIConsole::UIConsole(Messenger& m) : IUserInterface(m), m_(m)
+UIConsole::UIConsole(Messenger& m) : IUserInterface(m),
+        itPlaylists_(playlists.begin())
 {
     startThread();
 }
@@ -67,8 +72,6 @@ void UIConsole::destroy()
 
 void UIConsole::run()
 {
-    int seqnum=1;
-    int n;
     char c;
 
     while(isCancellationPending() == false)
@@ -86,8 +89,6 @@ void UIConsole::run()
 
         c = getchar();
 
-        //std::cout << "fuuuuuuu" << std::endl;
-        Message msg;
         switch(c)
         {
         case 'i':
@@ -96,52 +97,44 @@ void UIConsole::run()
             std::cout << "Enter Album URI" << std::endl;
             std::cin >> uri;
 
-            msg.setType(GET_IMAGE_REQ);
-            msg.addTlv(TLV_LINK, uri);
+            getImage( uri );
             break;
         }
 
         case 'z':
         {
-            msg.setType(PLAY_CONTROL_REQ);
-            msg.addTlv(TLV_PLAY_OPERATION, PLAY_OP_PREV);
+            previous();
             break;
         }
         case 'v':
         {
-            msg.setType(PLAY_CONTROL_REQ);
-            msg.addTlv(TLV_PLAY_OPERATION, PLAY_OP_NEXT);
+            next();
             break;
         }
         case 'x':
         {
-            msg.setType(PLAY_CONTROL_REQ);
-            msg.addTlv(TLV_PLAY_OPERATION, PLAY_OP_RESUME);
+            resume();
             break;
         }
         case 'c':
         {
-            msg.setType(PLAY_CONTROL_REQ);
-            msg.addTlv(TLV_PLAY_OPERATION, PLAY_OP_PAUSE);
+            pause();
             break;
         }
 
         case 's':
         {
-            msg.setType(GET_STATUS_REQ);
+            getStatus();
             break;
         }
         case 'g':
         {
-            msg.setType(GET_PLAYLISTS_REQ);
+            getPlaylists();
             break;
         }
         case 't':
         {
-            msg.setType(GET_TRACKS_REQ);
-            TlvContainer* p = new TlvContainer(TLV_PLAYLIST);
-            p->addTlv(TLV_LINK, std::string("spotify:playlist:BestOfOasis"));
-            msg.addTlv(p);
+            getTracks("spotify:playlist:BestOfOasis");
             break;
         }
         case 'p':
@@ -151,8 +144,7 @@ void UIConsole::run()
             std::cin >> uri;
 
             if (uri == "w") uri = "spotify:track:2CT3r93YuSHtm57mjxvjhH";
-            msg.setType(PLAY_REQ);
-            msg.addTlv(TLV_LINK, uri);
+            play( uri );
             break;
         }
         case 'a':
@@ -162,8 +154,7 @@ void UIConsole::run()
             std::cin >> uri;
 
             if (uri == "w") uri = "spotify:album:1f4I0SpE0O8yg4Eg2ywwv1";
-            msg.setType(GET_ALBUM_REQ);
-            msg.addTlv(TLV_LINK, uri);
+            getAlbum( uri );
             break;
         }
 
@@ -173,8 +164,7 @@ void UIConsole::run()
             std::cout << "Write your search query, end with enter:" << std::endl;
             std::cin >> query;
 
-            msg.setType(GENERIC_SEARCH_REQ);
-            msg.addTlv(TLV_SEARCH_QUERY, query);
+            search( query );
             break;
         }
 
@@ -185,21 +175,25 @@ void UIConsole::run()
         default:
             continue;
         }
-
-        msg.setId(seqnum++);
-        m_.queueMessage(new Message(msg));
-
     }
 
     log(LOG_NOTICE) << "Exiting UI";
 }
 
+void UIConsole::updateRootFolder(Folder& f)
+{
+    for( LibSpotify::FolderContainer::iterator it = f.getFolders().begin(); it != f.getFolders().end() ; it++)
+        playlists.insert( playlists.end(), (*it).getPlaylists().begin(), (*it).getPlaylists().end());
+
+    playlists.insert( playlists.end(), f.getPlaylists().begin(), f.getPlaylists().end());
+
+    itPlaylists_ = playlists.begin();
+}
 
 #include <unistd.h> /*todo*/
 
 int main(int argc, char *argv[])
 {
-    Socket* socket;
     std::string servaddr("127.0.0.1");
     ConfigHandling::LoggerConfig cfg;
     cfg.setLogTo(ConfigHandling::LoggerConfig::STDOUT);
