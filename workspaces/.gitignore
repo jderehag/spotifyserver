@@ -21,3 +21,15 @@ tmp/
 # tmp files
 ############################
 /output.log
+
+############################
+# visual studio files
+############################
+Debug/
+Release/
+ipch/
+spotifyserver.opensdf
+spotifyserver.sdf
+spotifyserver.sln
+spotifyserver.suo
+spotifyserver.vcxproj.user

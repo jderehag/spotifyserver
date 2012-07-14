@@ -64,7 +64,7 @@ protected:
     void search( std::string query );
 
 
-    virtual void updateRootFolder(Folder& f) {}
+    virtual void updateRootFolder(Folder& f) {(void)f;}
     virtual void status() {}
 };
 

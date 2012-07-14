@@ -52,12 +52,13 @@ void Messenger::run()
         {
             Message* msg = popMessage();
             subscriber_->receivedMessage( msg );
-            continue;
+            delete msg;
         }
+        continue;
 #endif
         Socket socket;
 
-        if (socket.Connect(serveraddr_ /*"192.168.5.98"*/, 7788) == 0)
+        if ( socket.Connect( serveraddr_, 7788 ) == 0 )
         {
             log(LOG_NOTICE) << "Connected";
 
@@ -82,7 +83,6 @@ void Messenger::run()
             }
             delete enc;
 
-
             SocketReader reader(&socket);
             SocketWriter writer(&socket);
 
@@ -103,7 +103,7 @@ void Messenger::run()
                 if ( reader.doread() < 0 )
                     break;
 
-                if(reader.done())
+                if ( reader.done() )
                 {
                     MessageDecoder decoder;
 
@@ -128,7 +128,7 @@ void Messenger::run()
                     if ( writer.isEmpty() )
                     {
                         Message* msg = popMessage();
-                        if (msg != NULL )
+                        if ( msg != NULL )
                         {
                             msg->setId(messageId++);
                             MessageEncoder* encoder = msg->encode();

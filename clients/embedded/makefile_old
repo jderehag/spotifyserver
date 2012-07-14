@@ -1,0 +1,203 @@
+##############################################################################################
+# Setup
+#
+
+TRGT = arm-none-eabi-yagarto-
+CC   = $(TRGT)gcc
+CCX  = $(TRGT)g++
+CP   = $(TRGT)objcopy
+AS   = $(TRGT)gcc -x assembler-with-cpp
+BIN  = $(CP) -O ihex 
+
+MCU  = cortex-m4
+
+#
+# End of setup
+##############################################################################################
+
+##############################################################################################
+# Start of user section
+#
+
+# 
+# Define project name and Ram/Flash mode here
+PROJECT        = spotifyclient
+RUN_FROM_FLASH = 1
+USE_HARD_FPU   = 1
+
+#
+# Define linker script file here
+#
+ifeq ($(RUN_FROM_FLASH), 0)
+LDSCRIPT = ./prj/stm32f4xx_ram.ld
+FULL_PRJ = $(PROJECT)_ram
+else
+LDSCRIPT = ./prj/stm32f4xxxg_flash.ld
+FULL_PRJ = $(PROJECT)_rom
+endif
+
+#
+# Define FPU settings here
+#
+ifeq ($(USE_HARD_FPU), 0)
+FPU = -mfloat-abi=soft -mfpu=fpv4-sp-d16
+else
+FPU = -mfloat-abi=hard -mfpu=fpv4-sp-d16 -D__FPU_USED=1
+endif
+
+
+# List all user C define here, like -D_DEBUG=1
+UDEFS = -DCORE_M4 -DUSE_STDPERIPH_DRIVER -DSTM32F4XX
+
+# Define ASM defines here
+UADEFS = 
+
+# List C source files here
+SRC  =	./source/netconf.c \
+		./source/freertos/list.c \
+		./source/freertos/queue.c \
+		./source/freertos/tasks.c \
+		./source/freertos/timers.c \
+		./source/freertos/port.c \
+		./source/freertos/heap_2.c \
+		./source/FreeRTOSHooks.c \
+		./source/system/stm32f4_discovery.c \
+		./source/system/system_stm32f4xx.c \
+		./source/system/stm32f4xx_it.c \
+		./source/system/stm32f4x7_eth_bsp.c \
+		$(addprefix ./source/system/STM32F4xx_StdPeriph_Driver/src/, misc.c stm32f4xx_dma.c stm32f4xx_exti.c stm32f4xx_gpio.c stm32f4xx_syscfg.c stm32f4xx_rcc.c) \
+		./source/system/STM32F4x7_ETH_Driver/src/stm32f4x7_eth.c \
+		$(addprefix ./source/lwip_v1.3.2/src/core/, init.c tcp_out.c mem.c memp.c netif.c pbuf.c raw.c stats.c sys.c tcp.c tcp_in.c udp.c dhcp.c ipv4/ip.c ipv4/ip_addr.c ipv4/icmp.c ipv4/ip_frag.c ipv4/inet.c ipv4/inet_chksum.c ipv4/autoip.c) \
+		$(addprefix ./source/lwip_v1.3.2/src/api/, tcpip.c api_msg.c err.c api_lib.c netbuf.c sockets.c ) \
+		$(addprefix ./source/lwip_v1.3.2/src/netif/, etharp.c ) \
+		$(addprefix ./source/lwip_v1.3.2/port/STM32F4x7/FreeRTOS/, sys_arch.c ethernetif.c) 
+		
+
+ 
+SRCX  = ./source/main.cpp \
+		../../src/Platform/Threads/FreeRTOS/FreeRTOSRunnable.cpp
+
+HUPP =	./source/UIEmbedded.cpp \
+		$(addprefix ../../src/LibSpotifyIf/MediaContainers/, Album.cpp Artist.cpp Folder.cpp Playlist.cpp Track.cpp) \
+		../../src/MessageFactory/Message.cpp \
+		../../src/MessageFactory/MessageDecoder.cpp \
+		../../src/MessageFactory/MessageEncoder.cpp \
+		../../src/MessageFactory/TlvDefinitions.cpp \
+		../../src/MessageFactory/Tlvs.cpp \
+		../../src/MessageFactory/SocketReader.cpp \
+		../../src/MessageFactory/SocketWriter.cpp \
+		../../src/TestApp/Messenger.cpp \
+		../../src/TestApp/IUserInterface.cpp \
+		../../src/Logger/Logger.cpp \
+		../../src/ConfigHandling/Configs/LoggerConfig.cpp \
+		../../src/Platform/Socket/LwIP/LwIPSocket.cpp \
+		../../src/Platform/Threads/FreeRTOS/FreeRTOSMutex.cpp \
+		../../src/Platform/Threads/FreeRTOS/FreeRTOSRunnable.cpp
+
+# List ASM source files here
+ASRC = ./source/system/startup_stm32f4xx.s
+
+# List all user directories here
+UINCDIR = ./source/freertos/ \
+		  ./source/lwip_v1.3.2/src/include \
+		  ./source/lwip_v1.3.2/src/include/ipv4 \
+		  ./source/lwip_v1.3.2/port/STM32F4x7/FreeRTOS \
+		  ./source/lwip_v1.3.2/port/STM32F4x7 \
+		  ./source \
+		  ./source/system \
+		  ./source/system/CMSIS \
+		  ./source/system/STM32F4xx_StdPeriph_Driver/inc \
+		  ./source/system/STM32F4x7_ETH_Driver/inc \
+		  ./../../src \
+		  ./../../src/Logger \
+		  ./../../src/LibSpotifyIf/MediaContainers
+
+# List the user directory to look for the libraries here
+ULIBDIR =
+
+# List all user libraries here
+ULIBS = -lgcc -lstdc++ -lc
+
+# Define optimisation level here
+#OPT = -O0 
+OPT = -O3 -falign-functions=16 -fno-inline -fomit-frame-pointer
+
+#
+# End of user defines
+##############################################################################################
+
+
+INCDIR  = $(patsubst %,-I%,$(UINCDIR))
+LIBDIR  = $(patsubst %,-L%,$(ULIBDIR))
+
+ifeq ($(RUN_FROM_FLASH), 0)
+DEFS    = $(UDEFS) -DRUN_FROM_FLASH=0 -DVECT_TAB_SRAM
+else
+DEFS    = $(UDEFS) -DRUN_FROM_FLASH=1
+endif
+
+ADEFS   = $(UADEFS)
+OBJDIR  = .obj
+OBJSP    =  $(SRCX:.cpp=.o) $(ASRC:.s=.o) $(SRC:.c=.o)
+OBJS	= crtbegin.o crti.o $(addprefix $(OBJDIR)/, $(foreach obj,$(OBJSP),$(notdir $(obj)))) crtend.o crtn.o
+LIBS    = $(ULIBS)
+MCFLAGS = -mthumb -mcpu=$(MCU)
+
+ASFLAGS = $(MCFLAGS) -g -gdwarf-2 -Wa,-amhls=$(1:.o=.lst) $(ADEFS)
+CPFLAGS = $(MCFLAGS) $(OPT) $(FPU) -gdwarf-2 -Wall -Wstrict-prototypes -fverbose-asm -Wa,-ahlms=$(1:.o=.lst) $(DEFS)
+CPXFLAGS = $(MCFLAGS) $(OPT) $(FPU) -gdwarf-2 -Wall -fverbose-asm -Wa,-ahlms=$(1:.o=.lst) $(DEFS)
+LDFLAGS = $(MCFLAGS) -mthumb -nostartfiles -T$(LDSCRIPT) -Wl,-Map=$(FULL_PRJ).map,--no-warn-mismatch $(LIBDIR)
+
+# Generate dependency information
+CPFLAGS += -MD -MP -MF .dep/$(notdir $(1)).d
+CPXFLAGS += -MD -MP -MF .dep/$(notdir $(1)).d
+
+#
+# makefile rules
+#
+.PHONY : all clean
+
+all: $(OBJS) $(FULL_PRJ).elf $(FULL_PRJ).hex
+
+define objc
+$(1): $(2)
+	@mkdir -p $(OBJDIR)
+	$(CC) -o $(1) -c $(CPFLAGS) -I . $(INCDIR) $(2)
+endef
+
+define objcpp
+$(1): $(2)
+	@mkdir -p $(OBJDIR)
+	$(CCX) -o $(1) -c $(CPXFLAGS) -I . $(INCDIR) $(2)
+endef
+
+define objasm
+$(1): $(2)
+	@mkdir -p $(OBJDIR)
+	$(AS) -c $(ASFLAGS) $(2) -o $(1)
+endef
+	
+	
+$(foreach src, $(SRCX), $(eval $(call objcpp,$(OBJDIR)/$(notdir $(src:.cpp=.o)),$(src))))
+$(foreach src, $(SRC), $(eval $(call objc,$(OBJDIR)/$(notdir $(src:.c=.o)),$(src))))
+$(foreach src, $(ASRC), $(eval $(call objasm,$(OBJDIR)/$(notdir $(src:.s=.o)),$(src))))
+
+%elf: $(OBJS)
+	$(CCX) $(OBJS) $(LDFLAGS) $(LIBS) -o $@
+  
+%hex: %elf
+	$(BIN) $< $@
+
+clean:
+	-rm -f $(FULL_PRJ).elf
+	-rm -f $(FULL_PRJ).map
+	-rm -f $(FULL_PRJ).hex
+	-rm -fR .dep
+	-rm -fR .obj
+
+# 
+# Include the dependency files, should be the last of the makefile
+#
+-include $(shell mkdir .dep 2>/dev/null) $(wildcard .dep/*)
+
+# *** EOF ***

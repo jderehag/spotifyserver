@@ -33,6 +33,8 @@
 #include "Platform/Threads/Messagebox.h"
 #include <string>
 #include <queue>
+#include <stdint.h>
+
 
 class Message;
 

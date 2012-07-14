@@ -51,8 +51,8 @@ private:
 public:
     CircularQueue(SizeType maxNumberOfElements) : maxNumberOfElements_(maxNumberOfElements) {};
 
-    iterator erase(iterator position) { queue_.erase(position); }
-    iterator erase(iterator first, iterator last) { queue_.erase(first, last); }
+    iterator erase(iterator position) { return queue_.erase(position); }
+    iterator erase(iterator first, iterator last) { return queue_.erase(first, last); }
     void clear() {queue_.clear(); }
 
     SizeType size() const { return queue_.size(); }
