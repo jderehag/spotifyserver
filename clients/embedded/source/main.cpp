@@ -35,9 +35,64 @@
 #include "buttonHandler.h"
 #include "FreeRTOS.h"
 #include "task.h"
+//#include "portable.h"
 #include "applog.h"
 #include "MessageFactory/Message.h"
 
+#if 1
+extern "C" void  *malloc(size_t size)
+{
+  return pvPortMalloc(size);
+}
+
+//............................................................................
+extern "C" void *calloc(size_t count, size_t size)
+{
+  return pvPortMalloc(count*size);
+}
+
+#include <string.h>
+extern "C" void *realloc(void *p, size_t size)
+{
+    if ( p == NULL )
+        return pvPortMalloc(size);
+    else
+    {
+        void* p2 = pvPortMalloc(size);
+        if ( p2 != NULL )
+        {
+            memcpy(p2, p, size);
+            vPortFree(p);
+        }
+        return p2;
+    }
+}
+//............................................................................
+extern "C" void free(void *p)
+{
+    vPortFree(p);
+}
+
+//override new and delete operators for c++
+void *operator new(size_t size)
+{
+    return pvPortMalloc(size);
+}
+
+void *operator new[](size_t size)
+{
+    return pvPortMalloc(size);
+}
+
+void operator delete(void *p){
+	STM_EVAL_LEDToggle(LED5);
+	vPortFree( p );
+}
+
+void operator delete[](void *p){
+	vPortFree( p );
+}
+#endif
 
 class LedFlasher : public Platform::Runnable
 {
@@ -71,7 +126,6 @@ void LedFlasher::run()
     {
         vTaskDelayUntil( &t, delay );
         STM_EVAL_LEDToggle( LED3 );
-        log(LOG_DEBUG) << "Wee";
     }
 }
 
@@ -84,6 +138,7 @@ int main(void)
     STM_EVAL_LEDInit(LED6);
     STM_EVAL_PBInit(BUTTON_USER, BUTTON_MODE_EXTI);
 
+
     ConfigHandling::LoggerConfig* cfg = new ConfigHandling::LoggerConfig;
     cfg->setLogTo(ConfigHandling::LoggerConfig::NOWHERE);
     Logger::Logger* l = new Logger::Logger(*cfg);
@@ -92,7 +147,8 @@ int main(void)
     Messenger* m = new Messenger("192.168.5.198");
     UIEmbedded* ui = new UIEmbedded(*m);
 
-    buttonHandler_setUI(NULL);//ui);
+    buttonHandler_setUI(ui);
+
 
 
     /* configure ethernet (GPIOs, clocks, MAC, DMA) */

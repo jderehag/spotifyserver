@@ -29,10 +29,9 @@
 #include "UIEmbedded.h"
 #include "applog.h"
 
-UIEmbedded::UIEmbedded( Messenger& m ) : IUserInterface(m),
-                                         itPlaylists_(playlists.begin())
+UIEmbedded::UIEmbedded( Messenger& m ) : IUserInterface(m)
 {
-    getPlaylists();
+    itPlaylists_ = playlists.begin();
 }
 
 UIEmbedded::~UIEmbedded()
@@ -41,7 +40,6 @@ UIEmbedded::~UIEmbedded()
 
 void UIEmbedded::shortButtonPress()
 {
-
     switch( playbackState_ )
     {
         case PLAYBACK_IDLE:
@@ -91,7 +89,14 @@ void UIEmbedded::updateRootFolder(Folder& f)
     itPlaylists_ = playlists.begin();
 }
 
-
+void UIEmbedded::connectionState( bool up )
+{
+    if ( up )
+    {
+        /*new connection, go get playlists*/
+        getPlaylists();
+    }
+}
 
 
 

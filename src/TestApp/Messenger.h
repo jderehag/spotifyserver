@@ -41,6 +41,7 @@ class Message;
 class IMessageSubscriber
 {
 public:
+    virtual void connectionState( bool up ) = 0;
     virtual void receivedMessage( Message* msg ) = 0;
 };
 

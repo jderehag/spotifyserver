@@ -29,7 +29,6 @@
 #include "MessageFactory/Message.h"
 #include "applog.h"
 
-
 IUserInterface::IUserInterface(Messenger& m) : messenger_(m), playbackState_(PLAYBACK_IDLE), rootFolder_("root", 0, 0)
 {
     messenger_.addSubscriber(this);

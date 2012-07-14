@@ -61,7 +61,7 @@ void buttonHandler_action(uint8_t pressed)
 
         if ( higherPrioTaskWoken )
         {
-           // vPortYieldFromISR();
+            vPortYieldFromISR();
         }
     }
     else if ( xTimerIsTimerActive( tmr ) )
@@ -85,7 +85,7 @@ void buttonHandler_action(uint8_t pressed)
 
         if ( higherPrioTaskWoken )
         {
-           // vPortYieldFromISR();
+            vPortYieldFromISR();
         }
     }
 }

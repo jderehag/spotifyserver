@@ -11,10 +11,10 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "stm32f4_discovery.h"
+#include "stm32f4xx.h"
 
 //#include "term_io.h"
-#include "stm32f4_discovery.h"
+
 
 #undef errno
 extern int errno;
@@ -29,6 +29,7 @@ int _kill(int pid, int sig)
 
 void _exit(int status)
 {
+	(void)status;
 //	xprintf("_exit called with parameter %d\n", status);
 	while(1) {;}
 }
@@ -72,6 +73,9 @@ caddr_t _sbrk(int incr)
 
 int _open(const char *name, int flags, int mode)
 {
+	(void)name;
+	(void)flags;
+	(void)mode;
     return -1;
 }
 
@@ -113,8 +117,7 @@ int _write(int file, char *ptr, int len)
 {
 	int todo;
 	(void)file; /* avoid warning */
-
-	STM_EVAL_LEDToggle(LED4);
+	(void)ptr;
 
 	for (todo = 0; todo < len; todo++) {
 	//	xputc(*ptr++);

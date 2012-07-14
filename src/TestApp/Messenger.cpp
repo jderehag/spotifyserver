@@ -86,6 +86,8 @@ void Messenger::run()
             SocketReader reader(&socket);
             SocketWriter writer(&socket);
 
+            if ( subscriber_ ) subscriber_->connectionState( true );
+
             while(isCancellationPending() == false)
             {
                 std::set<Socket*> readset;
@@ -115,7 +117,7 @@ void Messenger::run()
 
                     if ( msg != NULL )
                     {
-                        subscriber_->receivedMessage( msg );
+                        if ( subscriber_ ) subscriber_->receivedMessage( msg );
                         delete msg;
                     }
 
@@ -148,6 +150,7 @@ void Messenger::run()
             }
         }
         socket.Close();
+        if ( subscriber_ ) subscriber_->connectionState( false );
     }
 }
 
@@ -159,30 +162,17 @@ void Messenger::destroy()
 
 Message* Messenger::popMessage()
 {
-/*    sendQueueMtx.lock();
-    Message* msg = sendQueue.front();
-    sendQueue.pop();
-    sendQueueMtx.unlock();
-    return msg;*/
     return mb_.pop_front();
 }
 
 
 void Messenger::queueMessage(Message* msg)
 {
-    /*sendQueueMtx.lock();
-    sendQueue.push(msg);
-    sendQueueMtx.unlock();*/
     mb_.push_back(msg);
 }
 
 bool Messenger::pendingSend()
 {
-/*    bool ret;
-    sendQueueMtx.lock();
-    ret = (sendQueue.empty() == false);
-    sendQueueMtx.unlock();
-    return ret;*/
     return !mb_.empty();
 }
 

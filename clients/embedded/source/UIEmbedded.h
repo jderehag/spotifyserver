@@ -41,7 +41,7 @@ private:
     PlaylistContainer playlists;
 
     virtual void updateRootFolder(Folder& f);
-
+    virtual void connectionState( bool up );
 public:
     UIEmbedded(Messenger& m);
     virtual ~UIEmbedded();

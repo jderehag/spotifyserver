@@ -65,6 +65,7 @@ protected:
 
 
     virtual void updateRootFolder(Folder& f) {(void)f;}
+    virtual void connectionState( bool up ) {(void)up;}
     virtual void status() {}
 };
 

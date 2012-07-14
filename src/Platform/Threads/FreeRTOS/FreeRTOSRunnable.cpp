@@ -34,8 +34,6 @@
 namespace Platform
 {
 
-static Runnable* instances;
-
 typedef struct ThreadHandle_t
 {
     xTaskHandle handle;
@@ -66,7 +64,6 @@ Runnable::~Runnable()
 
 void Runnable::startThread()
 {
-    instances = this;
     xTaskCreate( runnableWrapper, ( signed char * ) "tsk", 2000, this, tskIDLE_PRIORITY + 1UL, &threadHandle_->handle );
 }
 
