@@ -70,6 +70,9 @@ private:
     TrackQueue::iterator playQueueIter_;
     TrackQueue playQueue_;
 
+    bool isShuffle;
+    bool isRepeat;
+
     void loadPlaylist(const Playlist& playlist, int startIndex);
 
 public:

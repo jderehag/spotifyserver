@@ -63,9 +63,7 @@ SRC  =	./source/syscalls.c \
 
 # List C++ source files here.
 # use file-extension .cpp for C++-files (not .C)
-CPPSRC = ./source/main.cpp \
-		./source/buttonHandler.cpp \
-		./source/UIEmbedded.cpp \
+CPPSRC = $(addprefix ./source/, main.cpp buttonHandler.cpp UIEmbedded.cpp heapWrap.cpp) \
 		$(addprefix ../../src/LibSpotifyIf/MediaContainers/, Album.cpp Artist.cpp Folder.cpp Playlist.cpp Track.cpp) \
 		$(addprefix ../../src/MessageFactory/, Message.cpp MessageDecoder.cpp MessageEncoder.cpp TlvDefinitions.cpp Tlvs.cpp SocketReader.cpp SocketWriter.cpp) \
 		../../src/TestApp/Messenger.cpp \
@@ -245,7 +243,7 @@ LDFLAGS = -Wl,-Map=$(OUTDIR)/$(TARGET).map,--cref,--gc-sections
 #LDFLAGS += -nostartfiles
 LDFLAGS += -lc
 LDFLAGS += $(MATH_LIB)
-LDFLAGS += -lc -lgcc
+LDFLAGS += -lgcc
 LDFLAGS += $(CPLUSPLUS_LIB)
 LDFLAGS += $(patsubst %,-L%,$(EXTRA_LIBDIRS))
 LDFLAGS += $(patsubst %,-l%,$(EXTRA_LIBS)) 
@@ -449,7 +447,7 @@ endif
 # Link: create ELF output file from object files.
 .SECONDARY : $(TARGET).elf
 .PRECIOUS : $(ALLOBJ)
-%.elf:  $(ALLOBJ)
+%.elf:  $(ALLOBJ) makefile
 	@echo $(MSG_LINKING) $@
 # use $(CC) for C-only projects or $(CPP) for C++-projects:
 ifeq "$(strip $(CPPSRC)$(CPPARM))" ""

@@ -27,12 +27,15 @@
 
 #include "LibSpotifyPlaybackHandler.h"
 #include "LibSpotifyIf.h"
+#include <algorithm>
 
 namespace LibSpotify
 {
 
 LibSpotifyPlaybackHandler::LibSpotifyPlaybackHandler(LibSpotifyIf& libspotify) : libSpotifyIf_(libspotify),
-                                                                                 historyQueue_(HISTORY_QUEUE_DEPTH)
+                                                                                 historyQueue_(HISTORY_QUEUE_DEPTH),
+                                                                                 isShuffle(true),
+                                                                                 isRepeat(true)
 {
 }
 
@@ -93,8 +96,24 @@ void LibSpotifyPlaybackHandler::loadPlaylist( const Playlist& playlist, int star
     currentlyPlayingFromUri_ = playlist.getLink();
     playQueue_.insert(playQueue_.end(), playlist.getTracks().begin(), playlist.getTracks().end());
     playQueueIter_ = playQueue_.begin();
-    while ( ( playQueueIter_ != playQueue_.end() ) && ( (*playQueueIter_).getIndex() != startIndex ) )
-        playQueueIter_++;
+    if ( startIndex >= 0 )
+    {
+        while ( ( playQueueIter_ != playQueue_.end() ) && ( (*playQueueIter_).getIndex() != startIndex ) )
+            playQueueIter_++;
+
+        if ( playQueueIter_ != playQueue_.end() && isShuffle )
+        {
+            Track first = *playQueueIter_;
+            playQueue_.erase(playQueueIter_);
+            random_shuffle ( playQueue_.begin(), playQueue_.end() );
+            playQueue_.push_front(first);
+            playQueueIter_ = playQueue_.begin();
+        }
+    }
+    else if ( isShuffle )
+    {
+        random_shuffle ( playQueue_.begin(), playQueue_.end() );
+    }
 }
 
 void LibSpotifyPlaybackHandler::playSearchResult(const std::string& searchString,

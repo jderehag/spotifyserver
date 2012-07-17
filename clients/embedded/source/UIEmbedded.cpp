@@ -28,6 +28,7 @@
 
 #include "UIEmbedded.h"
 #include "applog.h"
+#include "stm32f4_discovery.h"
 
 UIEmbedded::UIEmbedded( Messenger& m ) : IUserInterface(m)
 {
@@ -95,6 +96,11 @@ void UIEmbedded::connectionState( bool up )
     {
         /*new connection, go get playlists*/
         getPlaylists();
+        STM_EVAL_LEDOn( LED4 );
+    }
+    else
+    {
+        STM_EVAL_LEDOff( LED4 );
     }
 }
 

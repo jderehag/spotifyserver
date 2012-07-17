@@ -515,7 +515,7 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
 		        sp_link* link = sp_link_create_from_string(trackObj->getLink().c_str());
                 if(link)
                 {
-                    assert(sp_link_type(link) == SP_LINKTYPE_TRACK);
+                    assert( sp_link_type(link) == SP_LINKTYPE_TRACK || sp_link_type(link) == SP_LINKTYPE_LOCALTRACK );
 
                     sp_error err;
                     sp_track* track = sp_link_as_track(link);
@@ -541,6 +541,7 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
                         else
                         {
                             log(LOG_WARN) << "Player load error for " << trackObj->getLink().c_str() << " (" << sp_error_message(err) << ")";
+                            playbackHandler_.trackEndedInd(); /*todo: some proper handling here, this will put track on the history list */
                         }
                     }
                     else if (err == SP_ERROR_IS_LOADING)

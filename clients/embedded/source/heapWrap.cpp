@@ -25,83 +25,79 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-#include "stm32f4_discovery.h"
-#include "stm32f4x7_eth_bsp.h"
-#include "netconf.h"
-#include "Platform/Threads/Runnable.h"
-#include "Platform/Threads/Messagebox.h"
-#include "UIEmbedded.h"
-#include "buttonHandler.h"
 #include "FreeRTOS.h"
-#include "task.h"
-#include "applog.h"
-#include "MessageFactory/Message.h"
+#include <string.h>
 
+/*
+ * C stuff
+ */
 
-class LedFlasher : public Platform::Runnable
+extern "C" void* malloc( size_t size )
 {
-public:
-    LedFlasher();
-    virtual ~LedFlasher();
-
-    virtual void run();
-    virtual void destroy();
-};
-
-LedFlasher::LedFlasher() : Platform::Runnable(false)
-{
-    startThread();
-}
-LedFlasher::~LedFlasher()
-{
+    return pvPortMalloc(size);
 }
 
-void LedFlasher::destroy()
+extern "C" void* calloc( size_t count, size_t size )
 {
-
+    void* p = pvPortMalloc( count * size );
+    if ( p != NULL )
+        memset( p, 0, count * size );
+    return p;
 }
 
-void LedFlasher::run()
+extern "C" void* realloc( void *p, size_t size )
 {
-    portTickType delay = 500 / portTICK_RATE_MS;
-    portTickType t = xTaskGetTickCount();
-
-    while( isCancellationPending() == false )
+    /* if size is 0, realloc shall free */
+    if ( size == 0 )
     {
-        vTaskDelayUntil( &t, delay );
-        STM_EVAL_LEDToggle( LED3 );
+        vPortFree( p );
+        return NULL;
+    }
+    /* if p is NULL, realloc is malloc */
+    if ( p == NULL )
+    {
+        return pvPortMalloc( size );
+    }
+    else
+    {
+        void* p2 = pvPortMalloc( size );
+        if ( p2 != NULL )
+        {
+            /* preserve content. we may read out of bounds here if new size is smaller than old, but we don't know the old size so... */
+            memcpy( p2, p, size );
+            vPortFree( p );
+        }
+        return p2;
     }
 }
 
-
-int main(void)
+extern "C" void free( void* p )
 {
-    STM_EVAL_LEDInit(LED3);
-    STM_EVAL_LEDInit(LED4);
-    STM_EVAL_LEDInit(LED5);
-    STM_EVAL_LEDInit(LED6);
-    STM_EVAL_PBInit(BUTTON_USER, BUTTON_MODE_EXTI);
+    vPortFree( p );
+}
 
 
-    ConfigHandling::LoggerConfig* cfg = new ConfigHandling::LoggerConfig;
-    cfg->setLogTo(ConfigHandling::LoggerConfig::NOWHERE);
-    Logger::Logger* l = new Logger::Logger(*cfg);
+/*
+ * C++ stuff
+ */
 
-    LedFlasher* fl = new LedFlasher;
-    Messenger* m = new Messenger("192.168.5.198");
-    UIEmbedded* ui = new UIEmbedded(*m);
+void* operator new( size_t size )
+{
+    return pvPortMalloc( size );
+}
 
-    buttonHandler_setUI(ui);
+void* operator new[]( size_t size )
+{
+    return pvPortMalloc( size );
+}
 
-    /* configure ethernet (GPIOs, clocks, MAC, DMA) */
-    //ETH_BSP_Config();
+void operator delete( void* p )
+{
+    vPortFree( p );
+}
 
-    /* Initilaize the LwIP stack */
-    LwIP_Init();
-
-    vTaskStartScheduler();
-
-    while (1);
+void operator delete[]( void* p )
+{
+    vPortFree( p );
 }
 
