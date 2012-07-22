@@ -137,6 +137,13 @@ void IUserInterface::pause()
     messenger_.queueMessage( msg );
 }
 
+void IUserInterface::setShuffle( bool shuffleOn )
+{
+    Message* msg = new Message( PLAY_CONTROL_REQ );
+    msg->addTlv( TLV_PLAY_MODE_SHUFFLE, shuffleOn ? 1 : 0 );
+    messenger_.queueMessage( msg );
+}
+
 void IUserInterface::getStatus()
 {
     Message* msg = new Message( GET_STATUS_REQ );
@@ -163,6 +170,13 @@ void IUserInterface::play( std::string uri, int startIndex )
     Message* msg = new Message( PLAY_REQ );
     msg->addTlv(TLV_LINK, uri);
     msg->addTlv(TLV_TRACK_INDEX, startIndex);
+    messenger_.queueMessage(msg);
+}
+
+void IUserInterface::play( std::string uri )
+{
+    Message* msg = new Message( PLAY_REQ );
+    msg->addTlv(TLV_LINK, uri);
     messenger_.queueMessage(msg);
 }
 

@@ -89,13 +89,17 @@ int main(void)
     Logger::Logger* l = new Logger::Logger(*cfg);
 
     LedFlasher* fl = new LedFlasher;
-    Messenger* m = new Messenger("192.168.5.198");
+#if 0
+    Messenger* m = new Messenger("192.168.5.163");
+#else
+    Messenger* m = new Messenger("192.168.5.98");
+#endif
     UIEmbedded* ui = new UIEmbedded(*m);
 
     buttonHandler_setUI(ui);
 
     /* configure ethernet (GPIOs, clocks, MAC, DMA) */
-    //ETH_BSP_Config();
+    ETH_BSP_Config();
 
     /* Initilaize the LwIP stack */
     LwIP_Init();

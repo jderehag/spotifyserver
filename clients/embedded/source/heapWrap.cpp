@@ -31,7 +31,7 @@
 /*
  * C stuff
  */
-
+#if 0
 extern "C" void* malloc( size_t size )
 {
     return pvPortMalloc(size);
@@ -75,7 +75,7 @@ extern "C" void free( void* p )
 {
     vPortFree( p );
 }
-
+#endif
 
 /*
  * C++ stuff

@@ -40,7 +40,7 @@ int _getpid(void)
 }
 
 
-extern char __HeapLimit; /* Defined by the linker */
+extern char __end__; /* Defined by the linker */
 static char *heap_end;
 
 char* get_heap_end(void)
@@ -58,7 +58,7 @@ caddr_t _sbrk(int incr)
 {
 	char *prev_heap_end;
 	if (heap_end == 0) {
-		heap_end = &__HeapLimit;
+		heap_end = &__end__;
 	}
 	prev_heap_end = heap_end;
 #if 1

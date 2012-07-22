@@ -109,13 +109,13 @@ int Socket::Connect(std::string addr, int port)
 
 int Socket::WaitForConnect()
 {
-    fd_set fds;
+    lwip_fd_set fds;
     struct timeval tmo;
     int error;
     socklen_t len = sizeof(error);
 
-    FD_ZERO(&fds);
-    FD_SET(socket_->fd, &fds);
+    LWIP_FD_ZERO(&fds);
+    LWIP_FD_SET(socket_->fd, &fds);
     tmo.tv_sec = 5;
     tmo.tv_usec = 0;
 
@@ -188,7 +188,6 @@ void Socket::Close()
 
 void Socket::Shutdown()
 {
-#define SHUT_RD 77 /*shutdown not properly implemented in lwip...*/
     lwip_shutdown(socket_->fd, SHUT_RD);
 }
 
@@ -198,19 +197,19 @@ int select(std::set<Socket*>* readsockets, std::set<Socket*>* writesockets, std:
 {
     int maxfd = 0;
     int rc;
-    fd_set readfds, writefds, errfds;
+    lwip_fd_set readfds, writefds, errfds;
     std::set<Socket*>::iterator it;
     struct timeval tmo;
 
-    FD_ZERO(&readfds);
-    FD_ZERO(&writefds);
-    FD_ZERO(&errfds);
+    LWIP_FD_ZERO(&readfds);
+    LWIP_FD_ZERO(&writefds);
+    LWIP_FD_ZERO(&errfds);
 
     if (readsockets)
     {
         for (it = readsockets->begin(); it != readsockets->end(); it++)
         {
-            FD_SET((*it)->socket_->fd, &readfds);
+            LWIP_FD_SET((*it)->socket_->fd, &readfds);
             if ((*it)->socket_->fd > maxfd) maxfd = (*it)->socket_->fd;
         }
     }
@@ -219,7 +218,7 @@ int select(std::set<Socket*>* readsockets, std::set<Socket*>* writesockets, std:
     {
         for (it = writesockets->begin(); it != writesockets->end(); it++)
         {
-            FD_SET((*it)->socket_->fd, &writefds);
+            LWIP_FD_SET((*it)->socket_->fd, &writefds);
             if ((*it)->socket_->fd > maxfd) maxfd = (*it)->socket_->fd;
         }
     }
@@ -228,7 +227,7 @@ int select(std::set<Socket*>* readsockets, std::set<Socket*>* writesockets, std:
     {
         for (it = errsockets->begin(); it != errsockets->end(); it++)
         {
-            FD_SET((*it)->socket_->fd, &errfds);
+            LWIP_FD_SET((*it)->socket_->fd, &errfds);
             if ((*it)->socket_->fd > maxfd) maxfd = (*it)->socket_->fd;
         }
     }
@@ -247,7 +246,7 @@ int select(std::set<Socket*>* readsockets, std::set<Socket*>* writesockets, std:
         it = readsockets->begin();
         while (it != readsockets->end())
         {
-            if (!FD_ISSET((*it)->socket_->fd, &readfds))
+            if (!LWIP_FD_ISSET((*it)->socket_->fd, &readfds))
                 readsockets->erase(it++);
             else
                 it++;
@@ -259,10 +258,9 @@ int select(std::set<Socket*>* readsockets, std::set<Socket*>* writesockets, std:
         it = writesockets->begin();
         while (it != writesockets->end())
         {
-            if (!FD_ISSET((*it)->socket_->fd, &writefds))
+            if (!LWIP_FD_ISSET((*it)->socket_->fd, &writefds))
             {
                 writesockets->erase(it++);
-                log(LOG_WARN) << "nooooo ";
             }
             else
                 it++;
@@ -274,7 +272,7 @@ int select(std::set<Socket*>* readsockets, std::set<Socket*>* writesockets, std:
         it = errsockets->begin();
         while (it != errsockets->end())
         {
-            if (!FD_ISSET((*it)->socket_->fd, &errfds))
+            if (!LWIP_FD_ISSET((*it)->socket_->fd, &errfds))
                 errsockets->erase(it++);
             else
                 it++;

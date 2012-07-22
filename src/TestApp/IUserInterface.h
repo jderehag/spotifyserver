@@ -56,10 +56,12 @@ protected:
     void next();
     void resume();
     void pause();
+    void setShuffle( bool shuffleOn );
     void getStatus();
     void getPlaylists();
     void getTracks( std::string uri );
-    void play( std::string uri, int startIndex = 0 );
+    void play( std::string uri, int startIndex );
+    void play( std::string uri );
     void getAlbum( std::string uri );
     void search( std::string query );
 

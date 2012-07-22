@@ -38,7 +38,7 @@
 #define htonl Htonl
 #endif
 
-MessageDecoder::MessageDecoder() : hasError_(false)
+MessageDecoder::MessageDecoder() : hasError_(false), hasUnknownTlv_(false)
 {
 }
 
@@ -123,7 +123,7 @@ TlvContainer* MessageDecoder::decodeImage()
 
             default:
                 log(LOG_NOTICE) << "Unknown TLV 0x" << std::hex << getCurrentTlv() << std::dec << " at byte " << rpos_;
-                hasError_ = true;
+                hasUnknownTlv_ = true;
                 nextTlv();
                 break;
         }
@@ -177,7 +177,7 @@ TlvContainer* MessageDecoder::decodeArtist()
 
             default:
                 log(LOG_NOTICE) << "Unknown TLV 0x" << std::hex << getCurrentTlv() << std::dec << " at byte " << rpos_;
-                hasError_ = true;
+                hasUnknownTlv_ = true;
                 nextTlv();
                 break;
         }
@@ -253,7 +253,7 @@ TlvContainer* MessageDecoder::decodeAlbum()
 
             default:
                 log(LOG_NOTICE) << "Unknown TLV 0x" << std::hex << getCurrentTlv() << std::dec << " at byte " << rpos_;
-                hasError_ = true;
+                hasUnknownTlv_ = true;
                 nextTlv();
                 break;
         }
@@ -319,7 +319,7 @@ TlvContainer* MessageDecoder::decodeFolder()
 
             default:
                 log(LOG_NOTICE) << "Unknown TLV 0x" << std::hex << getCurrentTlv() << std::dec << " at byte " << rpos_;
-                hasError_ = true;
+                hasUnknownTlv_ = true;
                 nextTlv();
                 break;
         }
@@ -373,7 +373,7 @@ TlvContainer* MessageDecoder::decodePlaylist()
 
             default:
                 log(LOG_NOTICE) << "Unknown TLV 0x" << std::hex << getCurrentTlv() << std::dec << " at byte " << rpos_;
-                hasError_ = true;
+                hasUnknownTlv_ = true;
                 nextTlv();
                 break;
         }
@@ -448,7 +448,7 @@ TlvContainer* MessageDecoder::decodeTrack()
             break;
             default:
                 log(LOG_NOTICE) << "Unknown TLV 0x" << std::hex << getCurrentTlv() << std::dec << " at byte " << rpos_;
-                hasError_ = true;
+                hasUnknownTlv_ = true;
                 nextTlv();
                 break;
         }
@@ -524,6 +524,8 @@ void MessageDecoder::decodeTlvs(TlvContainer* parent, uint32_t len)
             case TLV_STATE:
             case TLV_PROGRESS:
             case TLV_PLAY_OPERATION:
+            case TLV_PLAY_MODE_SHUFFLE:
+            case TLV_PLAY_MODE_REPEAT:
             case TLV_PROTOCOL_VERSION_MAJOR:
             case TLV_PROTOCOL_VERSION_MINOR:
             case TLV_FAILURE:
@@ -536,7 +538,7 @@ void MessageDecoder::decodeTlvs(TlvContainer* parent, uint32_t len)
 
             default:
                 log(LOG_NOTICE) << "Unknown TLV 0x" << std::hex << getCurrentTlv() << std::dec <<" at byte " << rpos_;
-                hasError_ = true;
+                hasUnknownTlv_ = true;
                 nextTlv();
                 break;
         }

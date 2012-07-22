@@ -82,6 +82,8 @@ void UIEmbedded::longButtonPress()
 
 void UIEmbedded::updateRootFolder(Folder& f)
 {
+    playlists.clear();
+
     for( LibSpotify::FolderContainer::iterator it = f.getFolders().begin(); it != f.getFolders().end() ; it++)
         playlists.insert( playlists.end(), (*it).getPlaylists().begin(), (*it).getPlaylists().end());
 
@@ -94,8 +96,12 @@ void UIEmbedded::connectionState( bool up )
 {
     if ( up )
     {
-        /*new connection, go get playlists*/
+        /*new connection, check status and get playlists*/
+        getStatus();
         getPlaylists();
+
+        /*make sure we shuffle (should be controlled by button though..)*/
+        setShuffle(true);
         STM_EVAL_LEDOn( LED4 );
     }
     else

@@ -1,5 +1,5 @@
 /*
-    FreeRTOS V7.1.0 - Copyright (C) 2011 Real Time Engineers Ltd.
+    FreeRTOS V7.1.1 - Copyright (C) 2012 Real Time Engineers Ltd.
 	
 
     ***************************************************************************
@@ -40,15 +40,28 @@
     FreeRTOS WEB site.
 
     1 tab == 4 spaces!
+    
+    ***************************************************************************
+     *                                                                       *
+     *    Having a problem?  Start by reading the FAQ "My application does   *
+     *    not run, what could be wrong?                                      *
+     *                                                                       *
+     *    http://www.FreeRTOS.org/FAQHelp.html                               *
+     *                                                                       *
+    ***************************************************************************
 
-    http://www.FreeRTOS.org - Documentation, latest information, license and
-    contact details.
+    
+    http://www.FreeRTOS.org - Documentation, training, latest information, 
+    license and contact details.
+    
+    http://www.FreeRTOS.org/plus - A selection of FreeRTOS ecosystem products,
+    including FreeRTOS+Trace - an indispensable productivity tool.
 
-    http://www.SafeRTOS.com - A version that is certified for use in safety
-    critical systems.
-
-    http://www.OpenRTOS.com - Commercial support, development, porting,
-    licensing and training services.
+    Real Time Engineers ltd license FreeRTOS to High Integrity Systems, who sell 
+    the code with commercial support, indemnification, and middleware, under 
+    the OpenRTOS brand: http://www.OpenRTOS.com.  High Integrity Systems also
+    provide a safety engineered and independently SIL3 certified version under 
+    the SafeRTOS brand: http://www.SafeRTOS.com.
 */
 
 
@@ -168,7 +181,7 @@ PRIVILEGED_DATA static volatile unsigned portBASE_TYPE uxSchedulerSuspended	 	= 
 PRIVILEGED_DATA static volatile unsigned portBASE_TYPE uxMissedTicks 			= ( unsigned portBASE_TYPE ) 0U;
 PRIVILEGED_DATA static volatile portBASE_TYPE xMissedYield 						= ( portBASE_TYPE ) pdFALSE;
 PRIVILEGED_DATA static volatile portBASE_TYPE xNumOfOverflows 					= ( portBASE_TYPE ) 0;
-PRIVILEGED_DATA static unsigned portBASE_TYPE uxTCBNumber 						= ( unsigned portBASE_TYPE ) 0U;
+PRIVILEGED_DATA static unsigned portBASE_TYPE uxTaskNumber 						= ( unsigned portBASE_TYPE ) 0U;
 PRIVILEGED_DATA static portTickType xNextTaskUnblockTime						= ( portTickType ) portMAX_DELAY;
 
 #if ( configGENERATE_RUN_TIME_STATS == 1 )
@@ -205,6 +218,7 @@ PRIVILEGED_DATA static portTickType xNextTaskUnblockTime						= ( portTickType )
  * executing task has been rescheduled.
  */
 #define prvAddTaskToReadyQueue( pxTCB )																					\
+	traceMOVED_TASK_TO_READY_STATE( pxTCB )																				\
 	if( ( pxTCB )->uxPriority > uxTopReadyPriority )																	\
 	{																													\
 		uxTopReadyPriority = ( pxTCB )->uxPriority;																		\
@@ -506,14 +520,15 @@ tskTCB * pxNewTCB;
 			#if ( configUSE_TRACE_FACILITY == 1 )
 			{
 				/* Add a counter into the TCB for tracing only. */
-				pxNewTCB->uxTCBNumber = uxTCBNumber;
+				pxNewTCB->uxTCBNumber = uxTaskNumber;
 			}
 			#endif
-			uxTCBNumber++;
+			uxTaskNumber++;
 
 			prvAddTaskToReadyQueue( pxNewTCB );
 
 			xReturn = pdPASS;
+			portSETUP_TCB( pxNewTCB );
 			traceTASK_CREATE( pxNewTCB );
 		}
 		taskEXIT_CRITICAL();
@@ -580,7 +595,7 @@ tskTCB * pxNewTCB;
 
 			/* Increment the uxTaskNumberVariable also so kernel aware debuggers
 			can detect that the task lists need re-generating. */
-			uxTCBNumber++;
+			uxTaskNumber++;
 
 			traceTASK_DELETE( pxTCB );
 		}
@@ -2300,7 +2315,8 @@ tskTCB *pxNewTCB;
 	static void prvDeleteTCB( tskTCB *pxTCB )
 	{
 		/* This call is required specifically for the TriCore port.  It must be
-		above the vPortFree() calls. */
+		above the vPortFree() calls.  The call is also used by ports/demos that
+		want to allocate and clean RAM statically. */
 		portCLEAN_UP_TCB( pxTCB );
 
 		/* Free up the memory allocated by the scheduler for the task.  It is up to

@@ -34,9 +34,10 @@ namespace LibSpotify
 
 LibSpotifyPlaybackHandler::LibSpotifyPlaybackHandler(LibSpotifyIf& libspotify) : libSpotifyIf_(libspotify),
                                                                                  historyQueue_(HISTORY_QUEUE_DEPTH),
-                                                                                 isShuffle(true),
-                                                                                 isRepeat(true)
+                                                                                 isShuffle(false),
+                                                                                 isRepeat(false)
 {
+    playQueueIter_ = playQueue_.end();
 }
 
 LibSpotifyPlaybackHandler::~LibSpotifyPlaybackHandler() { }
@@ -105,14 +106,14 @@ void LibSpotifyPlaybackHandler::loadPlaylist( const Playlist& playlist, int star
         {
             Track first = *playQueueIter_;
             playQueue_.erase(playQueueIter_);
-            random_shuffle ( playQueue_.begin(), playQueue_.end() );
+            shuffle();
             playQueue_.push_front(first);
             playQueueIter_ = playQueue_.begin();
         }
     }
     else if ( isShuffle )
     {
-        random_shuffle ( playQueue_.begin(), playQueue_.end() );
+        shuffle();
     }
 }
 
@@ -164,6 +165,11 @@ void LibSpotifyPlaybackHandler::playPrevious()
     mtx_.unlock();
 }
 
+void LibSpotifyPlaybackHandler::shuffle()
+{
+    random_shuffle ( playQueue_.begin(), playQueue_.end() );
+}
+
 /***************************************************
  * Subscribed callbacks from LibSpotifyIf
  ***************************************************/
@@ -202,6 +208,40 @@ void LibSpotifyPlaybackHandler::trackEndedInd()
 void LibSpotifyPlaybackHandler::rootFolderUpdatedInd()
 {
     /* TODO: Should update the playQueue/Folder lists.. */
+}
+
+static bool playQueueCompareTrack (Track a, Track b) { return ( a.getIndex() < b.getIndex() ); }
+
+void LibSpotifyPlaybackHandler::setShuffle(bool shuffleOn)
+{
+    if ( isShuffle == shuffleOn )
+        return; /*client out of sync, just nop()*/
+
+    mtx_.lock();
+    if ( shuffleOn )
+    {
+        shuffle();
+    }
+    else
+    {
+        /*get the index of the current track (if we have one)*/
+        int currentIndex = -1;
+        if ( playQueueIter_ != playQueue_.end() )
+            currentIndex = (*playQueueIter_).getIndex();
+
+        /*put playqueue back in order*/
+        sort( playQueue_.begin(), playQueue_.end(), playQueueCompareTrack );
+
+        /*find the current track again (if we had one)*/
+        playQueueIter_ = playQueue_.begin();
+        if ( currentIndex >= 0 )
+        {
+            while ( ( playQueueIter_ != playQueue_.end() ) && ( (*playQueueIter_).getIndex() != currentIndex ) )
+                playQueueIter_++;
+        }
+    }
+    isShuffle = shuffleOn;
+    mtx_.unlock();
 }
 
 } /* namespace LibSpotify */

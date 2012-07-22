@@ -74,6 +74,7 @@ private:
     bool isRepeat;
 
     void loadPlaylist(const Playlist& playlist, int startIndex);
+    void shuffle();
 
 public:
     LibSpotifyPlaybackHandler(class LibSpotifyIf& spotifyIf);
@@ -81,8 +82,8 @@ public:
 
     void playTrack(const Track& track);
     void playFolder(const Folder& folder);
-    void playPlaylist(const Playlist& playlist, int startIndex = 0);
-    void playAlbum(const Album& album, int startIndex = 0);
+    void playPlaylist(const Playlist& playlist, int startIndex = -1);
+    void playAlbum(const Album& album, int startIndex = -1);
     void playSearchResult(const std::string& searchString,
                           const std::string& searchLink,
                           const TrackQueue& searchResult);
@@ -93,7 +94,7 @@ public:
 
     void rootFolderUpdatedInd();
     void trackEndedInd();
-
+    void setShuffle(bool shuffleOn);
 };
 
 } /* namespace LibSpotify */

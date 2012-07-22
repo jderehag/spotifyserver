@@ -42,6 +42,7 @@ class UIConsole : public Platform::Runnable, public IUserInterface
 private:
     LibSpotify::PlaylistContainer playlists;
     LibSpotify::PlaylistContainer::iterator itPlaylists_;
+    bool isShuffle;
 public:
     UIConsole(Messenger& m);
     ~UIConsole();
@@ -55,7 +56,8 @@ public:
 
 
 UIConsole::UIConsole(Messenger& m) : IUserInterface(m),
-        itPlaylists_(playlists.begin())
+        itPlaylists_(playlists.begin()),
+        isShuffle(false)
 {
     startThread();
 }
@@ -85,7 +87,8 @@ void UIConsole::run()
                      "'z' previous\n"
                      "'x' play\n"
                      "'c' pause\n"
-                     "'v' next\n" << std::endl;
+                     "'v' next\n"
+                     "'e' toggle shuffle\n" << std::endl;
 
         c = getchar();
 
@@ -119,6 +122,12 @@ void UIConsole::run()
         case 'c':
         {
             pause();
+            break;
+        }
+        case 'e':
+        {
+            isShuffle = !isShuffle;
+            setShuffle(isShuffle);
             break;
         }
 

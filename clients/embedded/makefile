@@ -47,33 +47,39 @@ OUTDIR = .out
 # Target file name (without extension).
 TARGET = spotifyclient_rom
 
+# root directories to look for source files in
+VPATH += ../../src/ ./source/
+
 # List C source files here. (C dependencies are automatically generated.)
 # use file-extension c for "c-only"-files
-SRC  =	./source/syscalls.c \
-		$(addprefix ./source/freeRTOS/, list.c queue.c tasks.c timers.c port.c heap_2.c) \
-		./source/hooks.c \
-		$(addprefix ./source/STM32F4XX/, stm32f4_discovery.c system_stm32f4xx.c stm32f4xx_it.c stm32f4x7_eth_bsp.c netconf.c) \
-		$(addprefix ./source/STM32F4XX/STM32F4xx_StdPeriph_Driver/src/, misc.c stm32f4xx_dma.c stm32f4xx_exti.c stm32f4xx_gpio.c stm32f4xx_syscfg.c stm32f4xx_rcc.c) \
-		./source/STM32F4XX/STM32F4x7_ETH_Driver/src/stm32f4x7_eth.c \
-		$(addprefix ./source/lwip_v1.3.2/src/core/, init.c tcp_out.c memp.c netif.c pbuf.c raw.c stats.c sys.c tcp.c tcp_in.c udp.c dhcp.c ipv4/ip.c ipv4/ip_addr.c ipv4/icmp.c ipv4/ip_frag.c ipv4/inet.c ipv4/inet_chksum.c ipv4/autoip.c) \
-		$(addprefix ./source/lwip_v1.3.2/src/api/, tcpip.c api_msg.c err.c api_lib.c netbuf.c sockets.c ) \
-		$(addprefix ./source/lwip_v1.3.2/src/netif/, etharp.c ) \
-		$(addprefix ./source/lwip_v1.3.2/port/STM32F4x7/FreeRTOS/, sys_arch.c ethernetif.c) 
-
+SRC  =	syscalls.c \
+		$(addprefix freeRTOS/, list.c queue.c tasks.c timers.c heap_3.c) \
+		$(addprefix freeRTOS/port/, port.c) \
+		hooks.c \
+		$(addprefix STM32F4XX/, stm32f4_discovery.c system_stm32f4xx.c stm32f4xx_it.c stm32f4x7_eth_bsp.c netconf.c) \
+		$(addprefix STM32F4XX/STM32F4xx_StdPeriph_Driver/src/, misc.c stm32f4xx_dma.c stm32f4xx_exti.c stm32f4xx_gpio.c stm32f4xx_syscfg.c stm32f4xx_rcc.c) \
+		STM32F4XX/STM32F4x7_ETH_Driver/src/stm32f4x7_eth.c
+		
+SRC +=	$(addprefix lwip_v1.4.0/src/core/, init.c tcp_out.c memp.c netif.c pbuf.c raw.c stats.c sys.c tcp.c tcp_in.c udp.c dhcp.c def.c timers.c ipv4/ip.c ipv4/ip_addr.c ipv4/icmp.c ipv4/ip_frag.c ipv4/inet.c ipv4/inet_chksum.c ipv4/autoip.c) \
+		$(addprefix lwip_v1.4.0/src/api/, tcpip.c api_msg.c err.c api_lib.c netbuf.c sockets.c ) \
+		$(addprefix lwip_v1.4.0/src/netif/, etharp.c ) \
+		$(addprefix lwip_v1.4.0/port/STM32F4x7/FreeRTOS/, sys_arch.c ethernetif.c)
+		
+		
 
 # List C++ source files here.
 # use file-extension .cpp for C++-files (not .C)
-CPPSRC = $(addprefix ./source/, main.cpp buttonHandler.cpp UIEmbedded.cpp heapWrap.cpp) \
-		$(addprefix ../../src/LibSpotifyIf/MediaContainers/, Album.cpp Artist.cpp Folder.cpp Playlist.cpp Track.cpp) \
-		$(addprefix ../../src/MessageFactory/, Message.cpp MessageDecoder.cpp MessageEncoder.cpp TlvDefinitions.cpp Tlvs.cpp SocketReader.cpp SocketWriter.cpp) \
-		../../src/TestApp/Messenger.cpp \
-		../../src/TestApp/IUserInterface.cpp \
-		../../src/Logger/Logger.cpp \
-		../../src/ConfigHandling/Configs/LoggerConfig.cpp \
-		../../src/Platform/Socket/LwIP/LwIPSocket.cpp \
-		../../src/Platform/Threads/FreeRTOS/FreeRTOSMessagebox.cpp \
-		../../src/Platform/Threads/FreeRTOS/FreeRTOSMutex.cpp \
-		../../src/Platform/Threads/FreeRTOS/FreeRTOSRunnable.cpp
+CPPSRC = main.cpp buttonHandler.cpp UIEmbedded.cpp heapWrap.cpp \
+		$(addprefix LibSpotifyIf/MediaContainers/, Album.cpp Artist.cpp Folder.cpp Playlist.cpp Track.cpp) \
+		$(addprefix MessageFactory/, Message.cpp MessageDecoder.cpp MessageEncoder.cpp TlvDefinitions.cpp Tlvs.cpp SocketReader.cpp SocketWriter.cpp) \
+		TestApp/Messenger.cpp \
+		TestApp/IUserInterface.cpp \
+		Logger/Logger.cpp \
+		ConfigHandling/Configs/LoggerConfig.cpp \
+		Platform/Socket/LwIP/LwIPSocket.cpp \
+		Platform/Threads/FreeRTOS/FreeRTOSMessagebox.cpp \
+		Platform/Threads/FreeRTOS/FreeRTOSMutex.cpp \
+		Platform/Threads/FreeRTOS/FreeRTOSRunnable.cpp
 
 # List Assembler source files here.
 # Make them always end in a capital .S. Files ending in a lowercase .s
@@ -82,22 +88,23 @@ CPPSRC = $(addprefix ./source/, main.cpp buttonHandler.cpp UIEmbedded.cpp heapWr
 # Even though the DOS/Win* filesystem matches both .s and .S the same,
 # it will preserve the spelling of the filenames, and gcc itself does
 # care about how the name is spelled on its command-line.
-ASRC = ./source/STM32F4XX/startup_stm32f4xx.s
+ASRC = STM32F4XX/startup_stm32f4xx.s
 
 # List any extra directories to look for include files here.
 #    Each directory must be seperated by a space.
-EXTRAINCDIRS  = ./source/freertos/ \
-		  ./source/lwip_v1.3.2/src/include \
-		  ./source/lwip_v1.3.2/src/include/ipv4 \
-		  ./source/lwip_v1.3.2/port/STM32F4x7/FreeRTOS \
-		  ./source/lwip_v1.3.2/port/STM32F4x7 \
+EXTRAINCDIRS  += ./source/freertos/include \
+		  ./source/freertos/port \
 		  ./source \
 		  ./source/STM32F4XX \
 		  ./source/STM32F4XX/CMSIS \
 		  ./source/STM32F4XX/STM32F4xx_StdPeriph_Driver/inc \
 		  ./source/STM32F4XX/STM32F4x7_ETH_Driver/inc \
 		  ./../../src \
-		  ./../../src/Logger
+		  ./../../src/Logger \
+		  ./source/lwip_v1.4.0/src/include \
+		  ./source/lwip_v1.4.0/src/include/ipv4 \
+		  ./source/lwip_v1.4.0/port/STM32F4x7/FreeRTOS \
+		  ./source/lwip_v1.4.0/port/STM32F4x7
 
 # Extra libraries
 #    Each library-name must be seperated by a space.
@@ -121,9 +128,9 @@ EXTRA_LIBDIRS =
 # 0 = turn off optimization. s = optimize for size.
 # (Note: 3 is not always the best optimization level. See avr-libc FAQ.)
 #OPT = s
-OPT = 2
+#OPT = 2
 #OPT = 3
-#OPT = 0
+OPT = 0
 
 # Output format. (can be ihex or binary or both)
 #  binary to create a load-image in raw-binary format i.e. for SAM-BA, 
@@ -177,6 +184,7 @@ THUMB    =
 THUMB_IW = 
 endif
 
+#-mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=softfp
 #  -g*:          generate debugging information
 #  -O*:          optimization level
 #  -f...:        tuning, see GCC manual and avr-libc documentation
@@ -188,6 +196,7 @@ endif
 CFLAGS =  -g$(DEBUG)
 CFLAGS += -O$(OPT)
 CFLAGS += -mcpu=$(MCU) $(THUMB_IW) 
+CFLAGS += -mfpu=fpv4-sp-d16 -mfloat-abi=softfp
 CFLAGS += $(CDEFS)
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS)) -I.
 # when using ".ramfunc"s without longcall:
@@ -338,11 +347,12 @@ MSG_ASMFROMC_ARM = "Creating asm-File from C-Source (ARM-only):"
 
 # List of all source files.
 ALLSRC     = $(ASRC) $(SRC) $(CPPSRC)
-# List of all source files without directory and file-extension.
-ALLSRCBASE = $(notdir $(basename $(ALLSRC)))
+# List of all source files with directory but without file-extension.
+ALLSRCBASE = $(basename $(ALLSRC))
 
 # Define all object files.
-ALLOBJ     = $(addprefix $(OUTDIR)/, $(addsuffix .o, $(ALLSRCBASE)))
+ALLOBJFILES = $(addsuffix .o, $(ALLSRCBASE))
+ALLOBJ     = $(addprefix $(OUTDIR)/, $(ALLOBJFILES))
 
 # Define all listing files (used for make clean).
 LSTFILES   = $(addprefix $(OUTDIR)/, $(addsuffix .lst, $(ALLSRCBASE)))
@@ -379,10 +389,12 @@ ifdef SHELL_IS_WIN32
 createdirs:
 	-@md $(OUTDIR) >NUL 2>&1 || echo "" >NUL
 	-@md $(OUTDIR)\dep >NUL 2>&1 || echo "" >NUL
+	-@md $(foreach objdir, $(subst /,\,$(filter-out ./,$(dir $(ALLOBJFILES)))), $(OUTDIR)\$(objdir)) >NUL 2>&1 || echo "" >NUL
 else
 createdirs:
 	-@mkdir $(OUTDIR) 2>/dev/null || echo "" >/dev/null
 	-@mkdir $(OUTDIR)/dep 2>/dev/null || echo "" >/dev/null
+	-@mkdir -p $(foreach objdir, $(dir $(ALLOBJFILES)), $(OUTDIR)/$(objdir)) 2>/dev/null || echo "" >/dev/null
 endif
 
 # Eye candy.
@@ -447,7 +459,7 @@ endif
 # Link: create ELF output file from object files.
 .SECONDARY : $(TARGET).elf
 .PRECIOUS : $(ALLOBJ)
-%.elf:  $(ALLOBJ) makefile
+%.elf:  $(ALLOBJ)
 	@echo $(MSG_LINKING) $@
 # use $(CC) for C-only projects or $(CPP) for C++-projects:
 ifeq "$(strip $(CPPSRC)$(CPPARM))" ""
@@ -459,7 +471,7 @@ endif
 
 # Assemble: create object files from assembler source files.
 define ASSEMBLE_TEMPLATE
-$(OUTDIR)/$(notdir $(basename $(1))).o : $(1)
+$(OUTDIR)/$(basename $(1)).o : $(1)
 	@echo $(MSG_ASSEMBLING) $$< to $$@
 	$(CC) -c $(THUMB) $$(ASFLAGS) $$< -o $$@ 
 endef
@@ -467,7 +479,7 @@ $(foreach src, $(ASRC), $(eval $(call ASSEMBLE_TEMPLATE, $(src))))
 
 # Compile: create object files from C source files.
 define COMPILE_C_TEMPLATE
-$(OUTDIR)/$(notdir $(basename $(1))).o : $(1)
+$(OUTDIR)/$(basename $(1)).o : $(1)
 	@echo $(MSG_COMPILING) $$< to $$@
 	$(CC) -c $(THUMB) $$(CFLAGS) $$(CONLYFLAGS) $$< -o $$@ 
 endef
@@ -475,7 +487,7 @@ $(foreach src, $(SRC), $(eval $(call COMPILE_C_TEMPLATE, $(src))))
 
 # Compile: create object files from C++ source files.
 define COMPILE_CPP_TEMPLATE
-$(OUTDIR)/$(notdir $(basename $(1))).o : $(1)
+$(OUTDIR)/$(basename $(1)).o : $(1)
 	@echo $(MSG_COMPILINGCPP) $$< to $$@
 	$(CC) -c $(THUMB) $$(CFLAGS) $$(CPPFLAGS) $$< -o $$@ 
 endef

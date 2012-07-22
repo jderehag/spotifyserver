@@ -80,7 +80,7 @@ T Messagebox<T>::pop_front()
 template <typename T>
 bool Messagebox<T>::empty()
 {
-    return uxQueueMessagesWaiting( mb_->hdl );
+    return ( uxQueueMessagesWaiting( mb_->hdl ) == 0 );
 }
 
 }

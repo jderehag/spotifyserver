@@ -102,26 +102,29 @@ void Messenger::run()
                 if ( select( &readset, &writeset, NULL, 100 ) < 0 )
                     break;
 
-                if ( reader.doread() < 0 )
-                    break;
-
-                if ( reader.done() )
+                if ( !readset.empty() )
                 {
-                    MessageDecoder decoder;
+                    if ( reader.doread() < 0 )
+                        break;
 
-                    log(LOG_DEBUG) << "Receive complete";
-
-                    printHexMsg(reader.getMessage(), reader.getLength());
-
-                    Message* msg = decoder.decode(reader.getMessage());
-
-                    if ( msg != NULL )
+                    if ( reader.done() )
                     {
-                        if ( subscriber_ ) subscriber_->receivedMessage( msg );
-                        delete msg;
-                    }
+                        MessageDecoder decoder;
 
-                    reader.reset();
+                        log(LOG_DEBUG) << "Receive complete";
+
+                        printHexMsg(reader.getMessage(), reader.getLength());
+
+                        Message* msg = decoder.decode(reader.getMessage());
+
+                        if ( msg != NULL )
+                        {
+                            if ( subscriber_ ) subscriber_->receivedMessage( msg );
+                            delete msg;
+                        }
+
+                        reader.reset();
+                    }
                 }
 
                 if ( !writeset.empty() )

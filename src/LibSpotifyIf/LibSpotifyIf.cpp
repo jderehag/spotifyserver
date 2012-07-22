@@ -187,6 +187,10 @@ void LibSpotifyIf::previous()
     }
 }
 
+void LibSpotifyIf::setShuffle( bool shuffleOn )
+{
+    playbackHandler_.setShuffle( shuffleOn );
+}
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * *
  * * * * * * * * * * * * * * * * * * * * * * * * * * *

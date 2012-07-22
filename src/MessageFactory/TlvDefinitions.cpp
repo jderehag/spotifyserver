@@ -102,12 +102,14 @@ const char* tlvTypeToString(const TlvType_t type)
             return "TLV_STATE";
         case TLV_PROGRESS:
             return "TLV_PROGRESS";
-        case TLV_PLAY_MODE:
-            return "TLV_PLAY_MODE";
         case TLV_VOLUME:
             return "TLV_VOLUME";
         case TLV_PLAY_OPERATION:
             return "TLV_PLAY_OPERATION";
+
+        STR( TLV_PLAY_MODE_SHUFFLE );
+        STR( TLV_PLAY_MODE_REPEAT );
+
         case TLV_LINK:
             return "TLV_LINK";
         case TLV_NAME:
@@ -159,19 +161,6 @@ const char* playbackStateToString(const PlaybackState_t type)
     return "Unknown PlaybackState";
 }
 
-const char* playModeToString(const PlayMode_t type)
-{
-    switch(type)
-    {
-        case PLAY_MODE_SHUFFLE:
-            return "PLAY_MODE_SHUFFLE";
-        case PLAY_MODE_REPEAT:
-            return "PLAY_MODE_REPEAT";
-        case PLAY_MODE_WONDERWALL_ONLY:
-            return "PLAY_MODE_WONDERWALL_ONLY";
-    }
-    return "Unknown PlayMode";
-}
 
 
 

@@ -61,8 +61,8 @@ void vApplicationStackOverflowHook( xTaskHandle pxTask, signed char *pcTaskName 
   */
 void assert_failed(uint8_t* file, uint32_t line)
 { 
-	taskDISABLE_INTERRUPTS();
-	for( ;; );
+	/*taskDISABLE_INTERRUPTS();
+	for( ;; );*/
 }
 
 

@@ -236,7 +236,7 @@ public:
 	unsigned int getProgress() { return progress_/10; }
 	Track& getCurrentTrack() { return currentTrack_; }
 
-	void play(unsigned int reqId, const std::string link, ILibSpotifyIfCallbackSubscriber& callbackSubscriber, int startIndex = 0);
+	void play(unsigned int reqId, const std::string link, ILibSpotifyIfCallbackSubscriber& callbackSubscriber, int startIndex = -1);
 	void stop();
     void playSearchResult(const char* searchString);
     void enqueueTrack(const char* track_uri);
@@ -244,6 +244,7 @@ public:
 	void resume();
     void next();
     void previous();
+    void setShuffle( bool shuffleOn );
 
 	Folder& getRootFolder();
 

@@ -418,7 +418,7 @@ void Client::handlePlayReq(const Message* msg)
     {
         const IntTlv* startIndex = (const IntTlv*)msg->getTlvRoot()->getTlv(TLV_TRACK_INDEX);
         log(LOG_DEBUG) << "spotify_.play(" << url->getString() << ")";
-        spotify_.play(msg->getId(), url->getString(), *this, startIndex ? startIndex->getVal() : 0 );
+        spotify_.play(msg->getId(), url->getString(), *this, startIndex ? startIndex->getVal() : -1 );
     }
 
     Message* rsp = new Message( PLAY_RSP );
@@ -466,6 +466,12 @@ void Client::handlePlayControlReq(const Message* msg)
                     default:
                         break;
                 }
+            }
+            break;
+
+            case TLV_PLAY_MODE_SHUFFLE:
+            {
+                spotify_.setShuffle( (((IntTlv*)tlv)->getVal() != 0) );
             }
             break;
 

@@ -40,6 +40,7 @@ private:
     const uint8_t* message;
     uint32_t rpos_;
     bool hasError_;
+    bool hasUnknownTlv_;
 
     TlvType_t getCurrentTlv();
     uint32_t getCurrentTlvLen();

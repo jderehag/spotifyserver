@@ -60,7 +60,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>..\..\spotifyserver_deps\lib\libspotify-10.1.16-win32-release\include;src;..\src\Logger;..\src\Utils;..\..\spotifyserver_deps\lib\OpenAL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\spotifyserver_deps\lib\libspotify-10.1.16-win32-release\include;..\src;..\src\Logger;..\src\Utils;..\..\spotifyserver_deps\lib\OpenAL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>

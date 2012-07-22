@@ -1,5 +1,5 @@
 /*
-    FreeRTOS V7.1.0 - Copyright (C) 2011 Real Time Engineers Ltd.
+    FreeRTOS V7.1.1 - Copyright (C) 2012 Real Time Engineers Ltd.
 
 
     ***************************************************************************
@@ -40,15 +40,28 @@
     FreeRTOS WEB site.
 
     1 tab == 4 spaces!
+    
+    ***************************************************************************
+     *                                                                       *
+     *    Having a problem?  Start by reading the FAQ "My application does   *
+     *    not run, what could be wrong?                                      *
+     *                                                                       *
+     *    http://www.FreeRTOS.org/FAQHelp.html                               *
+     *                                                                       *
+    ***************************************************************************
 
-    http://www.FreeRTOS.org - Documentation, latest information, license and
-    contact details.
+    
+    http://www.FreeRTOS.org - Documentation, training, latest information, 
+    license and contact details.
+    
+    http://www.FreeRTOS.org/plus - A selection of FreeRTOS ecosystem products,
+    including FreeRTOS+Trace - an indispensable productivity tool.
 
-    http://www.SafeRTOS.com - A version that is certified for use in safety
-    critical systems.
-
-    http://www.OpenRTOS.com - Commercial support, development, porting,
-    licensing and training services.
+    Real Time Engineers ltd license FreeRTOS to High Integrity Systems, who sell 
+    the code with commercial support, indemnification, and middleware, under 
+    the OpenRTOS brand: http://www.OpenRTOS.com.  High Integrity Systems also
+    provide a safety engineered and independently SIL3 certified version under 
+    the SafeRTOS brand: http://www.SafeRTOS.com.
 */
 
 #include <stdlib.h>
@@ -163,6 +176,8 @@ void vQueueWaitForMessageRestricted( xQueueHandle pxQueue, portTickType xTicksTo
 unsigned char ucQueueGetQueueNumber( xQueueHandle pxQueue ) PRIVILEGED_FUNCTION;
 void vQueueSetQueueNumber( xQueueHandle pxQueue, unsigned char ucQueueNumber ) PRIVILEGED_FUNCTION;
 unsigned char ucQueueGetQueueType( xQueueHandle pxQueue ) PRIVILEGED_FUNCTION;
+portBASE_TYPE xQueueGenericReset( xQueueHandle pxQueue, portBASE_TYPE xNewQueue ) PRIVILEGED_FUNCTION;
+xTaskHandle xQueueGetMutexHolder( xQueueHandle xSemaphore ) PRIVILEGED_FUNCTION;
 
 /*
  * Co-routine queue functions differ from task queue functions.  Co-routines are
@@ -261,13 +276,52 @@ static void prvCopyDataFromQueue( xQUEUE * const pxQueue, const void *pvBuffer )
  * PUBLIC QUEUE MANAGEMENT API documented in queue.h
  *----------------------------------------------------------*/
 
+portBASE_TYPE xQueueGenericReset( xQueueHandle pxQueue, portBASE_TYPE xNewQueue )
+{
+portBASE_TYPE xReturn = pdPASS;
+
+	configASSERT( pxQueue );
+
+	/* If the queue being reset has already been used (has not just been
+	created), then only reset the queue if its event lists are empty. */
+	if( xNewQueue != pdTRUE )
+	{
+		if( listLIST_IS_EMPTY( &( pxQueue->xTasksWaitingToReceive ) ) == pdFALSE )
+		{
+			xReturn = pdFAIL;
+		}
+
+		if( listLIST_IS_EMPTY( &( pxQueue->xTasksWaitingToSend ) ) == pdFALSE )
+		{
+			xReturn = pdFAIL;
+		}
+	}
+
+	if( xReturn == pdPASS )
+	{
+		pxQueue->pcTail = pxQueue->pcHead + ( pxQueue->uxLength * pxQueue->uxItemSize );
+		pxQueue->uxMessagesWaiting = ( unsigned portBASE_TYPE ) 0U;
+		pxQueue->pcWriteTo = pxQueue->pcHead;
+		pxQueue->pcReadFrom = pxQueue->pcHead + ( ( pxQueue->uxLength - ( unsigned portBASE_TYPE ) 1U ) * pxQueue->uxItemSize );
+		pxQueue->xRxLock = queueUNLOCKED;
+		pxQueue->xTxLock = queueUNLOCKED;
+
+		/* Ensure the event queues start with the correct state. */
+		vListInitialise( &( pxQueue->xTasksWaitingToSend ) );
+		vListInitialise( &( pxQueue->xTasksWaitingToReceive ) );
+	}
+
+	return xReturn;
+}
+/*-----------------------------------------------------------*/
+
 xQueueHandle xQueueGenericCreate( unsigned portBASE_TYPE uxQueueLength, unsigned portBASE_TYPE uxItemSize, unsigned char ucQueueType )
 {
 xQUEUE *pxNewQueue;
 size_t xQueueSizeInBytes;
 xQueueHandle xReturn = NULL;
 
-	/* Remove compiler warnings about unused parameters should 
+	/* Remove compiler warnings about unused parameters should
 	configUSE_TRACE_FACILITY not be set to 1. */
 	( void ) ucQueueType;
 
@@ -286,23 +340,14 @@ xQueueHandle xReturn = NULL;
 			{
 				/* Initialise the queue members as described above where the
 				queue type is defined. */
-				pxNewQueue->pcTail = pxNewQueue->pcHead + ( uxQueueLength * uxItemSize );
-				pxNewQueue->uxMessagesWaiting = ( unsigned portBASE_TYPE ) 0U;
-				pxNewQueue->pcWriteTo = pxNewQueue->pcHead;
-				pxNewQueue->pcReadFrom = pxNewQueue->pcHead + ( ( uxQueueLength - ( unsigned portBASE_TYPE ) 1U ) * uxItemSize );
 				pxNewQueue->uxLength = uxQueueLength;
 				pxNewQueue->uxItemSize = uxItemSize;
-				pxNewQueue->xRxLock = queueUNLOCKED;
-				pxNewQueue->xTxLock = queueUNLOCKED;
+				xQueueGenericReset( pxNewQueue, pdTRUE );
 				#if ( configUSE_TRACE_FACILITY == 1 )
 				{
 					pxNewQueue->ucQueueType = ucQueueType;
 				}
 				#endif /* configUSE_TRACE_FACILITY */
-
-				/* Likewise ensure the event queues start with the correct state. */
-				vListInitialise( &( pxNewQueue->xTasksWaitingToSend ) );
-				vListInitialise( &( pxNewQueue->xTasksWaitingToReceive ) );
 
 				traceQUEUE_CREATE( pxNewQueue );
 				xReturn = pxNewQueue;
@@ -330,7 +375,7 @@ xQueueHandle xReturn = NULL;
 		/* Prevent compiler warnings about unused parameters if
 		configUSE_TRACE_FACILITY does not equal 1. */
 		( void ) ucQueueType;
-	
+
 		/* Allocate the new queue structure. */
 		pxNewQueue = ( xQUEUE * ) pvPortMalloc( sizeof( xQUEUE ) );
 		if( pxNewQueue != NULL )
@@ -352,7 +397,7 @@ xQueueHandle xReturn = NULL;
 			pxNewQueue->uxItemSize = ( unsigned portBASE_TYPE ) 0U;
 			pxNewQueue->xRxLock = queueUNLOCKED;
 			pxNewQueue->xTxLock = queueUNLOCKED;
-			
+
 			#if ( configUSE_TRACE_FACILITY == 1 )
 			{
 				pxNewQueue->ucQueueType = ucQueueType;
@@ -380,7 +425,37 @@ xQueueHandle xReturn = NULL;
 #endif /* configUSE_MUTEXES */
 /*-----------------------------------------------------------*/
 
-#if configUSE_RECURSIVE_MUTEXES == 1
+#if ( configUSE_MUTEXES == 1 )
+
+	void* xQueueGetMutexHolder( xQueueHandle xSemaphore )
+	{
+	void *pxReturn;
+
+		/* This function is called by xSemaphoreGetMutexHolder(), and should not
+		be called directly.  Note:  This is is a good way of determining if the
+		calling task is the mutex holder, but not a good way of determining the
+		identity of the mutex holder, as the holder may change between the 
+		following critical section exiting and the function returning. */
+		taskENTER_CRITICAL();
+		{
+			if( xSemaphore->uxQueueType == queueQUEUE_IS_MUTEX )
+			{
+				pxReturn = ( void * ) xSemaphore->pxMutexHolder;
+			}
+			else
+			{
+				pxReturn = NULL;
+			}
+		}
+		taskEXIT_CRITICAL();
+		
+		return pxReturn;
+	}
+
+#endif
+/*-----------------------------------------------------------*/
+
+#if ( configUSE_RECURSIVE_MUTEXES == 1 )
 
 	portBASE_TYPE xQueueGiveMutexRecursive( xQueueHandle pxMutex )
 	{

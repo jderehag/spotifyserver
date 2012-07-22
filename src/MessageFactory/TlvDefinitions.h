@@ -29,7 +29,7 @@
 #define TLVDEFINITIONS_H_
 
 #define PROTOCOL_VERSION_MAJOR 1 /*increase when not backwards compatible*/
-#define PROTOCOL_VERSION_MINOR 1 /*increase when adding new messages and/or TLV's*/
+#define PROTOCOL_VERSION_MINOR 2 /*increase when adding new messages and/or TLV's*/
 
 #define RSP_BIT 0x80000000
 #define IND_BIT 0x40000000
@@ -96,9 +96,11 @@ typedef enum
     TLV_PROGRESS = 0x502,
 
     /* Playback control */
-    TLV_PLAY_MODE      = 0x601, /* PlayMode_t */
-    TLV_VOLUME         = 0x602,
-    TLV_PLAY_OPERATION = 0x603, /* PlayOp_t */
+    /* TLV_PLAY_MODE         = 0x601, deprecated PlayMode_t */
+    TLV_VOLUME            = 0x602,
+    TLV_PLAY_OPERATION    = 0x603, /* PlayOp_t */
+    TLV_PLAY_MODE_SHUFFLE = 0x611,
+    TLV_PLAY_MODE_REPEAT  = 0x612,
 
     /* Generic data items */
     TLV_LINK      = 0x701,
@@ -154,13 +156,6 @@ typedef enum
 
 typedef enum
 {
-    PLAY_MODE_SHUFFLE,
-    PLAY_MODE_REPEAT,
-    PLAY_MODE_WONDERWALL_ONLY,
-}PlayMode_t;
-
-typedef enum
-{
     PLAY_OP_PAUSE,
     PLAY_OP_RESUME,
     PLAY_OP_NEXT,
@@ -178,7 +173,6 @@ const char* failureCauseToString(const FailureCause_t type);
 const char* messageTypeToString(const MessageType_t type);
 const char* tlvTypeToString(const TlvType_t type);
 const char* playbackStateToString(const PlaybackState_t type);
-const char* playModeToString(const PlayMode_t type);
 
 
 
