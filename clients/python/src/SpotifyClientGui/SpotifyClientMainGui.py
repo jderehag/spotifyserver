@@ -108,10 +108,15 @@ class SpotifyClientMainGui(Tk):
         
     def executeSearchReq(self, *event):
         self.spotify.sendSearchReq(self, self.searchEntry.get())
+        # For now, we dont support search playback with index offset
+        self.__pendingTrackListParent = None
         
     def listboxTracksPlayReq(self, *event):
         tr = self.__tracks[int(self.multiListboxTracks.curselection()[0])]
-        self.spotify.sendPlayReq(tr.getUri())
+        if(self.__pendingTrackListParent != None):
+            self.spotify.sendPlayReq(self.__pendingTrackListParent.getUri(), tr.getIndex())
+        else:
+            self.spotify.sendPlayReq(tr.getUri(), tr.getIndex())
     
     def getTracksRspCb(self, listOfTracks):
         self.__tracks = listOfTracks
@@ -128,6 +133,12 @@ class SpotifyClientMainGui(Tk):
             for artist in track.getArtistList():
                 artistStr += artist.getName() + " "
             self.multiListboxTracks.insert(END, (track.getName(), artistStr, track.getAlbum().getName()))
+            
+    def setPendingTrackListParent(self, parent):
+        self.__pendingTrackListParent = parent
+        
+    def getPendingTrackListParent(self):
+        return self.__pendingTrackListParent
 
 
 class LeftFrame(Frame):
@@ -207,6 +218,7 @@ class LeftFrame(Frame):
     def listboxPlaylistSelectionChanged(self, *event):
         pl = self.__playlists[int(self.listboxPlaylist.curselection()[0])]
         self.spotify.sendGetTracksReq(self.parent, pl.getUri())
+        self.parent.setPendingTrackListParent(pl)
         
     def updateListboxPlaylist(self):
         self.__playlists = self.spotify.getPlaylists()

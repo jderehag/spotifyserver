@@ -119,3 +119,9 @@ class MultiListbox(Frame):
     def bind(self, event, function):
         for lb in self.lists:
             lb.bind(event, function)
+            
+    def setListOpaqueData(self, data):
+        self.__data = data
+        
+    def getListOpaqueData(self):
+        return self.__data

@@ -70,7 +70,7 @@ class Playlist(object):
         return self.__uri 
 
 class Track(object):
-    def __init__(self, name, link, artistlist, album, isStarred, isLocal, isAutoLinked, durationMillisecs):
+    def __init__(self, name, link, artistlist, album, isStarred, isLocal, isAutoLinked, durationMillisecs, index):
         self.__name = name
         self.__uri = link
         self.__artistList = artistlist
@@ -79,6 +79,7 @@ class Track(object):
         self.__isLocal = isLocal
         self.__isAutoLinked = isAutoLinked
         self.__durationMillisecs = durationMillisecs
+        self.__index = index
     
     def __str__(self):
         return self.__name
@@ -97,6 +98,9 @@ class Track(object):
     
     def getDurationMillisecs(self):
         return self.__durationMillisecs
+    
+    def getIndex(self):
+        return self.__index
     
 class Artist(object):
     def __init__(self, name, uri):

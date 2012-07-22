@@ -205,10 +205,16 @@ class GetTracksRspMsg(Message):
         for trackTlv in trackTlvs[:]:
             name = trackTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_NAME)._TlvValue.rstrip(' \t\r\n\0')
             uri = trackTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_LINK)._TlvValue.rstrip(' \t\r\n\0')
-            durationTlv = trackTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_TRACK_DURATION)._TlvValue
+            
+            durationTlv = trackTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_TRACK_DURATION)
             duration = None
             if(durationTlv != None):
-                duration, = struct.unpack('!I', durationTlv)
+                duration, = struct.unpack('!I', durationTlv._TlvValue)
+                
+            indexTlv = trackTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_TRACK_INDEX)
+            index = None
+            if(indexTlv != None):
+                index, = struct.unpack('!I', indexTlv._TlvValue)
             
             artists = []
             for artistTlv in trackTlv.getAllTlvsOfType(TlvDefinitions.TlvContainerType.TLV_ARTIST):
@@ -221,7 +227,7 @@ class GetTracksRspMsg(Message):
                 albumName = albumTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_NAME)._TlvValue.rstrip(' \t\r\n\0')
                 albumLink = albumTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_LINK)._TlvValue.rstrip(' \t\r\n\0')
                 album = Album(albumName, albumLink)
-            tracks.append(Track(name, uri, artists, album, False, False, False, duration))
+            tracks.append(Track(name, uri, artists, album, False, False, False, duration, index))
         return tracks
            
 class GenericSearchReqMsg(Message):
@@ -246,11 +252,17 @@ class GenericSearchRspMsg(Message):
         for trackTlv in trackTlvs[:]:
             name = trackTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_NAME)._TlvValue.rstrip(' \t\r\n\0')
             uri = trackTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_LINK)._TlvValue.rstrip(' \t\r\n\0')
-            durationTlv = trackTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_TRACK_DURATION)._TlvValue
+            
+            durationTlv = trackTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_TRACK_DURATION)
             duration = None
             if(durationTlv != None):
-                duration, = struct.unpack('!I', durationTlv)
+                duration, = struct.unpack('!I', durationTlv._TlvValue)
             
+            indexTlv = trackTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_TRACK_INDEX)
+            index = None
+            if(indexTlv != None):
+                index, = struct.unpack('!I', indexTlv._TlvValue)
+                
             artists = []
             for artistTlv in trackTlv.getAllTlvsOfType(TlvDefinitions.TlvContainerType.TLV_ARTIST):
                 artistName = artistTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_NAME)._TlvValue.rstrip(' \t\r\n\0')
@@ -262,7 +274,7 @@ class GenericSearchRspMsg(Message):
                 albumName = albumTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_NAME)._TlvValue.rstrip(' \t\r\n\0')
                 albumLink = albumTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_LINK)._TlvValue.rstrip(' \t\r\n\0')
                 album = Album(albumName, albumLink)
-            tracks.append(Track(name, uri, artists, album, False, False, False, duration))
+            tracks.append(Track(name, uri, artists, album, False, False, False, duration, index))
         return tracks
         
 class StatusIndMsg(Message):
@@ -298,7 +310,7 @@ class StatusIndMsg(Message):
                     albumName = albumTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_NAME)._TlvValue.rstrip(' \t\r\n\0')
                     albumLink = albumTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_LINK)._TlvValue.rstrip(' \t\r\n\0')
                     album = Album(albumName, albumLink)
-                return Track(name, uri, artists, album, False, False, False, duration)
+                return Track(name, uri, artists, album, False, False, False, duration, None)
         return None
     
     def getProgress(self):
@@ -310,9 +322,11 @@ class StatusIndMsg(Message):
 
         
 class PlayReqMsg(Message):
-    def __init__(self, msgId, uri):
+    def __init__(self, msgId, uri, startAtIndex):
         Message.__init__(self, TlvDefinitions.TlvMessageType.PLAY_REQ, msgId)
         self.addTlv(Tlv.Create(TlvDefinitions.TlvContainerType.TLV_LINK, len(uri), uri))
+        if(startAtIndex != None):
+            self.addTlv(Tlv.Create(TlvDefinitions.TlvContainerType.TLV_TRACK_INDEX, 4, startAtIndex)) 
         
 class PlayRspMsg(Message):
     def __init__(self, msgId):
@@ -364,7 +378,7 @@ class GetStatusRspMsg(Message):
                     albumName = albumTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_NAME)._TlvValue.rstrip(' \t\r\n\0')
                     albumLink = albumTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_LINK)._TlvValue.rstrip(' \t\r\n\0')
                     album = Album(albumName, albumLink)
-                return Track(name, uri, artists, album, False, False, False, duration)
+                return Track(name, uri, artists, album, False, False, False, duration, None)
         return None
     
     def getProgress(self):
