@@ -43,6 +43,7 @@ private:
     LibSpotify::PlaylistContainer playlists;
     LibSpotify::PlaylistContainer::iterator itPlaylists_;
     bool isShuffle;
+    bool isRepeat;
 public:
     UIConsole(Messenger& m);
     ~UIConsole();
@@ -57,7 +58,8 @@ public:
 
 UIConsole::UIConsole(Messenger& m) : IUserInterface(m),
         itPlaylists_(playlists.begin()),
-        isShuffle(false)
+        isShuffle(false),
+        isRepeat(false)
 {
     startThread();
 }
@@ -128,6 +130,12 @@ void UIConsole::run()
         {
             isShuffle = !isShuffle;
             setShuffle(isShuffle);
+            break;
+        }
+        case 'r':
+        {
+            isRepeat = !isRepeat;
+            setRepeat(isRepeat);
             break;
         }
 

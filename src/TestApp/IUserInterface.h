@@ -57,6 +57,7 @@ protected:
     void resume();
     void pause();
     void setShuffle( bool shuffleOn );
+    void setRepeat( bool repeatOn );
     void getStatus();
     void getPlaylists();
     void getTracks( std::string uri );

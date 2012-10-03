@@ -187,11 +187,10 @@ void LibSpotifyIf::previous()
     }
 }
 
-void LibSpotifyIf::setShuffle( bool shuffleOn )
-{
-    playbackHandler_.setShuffle( shuffleOn );
-}
-
+void LibSpotifyIf::setShuffle( bool shuffleOn ) { playbackHandler_.setShuffle( shuffleOn ); }
+void LibSpotifyIf::setRepeat( bool repeatOn )   { playbackHandler_.setRepeat( repeatOn ); }
+bool LibSpotifyIf::getShuffle() { return playbackHandler_.getShuffle(); }
+bool LibSpotifyIf::getRepeat()  { return playbackHandler_.getRepeat(); }
 /* * * * * * * * * * * * * * * * * * * * * * * * * * *
  * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
@@ -483,6 +482,7 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
 		    if (trackState_ == TRACK_STATE_PLAYING)
 		    {
 		        sp_session_player_play(spotifySession_, 0);
+		        endpoint_.pause();
 		        trackState_ = TRACK_STATE_PAUSED;
 
 		        callbackSubscriberMtx_.lock();
@@ -499,6 +499,7 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
             if (trackState_ == TRACK_STATE_PAUSED)
             {
                 sp_session_player_play(spotifySession_, 1);
+                endpoint_.resume();
                 trackState_ = TRACK_STATE_PLAYING;
 
                 callbackSubscriberMtx_.lock();
@@ -531,6 +532,7 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
                             currentTrack_.setIndex(trackObj->getIndex()); /*kind of a hack.. but only trackObj know where it came from, and thus which index it has (if it has one) */
                             trackState_ = TRACK_STATE_PLAYING;
                             sp_session_player_play(spotifySession_, 1);
+                            endpoint_.resume();
                             progress_ = 0;
 
                             callbackSubscriberMtx_.lock();

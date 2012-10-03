@@ -193,6 +193,9 @@ void Client::playingInd(Track& currentTrack)
     msg->addTlv(currentTrack.toTlv());
     msg->addTlv(TLV_PROGRESS, spotify_.getProgress());
 
+    msg->addTlv( TLV_PLAY_MODE_REPEAT, spotify_.getRepeat() );
+    msg->addTlv( TLV_PLAY_MODE_SHUFFLE, spotify_.getShuffle() );
+
     queueMessage(msg);
 }
 void Client::trackEndedInd()
@@ -205,6 +208,9 @@ void Client::trackEndedInd()
 
     msg->addTlv(TLV_STATE, PLAYBACK_IDLE);
     msg->addTlv(TLV_PROGRESS, spotify_.getProgress());
+
+    msg->addTlv( TLV_PLAY_MODE_REPEAT, spotify_.getRepeat() );
+    msg->addTlv( TLV_PLAY_MODE_SHUFFLE, spotify_.getShuffle() );
 
     queueMessage(msg);
 }
@@ -219,6 +225,9 @@ void Client::pausedInd(Track& currentTrack)
     msg->addTlv(TLV_STATE, PLAYBACK_PAUSED);
     msg->addTlv(currentTrack.toTlv());
     msg->addTlv(TLV_PROGRESS, spotify_.getProgress());
+
+    msg->addTlv( TLV_PLAY_MODE_REPEAT, spotify_.getRepeat() );
+    msg->addTlv( TLV_PLAY_MODE_SHUFFLE, spotify_.getShuffle() );
 
     queueMessage(msg);
 }
@@ -407,6 +416,8 @@ void Client::handleGetStatusReq(const Message* msg)
             rsp->addTlv(TLV_PROGRESS, spotify_.getProgress());
             break;
     }
+    rsp->addTlv( TLV_PLAY_MODE_REPEAT, spotify_.getRepeat() );
+    rsp->addTlv( TLV_PLAY_MODE_SHUFFLE, spotify_.getShuffle() );
     queueMessage(rsp);
 }
 
@@ -453,10 +464,10 @@ void Client::handlePlayControlReq(const Message* msg)
                 {
                     case PLAY_OP_NEXT:
                         spotify_.next();
-                    break;
+                        break;
                     case PLAY_OP_PREV:
                         spotify_.previous();
-                    break;
+                        break;
                     case PLAY_OP_PAUSE:
                         spotify_.pause();
                         break;
@@ -472,6 +483,12 @@ void Client::handlePlayControlReq(const Message* msg)
             case TLV_PLAY_MODE_SHUFFLE:
             {
                 spotify_.setShuffle( (((IntTlv*)tlv)->getVal() != 0) );
+            }
+            break;
+
+            case TLV_PLAY_MODE_REPEAT:
+            {
+                spotify_.setRepeat( (((IntTlv*)tlv)->getVal() != 0) );
             }
             break;
 

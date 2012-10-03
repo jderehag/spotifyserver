@@ -92,15 +92,22 @@ void Messenger::run()
             {
                 std::set<Socket*> readset;
                 std::set<Socket*> writeset;
+                std::set<Socket*> errorset;
 
+                errorset.insert( &socket );
                 readset.insert( &socket );
                 if ( pendingSend() || !writer.isEmpty() )
                 {
                     writeset.insert( &socket );
                 }
 
-                if ( select( &readset, &writeset, NULL, 100 ) < 0 )
+                if ( select( &readset, &writeset, &errorset, 100 ) < 0 )
                     break;
+
+                if ( !errorset.empty() )
+                {
+                    break;
+                }
 
                 if ( !readset.empty() )
                 {

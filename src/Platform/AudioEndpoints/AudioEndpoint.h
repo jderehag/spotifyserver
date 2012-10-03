@@ -40,11 +40,17 @@ private:
 	AudioFifo fifo;
 	ConfigHandling::AudioEndpointConfig config_;
 
+	bool paused_;
+
 public:
 	AudioEndpoint(const ConfigHandling::AudioEndpointConfig& config);
 	~AudioEndpoint();
 	int enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples);
 	void flushAudioData();
+
+	/*todo do something proper with these...*/
+	void pause() { paused_ = true; }
+	void resume() { paused_ = false; }
 
 	void run();
 	void destroy();

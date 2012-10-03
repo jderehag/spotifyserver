@@ -40,11 +40,10 @@
 
 namespace Platform {
 
-static int queue_buffer(ALuint source, AudioFifoData *af, ALuint buffer);
 
 #define NUM_BUFFERS 3
 
-AudioEndpoint::AudioEndpoint(const ConfigHandling::AudioEndpointConfig& config) : config_(config)
+AudioEndpoint::AudioEndpoint(const ConfigHandling::AudioEndpointConfig& config) : config_(config), paused_(false)
 {
 	startThread();
 }
@@ -69,7 +68,6 @@ void AudioEndpoint::flushAudioData()
 {
 	fifo.flush();
 }
-
 
 void AudioEndpoint::run()
 {
@@ -137,6 +135,13 @@ void AudioEndpoint::run()
                 //log(LOG_DEBUG) << "processed " << processed;
             }
 
+            if ( paused_ )
+            {
+                alSourcePause(source);
+                Sleep(10);
+                continue;
+            }
+
             /* check if there's more audio available */
             if ( ( afd = fifo.getFifoDataTimedWait(1) ) == NULL )
                 continue;
@@ -171,7 +176,7 @@ void AudioEndpoint::run()
                 log(LOG_DEBUG) << "Stopped, curbuffers = " << curbuffers << ", processed = " << processed;
             }
             /* start playback when all buffers are ready. player will also stop when it runs out of buffers so it has to be restarted */
-            if ((state == AL_STOPPED || state == AL_INITIAL) && curbuffers == NUM_BUFFERS && processed == 0)
+            if ((state != AL_PLAYING) && curbuffers == NUM_BUFFERS && processed == 0)
             {
                 log(LOG_DEBUG) << "Starting playback";
                 alSourcePlay(source);

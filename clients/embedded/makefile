@@ -52,12 +52,12 @@ VPATH += ../../src/ ./source/
 
 # List C source files here. (C dependencies are automatically generated.)
 # use file-extension c for "c-only"-files
-SRC  =	syscalls.c \
+SRC  =	syscalls.c powerHandler.c \
 		$(addprefix freeRTOS/, list.c queue.c tasks.c timers.c heap_3.c) \
 		$(addprefix freeRTOS/port/, port.c) \
 		hooks.c \
 		$(addprefix STM32F4XX/, stm32f4_discovery.c system_stm32f4xx.c stm32f4xx_it.c stm32f4x7_eth_bsp.c netconf.c) \
-		$(addprefix STM32F4XX/STM32F4xx_StdPeriph_Driver/src/, misc.c stm32f4xx_dma.c stm32f4xx_exti.c stm32f4xx_gpio.c stm32f4xx_syscfg.c stm32f4xx_rcc.c) \
+		$(addprefix STM32F4XX/STM32F4xx_StdPeriph_Driver/src/, misc.c stm32f4xx_dma.c stm32f4xx_exti.c stm32f4xx_gpio.c stm32f4xx_syscfg.c stm32f4xx_rcc.c stm32f4xx_pwr.c stm32f4xx_rtc.c) \
 		STM32F4XX/STM32F4x7_ETH_Driver/src/stm32f4x7_eth.c
 		
 SRC +=	$(addprefix lwip_v1.4.0/src/core/, init.c tcp_out.c memp.c netif.c pbuf.c raw.c stats.c sys.c tcp.c tcp_in.c udp.c dhcp.c def.c timers.c ipv4/ip.c ipv4/ip_addr.c ipv4/icmp.c ipv4/ip_frag.c ipv4/inet.c ipv4/inet_chksum.c ipv4/autoip.c) \

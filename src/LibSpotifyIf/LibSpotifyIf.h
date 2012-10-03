@@ -233,26 +233,29 @@ public:
     void getAlbum(unsigned int reqId, std::string link, ILibSpotifyIfCallbackSubscriber& callbackSubscriber);
 
     LibSpotifyTrackStates getState() { return trackState_; }
-	unsigned int getProgress() { return progress_/10; }
-	Track& getCurrentTrack() { return currentTrack_; }
+    unsigned int getProgress() { return progress_/10; }
+    Track& getCurrentTrack() { return currentTrack_; }
+    bool getRepeat();
+    bool getShuffle();
 
-	void play(unsigned int reqId, const std::string link, ILibSpotifyIfCallbackSubscriber& callbackSubscriber, int startIndex = -1);
-	void stop();
+    void play(unsigned int reqId, const std::string link, ILibSpotifyIfCallbackSubscriber& callbackSubscriber, int startIndex = -1);
+    void stop();
     void playSearchResult(const char* searchString);
     void enqueueTrack(const char* track_uri);
-	void pause();
-	void resume();
+    void pause();
+    void resume();
     void next();
     void previous();
     void setShuffle( bool shuffleOn );
+    void setRepeat( bool repeatOn );
 
-	Folder& getRootFolder();
+    Folder& getRootFolder();
 
-	void run();
-	void destroy();
+    void run();
+    void destroy();
 
-	void registerForCallbacks(ILibSpotifyIfCallbackSubscriber& subscriber);
-	void unRegisterForCallbacks(ILibSpotifyIfCallbackSubscriber& subscriber);
+    void registerForCallbacks(ILibSpotifyIfCallbackSubscriber& subscriber);
+    void unRegisterForCallbacks(ILibSpotifyIfCallbackSubscriber& subscriber);
 
 };
 }

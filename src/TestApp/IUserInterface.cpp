@@ -144,6 +144,13 @@ void IUserInterface::setShuffle( bool shuffleOn )
     messenger_.queueMessage( msg );
 }
 
+void IUserInterface::setRepeat( bool repeatOn )
+{
+    Message* msg = new Message( PLAY_CONTROL_REQ );
+    msg->addTlv( TLV_PLAY_MODE_REPEAT, repeatOn ? 1 : 0 );
+    messenger_.queueMessage( msg );
+}
+
 void IUserInterface::getStatus()
 {
     Message* msg = new Message( GET_STATUS_REQ );

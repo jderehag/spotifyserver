@@ -33,6 +33,7 @@
 #include "Platform/Threads/Messagebox.h"
 #include "UIEmbedded.h"
 #include "buttonHandler.h"
+#include "powerHandler.h"
 #include "FreeRTOS.h"
 #include "task.h"
 #include "applog.h"
@@ -96,6 +97,7 @@ int main(void)
 #endif
     UIEmbedded* ui = new UIEmbedded(*m);
 
+    pwrInit();
     buttonHandler_setUI(ui);
 
     /* configure ethernet (GPIOs, clocks, MAC, DMA) */

@@ -167,7 +167,7 @@ void LibSpotifyPlaybackHandler::playPrevious()
 
 void LibSpotifyPlaybackHandler::shuffle()
 {
-    random_shuffle ( playQueue_.begin(), playQueue_.end() );
+    random_shuffle( playQueue_.begin(), playQueue_.end() );
 }
 
 /***************************************************
@@ -186,8 +186,8 @@ void LibSpotifyPlaybackHandler::trackEndedInd()
         historyQueue_.push_back(*playQueueIter_);
         playQueueIter_++;
 
-        //if(/*playmode == repeat &&*/ playQueueIter_ == playQueue_.end())
-        //    playQueueIter_ = playQueue_.begin();
+        if( isRepeat && playQueueIter_ == playQueue_.end())
+            playQueueIter_ = playQueue_.begin();
     }
     else
     {
@@ -243,5 +243,13 @@ void LibSpotifyPlaybackHandler::setShuffle(bool shuffleOn)
     isShuffle = shuffleOn;
     mtx_.unlock();
 }
+
+void LibSpotifyPlaybackHandler::setRepeat(bool repeatOn)
+{
+    isRepeat = repeatOn;
+}
+
+bool LibSpotifyPlaybackHandler::getShuffle() { return isShuffle; }
+bool LibSpotifyPlaybackHandler::getRepeat()  { return isRepeat; }
 
 } /* namespace LibSpotify */

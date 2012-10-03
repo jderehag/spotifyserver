@@ -95,6 +95,9 @@ public:
     void rootFolderUpdatedInd();
     void trackEndedInd();
     void setShuffle(bool shuffleOn);
+    void setRepeat(bool repeatOn);
+    bool getShuffle();
+    bool getRepeat();
 };
 
 } /* namespace LibSpotify */
