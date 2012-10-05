@@ -28,17 +28,12 @@
 #include "Client.h"
 #include "applog.h"
 #include "MessageFactory/TlvDefinitions.h"
-#include "MessageFactory/MessageEncoder.h"
-#include "MessageFactory/MessageDecoder.h"
 
-Client::Client(Socket* socket, LibSpotifyIf& spotifyif) : requestId(0),
+Client::Client(Socket* socket, LibSpotifyIf& spotifyif) : SocketPeer(socket),
                                                           spotify_(spotifyif),
                                                           loggedIn_(true),
                                                           networkUsername_(""),
-                                                          networkPassword_(""),
-                                                          reader_(socket),
-                                                          writer_(socket),
-                                                          socket_(socket)
+                                                          networkPassword_("")
 
 
 {
@@ -48,88 +43,22 @@ Client::Client(Socket* socket, LibSpotifyIf& spotifyif) : requestId(0),
 Client::~Client()
 {
     log(LOG_DEBUG) << "~Client";
-    delete socket_;
     spotify_.unRegisterForCallbacks(*this);
 }
 
 void Client::setUsername(std::string username) { networkUsername_ = username; }
 void Client::setPassword(std::string password) { networkPassword_ = password; }
 
-int Client::doRead()
-{
-    do
-    {
-        int n = reader_.doread();
-
-        if (n == 0)
-        {
-            break;
-        }
-        else if (n < 0)
-        {
-            log(LOG_DEBUG) << "Socket closed";
-            return -1;
-        }
-
-        if (reader_.done())
-        {
-            MessageDecoder m;
-
-            log(LOG_DEBUG) << "Receive complete";
-
-            printHexMsg(reader_.getMessage(), reader_.getLength());
-
-            Message* msg = m.decode(reader_.getMessage());
-
-            if (msg != NULL)
-            {
-                /*require login before doing anything else (??if either username or password is set, for backward compatibility??)*/
-                if ( /*(!networkUsername_.empty() || !networkPassword_.empty()) && */!loggedIn_ && msg->getType() != HELLO_REQ )
-                {
-                    delete msg;
-                    return -1;
-                }
-
-                processMessage(msg);
-                delete msg;
-            }
-            else
-            {
-                /*error handling?*/
-            }
-
-            reader_.reset();
-        }
-    } while(1);
-
-    return 0;
-}
-
-
-int Client::doWrite()
-{
-    log(LOG_DEBUG);
-
-    if (writer_.isEmpty())
-    {
-        Message* msg = popMessage();
-        if (msg == NULL )
-            return 0;
-
-        MessageEncoder* encoder = msg->encode();
-        encoder->printHex();
-        log(LOG_DEBUG) << *msg;
-        delete msg;
-        writer_.setData(encoder); // SocketWriter takes ownership of encoder
-    }
-
-    return writer_.doWrite();
-}
-
-
 void Client::processMessage(const Message* msg)
 {
     log(LOG_NOTICE) << *(msg);
+
+    /*require login before doing anything else (??if either username or password is set, for backward compatibility??)*/
+    if ( /*(!networkUsername_.empty() || !networkPassword_.empty()) && */!loggedIn_ && msg->getType() != HELLO_REQ )
+    {
+        delete msg;
+        return;
+    }
 
     switch(msg->getType())
     {
@@ -149,32 +78,6 @@ void Client::processMessage(const Message* msg)
     }
 }
 
-Message* Client::popMessage()
-{
-    messageQueueMtx.lock();
-    Message* msg = messageQueue.front();
-    messageQueue.pop();
-    messageQueueMtx.unlock();
-    return msg;
-}
-
-
-void Client::queueMessage(Message* msg)
-{
-    messageQueueMtx.lock();
-    messageQueue.push(msg);
-    messageQueueMtx.unlock();
-}
-
-bool Client::pendingSend()
-{
-    bool ret;
-    messageQueueMtx.lock();
-    ret = ((messageQueue.empty() == false) || (writer_.isEmpty() == false));
-    messageQueueMtx.unlock();
-    return ret;
-}
-
 
 void Client::rootFolderUpdatedInd()
 {
@@ -186,8 +89,6 @@ void Client::playingInd(Track& currentTrack)
 
     log(LOG_DEBUG) << "Client::playingInd()";
 
-    msg->setId(requestId++);
-
     msg->addTlv(TLV_STATE, PLAYBACK_PLAYING);
 
     msg->addTlv(currentTrack.toTlv());
@@ -196,7 +97,7 @@ void Client::playingInd(Track& currentTrack)
     msg->addTlv( TLV_PLAY_MODE_REPEAT, spotify_.getRepeat() );
     msg->addTlv( TLV_PLAY_MODE_SHUFFLE, spotify_.getShuffle() );
 
-    queueMessage(msg);
+    queueRequest(msg);
 }
 void Client::trackEndedInd()
 {
@@ -204,23 +105,19 @@ void Client::trackEndedInd()
 
     log(LOG_DEBUG) << "Client::trackEndedInd()";
 
-    msg->setId(requestId++);
-
     msg->addTlv(TLV_STATE, PLAYBACK_IDLE);
     msg->addTlv(TLV_PROGRESS, spotify_.getProgress());
 
     msg->addTlv( TLV_PLAY_MODE_REPEAT, spotify_.getRepeat() );
     msg->addTlv( TLV_PLAY_MODE_SHUFFLE, spotify_.getShuffle() );
 
-    queueMessage(msg);
+    queueRequest(msg);
 }
 void Client::pausedInd(Track& currentTrack)
 {
     Message* msg = new Message(STATUS_IND);
 
     log(LOG_DEBUG) << "Client::pausedInd()";
-
-    msg->setId(requestId++);
 
     msg->addTlv(TLV_STATE, PLAYBACK_PAUSED);
     msg->addTlv(currentTrack.toTlv());
@@ -229,7 +126,7 @@ void Client::pausedInd(Track& currentTrack)
     msg->addTlv( TLV_PLAY_MODE_REPEAT, spotify_.getRepeat() );
     msg->addTlv( TLV_PLAY_MODE_SHUFFLE, spotify_.getShuffle() );
 
-    queueMessage(msg);
+    queueRequest(msg);
 }
 void Client::getTrackResponse(unsigned int reqId, const std::deque<Track>& tracks)
 {
@@ -318,11 +215,6 @@ void Client::genericSearchCallback(unsigned int reqId, std::deque<Track>& tracks
         pendingMessageMap_.erase(msgIt);
     }
     else log(LOG_WARN) << "Could not match the genericSearchCallback() to a pending response";
-}
-
-Socket* Client::getSocket() const
-{
-    return socket_;
 }
 
 void Client::handleGetTracksReq(const Message* msg)
@@ -429,7 +321,7 @@ void Client::handlePlayReq(const Message* msg)
     {
         const IntTlv* startIndex = (const IntTlv*)msg->getTlvRoot()->getTlv(TLV_TRACK_INDEX);
         log(LOG_DEBUG) << "spotify_.play(" << url->getString() << ")";
-        spotify_.play(msg->getId(), url->getString(), *this, startIndex ? startIndex->getVal() : -1 );
+        spotify_.play(msg->getId(), url->getString(), *this, startIndex ? (int)startIndex->getVal() : -1 );
     }
 
     Message* rsp = new Message( PLAY_RSP );

@@ -30,21 +30,15 @@
 
 #include "LibSpotifyIf/ILibSpotifyIfCallbackSubscriber.h"
 #include "LibSpotifyIf/LibSpotifyIf.h"
-#include "MessageFactory/Message.h"
+#include "SocketPeer.h"
 #include "MessageFactory/MessageEncoder.h"
-#include "MessageFactory/SocketReader.h"
-#include "MessageFactory/SocketWriter.h"
-#include "Platform/Threads/Mutex.h"
-#include "Platform/Socket/Socket.h"
 #include <map>
-#include <queue>
 
 using namespace LibSpotify;
 
-class Client : ILibSpotifyIfCallbackSubscriber
+class Client : ILibSpotifyIfCallbackSubscriber, public SocketPeer
 {
 private:
-    unsigned int requestId;
 
     LibSpotifyIf& spotify_;
 
@@ -55,13 +49,10 @@ private:
     uint32_t peerProtocolMajor_;
     uint32_t peerProtocolMinor_;
 
-    SocketReader reader_;
-    SocketWriter writer_;
-
     typedef std::map<unsigned int, Message*>  PendingMessageMap;
     PendingMessageMap pendingMessageMap_;
 
-    void processMessage(const Message* msg);
+    virtual void processMessage(const Message* msg);
 
     void rootFolderUpdatedInd();
     void playingInd(Track& currentTrack);
@@ -85,12 +76,6 @@ private:
     void handleGenericSearchReq(const Message* msg);
     void handleGetAlbumReq(const Message* msg);
 
-    void queueMessage(Message* msg);
-    Message* popMessage();
-    Platform::Mutex messageQueueMtx;
-    std::queue<Message*> messageQueue;
-
-    Socket* socket_;
 public:
 
     Client(Socket* socket, LibSpotifyIf& spotifyif);
@@ -99,11 +84,6 @@ public:
     void setUsername(std::string username);
     void setPassword(std::string password);
 
-    int doRead();
-    int doWrite();
-
-    bool pendingSend();
-    Socket* getSocket() const;
 };
 
 #endif /* CLIENT_H_ */

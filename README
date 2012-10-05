@@ -15,6 +15,8 @@ Right now there is a limited client support, but this is intended to increase wi
 3. python api:
       tkinter client
       xbmc client (in development)
+4. embedded client
+    A variant of the C++ client ported to FreeRTOS and lwIP for the STM32F4-DISCOVERY board with an add-on DP83848 board.
 
 Background:
 The spotifyserver project started as side project during a "24h hackthlon" where a number of collegues and hangarounds gathered to spend an evening of programming (as good an excuse for drinking beer as anything).
@@ -37,5 +39,5 @@ Legal stuff:
    BSD 3-clause license ("New BSD License" or "Modified BSD License")
 
 2. libspotify:
-   This product uses SPOTIFY(R) CORE but is not endorsed, certified or otherwise approved in any way by Spotify. Spotify is the registered trade mark of the Spotify Group.”
+   This product uses SPOTIFY(R) CORE but is not endorsed, certified or otherwise approved in any way by Spotify. Spotify is the registered trade mark of the Spotify Group.
 

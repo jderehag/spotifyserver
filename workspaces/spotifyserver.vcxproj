@@ -74,6 +74,7 @@
   <ItemGroup>
     <ClInclude Include="..\src\ClientHandler\Client.h" />
     <ClInclude Include="..\src\ClientHandler\ClientHandler.h" />
+    <ClInclude Include="..\src\ClientHandler\SocketPeer.h" />
     <ClInclude Include="..\src\ConfigHandling\ConfigHandler.h" />
     <ClInclude Include="..\src\ConfigHandling\ConfigParser.h" />
     <ClInclude Include="..\src\LibSpotifyIf\ILibSpotifyIfCallbackSubscriber.h" />
@@ -112,6 +113,7 @@
     <ClCompile Include="..\..\spotifyserver_deps\appkey.c" />
     <ClCompile Include="..\src\ClientHandler\Client.cpp" />
     <ClCompile Include="..\src\ClientHandler\ClientHandler.cpp" />
+    <ClCompile Include="..\src\ClientHandler\SocketPeer.cpp" />
     <ClCompile Include="..\src\ConfigHandling\ConfigHandler.cpp" />
     <ClCompile Include="..\src\ConfigHandling\ConfigParser.cpp" />
     <ClCompile Include="..\src\ConfigHandling\Configs\AudioEndpointConfig.cpp" />

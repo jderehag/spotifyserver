@@ -165,6 +165,9 @@
     <ClInclude Include="..\src\LibSpotifyIf\MediaContainers\Album.h">
       <Filter>src\LibSpotifyIf\MediaContainers</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ClientHandler\SocketPeer.h">
+      <Filter>src\ClientHandler</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\spotifyserver.cpp">
@@ -271,6 +274,9 @@
     </ClCompile>
     <ClCompile Include="..\src\Platform\Threads\Windows\WindowsMessagebox.cpp">
       <Filter>src\Platform\Threads\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ClientHandler\SocketPeer.cpp">
+      <Filter>src\ClientHandler</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

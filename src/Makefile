@@ -42,6 +42,7 @@ COMMON_OBJECTS += spotifyserver.o \
 		  Album.o \
 		  ClientHandler.o \
 		  Client.o \
+		  SocketPeer.o \
 		  AudioFifo.o \
 		  MessageDecoder.o \
 		  MessageEncoder.o \
