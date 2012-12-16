@@ -33,7 +33,8 @@ Client::Client(Socket* socket, LibSpotifyIf& spotifyif) : SocketPeer(socket),
                                                           spotify_(spotifyif),
                                                           loggedIn_(true),
                                                           networkUsername_(""),
-                                                          networkPassword_("")
+                                                          networkPassword_(""),
+                                                          audioEp(NULL)
 
 
 {
@@ -44,6 +45,8 @@ Client::~Client()
 {
     log(LOG_DEBUG) << "~Client";
     spotify_.unRegisterForCallbacks(*this);
+    /*todo clear pendingMessageMap_*/
+    /*todo unregister and free audioEp*/
 }
 
 void Client::setUsername(std::string username) { networkUsername_ = username; }
@@ -56,7 +59,6 @@ void Client::processMessage(const Message* msg)
     /*require login before doing anything else (??if either username or password is set, for backward compatibility??)*/
     if ( /*(!networkUsername_.empty() || !networkPassword_.empty()) && */!loggedIn_ && msg->getType() != HELLO_REQ )
     {
-        delete msg;
         return;
     }
 
@@ -72,6 +74,7 @@ void Client::processMessage(const Message* msg)
         case GET_STATUS_REQ:     handleGetStatusReq(msg);     break;
         case GET_IMAGE_REQ:      handleGetImageReq(msg);      break;
         case GET_ALBUM_REQ:      handleGetAlbumReq(msg);      break;
+        case ADD_AUDIO_ENDPOINT_REQ: handleAddAudioEpReq(msg); break;
 
         default:
             break;
@@ -460,4 +463,13 @@ void Client::handleGetAlbumReq(const Message* msg)
         delete rsp;
     }
 }
+
+
+void Client::handleAddAudioEpReq(const Message* msg)
+{
+    audioEp = new Platform::AudioEndpointRemote();
+    spotify_.setAudioEndpoint(audioEp);
+}
+
+
 

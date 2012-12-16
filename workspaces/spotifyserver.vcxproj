@@ -75,6 +75,7 @@
     <ClInclude Include="..\src\ClientHandler\Client.h" />
     <ClInclude Include="..\src\ClientHandler\ClientHandler.h" />
     <ClInclude Include="..\src\ClientHandler\SocketPeer.h" />
+    <ClInclude Include="..\src\ClientHandler\SocketServer.h" />
     <ClInclude Include="..\src\ConfigHandling\ConfigHandler.h" />
     <ClInclude Include="..\src\ConfigHandling\ConfigParser.h" />
     <ClInclude Include="..\src\LibSpotifyIf\ILibSpotifyIfCallbackSubscriber.h" />
@@ -98,6 +99,8 @@
     <ClInclude Include="..\src\MessageFactory\TlvDefinitions.h" />
     <ClInclude Include="..\src\MessageFactory\Tlvs.h" />
     <ClInclude Include="..\src\Platform\AudioEndpoints\AudioEndpoint.h" />
+    <ClInclude Include="..\src\Platform\AudioEndpoints\AudioEndpointLocal.h" />
+    <ClInclude Include="..\src\Platform\AudioEndpoints\AudioEndpointRemote.h" />
     <ClInclude Include="..\src\Platform\AudioEndpoints\AudioFifo.h" />
     <ClInclude Include="..\src\Platform\Socket\Socket.h" />
     <ClInclude Include="..\src\Platform\Socket\Windows\WindowsSocket.h" />
@@ -106,6 +109,8 @@
     <ClInclude Include="..\src\Platform\Threads\Runnable.h" />
     <ClInclude Include="..\src\Platform\Threads\Windows\WindowsMutexPimpl.h" />
     <ClInclude Include="..\src\Platform\Utils\Utils.h" />
+    <ClInclude Include="..\src\TestApp\Messenger.h" />
+    <ClInclude Include="..\src\TestApp\SocketClient.h" />
     <ClInclude Include="..\src\Utils\CircularQueue.h" />
     <ClInclude Include="..\src\Utils\FixedQueue.h" />
   </ItemGroup>
@@ -114,6 +119,7 @@
     <ClCompile Include="..\src\ClientHandler\Client.cpp" />
     <ClCompile Include="..\src\ClientHandler\ClientHandler.cpp" />
     <ClCompile Include="..\src\ClientHandler\SocketPeer.cpp" />
+    <ClCompile Include="..\src\ClientHandler\SocketServer.cpp" />
     <ClCompile Include="..\src\ConfigHandling\ConfigHandler.cpp" />
     <ClCompile Include="..\src\ConfigHandling\ConfigParser.cpp" />
     <ClCompile Include="..\src\ConfigHandling\Configs\AudioEndpointConfig.cpp" />
@@ -137,6 +143,7 @@
     <ClCompile Include="..\src\MessageFactory\SocketWriter.cpp" />
     <ClCompile Include="..\src\MessageFactory\TlvDefinitions.cpp" />
     <ClCompile Include="..\src\MessageFactory\Tlvs.cpp" />
+    <ClCompile Include="..\src\Platform\AudioEndpoints\AudioEndpointRemote.cpp" />
     <ClCompile Include="..\src\Platform\AudioEndpoints\AudioFifo.cpp" />
     <ClCompile Include="..\src\Platform\AudioEndpoints\Endpoints\AudioEndpoint-OpenAL.cpp" />
     <ClCompile Include="..\src\Platform\Socket\Windows\WindowsSocket.cpp" />
@@ -146,6 +153,8 @@
     <ClCompile Include="..\src\Platform\Threads\Windows\WindowsRunnable.cpp" />
     <ClCompile Include="..\src\Platform\Utils\Windows\WindowsUtils.cpp" />
     <ClCompile Include="..\src\spotifyserver.cpp" />
+    <ClCompile Include="..\src\TestApp\Messenger.cpp" />
+    <ClCompile Include="..\src\TestApp\SocketClient.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

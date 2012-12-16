@@ -25,23 +25,21 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "ClientHandler.h"
-#include "Client.h"
+#include "AudioEndpointRemoteSocketServer.h"
+#include "AudioEndpointRemotePeer.h"
 #include "applog.h"
 
-ClientHandler::ClientHandler(const ConfigHandling::NetworkConfig& config, LibSpotifyIf& spotifyif) : SocketServer(config),
-                                                                                                     spotify_(spotifyif)
+AudioEndpointRemoteSocketServer::AudioEndpointRemoteSocketServer(const ConfigHandling::AudioEndpointConfig& audioconfig, const ConfigHandling::NetworkConfig& networkconfig)
+        : SocketServer(networkconfig), audioconfig_(audioconfig)
 {
 }
 
-ClientHandler::~ClientHandler()
+AudioEndpointRemoteSocketServer::~AudioEndpointRemoteSocketServer()
 {
 }
 
-SocketPeer* ClientHandler::newPeer( Socket* s )
+SocketPeer* AudioEndpointRemoteSocketServer::newPeer( Socket* socket )
 {
-    Client* c = new Client(s, spotify_);
-    c->setUsername(config_.getUsername());
-    c->setPassword(config_.getPassword());
-    return c;
+    AudioEndpointRemotePeer* p = new AudioEndpointRemotePeer( socket, audioconfig_ );
+    return p;
 }

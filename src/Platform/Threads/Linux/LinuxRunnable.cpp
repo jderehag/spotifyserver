@@ -48,7 +48,10 @@ static void* runnableWrapper(void* arg)
 	return NULL;
 }
 
-Runnable::Runnable(bool isJoinable) : isCancellationPending_(false) , isJoinable_(isJoinable)
+Runnable::Runnable(bool isJoinable, Size size, Prio prio) : isCancellationPending_(false),
+                                                            isJoinable_(isJoinable),
+                                                            size_(size),
+                                                            prio_(prio)
 {
 	threadHandle_ = new ThreadHandle_t;
 	pthread_attr_init(&threadHandle_->attr);

@@ -48,7 +48,9 @@ public:
     IUserInterface(Messenger& messenger);
     virtual ~IUserInterface();
 
-    void receivedMessage( Message* msg );
+    virtual void receivedMessage( Message* msg );
+    virtual void receivedResponse( Message* rsp, Message* req );
+    virtual void connectionState( bool up );
 
 protected:
     void getImage( std::string uri );
@@ -65,10 +67,10 @@ protected:
     void play( std::string uri );
     void getAlbum( std::string uri );
     void search( std::string query );
+    void addAudio();
 
 
     virtual void updateRootFolder(Folder& f) {(void)f;}
-    virtual void connectionState( bool up ) {(void)up;}
     virtual void status() {}
 };
 

@@ -52,7 +52,8 @@ static const char* getEventName(LibSpotifyIf::EventItem* event);
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
 LibSpotifyIf::LibSpotifyIf(const ConfigHandling::SpotifyConfig& config, Platform::AudioEndpoint& endpoint) :
                                                                          config_(config),
-																		 endpoint_(endpoint),
+																		 defaultEndpoint_(endpoint),
+																		 currentEndpoint_(&defaultEndpoint_),
 																		 rootFolder_("root", 0, 0),
 																		 state_(STATE_INVALID),
 																		 nextTimeoutForLibSpotify(0),
@@ -472,7 +473,7 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
                 callbackSubscriberMtx_.unlock();
 
                 sp_session_player_play(spotifySession_, 0);
-                endpoint_.flushAudioData();
+                currentEndpoint_->flushAudioData();
                 trackState_ = TRACK_STATE_NOT_LOADED;
                 progress_ = 0;
             }
@@ -482,7 +483,7 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
 		    if (trackState_ == TRACK_STATE_PLAYING)
 		    {
 		        sp_session_player_play(spotifySession_, 0);
-		        endpoint_.pause();
+		        currentEndpoint_->pause();
 		        trackState_ = TRACK_STATE_PAUSED;
 
 		        callbackSubscriberMtx_.lock();
@@ -499,7 +500,7 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
             if (trackState_ == TRACK_STATE_PAUSED)
             {
                 sp_session_player_play(spotifySession_, 1);
-                endpoint_.resume();
+                currentEndpoint_->resume();
                 trackState_ = TRACK_STATE_PLAYING;
 
                 callbackSubscriberMtx_.lock();
@@ -532,7 +533,7 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
                             currentTrack_.setIndex(trackObj->getIndex()); /*kind of a hack.. but only trackObj know where it came from, and thus which index it has (if it has one) */
                             trackState_ = TRACK_STATE_PLAYING;
                             sp_session_player_play(spotifySession_, 1);
-                            endpoint_.resume();
+                            currentEndpoint_->resume();
                             progress_ = 0;
 
                             callbackSubscriberMtx_.lock();
@@ -766,9 +767,14 @@ void LibSpotifyIf::notifyLibSpotifyMainThreadCb(sp_session *session)
 int LibSpotifyIf::musicDeliveryCb(sp_session *sess, const sp_audioformat *format,
                           const void *frames, int num_frames)
 {
-    int n = endpoint_.enqueueAudioData(format->channels, format->sample_rate, num_frames, static_cast<const int16_t*>(frames));
+    int n = currentEndpoint_->enqueueAudioData(format->channels, format->sample_rate, num_frames, static_cast<const int16_t*>(frames));
     progress_ += (n*10000)/format->sample_rate;
     return n;
+}
+
+void LibSpotifyIf::setAudioEndpoint(Platform::AudioEndpoint* endpoint)
+{
+    currentEndpoint_ = endpoint;
 }
 
 void LibSpotifyIf::genericSearchCb(sp_search *search, void *userdata)

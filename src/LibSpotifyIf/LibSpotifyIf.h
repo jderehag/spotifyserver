@@ -147,7 +147,11 @@ private:
  ***********************/
 private:
 	const ConfigHandling::SpotifyConfig& config_;
-	Platform::AudioEndpoint& endpoint_;
+	Platform::AudioEndpoint& defaultEndpoint_;
+    Platform::AudioEndpoint* currentEndpoint_;
+public:
+	void setAudioEndpoint(Platform::AudioEndpoint* endpoint);
+private:
 	Folder rootFolder_;
 
 	/*********************

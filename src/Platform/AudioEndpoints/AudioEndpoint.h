@@ -28,32 +28,27 @@
 #ifndef AUDIOENDPOINT_H_
 #define AUDIOENDPOINT_H_
 
-#include "ConfigHandling/ConfigHandler.h"
 #include "AudioFifo.h"
-#include "../Threads/Runnable.h"
 
 namespace Platform {
 
-class AudioEndpoint : Runnable
+class AudioEndpoint
 {
-private:
+protected:
 	AudioFifo fifo;
-	ConfigHandling::AudioEndpointConfig config_;
 
 	bool paused_;
 
 public:
-	AudioEndpoint(const ConfigHandling::AudioEndpointConfig& config);
-	~AudioEndpoint();
-	int enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples);
-	void flushAudioData();
+	AudioEndpoint() : paused_(false) {}
+	virtual ~AudioEndpoint() {}
+	virtual int enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples) = 0;
+	virtual void flushAudioData() = 0;
 
 	/*todo do something proper with these...*/
 	void pause() { paused_ = true; }
 	void resume() { paused_ = false; }
 
-	void run();
-	void destroy();
 };
 }
 #endif /* AUDIOENDPOINT_H_ */

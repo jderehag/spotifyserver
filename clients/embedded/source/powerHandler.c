@@ -89,15 +89,13 @@ void pwrInit()
 
 void vApplicationIdleHook( void )
 {
-    STM_EVAL_LEDOff( LED5 );
-    STM_EVAL_LEDOff( LED6 );
     switch ( powerLevel )
     {
         case PWR_ON:
         case PWR_ON_LIGHTS_OUT:
             /* we're active but all tasks have done their stuff, sleep until next interrupt */
             __WFI();
-            STM_EVAL_LEDOn( LED5 );
+
             break;
         case PWR_STANDBY:
             /* ok to go to cortex "stop mode" (more like standby to me) */
@@ -108,8 +106,6 @@ void vApplicationIdleHook( void )
             /* Configures system clock after wake-up from STOP: enable HSE, PLL and select
                PLL as system clock source (HSE and PLL are disabled in STOP mode) */
             SYSCLKConfig_STOP();
-
-            STM_EVAL_LEDOn( LED6 );
             break;
     }
 }
@@ -127,7 +123,7 @@ void pwrCanPowerOff( int enabled )
     {
         canPowerOff = 1;
         if ( powerLevel == PWR_ON_LIGHTS_OUT )
-            powerLevel = PWR_STANDBY;
+            powerLevel = PWR_ON_LIGHTS_OUT; //PWR_STANDBY;
     }
     else
     {
@@ -145,7 +141,7 @@ int pwrIsAlive()
 static void timerCb( xTimerHandle xTimer )
 {
     (void) xTimer;
-    powerLevel = canPowerOff != 0 ? PWR_STANDBY : PWR_ON_LIGHTS_OUT; /*no activity for a while, go to rest*/
+    powerLevel = canPowerOff != 0 ? PWR_ON_LIGHTS_OUT/*PWR_STANDBY*/ : PWR_ON_LIGHTS_OUT; /*no activity for a while, go to rest*/
 }
 
 /**

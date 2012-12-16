@@ -25,7 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "../AudioEndpoint.h"
+#include "../AudioEndpointLocal.h"
 #include "applog.h"
 #include <Windows.h>
 #include <iostream>
@@ -43,15 +43,15 @@ namespace Platform {
 
 #define NUM_BUFFERS 3
 
-AudioEndpoint::AudioEndpoint(const ConfigHandling::AudioEndpointConfig& config) : config_(config), paused_(false)
+AudioEndpointLocal::AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config) : config_(config)
 {
 	startThread();
 }
-AudioEndpoint::~AudioEndpoint()
+AudioEndpointLocal::~AudioEndpointLocal()
 {
 }
 
-void AudioEndpoint::destroy()
+void AudioEndpointLocal::destroy()
 {
 	cancelThread();
 	joinThread();
@@ -59,17 +59,17 @@ void AudioEndpoint::destroy()
 }
 
 
-int AudioEndpoint::enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples)
+int AudioEndpointLocal::enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples)
 {
 	return fifo.addFifoDataBlocking(channels, rate, nsamples, samples);
 }
 
-void AudioEndpoint::flushAudioData()
+void AudioEndpointLocal::flushAudioData()
 {
 	fifo.flush();
 }
 
-void AudioEndpoint::run()
+void AudioEndpointLocal::run()
 {
     AudioFifoData* afd = NULL;
     unsigned int frame = 0;
@@ -165,7 +165,7 @@ void AudioEndpoint::run()
             alSourceQueueBuffers(source, 1, &buffers[frame % NUM_BUFFERS]);
             frame++;
 
-            delete afd;
+            free( afd );
             afd = NULL;
 
             alGetSourcei(source, AL_SOURCE_STATE, &state);

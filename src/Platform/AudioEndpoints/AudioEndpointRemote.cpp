@@ -25,23 +25,72 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "ClientHandler.h"
-#include "Client.h"
-#include "applog.h"
+#include "AudioEndpointRemote.h"
+#include "MessageFactory/Message.h"
 
-ClientHandler::ClientHandler(const ConfigHandling::NetworkConfig& config, LibSpotifyIf& spotifyif) : SocketServer(config),
-                                                                                                     spotify_(spotifyif)
+
+namespace Platform {
+
+AudioEndpointRemote::AudioEndpointRemote() : m("192.168.5.211"/*"127.0.0.1"*/, 7789)
+{
+    m.addSubscriber( this );
+}
+
+AudioEndpointRemote::~AudioEndpointRemote()
 {
 }
 
-ClientHandler::~ClientHandler()
+void AudioEndpointRemote::sendAudioData()
+{
+    AudioFifoData* afd;
+
+    if ( (afd = fifo.getFifoDataTimedWait(0) ) != NULL )
+    {
+        Message* msg = new Message( AUDIO_DATA_IND );
+        msg->addTlv( TLV_AUDIO_CHANNELS, afd->channels );
+        msg->addTlv( TLV_AUDIO_RATE, afd->rate );
+        msg->addTlv( TLV_AUDIO_NOF_SAMPLES, afd->nsamples );
+        msg->addTlv( new BinaryTlv( TLV_AUDIO_DATA, (const uint8_t*) /*ugh, should hton this*/ afd->samples, afd->nsamples * sizeof(int16_t) * afd->channels ) );
+        m.queueMessage( msg );
+
+        free( afd );
+    }
+
+}
+
+int AudioEndpointRemote::enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples)
+{
+    if (nsamples == 0)
+        return 0; // Audio discontinuity, do nothing
+
+    if (nsamples > 500)
+        nsamples = 500;
+
+    nsamples = fifo.addFifoDataBlocking(channels, rate, nsamples, samples);
+
+    sendAudioData();
+
+    return nsamples;
+}
+
+void AudioEndpointRemote::flushAudioData()
 {
 }
 
-SocketPeer* ClientHandler::newPeer( Socket* s )
+void AudioEndpointRemote::connectionState( bool up )
 {
-    Client* c = new Client(s, spotify_);
-    c->setUsername(config_.getUsername());
-    c->setPassword(config_.getPassword());
-    return c;
+
+}
+
+void AudioEndpointRemote::receivedMessage( Message* msg )
+{
+
+}
+
+void AudioEndpointRemote::receivedResponse( Message* rsp, Message* req )
+{
+}
+
+
+
 }

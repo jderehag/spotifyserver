@@ -131,8 +131,8 @@ int Socket::Connect(std::string addr, int port)
     serv_addr.sin_port = htons( port );
     rc = connect( socket_->fd, (struct sockaddr*)&serv_addr, sizeof(serv_addr) );
 
-    if (rc < 0 && errno == EINPROGRESS)
-        rc = 0;
+    if (rc < 0 && errno != EINPROGRESS)
+        return -1;
 
     return WaitForConnect();
 }

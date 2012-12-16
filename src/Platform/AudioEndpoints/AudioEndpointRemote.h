@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Jesper Derehag
+ * Copyright (c) 2012, Jens Nielsen
  * All rights reserved.
 
  * Redistribution and use in source and binary forms, with or without
@@ -16,7 +16,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL JESPER DEREHAG BE LIABLE FOR ANY
+ * DISCLAIMED. IN NO EVENT SHALL JENS NIELSEN BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -25,61 +25,36 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef RUNNABLE_H_
-#define RUNNABLE_H_
+#ifndef AUDIOENDPOINTREMOTE_H_
+#define AUDIOENDPOINTREMOTE_H_
+
+#include "AudioEndpoint.h"
+#include "TestApp/SocketClient.h"
+#include "Platform/Threads/Mutex.h"
 
 namespace Platform
 {
 
-class Runnable
+class AudioEndpointRemote : public AudioEndpoint, public IMessageSubscriber
 {
-public:
-    typedef enum
-    {
-        SIZE_SMALL,
-        SIZE_MEDIUM,
-        SIZE_LARGE,
-    }Size;
-
-    typedef enum
-    {
-        PRIO_LOW,
-        PRIO_MID,
-        PRIO_HIGH,
-    }Prio;
-
 private:
-	struct ThreadHandle_t* threadHandle_;
-	bool isCancellationPending_;
-	bool isJoinable_;
-	Size size_;
-	Prio prio_;
+    SocketClient m;
+
+    void sendAudioData();
+
 public:
-	Runnable(bool isJoinable = 1, Size size = SIZE_LARGE, Prio prio = PRIO_HIGH);
-	~Runnable();
+    AudioEndpointRemote();
+    virtual ~AudioEndpointRemote();
 
-	/* startThread needs to be called from the child class to start the actual thread,
-	 * this is done separately from the constructor so that the child can initialize everything
-	 * before starting the thread */
-	void startThread();
+    /* AudioEndpoint implementation */
+    virtual int enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples);
+    virtual void flushAudioData();
 
-	void joinThread();
-
-	/* this is normally called from the child's destroy method to indicate that the thread should
-	 * be canceled, it does not actually stop the thread, but simply sets the cancellationPending_
-	 * attribute, cancellation is handled inline within the run method. */
-	void cancelThread();
-	bool isCancellationPending();
-
-	/* Is the method that is executed in the new thread */
-	virtual void run() = 0;
-
-	/* Must always be called when destroying child class, this is so that
-	 * threads will be canceled correctly in an asynchronous way,
-	 * child class should have all destructor's private */
-	virtual void destroy() = 0;
+    /* IMessageSubscriber implementation */
+    virtual void connectionState( bool up );
+    virtual void receivedMessage( Message* msg );
+    virtual void receivedResponse( Message* rsp, Message* req );
 
 };
-
-} /* namespace LibSpotify */
-#endif /* RUNNABLE_H_ */
+}
+#endif /* AUDIOENDPOINTREMOTE_H_ */

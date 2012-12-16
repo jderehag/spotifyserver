@@ -28,34 +28,20 @@
 #ifndef CLIENTHANDLER_H_
 #define CLIENTHANDLER_H_
 
-
-#include "Client.h"
-#include "ConfigHandling/ConfigHandler.h"
+#include "ClientHandler/SocketServer.h"
 #include "LibSpotifyIf/LibSpotifyIf.h"
-#include "Platform/Threads/Runnable.h"
-#include "Platform/Socket/Socket.h"
-#include <list>
 
 using namespace LibSpotify;
 
-class ClientHandler : Platform::Runnable
+class ClientHandler : public SocketServer
 {
 private:
-    const ConfigHandling::NetworkConfig& config_;
     LibSpotifyIf& spotify_;
-    //int listenfd_;
-    Socket* socket_;
 
-    std::list<Client*> clients_;
-
+    virtual SocketPeer* newPeer( Socket* s );
 public:
-    ClientHandler(const ConfigHandling::NetworkConfig&, LibSpotifyIf& spotifyif);
+    ClientHandler(const ConfigHandling::NetworkConfig& config, LibSpotifyIf& spotifyif);
     virtual ~ClientHandler();
-
-
-    void run();
-    void destroy();
-
 
 };
 

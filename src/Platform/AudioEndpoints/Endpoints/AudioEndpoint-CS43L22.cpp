@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Jesper Derehag
+ * Copyright (c) 2012, Jens Nielsen
  * All rights reserved.
 
  * Redistribution and use in source and binary forms, with or without
@@ -16,7 +16,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL JESPER DEREHAG BE LIABLE FOR ANY
+ * DISCLAIMED. IN NO EVENT SHALL JENS NIELSEN BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -26,12 +26,29 @@
  */
 
 #include "../AudioEndpointLocal.h"
+#include "stm32f4_discovery.h"
+#include <stdlib.h>
 
+extern "C"
+{
+#include "stm32f4_discovery_audio_codec.h"
+#include "FreeRTOS.h"
+#include "semphr.h"
+}
 namespace Platform {
 
-AudioEndpointLocal::AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config) : config_(config)
+xSemaphoreHandle xSemaphore;
+
+AudioEndpointLocal::AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config) : Platform::Runnable(false, SIZE_SMALL, PRIO_HIGH), config_(config)
 {
+    vSemaphoreCreateBinary( xSemaphore );
+
+    /* Initialize I2S interface */
+    EVAL_AUDIO_SetAudioInterface(AUDIO_INTERFACE_I2S);
+
+    startThread();
 }
+
 AudioEndpointLocal::~AudioEndpointLocal()
 {
 }
@@ -43,15 +60,58 @@ void AudioEndpointLocal::destroy()
 
 int AudioEndpointLocal::enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples)
 {
-	return nsamples;
+    STM_EVAL_LEDToggle( LED3 );
+    return fifo.addFifoDataBlocking(channels, rate, nsamples, samples);
 }
 
 void AudioEndpointLocal::flushAudioData()
 {
+    fifo.flush();
 }
 
 void AudioEndpointLocal::run()
 {
+    AudioFifoData* afd = NULL;
+    unsigned int currentrate = 0;
+
+    while(isCancellationPending() == false)
+    {
+        STM_EVAL_LEDToggle( LED6 );
+        /* check if there's more audio available */
+        if ( ( afd = fifo.getFifoDataTimedWait(1) ) == NULL )
+            continue;
+
+        if ( afd->rate != currentrate )
+        {
+            /* first data or rate changed */
+            currentrate = afd->rate;
+            /* Initialize the Audio codec and all related peripherals (I2S, I2C, IOExpander, IOs...) */
+            EVAL_AUDIO_Init(OUTPUT_DEVICE_AUTO, 100, currentrate );
+        }
+
+        EVAL_AUDIO_Play((uint16_t*)afd->samples, afd->nsamples * afd->channels * sizeof(uint16_t) );
+        free( afd );
+        xSemaphoreTake( xSemaphore, portMAX_DELAY ); // wait until play complete
+    }
+}
+extern "C"
+{
+uint16_t EVAL_AUDIO_GetSampleCallBack(void)
+{
+
+    return 0;
+}
+
+void EVAL_AUDIO_TransferComplete_CallBack(uint32_t pBuffer, uint32_t Size)
+{
+    xSemaphoreGive( xSemaphore );
+}
+
+uint32_t Codec_TIMEOUT_UserCallback(void)
+{
+    /*we should reset something...*/
+    return 1;
+}
 }
 
 }

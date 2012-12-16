@@ -24,24 +24,44 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include "../Condition.h"
+#include "../Mutex.h"
+#include "FreeRTOSMutexPimpl.h"
 
-#include "ClientHandler.h"
-#include "Client.h"
-#include "applog.h"
 
-ClientHandler::ClientHandler(const ConfigHandling::NetworkConfig& config, LibSpotifyIf& spotifyif) : SocketServer(config),
-                                                                                                     spotify_(spotifyif)
+namespace Platform
 {
+struct conditional
+{
+    xSemaphoreHandle xSemaphore;
+};
+
+Condition::Condition()
+{
+    cond_ = new conditional;
+    vSemaphoreCreateBinary( cond_->xSemaphore );
+
 }
 
-ClientHandler::~ClientHandler()
+Condition::~Condition()
 {
+    vSemaphoreDelete( cond_->xSemaphore );
+    delete cond_;
 }
 
-SocketPeer* ClientHandler::newPeer( Socket* s )
+void Condition::wait(Mutex& mtx)
 {
-    Client* c = new Client(s, spotify_);
-    c->setUsername(config_.getUsername());
-    c->setPassword(config_.getPassword());
-    return c;
+    xSemaphoreTake( cond_->xSemaphore, portMAX_DELAY );
+}
+
+void Condition::timedWait(Mutex& mtx, unsigned int milliSeconds)
+{
+    xSemaphoreTake( cond_->xSemaphore, milliSeconds/portTICK_RATE_MS );
+}
+
+void Condition::signal()
+{
+    xSemaphoreGive( cond_->xSemaphore );
+}
+
 }

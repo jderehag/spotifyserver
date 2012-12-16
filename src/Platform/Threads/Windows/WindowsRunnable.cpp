@@ -47,7 +47,10 @@ DWORD WINAPI runnableWrapper(void* arg)
     return 0;
 }
 
-Runnable::Runnable(bool isJoinable) : isCancellationPending_(false) , isJoinable_(isJoinable)
+Runnable::Runnable(bool isJoinable, Size size, Prio prio) : isCancellationPending_(false), 
+                                                            isJoinable_(isJoinable), 
+                                                            size_(size), 
+                                                            prio_(prio)
 {
     threadHandle_ = new ThreadHandle_t;
     InitializeCriticalSection(&threadHandle_->cancellationMutex_);

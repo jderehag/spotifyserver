@@ -50,7 +50,10 @@ static void runnableWrapper( void* arg )
 }
 
 
-Runnable::Runnable(bool isJoinable) : isCancellationPending_(false) , isJoinable_(isJoinable)
+Runnable::Runnable(bool isJoinable, Size size, Prio prio) : isCancellationPending_(false),
+                                                            isJoinable_(isJoinable),
+                                                            size_(size),
+                                                            prio_(prio)
 {
 	threadHandle_ = new ThreadHandle_t;
 }
@@ -64,7 +67,21 @@ Runnable::~Runnable()
 
 void Runnable::startThread()
 {
-    xTaskCreate( runnableWrapper, ( signed char * ) "tsk", 2000, this, tskIDLE_PRIORITY + 1UL, &threadHandle_->handle );
+    unsigned int stackdepth;
+    unsigned int prio;
+    switch(size_)
+    {
+        case SIZE_SMALL:  stackdepth = 500; break;
+        case SIZE_MEDIUM: stackdepth = 1200; break;
+        case SIZE_LARGE:  stackdepth = 1800; break;
+    }
+    switch(prio_)
+    {
+        case PRIO_LOW:  prio = 1; break;
+        case PRIO_MID:  prio = 2; break;
+        case PRIO_HIGH: prio = 3; break;
+    }
+    xTaskCreate( runnableWrapper, ( signed char * ) "tsk", stackdepth, this, tskIDLE_PRIORITY + prio, &threadHandle_->handle );
 }
 
 void Runnable::joinThread()

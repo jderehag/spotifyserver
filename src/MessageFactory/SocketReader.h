@@ -28,13 +28,15 @@
 #ifndef SOCKETREADER_H_
 #define SOCKETREADER_H_
 
+#include "MessageEncoder.h"
 #include <stdint.h>
+
 class Socket;
 class SocketReader
 {
 private:
     uint8_t* buf;
-    uint8_t recv_header[100]; /*todo use real header or sizeof*/
+    header_t recv_header;
     bool header_received;  /*this is pretty much equivalent to buf != NULL, maybe remove */
     unsigned int recvlen;
     unsigned int totlen;

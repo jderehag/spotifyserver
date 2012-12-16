@@ -42,11 +42,15 @@ COMMON_OBJECTS += spotifyserver.o \
 		  Album.o \
 		  ClientHandler.o \
 		  Client.o \
+		  SocketServer.o \
 		  SocketPeer.o \
 		  AudioFifo.o \
+		  AudioEndpointRemote.o \
 		  MessageDecoder.o \
 		  MessageEncoder.o \
 		  Message.o \
+		  Messenger.o \
+		  SocketClient.o \
 		  SocketReader.o \
 		  SocketWriter.o \
 		  Tlvs.o \
@@ -56,6 +60,7 @@ COMMON_OBJECTS += $(ARCH_OBJECTS) $(AUDIO_OBJECTS)
 
 TESTAPP_OBJECTS +=  testapp2.o \
 					Messenger.o \
+					SocketClient.o \
 					IUserInterface.o \
 					LoggerConfig.o \
 					Logger.o \
@@ -70,9 +75,17 @@ TESTAPP_OBJECTS +=  testapp2.o \
 					Playlist.o \
 					Track.o \
 					Artist.o \
-					Album.o
+					Album.o \
+					NetworkConfig.o \
+					AudioEndpointConfig.o \
+					SocketServer.o \
+					SocketPeer.o \
+					AudioFifo.o \
+					AudioEndpointRemoteSocketServer.o \
+					AudioEndpointRemotePeer.o
+					
 
-TESTAPP_OBJECTS += $(ARCH_OBJECTS)
+TESTAPP_OBJECTS += $(ARCH_OBJECTS) $(AUDIO_OBJECTS)
 
 INCLUDES += -I./ \
 		-ILogger \
@@ -84,16 +97,12 @@ LIBPATHS += -L$(LIBSPOTIFY)/lib
 	
 APPKEYOBJ=$(addsuffix .o, $(basename $(APPKEY)))
 
-.PHONY: all clean
+.PHONY: all clean test
 .SILENT:
 
 all: $(TARGET) test stub
 
-test: testapp.o
-	@echo ...Linking testapp for $(ARCH)
-	$(CCX) -o testapp.$(EXECUTABLE_EXT) testapp.o
-
-test2: $(TESTAPP_OBJECTS)
+test: $(TESTAPP_OBJECTS)
 	@echo ...Linking testapp for $(ARCH)
 	$(CCX) -o testapp.$(EXECUTABLE_EXT) $(TESTAPP_OBJECTS) $(LIBS)
 

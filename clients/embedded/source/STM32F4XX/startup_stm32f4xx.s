@@ -55,7 +55,7 @@ __StackTop:
 #ifdef __HEAP_SIZE
     .equ    Heap_Size, __HEAP_SIZE
 #else
-    .equ    Heap_Size, 0x00010000
+    .equ    Heap_Size, 0x00014000
 #endif
     .globl    __HeapBase
     .globl    __HeapLimit

@@ -61,13 +61,16 @@ int SocketPeer::doRead()
 
         if (reader_.done())
         {
-            MessageDecoder m;
+            Message* msg;
 
             log(LOG_DEBUG) << "Receive complete";
 
             printHexMsg(reader_.getMessage(), reader_.getLength());
 
-            Message* msg = m.decode(reader_.getMessage());
+            {
+                MessageDecoder m;
+                msg = m.decode(reader_.getMessage());
+            }
 
             if (msg != NULL)
             {

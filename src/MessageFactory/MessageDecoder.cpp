@@ -530,8 +530,18 @@ void MessageDecoder::decodeTlvs(TlvContainer* parent, uint32_t len)
             case TLV_PROTOCOL_VERSION_MINOR:
             case TLV_FAILURE:
             case TLV_TRACK_INDEX:
+            case TLV_AUDIO_CHANNELS:
+            case TLV_AUDIO_RATE:
+            case TLV_AUDIO_NOF_SAMPLES:
             {
                 parent->addTlv(getCurrentTlv(), getTlvIntData());
+                nextTlv();
+            }
+            break;
+
+            case TLV_AUDIO_DATA:
+            {
+                parent->addTlv( new BinaryTlv(getCurrentTlv(), getTlvData(), getCurrentTlvLen()));
                 nextTlv();
             }
             break;

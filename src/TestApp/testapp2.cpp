@@ -31,7 +31,8 @@
 #include "MessageFactory/MessageDecoder.h"
 #include "MessageFactory/MessageEncoder.h"
 #include "MessageFactory/SocketReader.h"
-#include "Messenger.h"
+#include "SocketClient.h"
+#include "AudioEndpointRemoteSocketServer.h"
 #include "IUserInterface.h"
 #include "applog.h"
 
@@ -45,7 +46,7 @@ private:
     bool isShuffle;
     bool isRepeat;
 public:
-    UIConsole(Messenger& m);
+    UIConsole(SocketClient& m);
     ~UIConsole();
 
     void run();
@@ -56,7 +57,7 @@ public:
 };
 
 
-UIConsole::UIConsole(Messenger& m) : IUserInterface(m),
+UIConsole::UIConsole(SocketClient& m) : IUserInterface(m),
         itPlaylists_(playlists.begin()),
         isShuffle(false),
         isRepeat(false)
@@ -185,6 +186,12 @@ void UIConsole::run()
             break;
         }
 
+        case 'l':
+        {
+            addAudio();
+            break;
+        }
+
         case 'q':
             cancelThread();
             continue;
@@ -215,11 +222,17 @@ int main(int argc, char *argv[])
     ConfigHandling::LoggerConfig cfg;
     cfg.setLogTo(ConfigHandling::LoggerConfig::STDOUT);
     Logger::Logger logger(cfg);
+    ConfigHandling::NetworkConfig audioepservercfg;
+    audioepservercfg.setPort("7789");
+    ConfigHandling::AudioEndpointConfig audiocfg;
+
+    AudioEndpointRemoteSocketServer audioserver( audiocfg, audioepservercfg );
+
 
     if(argc > 1)
         servaddr = std::string(argv[1]);
 
-    Messenger m(servaddr);
+    SocketClient m(servaddr, 7788);
     UIConsole ui(m);
 
     do
@@ -232,6 +245,7 @@ int main(int argc, char *argv[])
     /* cleanup */
     ui.destroy();
     m.destroy();
+    audioserver.destroy();
 
     return 0;
 }

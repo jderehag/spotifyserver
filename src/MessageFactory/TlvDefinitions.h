@@ -34,6 +34,9 @@
 #define RSP_BIT 0x80000000
 #define IND_BIT 0x40000000
 
+#define MSG_IS_REQUEST( id ) ( ( id & ( RSP_BIT | IND_BIT ) ) == 0 )
+#define MSG_IS_RESPONSE( id ) ( ( id & RSP_BIT ) != 0 )
+
 #define REQ(name, value) name##_REQ = value, name##_RSP = (value | RSP_BIT),
 #define IND(name, value) name##_IND = (value | IND_BIT),
 
@@ -58,6 +61,11 @@ typedef enum
     /* Status */
     REQ( GET_STATUS,       0x401 )
     IND( STATUS,           0x401 )
+
+    /* Remote Audio - Experimental use only! */
+    REQ( ADD_AUDIO_ENDPOINT, 0x1001 )
+    REQ( REM_AUDIO_ENDPOINT, 0x1002 )
+    IND( AUDIO_DATA,         0x1011 )
 }MessageType_t;
 
 
@@ -130,6 +138,12 @@ typedef enum
 
     /* Error handling TLV's */
     TLV_FAILURE                = 0x1101,
+
+    /* Audio TLV's */
+    TLV_AUDIO_DATA             = 0x2001,
+    TLV_AUDIO_CHANNELS         = 0x2002,
+    TLV_AUDIO_RATE             = 0x2003,
+    TLV_AUDIO_NOF_SAMPLES      = 0x2004,
 }TlvType_t;
 
 

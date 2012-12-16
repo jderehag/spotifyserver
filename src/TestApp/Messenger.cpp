@@ -26,149 +26,18 @@
  */
 
 #include "Messenger.h"
-#include "Platform/Socket/Socket.h"
 #include "MessageFactory/Message.h"
-#include "MessageFactory/MessageDecoder.h"
-#include "MessageFactory/MessageEncoder.h"
-#include "MessageFactory/SocketReader.h"
-#include "MessageFactory/SocketWriter.h"
 #include "applog.h"
 
-Messenger::Messenger(std::string serveraddr) : serveraddr_(serveraddr), subscriber_(NULL), messageId(0)
+Messenger::Messenger() : subscriber_(NULL),
+                         messageId(0)
 {
-    startThread();
 }
 
 Messenger::~Messenger()
 {
 }
 
-void Messenger::run()
-{
-    while(isCancellationPending() == false)
-    {
-#if 0
-        if ( pendingSend() )
-        {
-            Message* msg = popMessage();
-            subscriber_->receivedMessage( msg );
-            delete msg;
-        }
-        continue;
-#endif
-        Socket socket;
-
-        if ( socket.Connect( serveraddr_, 7788 ) == 0 )
-        {
-            log(LOG_NOTICE) << "Connected";
-
-            Message hello(HELLO_REQ);
-
-            hello.setId(messageId++);
-
-            hello.addTlv(TLV_PROTOCOL_VERSION_MAJOR, PROTOCOL_VERSION_MAJOR);
-            hello.addTlv(TLV_PROTOCOL_VERSION_MINOR, PROTOCOL_VERSION_MINOR);
-            hello.addTlv(TLV_LOGIN_USERNAME, "wonder");
-            hello.addTlv(TLV_LOGIN_PASSWORD, "wall");
-
-
-            MessageEncoder* enc = hello.encode();
-            enc->printHex();
-
-            if (socket.Send(enc->getBuffer(), enc->getLength()) <= 0)
-            {
-                log(LOG_WARN) << "Error writing to socket";
-                delete enc;
-                continue;
-            }
-            delete enc;
-
-            SocketReader reader(&socket);
-            SocketWriter writer(&socket);
-
-            if ( subscriber_ ) subscriber_->connectionState( true );
-
-            while(isCancellationPending() == false)
-            {
-                std::set<Socket*> readset;
-                std::set<Socket*> writeset;
-                std::set<Socket*> errorset;
-
-                errorset.insert( &socket );
-                readset.insert( &socket );
-                if ( pendingSend() || !writer.isEmpty() )
-                {
-                    writeset.insert( &socket );
-                }
-
-                if ( select( &readset, &writeset, &errorset, 100 ) < 0 )
-                    break;
-
-                if ( !errorset.empty() )
-                {
-                    break;
-                }
-
-                if ( !readset.empty() )
-                {
-                    if ( reader.doread() < 0 )
-                        break;
-
-                    if ( reader.done() )
-                    {
-                        MessageDecoder decoder;
-
-                        log(LOG_DEBUG) << "Receive complete";
-
-                        printHexMsg(reader.getMessage(), reader.getLength());
-
-                        Message* msg = decoder.decode(reader.getMessage());
-
-                        if ( msg != NULL )
-                        {
-                            if ( subscriber_ ) subscriber_->receivedMessage( msg );
-                            delete msg;
-                        }
-
-                        reader.reset();
-                    }
-                }
-
-                if ( !writeset.empty() )
-                {
-                    log(LOG_DEBUG) << "I shall write!";
-                    if ( writer.isEmpty() )
-                    {
-                        Message* msg = popMessage();
-                        if ( msg != NULL )
-                        {
-                            msg->setId(messageId++);
-                            MessageEncoder* encoder = msg->encode();
-                            encoder->printHex();
-                            log(LOG_DEBUG) << *msg;
-                            delete msg;
-                            writer.setData(encoder); // SocketWriter takes ownership of encoder
-                        }
-                    }
-
-                    if ( !writer.isEmpty() && ( writer.doWrite() < 0 ) )
-                    {
-                        log(LOG_NOTICE) << "Write failed!";
-                        break;
-                    }
-                }
-            }
-        }
-        socket.Close();
-        if ( subscriber_ ) subscriber_->connectionState( false );
-    }
-}
-
-void Messenger::destroy()
-{
-    cancelThread();
-    joinThread();
-}
 
 Message* Messenger::popMessage()
 {
@@ -178,7 +47,20 @@ Message* Messenger::popMessage()
 
 void Messenger::queueMessage(Message* msg)
 {
+    msg->setId(messageId++);
     mb_.push_back(msg);
+}
+
+void Messenger::queueResponse(Message* rsp, Message* req)
+{
+    rsp->setId(req->getId());
+    mb_.push_back(rsp);
+}
+
+void Messenger::queueResponse(Message* rsp, unsigned int reqid)
+{
+    rsp->setId(reqid);
+    mb_.push_back(rsp);
 }
 
 bool Messenger::pendingSend()
@@ -190,4 +72,3 @@ void Messenger::addSubscriber(IMessageSubscriber* subscriber)
 {
     subscriber_ = subscriber;
 }
-

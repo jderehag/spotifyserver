@@ -32,6 +32,7 @@
 #include "LibSpotifyIf/LibSpotifyIf.h"
 #include "SocketPeer.h"
 #include "MessageFactory/MessageEncoder.h"
+#include "Platform/AudioEndpoints/AudioEndpointRemote.h"
 #include <map>
 
 using namespace LibSpotify;
@@ -51,6 +52,8 @@ private:
 
     typedef std::map<unsigned int, Message*>  PendingMessageMap;
     PendingMessageMap pendingMessageMap_;
+
+    Platform::AudioEndpointRemote* audioEp;
 
     virtual void processMessage(const Message* msg);
 
@@ -75,6 +78,8 @@ private:
     void handleGetImageReq(const Message* msg);
     void handleGenericSearchReq(const Message* msg);
     void handleGetAlbumReq(const Message* msg);
+    void handleAddAudioEpReq(const Message* msg);
+    void handleRemAudioEpReq(const Message* msg);
 
 public:
 

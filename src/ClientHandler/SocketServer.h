@@ -25,23 +25,35 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "ClientHandler.h"
-#include "Client.h"
-#include "applog.h"
 
-ClientHandler::ClientHandler(const ConfigHandling::NetworkConfig& config, LibSpotifyIf& spotifyif) : SocketServer(config),
-                                                                                                     spotify_(spotifyif)
-{
-}
+#ifndef SOCKETSERVER_H_
+#define SOCKETSERVER_H_
 
-ClientHandler::~ClientHandler()
-{
-}
+#include "ClientHandler/SocketPeer.h"
+#include "ConfigHandling/ConfigHandler.h"
+#include "Platform/Threads/Runnable.h"
+#include "Platform/Socket/Socket.h"
+#include <list>
 
-SocketPeer* ClientHandler::newPeer( Socket* s )
+class SocketServer : Platform::Runnable
 {
-    Client* c = new Client(s, spotify_);
-    c->setUsername(config_.getUsername());
-    c->setPassword(config_.getPassword());
-    return c;
-}
+private:
+    Socket* socket_;
+
+    std::list<SocketPeer*> peers_;
+
+    virtual SocketPeer* newPeer( Socket* s ) = 0;
+
+protected:
+    const ConfigHandling::NetworkConfig& config_;
+
+public:
+    SocketServer( const ConfigHandling::NetworkConfig& config );
+    virtual ~SocketServer();
+
+    void run();
+    void destroy();
+
+};
+
+#endif /* SOCKETSERVER_H_ */

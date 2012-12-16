@@ -168,6 +168,21 @@
     <ClInclude Include="..\src\ClientHandler\SocketPeer.h">
       <Filter>src\ClientHandler</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\Platform\AudioEndpoints\AudioEndpointLocal.h">
+      <Filter>src\Platform\AudioEndpoints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Platform\AudioEndpoints\AudioEndpointRemote.h">
+      <Filter>src\Platform\AudioEndpoints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TestApp\Messenger.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ClientHandler\SocketServer.h">
+      <Filter>src\ClientHandler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TestApp\SocketClient.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\spotifyserver.cpp">
@@ -277,6 +292,18 @@
     </ClCompile>
     <ClCompile Include="..\src\ClientHandler\SocketPeer.cpp">
       <Filter>src\ClientHandler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Platform\AudioEndpoints\AudioEndpointRemote.cpp">
+      <Filter>src\Platform\AudioEndpoints</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TestApp\Messenger.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ClientHandler\SocketServer.cpp">
+      <Filter>src\ClientHandler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TestApp\SocketClient.cpp">
+      <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

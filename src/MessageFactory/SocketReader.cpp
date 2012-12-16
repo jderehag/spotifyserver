@@ -27,7 +27,6 @@
 
 #include "Platform/Socket/Socket.h"
 #include "SocketReader.h"
-#include "MessageEncoder.h"
 #include "applog.h"
 #include <string.h>
 
@@ -62,7 +61,7 @@ int SocketReader::doread()
 
     if (!header_received)
     {
-        n = socket_->Receive( recv_header, sizeof(header_t) - recvlen );
+        n = socket_->Receive( (uint8_t*)&recv_header, sizeof(header_t) - recvlen );
     }
     else
     {
@@ -84,12 +83,12 @@ int SocketReader::doread()
     if (!header_received && recvlen >= sizeof(header_t))
     {
         /* full header received, now we can allocate real buffer and start using that */
-        header = ((header_t*) recv_header);
+        header = ((header_t*) &recv_header);
         totlen = Ntohl(header->len);
         log(LOG_DEBUG) << "Received header, message length = " << totlen;
         header_received = true;
 
-        #define MAX_LEN (1024*1024) //1 MB should be enough for anyone
+        #define MAX_LEN (1024*1024) //1 MB should be enough for anyone ?? todo was this to protect from garbage? isn't there a better place for this?
         if (totlen > MAX_LEN)
         {
             log(LOG_WARN) << "Max length " << MAX_LEN << " exceeded, received " << totlen;
@@ -97,7 +96,9 @@ int SocketReader::doread()
         }
 
         buf = new uint8_t[totlen];
-        memcpy(buf, recv_header, sizeof(header_t));
+        if ( buf == NULL )
+            return -1;
+        memcpy(buf, &recv_header, sizeof(header_t));
     }
 
     return n;

@@ -64,22 +64,38 @@ SRC +=	$(addprefix lwip_v1.4.0/src/core/, init.c tcp_out.c memp.c netif.c pbuf.c
 		$(addprefix lwip_v1.4.0/src/api/, tcpip.c api_msg.c err.c api_lib.c netbuf.c sockets.c ) \
 		$(addprefix lwip_v1.4.0/src/netif/, etharp.c ) \
 		$(addprefix lwip_v1.4.0/port/STM32F4x7/FreeRTOS/, sys_arch.c ethernetif.c)
-		
-		
+
 
 # List C++ source files here.
 # use file-extension .cpp for C++-files (not .C)
 CPPSRC = main.cpp buttonHandler.cpp UIEmbedded.cpp heapWrap.cpp \
 		$(addprefix LibSpotifyIf/MediaContainers/, Album.cpp Artist.cpp Folder.cpp Playlist.cpp Track.cpp) \
 		$(addprefix MessageFactory/, Message.cpp MessageDecoder.cpp MessageEncoder.cpp TlvDefinitions.cpp Tlvs.cpp SocketReader.cpp SocketWriter.cpp) \
-		TestApp/Messenger.cpp \
-		TestApp/IUserInterface.cpp \
+		$(addprefix TestApp/, Messenger.cpp IUserInterface.cpp SocketClient.cpp ) \
 		Logger/Logger.cpp \
 		ConfigHandling/Configs/LoggerConfig.cpp \
 		Platform/Socket/LwIP/LwIPSocket.cpp \
 		Platform/Threads/FreeRTOS/FreeRTOSMessagebox.cpp \
 		Platform/Threads/FreeRTOS/FreeRTOSMutex.cpp \
+		Platform/Threads/FreeRTOS/FreeRTOSCondition.cpp \
 		Platform/Threads/FreeRTOS/FreeRTOSRunnable.cpp
+
+AUDIOSRC =	STM32F4XX/stm32f4_discovery_audio_codec.c \
+			$(addprefix STM32F4XX/STM32F4xx_StdPeriph_Driver/src/, stm32f4xx_i2c.c stm32f4xx_dac.c stm32f4xx_spi.c)
+		
+AUDIOSRCCPP =		ConfigHandling/Configs/AudioEndpointConfig.cpp \
+					ConfigHandling/Configs/NetworkConfig.cpp \
+					ClientHandler/SocketServer.cpp \
+					ClientHandler/SocketPeer.cpp \
+					Platform/AudioEndpoints/AudioFifo.cpp \
+					Platform/AudioEndpoints/Endpoints/AudioEndpoint-CS43L22.cpp \
+					TestApp/AudioEndpointRemoteSocketServer.cpp \
+					TestApp/AudioEndpointRemotePeer.cpp
+
+
+SRC += $(AUDIOSRC)
+CPPSRC += $(AUDIOSRCCPP)
+
 
 # List Assembler source files here.
 # Make them always end in a capital .S. Files ending in a lowercase .s

@@ -94,6 +94,8 @@ void UIEmbedded::updateRootFolder(Folder& f)
 
 void UIEmbedded::connectionState( bool up )
 {
+    IUserInterface::connectionState( up );
+
     if ( up )
     {
         /*new connection, check status and get playlists*/
@@ -102,6 +104,8 @@ void UIEmbedded::connectionState( bool up )
 
         /*make sure we shuffle (should be controlled by button though..)*/
         setShuffle(true);
+
+        //addAudio();
         STM_EVAL_LEDOn( LED4 );
     }
     else

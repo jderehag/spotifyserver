@@ -25,39 +25,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
-WindowsSocket::WindowsSocket(int port)
-{
-	// Initialise the winsocket
-	assert(0 == WSAStartup(MAKEWORD(2,2), &wsaData));
-
-	// Set up the addrinfo struct
-	struct addrinfo* addrinfo;
-	struct addrinfo  hints;
-	memset(&hints, 0, sizeof(hints));
-
-	hints.ai_family		= AF_INET;
-	hints.ai_socktype	= SOCK_STREAM;
-	hints.ai_protocol	= IPPROTO_TCP;
-	hints.ai_flags		= AI_PASSIVE;
-
-	std::stringstream ss;
-	ss << port;
-
-	assert(0 == getaddrinfo(NULL, ss.str().c_str(), &hints, &addrinfo));
-
-	// Create the socket
-	sock = socket(addrinfo->ai_family, addrinfo->ai_socktype, addrinfo->ai_protocol);
-	assert(INVALID_SOCKET != sock);
-
-	// Bind
-	assert(SOCKET_ERROR != bind(sock, addrinfo->ai_addr, (int)addrinfo->ai_addrlen));
-
-	assert(SOCKET_ERROR != listen(sock, 1));
-}
-*/
-
-
 #include <Winsock2.h>
 #include "../Socket.h"
 #include "applog.h"
@@ -150,41 +117,43 @@ int Socket::BindToDevice(std::string device, int port)
 
 int Socket::Connect(std::string addr, int port)
 {
+    int rc;
     struct sockaddr_in serv_addr;
     memset( &serv_addr, 0, sizeof(struct sockaddr_in) );
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = inet_addr( addr.c_str() );
     serv_addr.sin_port = htons( port );
-    return connect( socket_->handle, (struct sockaddr*)&serv_addr, sizeof(serv_addr) ); //todo: wait for success
+    rc = connect( socket_->handle, (struct sockaddr*)&serv_addr, sizeof(serv_addr) );
+
+    if (rc == SOCKET_ERROR && WSAGetLastError() != WSAEWOULDBLOCK)
+        return -1;
+
+    return WaitForConnect();
 }
 
-int Socket::WaitForConnect() //todo
+int Socket::WaitForConnect()
 {
-    /*fd_set fds;
+    fd_set fds;
     struct timeval tmo;
     int error;
-    socklen_t len = sizeof(error);
 
     FD_ZERO(&fds);
-    FD_SET(socket_->fd, &fds);
+    FD_SET(socket_->handle, &fds);
     tmo.tv_sec = 5;
     tmo.tv_usec = 0;
 
-    //log(LOG_WARN) << "waiting";
-
-    if (select(socket_->fd+1, NULL, &fds, NULL, &tmo) <= 0)
+    if (select(0, NULL, &fds, NULL, &tmo) <= 0)
     {
         return -1;
     }
 
-    if ( getsockopt(socket_->fd, SOL_SOCKET, SO_ERROR, &error, &len) < 0 ||
+    /*if ( getsockopt(socket_->fd, SOL_SOCKET, SO_ERROR, &error, &len) < 0 ||
          error > 0 )
     {
         return -1;
-    }
+    }*/
 
-    return 0;*/
-    return -1;
+    return 0;
 }
 
 int Socket::Listen()

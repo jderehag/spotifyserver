@@ -40,6 +40,21 @@ IUserInterface::~IUserInterface()
 
 }
 
+void IUserInterface::connectionState( bool up )
+{
+    if ( up )
+    {
+        Message* hello = new Message(HELLO_REQ);
+
+        hello->addTlv(TLV_PROTOCOL_VERSION_MAJOR, PROTOCOL_VERSION_MAJOR);
+        hello->addTlv(TLV_PROTOCOL_VERSION_MINOR, PROTOCOL_VERSION_MINOR);
+        hello->addTlv(TLV_LOGIN_USERNAME, "wonder");
+        hello->addTlv(TLV_LOGIN_PASSWORD, "wall");
+
+        messenger_.queueMessage( hello ); /* we should make sure this goes out first, ahead of any old pending messages from an old connection */
+    }
+}
+
 Playlist decodePlaylist( TlvContainer* tlv )
 {
     const StringTlv* tlvName = (const StringTlv*) tlv->getTlv(TLV_NAME);
@@ -99,6 +114,11 @@ void IUserInterface::receivedMessage( Message* msg )
         default:
             break;
     }
+}
+
+void IUserInterface::receivedResponse( Message* rsp, Message* req )
+{
+    receivedMessage( rsp );
 }
 
 
@@ -201,3 +221,8 @@ void IUserInterface::search( std::string query )
     messenger_.queueMessage(msg);
 }
 
+void IUserInterface::addAudio()
+{
+    Message* msg = new Message( ADD_AUDIO_ENDPOINT_REQ );
+    messenger_.queueMessage(msg);
+}

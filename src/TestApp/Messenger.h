@@ -28,11 +28,8 @@
 #ifndef MESSENGER_H_
 #define MESSENGER_H_
 
-#include "Platform/Threads/Runnable.h"
 #include "Platform/Threads/Mutex.h"
 #include "Platform/Threads/Messagebox.h"
-#include <string>
-#include <queue>
 #include <stdint.h>
 
 
@@ -43,27 +40,31 @@ class IMessageSubscriber
 public:
     virtual void connectionState( bool up ) = 0;
     virtual void receivedMessage( Message* msg ) = 0;
+    virtual void receivedResponse( Message* rsp, Message* req ) = 0;
 };
 
-class Messenger : public Platform::Runnable
+class Messenger
 {
 private:
-    std::string serveraddr_;
-    IMessageSubscriber* subscriber_;
+    /* message box for other threads to transfer messages to derived class */
     Platform::Messagebox<Message*> mb_;
+
     uint32_t messageId;
+
+protected:
+    IMessageSubscriber* subscriber_;
 
     bool pendingSend();
     Message* popMessage();
 
 public:
-    Messenger(std::string serveraddr);
+    Messenger();
     virtual ~Messenger();
 
-    void run();
-    void destroy();
+    void queueMessage(Message* msg); /* request and indication type messages */
+    void queueResponse(Message* rsp, Message* req); /* response type messages */
+    void queueResponse(Message* rsp, unsigned int reqid); /* response type messages */
 
-    void queueMessage(Message* msg);
     void addSubscriber(IMessageSubscriber* subscriber);
 };
 

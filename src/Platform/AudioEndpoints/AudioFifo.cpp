@@ -50,7 +50,7 @@ int AudioFifo::addFifoDataBlocking(unsigned short channels, unsigned int rate, u
 		 * investigate if we should have a const size queue instead */
         /* JENS, reinserted this throttle to avoid fifo growing really big*/
 		fifoMtx_.lock();
-		if (queuedSamples > rate) 
+		if (queuedSamples > rate)
         {
             fifoMtx_.unlock();
 			return 0;
@@ -60,6 +60,13 @@ int AudioFifo::addFifoDataBlocking(unsigned short channels, unsigned int rate, u
 		sampleLength = nsamples * sizeof(int16_t) * channels;
 		AudioFifoData* data;
 		data = static_cast<AudioFifoData*>(malloc(sizeof(AudioFifoData) + sampleLength));
+
+		if ( data == NULL )
+		{
+		    fifoMtx_.unlock();
+		    return 0;
+		}
+
 		memcpy(data->samples, samples, sampleLength);
 
 		data->nsamples = nsamples;

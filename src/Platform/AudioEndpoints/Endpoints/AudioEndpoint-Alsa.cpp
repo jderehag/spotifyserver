@@ -25,7 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "../AudioEndpoint.h"
+#include "../AudioEndpointLocal.h"
 #include "applog.h"
 #include <iostream>
 #include <asoundlib.h>
@@ -34,15 +34,15 @@ static snd_pcm_t *alsa_open(const char *dev, int rate, int channels);
 
 namespace Platform {
 
-AudioEndpoint::AudioEndpoint(const ConfigHandling::AudioEndpointConfig& config) : config_(config)
+AudioEndpointLocal::AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config) : config_(config)
 {
 	startThread();
 }
-AudioEndpoint::~AudioEndpoint()
+AudioEndpointLocal::~AudioEndpointLocal()
 {
 }
 
-void AudioEndpoint::destroy()
+void AudioEndpointLocal::destroy()
 {
 	cancelThread();
 	joinThread();
@@ -50,17 +50,17 @@ void AudioEndpoint::destroy()
 }
 
 
-int AudioEndpoint::enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples)
+int AudioEndpointLocal::enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples)
 {
-	return fifo.addFifoDataBlocking(channels, rate, nsamples, samples);
+    return fifo.addFifoDataBlocking(channels, rate, nsamples, samples);
 }
 
-void AudioEndpoint::flushAudioData()
+void AudioEndpointLocal::flushAudioData()
 {
-	fifo.flush();
+    fifo.flush();
 }
 
-void AudioEndpoint::run()
+void AudioEndpointLocal::run()
 {
 	snd_pcm_t *devFd = NULL;
 	int c;
@@ -100,7 +100,7 @@ void AudioEndpoint::run()
 
 				snd_pcm_writei(devFd, afd->samples, afd->nsamples);
 			}
-			delete afd;
+			free( afd );
 			afd = 0;
 		}
 	}

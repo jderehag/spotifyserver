@@ -25,23 +25,21 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "ClientHandler.h"
-#include "Client.h"
-#include "applog.h"
+#ifndef AUDIOENDPOINTSOCKETSERVER_H_
+#define AUDIOENDPOINTSOCKETSERVER_H_
 
-ClientHandler::ClientHandler(const ConfigHandling::NetworkConfig& config, LibSpotifyIf& spotifyif) : SocketServer(config),
-                                                                                                     spotify_(spotifyif)
-{
-}
+#include "ClientHandler/SocketServer.h"
 
-ClientHandler::~ClientHandler()
+class AudioEndpointRemoteSocketServer : public SocketServer
 {
-}
+private:
+    ConfigHandling::AudioEndpointConfig audioconfig_;
 
-SocketPeer* ClientHandler::newPeer( Socket* s )
-{
-    Client* c = new Client(s, spotify_);
-    c->setUsername(config_.getUsername());
-    c->setPassword(config_.getPassword());
-    return c;
-}
+    virtual SocketPeer* newPeer( Socket* s );
+public:
+    AudioEndpointRemoteSocketServer(const ConfigHandling::AudioEndpointConfig& audioconfig, const ConfigHandling::NetworkConfig& config);
+    virtual ~AudioEndpointRemoteSocketServer();
+
+};
+
+#endif /* AUDIOENDPOINTSOCKETSERVER_H_ */
