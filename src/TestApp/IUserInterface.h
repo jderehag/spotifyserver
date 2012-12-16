@@ -28,9 +28,9 @@
 #ifndef IUSERINTERFACE_H_
 #define IUSERINTERFACE_H_
 
-#include "Messenger.h"
-#include "LibSpotifyIf/MediaContainers/Folder.h"
-#include "LibSpotifyIf/MediaContainers/Playlist.h"
+#include "SocketHandling/Messenger.h"
+#include "MediaContainers/Folder.h"
+#include "MediaContainers/Playlist.h"
 #include "MessageFactory/TlvDefinitions.h"
 #include <string>
 

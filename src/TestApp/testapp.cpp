@@ -31,7 +31,7 @@
 #include "MessageFactory/MessageDecoder.h"
 #include "MessageFactory/MessageEncoder.h"
 #include "MessageFactory/SocketReader.h"
-#include "SocketClient.h"
+#include "SocketHandling/SocketClient.h"
 #include "AudioEndpointRemoteSocketServer.h"
 #include "IUserInterface.h"
 #include "applog.h"

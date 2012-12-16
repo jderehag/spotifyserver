@@ -12,15 +12,16 @@ TARGET = spotifyserver
 VPATH += ConfigHandling \
 	 ConfigHandling/Configs \
 	 LibSpotifyIf \
-	 LibSpotifyIf/MediaContainers \
+	 ../common/MediaContainers \
 	 LibSpotifyIf/LibSpotifyStub \
 	 ClientHandler \
-	 Platform/Threads \
-	 Platform/Socket \
-	 Platform/AudioEndpoints \
-	 Platform/AudioEndpoints/Endpoints \
-	 MessageFactory \
-	 Logger \
+	 ../common/Platform/Threads \
+	 ../common/Platform/Socket \
+	 ../common/Platform/AudioEndpoints \
+	 ../common/Platform/AudioEndpoints/Endpoints \
+	 ../common/MessageFactory \
+	 ../common/Logger \
+	 ../common/SocketHandling \
 	 TestApp
 
 COMMON_OBJECTS += spotifyserver.o \
@@ -58,7 +59,7 @@ COMMON_OBJECTS += spotifyserver.o \
 		  
 COMMON_OBJECTS += $(ARCH_OBJECTS) $(AUDIO_OBJECTS)
 
-TESTAPP_OBJECTS +=  testapp2.o \
+TESTAPP_OBJECTS +=  testapp.o \
 					Messenger.o \
 					SocketClient.o \
 					IUserInterface.o \
@@ -88,7 +89,8 @@ TESTAPP_OBJECTS +=  testapp2.o \
 TESTAPP_OBJECTS += $(ARCH_OBJECTS) $(AUDIO_OBJECTS)
 
 INCLUDES += -I./ \
-		-ILogger \
+		-I../common/ \
+		-I../common/Logger \
 	    -IUtils \
 	    -I$(LIBSPOTIFY)/include
 

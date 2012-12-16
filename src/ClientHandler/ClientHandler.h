@@ -28,7 +28,7 @@
 #ifndef CLIENTHANDLER_H_
 #define CLIENTHANDLER_H_
 
-#include "ClientHandler/SocketServer.h"
+#include "SocketHandling/SocketServer.h"
 #include "LibSpotifyIf/LibSpotifyIf.h"
 
 using namespace LibSpotify;

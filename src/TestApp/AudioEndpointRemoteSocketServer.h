@@ -28,7 +28,7 @@
 #ifndef AUDIOENDPOINTSOCKETSERVER_H_
 #define AUDIOENDPOINTSOCKETSERVER_H_
 
-#include "ClientHandler/SocketServer.h"
+#include "SocketHandling/SocketServer.h"
 
 class AudioEndpointRemoteSocketServer : public SocketServer
 {

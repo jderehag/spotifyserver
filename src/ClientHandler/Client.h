@@ -30,7 +30,7 @@
 
 #include "LibSpotifyIf/ILibSpotifyIfCallbackSubscriber.h"
 #include "LibSpotifyIf/LibSpotifyIf.h"
-#include "SocketPeer.h"
+#include "SocketHandling/SocketPeer.h"
 #include "MessageFactory/MessageEncoder.h"
 #include "Platform/AudioEndpoints/AudioEndpointRemote.h"
 #include <map>

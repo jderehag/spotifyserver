@@ -25,35 +25,36 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef AUDIOENDPOINTREMOTE_H_
+#define AUDIOENDPOINTREMOTE_H_
 
-#ifndef SOCKETSERVER_H_
-#define SOCKETSERVER_H_
+#include "AudioEndpoint.h"
+#include "SocketHandling/SocketClient.h"
+#include "Platform/Threads/Mutex.h"
 
-#include "ClientHandler/SocketPeer.h"
-#include "ConfigHandling/ConfigHandler.h"
-#include "Platform/Threads/Runnable.h"
-#include "Platform/Socket/Socket.h"
-#include <list>
+namespace Platform
+{
 
-class SocketServer : Platform::Runnable
+class AudioEndpointRemote : public AudioEndpoint, public IMessageSubscriber
 {
 private:
-    Socket* socket_;
+    SocketClient m;
 
-    std::list<SocketPeer*> peers_;
-
-    virtual SocketPeer* newPeer( Socket* s ) = 0;
-
-protected:
-    const ConfigHandling::NetworkConfig& config_;
+    void sendAudioData();
 
 public:
-    SocketServer( const ConfigHandling::NetworkConfig& config );
-    virtual ~SocketServer();
+    AudioEndpointRemote();
+    virtual ~AudioEndpointRemote();
 
-    void run();
-    void destroy();
+    /* AudioEndpoint implementation */
+    virtual int enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples);
+    virtual void flushAudioData();
+
+    /* IMessageSubscriber implementation */
+    virtual void connectionState( bool up );
+    virtual void receivedMessage( Message* msg );
+    virtual void receivedResponse( Message* rsp, Message* req );
 
 };
-
-#endif /* SOCKETSERVER_H_ */
+}
+#endif /* AUDIOENDPOINTREMOTE_H_ */

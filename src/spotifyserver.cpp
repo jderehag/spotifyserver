@@ -32,8 +32,6 @@
 #include "applog.h"
 
 #include "LibSpotifyIf/LibSpotifyIf.h"
-#include "LibSpotifyIf/MediaContainers/Folder.h"
-#include "LibSpotifyIf/MediaContainers/Playlist.h"
 #include "ClientHandler/ClientHandler.h"
 #include "Platform/AudioEndpoints/AudioEndpointLocal.h"
 #include "ConfigHandling/ConfigHandler.h"
@@ -112,7 +110,6 @@ int main(int argc, char *argv[])
 	ClientHandler clienthandler(ch.getNetworkConfig(), libspotifyif);
 
 	while (getchar() != 'q');
-	//std::cout << "Root:" << libspotifyif.getRootFolder();
 
 	libspotifyif.logOut();
 

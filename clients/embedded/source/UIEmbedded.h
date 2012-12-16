@@ -30,7 +30,7 @@
 #define UIEMBEDDED_H_
 
 #include "TestApp/IUserInterface.h"
-#include "TestApp/Messenger.h"
+#include "SocketHandling/Messenger.h"
 
 using namespace LibSpotify;
 

@@ -32,7 +32,7 @@
 #include "UIEmbedded.h"
 #include "buttonHandler.h"
 #include "powerHandler.h"
-#include "TestApp/SocketClient.h"
+#include "SocketHandling/SocketClient.h"
 //#include "TestApp/AudioEndpointRemoteSocketServer.h"
 #include "FreeRTOS.h"
 #include "task.h"

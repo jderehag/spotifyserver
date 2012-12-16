@@ -48,7 +48,7 @@ OUTDIR = .out
 TARGET = spotifyclient_rom
 
 # root directories to look for source files in
-VPATH += ../../src/ ./source/
+VPATH += ../../src/ ../../common/ ./source/
 
 # List C source files here. (C dependencies are automatically generated.)
 # use file-extension c for "c-only"-files
@@ -69,9 +69,10 @@ SRC +=	$(addprefix lwip_v1.4.0/src/core/, init.c tcp_out.c memp.c netif.c pbuf.c
 # List C++ source files here.
 # use file-extension .cpp for C++-files (not .C)
 CPPSRC = main.cpp buttonHandler.cpp UIEmbedded.cpp heapWrap.cpp \
-		$(addprefix LibSpotifyIf/MediaContainers/, Album.cpp Artist.cpp Folder.cpp Playlist.cpp Track.cpp) \
+		$(addprefix MediaContainers/, Album.cpp Artist.cpp Folder.cpp Playlist.cpp Track.cpp) \
 		$(addprefix MessageFactory/, Message.cpp MessageDecoder.cpp MessageEncoder.cpp TlvDefinitions.cpp Tlvs.cpp SocketReader.cpp SocketWriter.cpp) \
-		$(addprefix TestApp/, Messenger.cpp IUserInterface.cpp SocketClient.cpp ) \
+		$(addprefix TestApp/, IUserInterface.cpp ) \
+		$(addprefix SocketHandling/, Messenger.cpp SocketClient.cpp ) \
 		Logger/Logger.cpp \
 		ConfigHandling/Configs/LoggerConfig.cpp \
 		Platform/Socket/LwIP/LwIPSocket.cpp \
@@ -85,8 +86,7 @@ AUDIOSRC =	STM32F4XX/stm32f4_discovery_audio_codec.c \
 		
 AUDIOSRCCPP =		ConfigHandling/Configs/AudioEndpointConfig.cpp \
 					ConfigHandling/Configs/NetworkConfig.cpp \
-					ClientHandler/SocketServer.cpp \
-					ClientHandler/SocketPeer.cpp \
+					$(addprefix SocketHandling/, SocketServer.cpp SocketPeer.cpp ) \
 					Platform/AudioEndpoints/AudioFifo.cpp \
 					Platform/AudioEndpoints/Endpoints/AudioEndpoint-CS43L22.cpp \
 					TestApp/AudioEndpointRemoteSocketServer.cpp \
@@ -116,7 +116,8 @@ EXTRAINCDIRS  += ./source/freertos/include \
 		  ./source/STM32F4XX/STM32F4xx_StdPeriph_Driver/inc \
 		  ./source/STM32F4XX/STM32F4x7_ETH_Driver/inc \
 		  ./../../src \
-		  ./../../src/Logger \
+		  ./../../common \
+		  ./../../common/Logger \
 		  ./source/lwip_v1.4.0/src/include \
 		  ./source/lwip_v1.4.0/src/include/ipv4 \
 		  ./source/lwip_v1.4.0/port/STM32F4x7/FreeRTOS \
