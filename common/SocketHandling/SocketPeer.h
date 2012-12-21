@@ -32,27 +32,20 @@
 #include "MessageFactory/Message.h"
 #include "Platform/Socket/Socket.h"
 #include "Platform/Threads/Mutex.h"
+#include "Messenger.h"
 #include <queue>
 
-class SocketPeer
+class SocketPeer : public Messenger
 {
 private:
-    unsigned int requestId;
-
     SocketReader reader_;
     SocketWriter writer_;
 
     virtual void processMessage(const Message* msg) = 0;
 
-    Platform::Mutex messageQueueMtx;
-    std::queue<Message*> messageQueue;
-
     Socket* socket_;
 
 protected:
-    void queueRequest(Message* msg);
-    void queueMessage(Message* msg);
-    Message* popMessage();
 
 public:
     SocketPeer( Socket* socket );
@@ -61,7 +54,6 @@ public:
     int doRead();
     int doWrite();
 
-    bool pendingSend();
     Socket* getSocket() const;
 
 };

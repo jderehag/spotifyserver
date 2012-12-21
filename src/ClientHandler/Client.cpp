@@ -100,7 +100,7 @@ void Client::playingInd(Track& currentTrack)
     msg->addTlv( TLV_PLAY_MODE_REPEAT, spotify_.getRepeat() );
     msg->addTlv( TLV_PLAY_MODE_SHUFFLE, spotify_.getShuffle() );
 
-    queueRequest(msg);
+    queueMessage( msg );
 }
 void Client::trackEndedInd()
 {
@@ -114,7 +114,7 @@ void Client::trackEndedInd()
     msg->addTlv( TLV_PLAY_MODE_REPEAT, spotify_.getRepeat() );
     msg->addTlv( TLV_PLAY_MODE_SHUFFLE, spotify_.getShuffle() );
 
-    queueRequest(msg);
+    queueMessage( msg );
 }
 void Client::pausedInd(Track& currentTrack)
 {
@@ -129,7 +129,7 @@ void Client::pausedInd(Track& currentTrack)
     msg->addTlv( TLV_PLAY_MODE_REPEAT, spotify_.getRepeat() );
     msg->addTlv( TLV_PLAY_MODE_SHUFFLE, spotify_.getShuffle() );
 
-    queueRequest(msg);
+    queueMessage( msg );
 }
 void Client::getTrackResponse(unsigned int reqId, const std::deque<Track>& tracks)
 {
@@ -146,7 +146,7 @@ void Client::getTrackResponse(unsigned int reqId, const std::deque<Track>& track
         }
         log(LOG_DEBUG) << "#tracks found=" << tracks.size();
 
-        queueMessage(msg);
+        queueResponse( msg, reqId );
         pendingMessageMap_.erase(msgIt);
     }
     else log(LOG_WARN) << "Could not match the getTrackResponse() to a pending response";
@@ -172,7 +172,7 @@ void Client::getAlbumResponse(unsigned int reqId, const Album& album)
 
         msg->addTlv(albumTlv);
 
-        queueMessage(msg);
+        queueResponse( msg, reqId );
         pendingMessageMap_.erase(msgIt);
     }
     else log(LOG_WARN) << "Could not match the getAlbumResponse() to a pending response";
@@ -192,7 +192,7 @@ void Client::getImageResponse(unsigned int reqId, const void* data, size_t dataS
             image->addTlv(new BinaryTlv(TLV_IMAGE_DATA, (const uint8_t*)data, (uint32_t)dataSize));
             msg->addTlv(image);
         }
-        queueMessage(msg);
+        queueResponse( msg, reqId );
         pendingMessageMap_.erase(msgIt);
     }
     else log(LOG_WARN) << "Could not match the genericSearchCallback() to a pending response";
@@ -214,7 +214,7 @@ void Client::genericSearchCallback(unsigned int reqId, std::deque<Track>& tracks
         }
         log(LOG_DEBUG) << "#tracks found=" << tracks.size();
 
-        queueMessage(msg);
+        queueResponse( msg, reqId );
         pendingMessageMap_.erase(msgIt);
     }
     else log(LOG_WARN) << "Could not match the genericSearchCallback() to a pending response";
@@ -226,7 +226,6 @@ void Client::handleGetTracksReq(const Message* msg)
     log(LOG_DEBUG) << "get tracks: " << req->getPlaylist();
 
     Message* rsp  = new Message(GET_TRACKS_RSP);
-    rsp->setId(req->getId());
     unsigned int headerId = req->getId();
     pendingMessageMap_[headerId] = rsp;
 
@@ -236,7 +235,6 @@ void Client::handleGetTracksReq(const Message* msg)
 void Client::handleHelloReq(const Message* msg)
 {
     Message* rsp = new Message(HELLO_RSP);
-    rsp->setId( msg->getId() );
     const IntTlv* protoMajorTlv = (const IntTlv*)msg->getTlvRoot()->getTlv(TLV_PROTOCOL_VERSION_MAJOR);
     const IntTlv* protoMinorTlv = (const IntTlv*)msg->getTlvRoot()->getTlv(TLV_PROTOCOL_VERSION_MINOR);
 
@@ -279,22 +277,20 @@ void Client::handleHelloReq(const Message* msg)
     rsp->addTlv(TLV_PROTOCOL_VERSION_MAJOR, PROTOCOL_VERSION_MAJOR);
     rsp->addTlv(TLV_PROTOCOL_VERSION_MINOR, PROTOCOL_VERSION_MINOR);
 
-    queueMessage( rsp );
+    queueResponse( rsp, msg );
 }
 
 void Client::handleGetPlaylistReq(const Message* msg)
 {
     /*get playlist*/
     Message* rsp = new Message(GET_PLAYLISTS_RSP);
-    rsp->setId( msg->getId() );
     rsp->addTlv( spotify_.getRootFolder().toTlv() );
-    queueMessage( rsp );
+    queueResponse( rsp, msg );
 }
 
 void Client::handleGetStatusReq(const Message* msg)
 {
     Message* rsp = new Message( GET_STATUS_RSP );
-    rsp->setId( msg->getId() );
     switch (spotify_.getState())
     {
         case LibSpotifyIf::TRACK_STATE_NOT_LOADED:
@@ -313,7 +309,7 @@ void Client::handleGetStatusReq(const Message* msg)
     }
     rsp->addTlv( TLV_PLAY_MODE_REPEAT, spotify_.getRepeat() );
     rsp->addTlv( TLV_PLAY_MODE_SHUFFLE, spotify_.getShuffle() );
-    queueMessage(rsp);
+    queueResponse( rsp, msg );
 }
 
 void Client::handlePlayReq(const Message* msg)
@@ -328,8 +324,7 @@ void Client::handlePlayReq(const Message* msg)
     }
 
     Message* rsp = new Message( PLAY_RSP );
-    rsp->setId( msg->getId() );
-    queueMessage(rsp);
+    queueResponse( rsp, msg );
 }
 
 void Client::handlePlayTrackReq(const Message* msg)
@@ -340,8 +335,7 @@ void Client::handlePlayTrackReq(const Message* msg)
     spotify_.play(msg->getId(), url->getString(), *this);
 
     Message* rsp = new Message( PLAY_TRACK_RSP );
-    rsp->setId( msg->getId() );
-    queueMessage(rsp);
+    queueResponse( rsp, msg );
 }
 
 void Client::handlePlayControlReq(const Message* msg)
@@ -392,8 +386,7 @@ void Client::handlePlayControlReq(const Message* msg)
         }
     }
     Message* rsp = new Message( PLAY_CONTROL_RSP );
-    rsp->setId( msg->getId() );
-    queueMessage(rsp);
+    queueResponse( rsp, msg );
 }
 
 
@@ -403,7 +396,6 @@ void Client::handleGetImageReq(const Message* msg)
 
     unsigned int headerId = msg->getId();
     Message* rsp = new Message(GET_IMAGE_RSP);
-    rsp->setId(headerId);
 
     /* make sure that the pending message queue does not already contain such a message */
     if (pendingMessageMap_.find(headerId) == pendingMessageMap_.end())
@@ -425,7 +417,6 @@ void Client::handleGenericSearchReq(const Message* msg)
     {
         unsigned int headerId = msg->getId();
         Message* rsp = new Message(GENERIC_SEARCH_RSP);
-        rsp->setId(headerId);
 
         /* make sure that the pending message queue does not already contain such a message */
         if (pendingMessageMap_.find(headerId) == pendingMessageMap_.end())
@@ -450,7 +441,6 @@ void Client::handleGetAlbumReq(const Message* msg)
 
     unsigned int headerId = msg->getId();
     Message* rsp = new Message(GET_ALBUM_RSP);
-    rsp->setId(headerId);
 
     /* make sure that the pending message queue does not already contain such a message */
     if (pendingMessageMap_.find(headerId) == pendingMessageMap_.end())

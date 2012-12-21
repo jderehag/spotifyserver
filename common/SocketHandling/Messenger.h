@@ -54,7 +54,6 @@ private:
 protected:
     IMessageSubscriber* subscriber_;
 
-    bool pendingSend();
     Message* popMessage();
 
 public:
@@ -62,10 +61,12 @@ public:
     virtual ~Messenger();
 
     void queueMessage(Message* msg); /* request and indication type messages */
-    void queueResponse(Message* rsp, Message* req); /* response type messages */
+    void queueResponse(Message* rsp, const Message* req); /* response type messages */
     void queueResponse(Message* rsp, unsigned int reqid); /* response type messages */
 
     void addSubscriber(IMessageSubscriber* subscriber);
+
+    bool pendingSend();
 };
 
 #endif /* MESSENGER_H_ */

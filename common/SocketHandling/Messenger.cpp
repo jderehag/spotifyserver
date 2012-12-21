@@ -51,7 +51,7 @@ void Messenger::queueMessage(Message* msg)
     mb_.push_back(msg);
 }
 
-void Messenger::queueResponse(Message* rsp, Message* req)
+void Messenger::queueResponse(Message* rsp, const Message* req)
 {
     rsp->setId(req->getId());
     mb_.push_back(rsp);

@@ -30,11 +30,9 @@
 #include "MessageFactory/MessageDecoder.h"
 #include "applog.h"
 
-SocketPeer::SocketPeer( Socket* socket ) :  requestId(0),
-                            reader_(socket),
-                            writer_(socket),
-                            socket_(socket)
-
+SocketPeer::SocketPeer( Socket* socket ) : reader_(socket),
+                                           writer_(socket),
+                                           socket_(socket)
 {
 }
 
@@ -108,39 +106,6 @@ int SocketPeer::doWrite()
     }
 
     return writer_.doWrite();
-}
-
-Message* SocketPeer::popMessage()
-{
-    messageQueueMtx.lock();
-    Message* msg = messageQueue.front();
-    messageQueue.pop();
-    messageQueueMtx.unlock();
-    return msg;
-}
-
-
-void SocketPeer::queueMessage(Message* msg)
-{
-    messageQueueMtx.lock();
-    messageQueue.push(msg);
-    messageQueueMtx.unlock();
-}
-
-void SocketPeer::queueRequest(Message* msg)
-{
-    msg->setId(requestId++);
-
-    queueMessage(msg);
-}
-
-bool SocketPeer::pendingSend()
-{
-    bool ret;
-    messageQueueMtx.lock();
-    ret = ((messageQueue.empty() == false) || (writer_.isEmpty() == false));
-    messageQueueMtx.unlock();
-    return ret;
 }
 
 Socket* SocketPeer::getSocket() const
