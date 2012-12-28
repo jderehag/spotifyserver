@@ -62,7 +62,7 @@ COMMON_OBJECTS += $(ARCH_OBJECTS) $(AUDIO_OBJECTS)
 TESTAPP_OBJECTS +=  testapp.o \
 					Messenger.o \
 					SocketClient.o \
-					IUserInterface.o \
+					RemoteMediaInterface.o \
 					MediaInterface.o \
 					LoggerConfig.o \
 					Logger.o \
