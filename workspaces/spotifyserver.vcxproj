@@ -21,13 +21,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v100</PlatformToolset>
+    <PlatformToolset>v110</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v100</PlatformToolset>
+    <PlatformToolset>v110</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -53,6 +53,10 @@
       <AdditionalLibraryDirectories>..\..\spotifyserver_deps\lib\libspotify-10.1.16-win32-release\lib;..\..\spotifyserver_deps\lib\OpenAL\libs\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>libspotify.lib;Ws2_32.lib;OpenAL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /y $(ProjectDir)\..\..\spotifyserver_deps\lib\libspotify-10.1.16-win32-release\lib\libspotify.dll $(OutDir)
+xcopy /y $(ProjectDir)\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32\OpenAL32.dll $(OutDir)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -70,6 +74,10 @@
       <AdditionalDependencies>libspotify.lib;Ws2_32.lib;OpenAL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\..\spotifyserver_deps\lib\libspotify-10.1.16-win32-release\lib;..\..\spotifyserver_deps\lib\OpenAL\libs\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /y $(ProjectDir)\..\..\spotifyserver_deps\lib\libspotify-10.1.16-win32-release\lib\libspotify.dll $(OutDir)
+xcopy /y $(ProjectDir)\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32\OpenAL32.dll $(OutDir)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\src\ClientHandler\Client.h" />
