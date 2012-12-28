@@ -27,10 +27,6 @@
 
 #include "Platform/Threads/Runnable.h"
 #include "Platform/Socket/Socket.h"
-#include "MessageFactory/Message.h"
-#include "MessageFactory/MessageDecoder.h"
-#include "MessageFactory/MessageEncoder.h"
-#include "MessageFactory/SocketReader.h"
 #include "SocketHandling/SocketClient.h"
 #include "AudioEndpointRemoteSocketServer.h"
 #include "IUserInterface.h"
@@ -38,30 +34,32 @@
 
 
 
-class UIConsole : public Platform::Runnable, public IUserInterface
+class UIConsole : public Platform::Runnable, public IMediaInterfaceCallbackSubscriber
 {
 private:
+    MediaInterface& m_;
     LibSpotify::PlaylistContainer playlists;
     LibSpotify::PlaylistContainer::iterator itPlaylists_;
     bool isShuffle;
     bool isRepeat;
 public:
-    UIConsole(SocketClient& m);
+    UIConsole(MediaInterface& m);
     ~UIConsole();
 
     void run();
     void destroy();
 
-    void updateRootFolder(Folder& f);
-
+    virtual void rootFolderUpdatedInd( Folder& f );
+    virtual void connectionState( bool up );
 };
 
 
-UIConsole::UIConsole(SocketClient& m) : IUserInterface(m),
+UIConsole::UIConsole( MediaInterface& m ) : m_(m),
         itPlaylists_(playlists.begin()),
         isShuffle(false),
         isRepeat(false)
 {
+    m_.registerForCallbacks( *this );
     startThread();
 }
 UIConsole::~UIConsole()
@@ -70,6 +68,7 @@ UIConsole::~UIConsole()
 
 void UIConsole::destroy()
 {
+    m_.unRegisterForCallbacks( *this );
     cancelThread();
     joinThread();
 }
@@ -103,56 +102,56 @@ void UIConsole::run()
             std::cout << "Enter Album URI" << std::endl;
             std::cin >> uri;
 
-            getImage( uri );
+            m_.getImage( uri );
             break;
         }
 
         case 'z':
         {
-            previous();
+            m_.previous();
             break;
         }
         case 'v':
         {
-            next();
+            m_.next();
             break;
         }
         case 'x':
         {
-            resume();
+            m_.resume();
             break;
         }
         case 'c':
         {
-            pause();
+            m_.pause();
             break;
         }
         case 'e':
         {
             isShuffle = !isShuffle;
-            setShuffle(isShuffle);
+            m_.setShuffle(isShuffle);
             break;
         }
         case 'r':
         {
             isRepeat = !isRepeat;
-            setRepeat(isRepeat);
+            m_.setRepeat(isRepeat);
             break;
         }
 
         case 's':
         {
-            getStatus();
+            m_.getStatus();
             break;
         }
         case 'g':
         {
-            getPlaylists();
+            m_.getPlaylists();
             break;
         }
         case 't':
         {
-            getTracks("spotify:playlist:BestOfOasis");
+            m_.getTracks("spotify:playlist:BestOfOasis");
             break;
         }
         case 'p':
@@ -162,7 +161,7 @@ void UIConsole::run()
             std::cin >> uri;
 
             if (uri == "w") uri = "spotify:track:2CT3r93YuSHtm57mjxvjhH";
-            play( uri );
+            m_.play( uri );
             break;
         }
         case 'a':
@@ -172,7 +171,7 @@ void UIConsole::run()
             std::cin >> uri;
 
             if (uri == "w") uri = "spotify:album:1f4I0SpE0O8yg4Eg2ywwv1";
-            getAlbum( uri );
+            m_.getAlbum( uri );
             break;
         }
 
@@ -182,13 +181,13 @@ void UIConsole::run()
             std::cout << "Write your search query, end with enter:" << std::endl;
             std::cin >> query;
 
-            search( query );
+            m_.search( query );
             break;
         }
 
         case 'l':
         {
-            addAudio();
+            m_.addAudio();
             break;
         }
 
@@ -204,7 +203,7 @@ void UIConsole::run()
     log(LOG_NOTICE) << "Exiting UI";
 }
 
-void UIConsole::updateRootFolder(Folder& f)
+void UIConsole::rootFolderUpdatedInd( Folder& f )
 {
     for( LibSpotify::FolderContainer::iterator it = f.getFolders().begin(); it != f.getFolders().end() ; it++)
         playlists.insert( playlists.end(), (*it).getPlaylists().begin(), (*it).getPlaylists().end());
@@ -212,6 +211,11 @@ void UIConsole::updateRootFolder(Folder& f)
     playlists.insert( playlists.end(), f.getPlaylists().begin(), f.getPlaylists().end());
 
     itPlaylists_ = playlists.begin();
+}
+
+void UIConsole::connectionState( bool up )
+{
+
 }
 
 #include <unistd.h> /*todo*/
@@ -232,7 +236,8 @@ int main(int argc, char *argv[])
     if(argc > 1)
         servaddr = std::string(argv[1]);
 
-    SocketClient m(servaddr, 7788);
+    SocketClient sc(servaddr, 7788);
+    RemoteMediaInterface m(sc);
     UIConsole ui(m);
 
     do
@@ -244,7 +249,7 @@ int main(int argc, char *argv[])
 
     /* cleanup */
     ui.destroy();
-    m.destroy();
+    sc.destroy();
     audioserver.destroy();
 
     return 0;

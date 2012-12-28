@@ -25,31 +25,27 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "TestApp/MediaInterface.h"
 
-#ifndef UIEMBEDDED_H_
-#define UIEMBEDDED_H_
-
-#include "TestApp/IUserInterface.h"
-#include "SocketHandling/Messenger.h"
-
-using namespace LibSpotify;
-
-class UIEmbedded : public IMediaInterfaceCallbackSubscriber
+MediaInterface::MediaInterface()
 {
-private:
-    MediaInterface& m_;
-    PlaylistContainer::iterator itPlaylists_;
-    PlaylistContainer playlists;
+}
 
-    virtual void rootFolderUpdatedInd(Folder& f);
-    virtual void connectionState( bool up );
-public:
-    UIEmbedded(MediaInterface& m);
-    virtual ~UIEmbedded();
+MediaInterface::~MediaInterface()
+{
+}
 
-    void shortButtonPress();
-    void longButtonPress();
-};
+void MediaInterface::registerForCallbacks(IMediaInterfaceCallbackSubscriber& subscriber)
+{
+    callbackSubscriberMtx_.lock();
+    callbackSubscriberList_.insert(&subscriber);
+    callbackSubscriberMtx_.unlock();
+}
 
+void MediaInterface::unRegisterForCallbacks(IMediaInterfaceCallbackSubscriber& subscriber)
+{
+    callbackSubscriberMtx_.lock();
+    callbackSubscriberList_.erase(&subscriber);
+    callbackSubscriberMtx_.unlock();
+}
 
-#endif /* UIEMBEDDED_H_ */

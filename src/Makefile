@@ -63,6 +63,7 @@ TESTAPP_OBJECTS +=  testapp.o \
 					Messenger.o \
 					SocketClient.o \
 					IUserInterface.o \
+					MediaInterface.o \
 					LoggerConfig.o \
 					Logger.o \
 					MessageDecoder.o \

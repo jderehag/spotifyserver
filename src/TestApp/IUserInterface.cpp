@@ -29,18 +29,18 @@
 #include "MessageFactory/Message.h"
 #include "applog.h"
 
-IUserInterface::IUserInterface(Messenger& m) : messenger_(m), playbackState_(PLAYBACK_IDLE), rootFolder_("root", 0, 0)
+RemoteMediaInterface::RemoteMediaInterface(Messenger& m) : messenger_(m), playbackState_(PLAYBACK_IDLE)
 {
     messenger_.addSubscriber(this);
 
 }
 
-IUserInterface::~IUserInterface()
+RemoteMediaInterface::~RemoteMediaInterface()
 {
 
 }
 
-void IUserInterface::connectionState( bool up )
+void RemoteMediaInterface::connectionState( bool up )
 {
     if ( up )
     {
@@ -53,6 +53,14 @@ void IUserInterface::connectionState( bool up )
 
         messenger_.queueMessage( hello ); /* we should make sure this goes out first, ahead of any old pending messages from an old connection */
     }
+
+    callbackSubscriberMtx_.lock();
+    for( std::set<IMediaInterfaceCallbackSubscriber*>::iterator it = callbackSubscriberList_.begin();
+            it != callbackSubscriberList_.end(); it++)
+    {
+        (*it)->connectionState( up );
+    }
+    callbackSubscriberMtx_.unlock();
 }
 
 Playlist decodePlaylist( TlvContainer* tlv )
@@ -90,7 +98,7 @@ Folder decodeFolder( TlvContainer* tlv )
     return f;
 }
 
-void IUserInterface::receivedMessage( Message* msg )
+void RemoteMediaInterface::receivedMessage( Message* msg )
 {
     log(LOG_DEBUG) << *msg;
 
@@ -99,7 +107,13 @@ void IUserInterface::receivedMessage( Message* msg )
         case GET_PLAYLISTS_RSP:
         {
             Folder f = decodeFolder( (TlvContainer*) msg->getTlv(TLV_FOLDER) );
-            updateRootFolder(f);
+            callbackSubscriberMtx_.lock();
+            for( std::set<IMediaInterfaceCallbackSubscriber*>::iterator it = callbackSubscriberList_.begin();
+                    it != callbackSubscriberList_.end(); it++)
+            {
+                (*it)->rootFolderUpdatedInd( f );
+            }
+            callbackSubscriberMtx_.unlock();
         }
         break;
 
@@ -116,74 +130,74 @@ void IUserInterface::receivedMessage( Message* msg )
     }
 }
 
-void IUserInterface::receivedResponse( Message* rsp, Message* req )
+void RemoteMediaInterface::receivedResponse( Message* rsp, Message* req )
 {
     receivedMessage( rsp );
 }
 
 
-void IUserInterface::getImage( std::string uri )
+void RemoteMediaInterface::getImage( std::string uri )
 {
     Message* msg = new Message( GET_IMAGE_REQ );
     msg->addTlv(TLV_LINK, uri);
     messenger_.queueMessage( msg );
 }
 
-void IUserInterface::previous()
+void RemoteMediaInterface::previous()
 {
     Message* msg = new Message( PLAY_CONTROL_REQ );
     msg->addTlv( TLV_PLAY_OPERATION, PLAY_OP_PREV );
     messenger_.queueMessage( msg );
 }
 
-void IUserInterface::next()
+void RemoteMediaInterface::next()
 {
     Message* msg = new Message( PLAY_CONTROL_REQ );
     msg->addTlv( TLV_PLAY_OPERATION, PLAY_OP_NEXT );
     messenger_.queueMessage( msg );
 }
 
-void IUserInterface::resume()
+void RemoteMediaInterface::resume()
 {
     Message* msg = new Message( PLAY_CONTROL_REQ );
     msg->addTlv( TLV_PLAY_OPERATION, PLAY_OP_RESUME );
     messenger_.queueMessage( msg );
 }
 
-void IUserInterface::pause()
+void RemoteMediaInterface::pause()
 {
     Message* msg = new Message( PLAY_CONTROL_REQ );
     msg->addTlv( TLV_PLAY_OPERATION, PLAY_OP_PAUSE );
     messenger_.queueMessage( msg );
 }
 
-void IUserInterface::setShuffle( bool shuffleOn )
+void RemoteMediaInterface::setShuffle( bool shuffleOn )
 {
     Message* msg = new Message( PLAY_CONTROL_REQ );
     msg->addTlv( TLV_PLAY_MODE_SHUFFLE, shuffleOn ? 1 : 0 );
     messenger_.queueMessage( msg );
 }
 
-void IUserInterface::setRepeat( bool repeatOn )
+void RemoteMediaInterface::setRepeat( bool repeatOn )
 {
     Message* msg = new Message( PLAY_CONTROL_REQ );
     msg->addTlv( TLV_PLAY_MODE_REPEAT, repeatOn ? 1 : 0 );
     messenger_.queueMessage( msg );
 }
 
-void IUserInterface::getStatus()
+void RemoteMediaInterface::getStatus()
 {
     Message* msg = new Message( GET_STATUS_REQ );
     messenger_.queueMessage( msg );
 }
 
-void IUserInterface::getPlaylists()
+void RemoteMediaInterface::getPlaylists()
 {
     Message* msg = new Message(GET_PLAYLISTS_REQ);
     messenger_.queueMessage(msg);
 }
 
-void IUserInterface::getTracks( std::string uri )
+void RemoteMediaInterface::getTracks( std::string uri )
 {
     Message* msg = new Message(GET_TRACKS_REQ);
     TlvContainer* p = new TlvContainer(TLV_PLAYLIST);
@@ -192,7 +206,7 @@ void IUserInterface::getTracks( std::string uri )
     messenger_.queueMessage(msg);
 }
 
-void IUserInterface::play( std::string uri, int startIndex )
+void RemoteMediaInterface::play( std::string uri, int startIndex )
 {
     Message* msg = new Message( PLAY_REQ );
     msg->addTlv(TLV_LINK, uri);
@@ -200,29 +214,34 @@ void IUserInterface::play( std::string uri, int startIndex )
     messenger_.queueMessage(msg);
 }
 
-void IUserInterface::play( std::string uri )
+void RemoteMediaInterface::play( std::string uri )
 {
     Message* msg = new Message( PLAY_REQ );
     msg->addTlv(TLV_LINK, uri);
     messenger_.queueMessage(msg);
 }
 
-void IUserInterface::getAlbum( std::string uri )
+void RemoteMediaInterface::getAlbum( std::string uri )
 {
     Message* msg = new Message( GET_ALBUM_REQ);
     msg->addTlv(TLV_LINK, uri);
     messenger_.queueMessage(msg);
 }
 
-void IUserInterface::search( std::string query )
+void RemoteMediaInterface::search( std::string query )
 {
     Message* msg = new Message( GENERIC_SEARCH_REQ );
     msg->addTlv( TLV_SEARCH_QUERY, query );
     messenger_.queueMessage(msg);
 }
 
-void IUserInterface::addAudio()
+void RemoteMediaInterface::addAudio()
 {
     Message* msg = new Message( ADD_AUDIO_ENDPOINT_REQ );
     messenger_.queueMessage(msg);
+}
+
+PlaybackState_t RemoteMediaInterface::getCurrentPlaybackState()
+{
+    return playbackState_;
 }

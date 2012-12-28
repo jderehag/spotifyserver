@@ -29,8 +29,8 @@
 #include "MessageFactory/Message.h"
 #include "applog.h"
 
-Messenger::Messenger() : subscriber_(NULL),
-                         messageId(0)
+Messenger::Messenger() : messageId(0),
+                         subscriber_(NULL)
 {
 }
 

@@ -30,36 +30,38 @@
 #include "applog.h"
 #include "stm32f4_discovery.h"
 
-UIEmbedded::UIEmbedded( Messenger& m ) : IUserInterface(m)
+UIEmbedded::UIEmbedded( MediaInterface& m ) : m_(m)
 {
+    m_.registerForCallbacks( *this );
     itPlaylists_ = playlists.begin();
 }
 
 UIEmbedded::~UIEmbedded()
 {
+    m_.unRegisterForCallbacks( *this );
 }
 
 void UIEmbedded::shortButtonPress()
 {
-    switch( playbackState_ )
+    switch( m_.getCurrentPlaybackState() )
     {
         case PLAYBACK_IDLE:
             if( itPlaylists_ != playlists.end() )
-                play((*itPlaylists_).getLink()); // -> PLAYING
+                m_.play((*itPlaylists_).getLink()); // -> PLAYING
             break;
 
         case PLAYBACK_PAUSED:
-            resume(); // -> PLAYING
+            m_.resume(); // -> PLAYING
             break;
 
         case PLAYBACK_PLAYING:
-            pause(); // -> PAUSED
+            m_.pause(); // -> PAUSED
             break;
     }
 }
 void UIEmbedded::longButtonPress()
 {
-    switch( playbackState_ )
+    switch( m_.getCurrentPlaybackState() )
     {
         case PLAYBACK_IDLE:
         case PLAYBACK_PAUSED:
@@ -70,17 +72,17 @@ void UIEmbedded::longButtonPress()
                 if( itPlaylists_ == playlists.end())
                     itPlaylists_ = playlists.begin();
 
-                play((*itPlaylists_).getLink()); // -> PLAYING
+                m_.play((*itPlaylists_).getLink()); // -> PLAYING
             }
             break;
 
         case PLAYBACK_PLAYING:
-            next(); // -> PLAYING
+            m_.next(); // -> PLAYING
             break;
     }
 }
 
-void UIEmbedded::updateRootFolder(Folder& f)
+void UIEmbedded::rootFolderUpdatedInd( Folder& f )
 {
     playlists.clear();
 
@@ -94,16 +96,14 @@ void UIEmbedded::updateRootFolder(Folder& f)
 
 void UIEmbedded::connectionState( bool up )
 {
-    IUserInterface::connectionState( up );
-
     if ( up )
     {
         /*new connection, check status and get playlists*/
-        getStatus();
-        getPlaylists();
+        m_.getStatus();
+        m_.getPlaylists();
 
         /*make sure we shuffle (should be controlled by button though..)*/
-        setShuffle(true);
+        m_.setShuffle(true);
 
         //addAudio();
         STM_EVAL_LEDOn( LED4 );

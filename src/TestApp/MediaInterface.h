@@ -25,51 +25,59 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef IUSERINTERFACE_H_
-#define IUSERINTERFACE_H_
+#ifndef MEDIAINTERFACE_H_
+#define MEDIAINTERFACE_H_
 
-#include "SocketHandling/Messenger.h"
-#include "MessageFactory/TlvDefinitions.h"
-#include "MediaInterface.h"
+#include "MediaContainers/Folder.h"
+#include "Platform/Threads/Mutex.h"
+#include <set>
 #include <string>
 
-using namespace LibSpotify;
+class IMediaInterfaceCallbackSubscriber
+{
+public:
+    virtual void connectionState( bool up ) = 0;
+    virtual void rootFolderUpdatedInd(LibSpotify::Folder& f) = 0;
+};
 
-class RemoteMediaInterface : public IMessageSubscriber, public MediaInterface
+
+class MediaInterface
 {
 private:
-    Messenger& messenger_;
+
+protected:
+    /***********************
+     * Callback subscription
+     ***********************/
+    Platform::Mutex callbackSubscriberMtx_;
+    typedef std::set<IMediaInterfaceCallbackSubscriber*> MediaInterfaceCallbackSubscriberSet;
+    MediaInterfaceCallbackSubscriberSet callbackSubscriberList_;
 
 public:
-    PlaybackState_t playbackState_;
+    MediaInterface();
+    virtual ~MediaInterface();
 
-    RemoteMediaInterface(Messenger& messenger);
-    virtual ~RemoteMediaInterface();
+    void registerForCallbacks(IMediaInterfaceCallbackSubscriber& subscriber);
+    void unRegisterForCallbacks(IMediaInterfaceCallbackSubscriber& subscriber);
 
-    /*Implements IMessageSubscriber*/
-    virtual void receivedMessage( Message* msg );
-    virtual void receivedResponse( Message* rsp, Message* req );
-    virtual void connectionState( bool up );
+    virtual void getImage( std::string uri ) = 0;
+    virtual void previous() = 0;
+    virtual void next() = 0;
+    virtual void resume() = 0;
+    virtual void pause() = 0;
+    virtual void setShuffle( bool shuffleOn ) = 0;
+    virtual void setRepeat( bool repeatOn ) = 0;
+    virtual void getStatus() = 0;
+    virtual void getPlaylists() = 0;
+    virtual void getTracks( std::string uri ) = 0;
+    virtual void play( std::string uri, int startIndex ) = 0;
+    virtual void play( std::string uri ) = 0;
+    virtual void getAlbum( std::string uri ) = 0;
+    virtual void search( std::string query ) = 0;
+    virtual void addAudio() = 0;
 
-    /*Implements MediaInterface*/
-    virtual void getImage( std::string uri );
-    virtual void previous();
-    virtual void next();
-    virtual void resume();
-    virtual void pause();
-    virtual void setShuffle( bool shuffleOn );
-    virtual void setRepeat( bool repeatOn );
-    virtual void getStatus();
-    virtual void getPlaylists();
-    virtual void getTracks( std::string uri );
-    virtual void play( std::string uri, int startIndex );
-    virtual void play( std::string uri );
-    virtual void getAlbum( std::string uri );
-    virtual void search( std::string query );
-    virtual void addAudio();
-
-    virtual PlaybackState_t getCurrentPlaybackState();
+    virtual PlaybackState_t getCurrentPlaybackState() = 0;
 
 };
 
-#endif /* IUSERINTERFACE_H_ */
+#endif /* MEDIAINTERFACE_H_ */

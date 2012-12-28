@@ -71,7 +71,7 @@ SRC +=	$(addprefix lwip_v1.4.0/src/core/, init.c tcp_out.c memp.c netif.c pbuf.c
 CPPSRC = main.cpp buttonHandler.cpp UIEmbedded.cpp heapWrap.cpp \
 		$(addprefix MediaContainers/, Album.cpp Artist.cpp Folder.cpp Playlist.cpp Track.cpp) \
 		$(addprefix MessageFactory/, Message.cpp MessageDecoder.cpp MessageEncoder.cpp TlvDefinitions.cpp Tlvs.cpp SocketReader.cpp SocketWriter.cpp) \
-		$(addprefix TestApp/, IUserInterface.cpp ) \
+		$(addprefix TestApp/, IUserInterface.cpp MediaInterface.cpp ) \
 		$(addprefix SocketHandling/, Messenger.cpp SocketClient.cpp ) \
 		Logger/Logger.cpp \
 		ConfigHandling/Configs/LoggerConfig.cpp \
