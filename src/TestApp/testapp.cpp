@@ -29,9 +29,9 @@
 #include "AudioEndpointRemoteSocketServer.h"
 #include "RemoteMediaInterface.h"
 #include "UIConsole.h"
+#include "Platform/Utils/Utils.h"
 #include "applog.h"
 
-#include <unistd.h> /*todo*/
 
 int main(int argc, char *argv[])
 {
@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 
     do
     {
-        usleep(10000);
+        sleep_ms( 10 );
     } while ( !ui.isCancellationPending() );
 
     std::cout << "Exiting" << std::endl;

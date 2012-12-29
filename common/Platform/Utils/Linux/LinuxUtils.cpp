@@ -46,3 +46,8 @@ void enableStdinEcho()
     newt.c_lflag |= ECHO;
     tcsetattr(STDIN_FILENO, TCSANOW, &newt);
 }
+
+void sleep_ms( unsigned int ms )
+{
+    usleep( ms * 1000 );
+}

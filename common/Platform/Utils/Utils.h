@@ -31,5 +31,5 @@
 void disableStdinEcho();
 void enableStdinEcho();
 
-
+void sleep_ms( unsigned int ms );
 #endif /* UTILS_H_ */

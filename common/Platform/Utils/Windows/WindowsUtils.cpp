@@ -42,3 +42,8 @@ void enableStdinEcho()
     GetConsoleMode(hStdin, &mode);
     SetConsoleMode(hStdin, mode | ENABLE_ECHO_INPUT);
 }
+
+void sleep_ms( unsigned int ms )
+{
+    Sleep( ms );
+}
