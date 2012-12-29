@@ -27,11 +27,12 @@
 
 #include "AudioEndpointRemote.h"
 #include "MessageFactory/Message.h"
+#include <stdlib.h>
 
 
 namespace Platform {
 
-AudioEndpointRemote::AudioEndpointRemote() : m("192.168.5.211"/*"127.0.0.1"*/, 7789)
+AudioEndpointRemote::AudioEndpointRemote() : m("192.168.5.211"/*"127.0.0.1"*/, 7789), reqId(0)
 {
     m.addSubscriber( this );
 }
@@ -51,7 +52,7 @@ void AudioEndpointRemote::sendAudioData()
         msg->addTlv( TLV_AUDIO_RATE, afd->rate );
         msg->addTlv( TLV_AUDIO_NOF_SAMPLES, afd->nsamples );
         msg->addTlv( new BinaryTlv( TLV_AUDIO_DATA, (const uint8_t*) /*ugh, should hton this*/ afd->samples, afd->nsamples * sizeof(int16_t) * afd->channels ) );
-        m.queueMessage( msg );
+        m.queueMessage( msg, reqId++ );
 
         free( afd );
     }

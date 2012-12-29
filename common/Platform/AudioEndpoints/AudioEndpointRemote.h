@@ -39,6 +39,7 @@ class AudioEndpointRemote : public AudioEndpoint, public IMessageSubscriber
 {
 private:
     SocketClient m;
+    unsigned int reqId;
 
     void sendAudioData();
 

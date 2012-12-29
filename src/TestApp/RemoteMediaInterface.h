@@ -25,13 +25,14 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef IUSERINTERFACE_H_
-#define IUSERINTERFACE_H_
+#ifndef REMOTEMEDIAINTERFACE_H_
+#define REMOTEMEDIAINTERFACE_H_
 
 #include "SocketHandling/Messenger.h"
 #include "MessageFactory/TlvDefinitions.h"
 #include "MediaInterface.h"
 #include <string>
+#include <map>
 
 using namespace LibSpotify;
 
@@ -39,7 +40,20 @@ class RemoteMediaInterface : public IMessageSubscriber, public MediaInterface
 {
 private:
     Messenger& messenger_;
+    unsigned int reqId;
 
+    class PendingRequest
+    {
+    public:
+        unsigned int mediaReqId;
+        IMediaInterfaceCallbackSubscriber* subscriber;
+        PendingRequest(unsigned int id, IMediaInterfaceCallbackSubscriber* subsc) : mediaReqId(id), subscriber(subsc) {}
+        ~PendingRequest() {}
+    };
+    typedef std::map<unsigned int, PendingRequest> PendingReqsMap;
+    PendingReqsMap pendingReqsMap;
+
+    void doRequest( Message* msg, unsigned int mediaReqId, IMediaInterfaceCallbackSubscriber* subscriber );
 public:
     PlaybackState_t playbackState_;
 
@@ -61,7 +75,7 @@ public:
     virtual void setRepeat( bool repeatOn );
     virtual void getStatus();
     virtual void getPlaylists();
-    virtual void getTracks( std::string uri );
+    virtual void getTracks( unsigned int reqId, std::string uri, IMediaInterfaceCallbackSubscriber* subscriber );
     virtual void play( std::string uri, int startIndex );
     virtual void play( std::string uri );
     virtual void getAlbum( std::string uri );
@@ -72,4 +86,4 @@ public:
 
 };
 
-#endif /* IUSERINTERFACE_H_ */
+#endif /* REMOTEMEDIAINTERFACE_H_ */

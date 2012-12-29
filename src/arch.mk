@@ -42,6 +42,15 @@ endif
 	AUDIO_DRIVER=stub
 	CFLAGS += -maccumulate-outgoing-args -fomit-frame-pointer
 
+else ifeq ($(ARCH),CYGWIN_NT-6.2-WOW64_i686)
+
+	VPATH += ../common/Platform/Socket/Linux ../common/Platform/Threads/Linux ../common/Platform/Utils/Linux
+	ARCH_OBJECTS +=  LinuxRunnable.o LinuxMutex.o LinuxCondition.o LinuxSocket.o LinuxUtils.o LinuxMessagebox.o
+	LIBSPOTIFY = $(DEPS_PATH)/lib/libspotify-10.1.16-win32-release
+	EXECUTABLE_EXT = exe
+	AUDIO_DRIVER=stub
+	CFLAGS += -maccumulate-outgoing-args -fomit-frame-pointer
+
 else
 	error = $(shell echo invalid arch $(ARCH))
 endif

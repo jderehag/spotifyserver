@@ -114,6 +114,8 @@ void UIEmbedded::connectionState( bool up )
     }
 }
 
-
+void UIEmbedded::getTracksResponse( unsigned int reqId, const std::deque<Track>& tracks )
+{
+}
 
 

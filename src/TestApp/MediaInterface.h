@@ -28,16 +28,23 @@
 #ifndef MEDIAINTERFACE_H_
 #define MEDIAINTERFACE_H_
 
-#include "MediaContainers/Folder.h"
 #include "Platform/Threads/Mutex.h"
 #include <set>
 #include <string>
+
+#include "MediaContainers/Folder.h"
+#include "MediaContainers/Track.h"
+#include <deque>
+
+using namespace LibSpotify;
 
 class IMediaInterfaceCallbackSubscriber
 {
 public:
     virtual void connectionState( bool up ) = 0;
-    virtual void rootFolderUpdatedInd(LibSpotify::Folder& f) = 0;
+    virtual void rootFolderUpdatedInd( Folder& f ) = 0;
+
+    virtual void getTracksResponse( unsigned int reqId, const std::deque<Track>& tracks ) = 0;
 };
 
 
@@ -69,7 +76,7 @@ public:
     virtual void setRepeat( bool repeatOn ) = 0;
     virtual void getStatus() = 0;
     virtual void getPlaylists() = 0;
-    virtual void getTracks( std::string uri ) = 0;
+    virtual void getTracks( unsigned int reqId, std::string uri, IMediaInterfaceCallbackSubscriber* subscriber ) = 0;
     virtual void play( std::string uri, int startIndex ) = 0;
     virtual void play( std::string uri ) = 0;
     virtual void getAlbum( std::string uri ) = 0;

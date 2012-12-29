@@ -29,7 +29,7 @@
 #include "Platform/Socket/Socket.h"
 #include "SocketHandling/SocketClient.h"
 #include "AudioEndpointRemoteSocketServer.h"
-#include "IUserInterface.h"
+#include "RemoteMediaInterface.h"
 #include "applog.h"
 
 
@@ -38,6 +38,8 @@ class UIConsole : public Platform::Runnable, public IMediaInterfaceCallbackSubsc
 {
 private:
     MediaInterface& m_;
+    unsigned int reqId;
+
     LibSpotify::PlaylistContainer playlists;
     LibSpotify::PlaylistContainer::iterator itPlaylists_;
     bool isShuffle;
@@ -49,15 +51,18 @@ public:
     void run();
     void destroy();
 
-    virtual void rootFolderUpdatedInd( Folder& f );
     virtual void connectionState( bool up );
+    virtual void rootFolderUpdatedInd( Folder& f );
+
+    virtual void getTracksResponse( unsigned int reqId, const std::deque<Track>& tracks );
 };
 
 
 UIConsole::UIConsole( MediaInterface& m ) : m_(m),
-        itPlaylists_(playlists.begin()),
-        isShuffle(false),
-        isRepeat(false)
+                                            reqId(0),
+                                            itPlaylists_(playlists.begin()),
+                                            isShuffle(false),
+                                            isRepeat(false)
 {
     m_.registerForCallbacks( *this );
     startThread();
@@ -151,7 +156,11 @@ void UIConsole::run()
         }
         case 't':
         {
-            m_.getTracks("spotify:playlist:BestOfOasis");
+            std::string uri;
+            std::cout << "Enter Spotify URI" << std::endl;
+            std::cin >> uri;
+
+            m_.getTracks( reqId++, uri, this );
             break;
         }
         case 'p':
@@ -215,8 +224,12 @@ void UIConsole::rootFolderUpdatedInd( Folder& f )
 
 void UIConsole::connectionState( bool up )
 {
-
 }
+
+void UIConsole::getTracksResponse( unsigned int reqId, const std::deque<Track>& tracks )
+{
+}
+
 
 #include <unistd.h> /*todo*/
 

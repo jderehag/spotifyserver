@@ -55,6 +55,8 @@ private:
 
     Platform::AudioEndpointRemote* audioEp;
 
+    unsigned int reqId;
+
     virtual void processMessage(const Message* msg);
 
     void rootFolderUpdatedInd();

@@ -29,8 +29,7 @@
 #include "MessageFactory/Message.h"
 #include "applog.h"
 
-Messenger::Messenger() : messageId(0),
-                         subscriber_(NULL)
+Messenger::Messenger() : subscriber_(NULL)
 {
 }
 
@@ -45,22 +44,22 @@ Message* Messenger::popMessage()
 }
 
 
-void Messenger::queueMessage(Message* msg)
+void Messenger::queueMessage( Message* msg, unsigned int reqId )
 {
-    msg->setId(messageId++);
-    mb_.push_back(msg);
+    msg->setId( reqId );
+    mb_.push_back( msg );
 }
 
-void Messenger::queueResponse(Message* rsp, const Message* req)
+void Messenger::queueResponse( Message* rsp, const Message* req )
 {
-    rsp->setId(req->getId());
-    mb_.push_back(rsp);
+    rsp->setId( req->getId() );
+    mb_.push_back( rsp );
 }
 
-void Messenger::queueResponse(Message* rsp, unsigned int reqid)
+void Messenger::queueResponse( Message* rsp, unsigned int reqId )
 {
-    rsp->setId(reqid);
-    mb_.push_back(rsp);
+    rsp->setId( reqId );
+    mb_.push_back( rsp );
 }
 
 bool Messenger::pendingSend()

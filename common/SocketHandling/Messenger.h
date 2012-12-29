@@ -49,8 +49,6 @@ private:
     /* message box for other threads to transfer messages to derived class */
     Platform::Messagebox<Message*> mb_;
 
-    uint32_t messageId;
-
 protected:
     IMessageSubscriber* subscriber_;
 
@@ -60,11 +58,11 @@ public:
     Messenger();
     virtual ~Messenger();
 
-    void queueMessage(Message* msg); /* request and indication type messages */
-    void queueResponse(Message* rsp, const Message* req); /* response type messages */
-    void queueResponse(Message* rsp, unsigned int reqid); /* response type messages */
+    void queueMessage( Message* msg, unsigned int reqId ); /* request and indication type messages */
+    void queueResponse( Message* rsp, const Message* req ); /* response type messages */
+    void queueResponse( Message* rsp, unsigned int reqId ); /* response type messages */
 
-    void addSubscriber(IMessageSubscriber* subscriber);
+    void addSubscriber( IMessageSubscriber* subscriber );
 
     bool pendingSend();
 };

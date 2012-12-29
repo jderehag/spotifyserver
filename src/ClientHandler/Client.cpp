@@ -34,7 +34,8 @@ Client::Client(Socket* socket, LibSpotifyIf& spotifyif) : SocketPeer(socket),
                                                           loggedIn_(true),
                                                           networkUsername_(""),
                                                           networkPassword_(""),
-                                                          audioEp(NULL)
+                                                          audioEp(NULL),
+                                                          reqId(0)
 
 
 {
@@ -100,7 +101,7 @@ void Client::playingInd(Track& currentTrack)
     msg->addTlv( TLV_PLAY_MODE_REPEAT, spotify_.getRepeat() );
     msg->addTlv( TLV_PLAY_MODE_SHUFFLE, spotify_.getShuffle() );
 
-    queueMessage( msg );
+    queueMessage( msg, reqId++ );
 }
 void Client::trackEndedInd()
 {
@@ -114,7 +115,7 @@ void Client::trackEndedInd()
     msg->addTlv( TLV_PLAY_MODE_REPEAT, spotify_.getRepeat() );
     msg->addTlv( TLV_PLAY_MODE_SHUFFLE, spotify_.getShuffle() );
 
-    queueMessage( msg );
+    queueMessage( msg, reqId++ );
 }
 void Client::pausedInd(Track& currentTrack)
 {
@@ -129,7 +130,7 @@ void Client::pausedInd(Track& currentTrack)
     msg->addTlv( TLV_PLAY_MODE_REPEAT, spotify_.getRepeat() );
     msg->addTlv( TLV_PLAY_MODE_SHUFFLE, spotify_.getShuffle() );
 
-    queueMessage( msg );
+    queueMessage( msg, reqId++ );
 }
 void Client::getTrackResponse(unsigned int reqId, const std::deque<Track>& tracks)
 {

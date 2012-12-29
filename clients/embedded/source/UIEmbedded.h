@@ -41,8 +41,12 @@ private:
     PlaylistContainer::iterator itPlaylists_;
     PlaylistContainer playlists;
 
-    virtual void rootFolderUpdatedInd(Folder& f);
+    /* Implements IMediaInterfaceCallbackSubscriber */
     virtual void connectionState( bool up );
+    virtual void rootFolderUpdatedInd( Folder& f );
+
+    virtual void getTracksResponse( unsigned int reqId, const std::deque<Track>& tracks );
+
 public:
     UIEmbedded(MediaInterface& m);
     virtual ~UIEmbedded();
