@@ -60,6 +60,7 @@ COMMON_OBJECTS += spotifyserver.o \
 COMMON_OBJECTS += $(ARCH_OBJECTS) $(AUDIO_OBJECTS)
 
 TESTAPP_OBJECTS +=  testapp.o \
+					UIConsole.o \
 					Messenger.o \
 					SocketClient.o \
 					RemoteMediaInterface.o \

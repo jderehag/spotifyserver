@@ -25,45 +25,34 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "SocketHandling/SocketClient.h"
-#include "AudioEndpointRemoteSocketServer.h"
-#include "RemoteMediaInterface.h"
-#include "UIConsole.h"
-#include "applog.h"
+#ifndef UICONSOLE_H_
+#define UICONSOLE_H_
 
-#include <unistd.h> /*todo*/
+#include "Platform/Threads/Runnable.h"
+#include "MediaInterface.h"
 
-int main(int argc, char *argv[])
+
+class UIConsole : public Platform::Runnable, public IMediaInterfaceCallbackSubscriber
 {
-    std::string servaddr("127.0.0.1");
-    ConfigHandling::LoggerConfig cfg;
-    cfg.setLogTo(ConfigHandling::LoggerConfig::STDOUT);
-    Logger::Logger logger(cfg);
-    ConfigHandling::NetworkConfig audioepservercfg;
-    audioepservercfg.setPort("7789");
-    ConfigHandling::AudioEndpointConfig audiocfg;
+private:
+    MediaInterface& m_;
+    unsigned int reqId;
 
-    AudioEndpointRemoteSocketServer audioserver( audiocfg, audioepservercfg );
+    LibSpotify::PlaylistContainer playlists;
+    LibSpotify::PlaylistContainer::iterator itPlaylists_;
+    bool isShuffle;
+    bool isRepeat;
+public:
+    UIConsole(MediaInterface& m);
+    ~UIConsole();
 
+    void run();
+    void destroy();
 
-    if(argc > 1)
-        servaddr = std::string(argv[1]);
+    virtual void connectionState( bool up );
+    virtual void rootFolderUpdatedInd( Folder& f );
 
-    SocketClient sc(servaddr, 7788);
-    RemoteMediaInterface m(sc);
-    UIConsole ui(m);
+    virtual void getTracksResponse( unsigned int reqId, const std::deque<Track>& tracks );
+};
 
-    do
-    {
-        usleep(10000);
-    } while ( !ui.isCancellationPending() );
-
-    std::cout << "Exiting" << std::endl;
-
-    /* cleanup */
-    ui.destroy();
-    sc.destroy();
-    audioserver.destroy();
-
-    return 0;
-}
+#endif /* UICONSOLE_H_ */
