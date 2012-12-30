@@ -38,6 +38,8 @@ class UIEmbedded : public IMediaInterfaceCallbackSubscriber
 {
 private:
     MediaInterface& m_;
+    unsigned int reqId_;
+
     PlaylistContainer::iterator itPlaylists_;
     PlaylistContainer playlists;
 
@@ -45,7 +47,10 @@ private:
     virtual void connectionState( bool up );
     virtual void rootFolderUpdatedInd( Folder& f );
 
-    virtual void getTracksResponse( unsigned int reqId, const std::deque<Track>& tracks );
+    virtual void getTracksResponse( MediaInterfaceRequestId reqId, const std::deque<Track>& tracks );
+    virtual void getImageResponse( MediaInterfaceRequestId reqId, const void* data, size_t dataSize );
+    virtual void getAlbumResponse( MediaInterfaceRequestId reqId, const Album& album );
+    virtual void genericSearchCallback( MediaInterfaceRequestId reqId, std::deque<Track>& listOfTracks, const std::string& didYouMean);
 
 public:
     UIEmbedded(MediaInterface& m);

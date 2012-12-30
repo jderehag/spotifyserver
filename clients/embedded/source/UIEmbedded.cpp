@@ -99,8 +99,8 @@ void UIEmbedded::connectionState( bool up )
     if ( up )
     {
         /*new connection, check status and get playlists*/
-        m_.getStatus();
-        m_.getPlaylists();
+        m_.getStatus( this, reqId_ );
+        m_.getPlaylists( this, reqId_);
 
         /*make sure we shuffle (should be controlled by button though..)*/
         m_.setShuffle(true);
@@ -114,8 +114,15 @@ void UIEmbedded::connectionState( bool up )
     }
 }
 
-void UIEmbedded::getTracksResponse( unsigned int reqId, const std::deque<Track>& tracks )
+void UIEmbedded::getTracksResponse( MediaInterfaceRequestId reqId, const std::deque<Track>& tracks )
 {
 }
+
+void UIEmbedded::getImageResponse( MediaInterfaceRequestId reqId, const void* data, size_t dataSize )
+{}
+void UIEmbedded::getAlbumResponse( MediaInterfaceRequestId reqId, const Album& album )
+{}
+void UIEmbedded::genericSearchCallback( MediaInterfaceRequestId reqId, std::deque<Track>& listOfTracks, const std::string& didYouMean)
+{}
 
 

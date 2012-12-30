@@ -33,10 +33,13 @@
 #include <string>
 
 #include "MediaContainers/Folder.h"
+#include "MediaContainers/Album.h"
 #include "MediaContainers/Track.h"
 #include <deque>
 
 using namespace LibSpotify;
+
+typedef unsigned int MediaInterfaceRequestId;
 
 class IMediaInterfaceCallbackSubscriber
 {
@@ -44,7 +47,11 @@ public:
     virtual void connectionState( bool up ) = 0;
     virtual void rootFolderUpdatedInd( Folder& f ) = 0;
 
-    virtual void getTracksResponse( unsigned int reqId, const std::deque<Track>& tracks ) = 0;
+    virtual void getTracksResponse( MediaInterfaceRequestId reqId, const std::deque<Track>& tracks ) = 0;
+    virtual void getImageResponse( MediaInterfaceRequestId reqId, const void* data, size_t dataSize ) = 0;
+    virtual void getAlbumResponse( MediaInterfaceRequestId reqId, const Album& album ) = 0;
+    virtual void genericSearchCallback( MediaInterfaceRequestId reqId, std::deque<Track>& listOfTracks, const std::string& didYouMean) = 0;
+
 };
 
 
@@ -67,20 +74,20 @@ public:
     void registerForCallbacks(IMediaInterfaceCallbackSubscriber& subscriber);
     void unRegisterForCallbacks(IMediaInterfaceCallbackSubscriber& subscriber);
 
-    virtual void getImage( std::string uri ) = 0;
+    virtual void getImage( std::string uri, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId ) = 0;
     virtual void previous() = 0;
     virtual void next() = 0;
     virtual void resume() = 0;
     virtual void pause() = 0;
     virtual void setShuffle( bool shuffleOn ) = 0;
     virtual void setRepeat( bool repeatOn ) = 0;
-    virtual void getStatus() = 0;
-    virtual void getPlaylists() = 0;
-    virtual void getTracks( unsigned int reqId, std::string uri, IMediaInterfaceCallbackSubscriber* subscriber ) = 0;
+    virtual void getStatus( IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId ) = 0;
+    virtual void getPlaylists( IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId ) = 0;
+    virtual void getTracks( std::string uri, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId ) = 0;
     virtual void play( std::string uri, int startIndex ) = 0;
     virtual void play( std::string uri ) = 0;
-    virtual void getAlbum( std::string uri ) = 0;
-    virtual void search( std::string query ) = 0;
+    virtual void getAlbum( std::string uri, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId ) = 0;
+    virtual void search( std::string query, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId ) = 0;
     virtual void addAudio() = 0;
 
     virtual PlaybackState_t getCurrentPlaybackState() = 0;

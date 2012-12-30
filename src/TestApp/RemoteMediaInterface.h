@@ -45,15 +45,15 @@ private:
     class PendingRequest
     {
     public:
-        unsigned int mediaReqId;
+        MediaInterfaceRequestId mediaReqId;
         IMediaInterfaceCallbackSubscriber* subscriber;
-        PendingRequest(unsigned int id, IMediaInterfaceCallbackSubscriber* subsc) : mediaReqId(id), subscriber(subsc) {}
+        PendingRequest(MediaInterfaceRequestId id, IMediaInterfaceCallbackSubscriber* subsc) : mediaReqId(id), subscriber(subsc) {}
         ~PendingRequest() {}
     };
     typedef std::map<unsigned int, PendingRequest> PendingReqsMap;
     PendingReqsMap pendingReqsMap;
 
-    void doRequest( Message* msg, unsigned int mediaReqId, IMediaInterfaceCallbackSubscriber* subscriber );
+    void doRequest( Message* msg, MediaInterfaceRequestId mediaReqId, IMediaInterfaceCallbackSubscriber* subscriber );
 public:
     PlaybackState_t playbackState_;
 
@@ -66,20 +66,20 @@ public:
     virtual void connectionState( bool up );
 
     /*Implements MediaInterface*/
-    virtual void getImage( std::string uri );
+    virtual void getImage( std::string uri, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId mediaReqId );
     virtual void previous();
     virtual void next();
     virtual void resume();
     virtual void pause();
     virtual void setShuffle( bool shuffleOn );
     virtual void setRepeat( bool repeatOn );
-    virtual void getStatus();
-    virtual void getPlaylists();
-    virtual void getTracks( unsigned int reqId, std::string uri, IMediaInterfaceCallbackSubscriber* subscriber );
+    virtual void getStatus( IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId mediaReqId );
+    virtual void getPlaylists( IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId mediaReqId );
+    virtual void getTracks( std::string uri, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId mediaReqId );
     virtual void play( std::string uri, int startIndex );
     virtual void play( std::string uri );
-    virtual void getAlbum( std::string uri );
-    virtual void search( std::string query );
+    virtual void getAlbum( std::string uri, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId mediaReqId );
+    virtual void search( std::string query, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId mediaReqId );
     virtual void addAudio();
 
     virtual PlaybackState_t getCurrentPlaybackState();

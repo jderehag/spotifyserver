@@ -36,7 +36,7 @@ class UIConsole : public Platform::Runnable, public IMediaInterfaceCallbackSubsc
 {
 private:
     MediaInterface& m_;
-    unsigned int reqId;
+    unsigned int reqId_;
 
     LibSpotify::PlaylistContainer playlists;
     LibSpotify::PlaylistContainer::iterator itPlaylists_;
@@ -52,7 +52,11 @@ public:
     virtual void connectionState( bool up );
     virtual void rootFolderUpdatedInd( Folder& f );
 
-    virtual void getTracksResponse( unsigned int reqId, const std::deque<Track>& tracks );
+    virtual void getTracksResponse( MediaInterfaceRequestId reqId, const std::deque<Track>& tracks );
+    virtual void getImageResponse( MediaInterfaceRequestId reqId, const void* data, size_t dataSize );
+    virtual void getAlbumResponse( MediaInterfaceRequestId reqId, const Album& album );
+    virtual void genericSearchCallback( MediaInterfaceRequestId reqId, std::deque<Track>& listOfTracks, const std::string& didYouMean);
+
 };
 
 #endif /* UICONSOLE_H_ */

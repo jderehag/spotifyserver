@@ -29,7 +29,7 @@
 #include "applog.h"
 
 UIConsole::UIConsole( MediaInterface& m ) : m_(m),
-                                            reqId(0),
+                                            reqId_(0),
                                             itPlaylists_(playlists.begin()),
                                             isShuffle(false),
                                             isRepeat(false)
@@ -77,7 +77,7 @@ void UIConsole::run()
             std::cout << "Enter Album URI" << std::endl;
             std::cin >> uri;
 
-            m_.getImage( uri );
+            m_.getImage( uri, this, reqId_++ );
             break;
         }
 
@@ -116,12 +116,12 @@ void UIConsole::run()
 
         case 's':
         {
-            m_.getStatus();
+            m_.getStatus( this, reqId_++ );
             break;
         }
         case 'g':
         {
-            m_.getPlaylists();
+            m_.getPlaylists( this, reqId_++ );
             break;
         }
         case 't':
@@ -130,7 +130,7 @@ void UIConsole::run()
             std::cout << "Enter Spotify URI" << std::endl;
             std::cin >> uri;
 
-            m_.getTracks( reqId++, uri, this );
+            m_.getTracks( uri, this, reqId_++ );
             break;
         }
         case 'p':
@@ -150,7 +150,7 @@ void UIConsole::run()
             std::cin >> uri;
 
             if (uri == "w") uri = "spotify:album:1f4I0SpE0O8yg4Eg2ywwv1";
-            m_.getAlbum( uri );
+            m_.getAlbum( uri, this, reqId_++ );
             break;
         }
 
@@ -160,7 +160,7 @@ void UIConsole::run()
             std::cout << "Write your search query, end with enter:" << std::endl;
             std::cin >> query;
 
-            m_.search( query );
+            m_.search( query, this, reqId_++ );
             break;
         }
 
@@ -193,9 +193,13 @@ void UIConsole::rootFolderUpdatedInd( Folder& f )
 }
 
 void UIConsole::connectionState( bool up )
-{
-}
+{}
+void UIConsole::getTracksResponse( MediaInterfaceRequestId reqId, const std::deque<Track>& tracks )
+{}
+void UIConsole::getImageResponse( MediaInterfaceRequestId reqId, const void* data, size_t dataSize )
+{}
+void UIConsole::getAlbumResponse( MediaInterfaceRequestId reqId, const Album& album )
+{}
+void UIConsole::genericSearchCallback( MediaInterfaceRequestId reqId, std::deque<Track>& listOfTracks, const std::string& didYouMean)
+{}
 
-void UIConsole::getTracksResponse( unsigned int reqId, const std::deque<Track>& tracks )
-{
-}
