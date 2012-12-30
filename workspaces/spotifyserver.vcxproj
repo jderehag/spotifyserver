@@ -119,6 +119,7 @@ xcopy /y $(ProjectDir)\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32\OpenAL32.d
     <ClInclude Include="..\common\Platform\Utils\Utils.h" />
     <ClInclude Include="..\common\SocketHandling\Messenger.h" />
     <ClInclude Include="..\common\SocketHandling\SocketClient.h" />
+    <ClInclude Include="..\src\TestApp\MediaInterface.h" />
     <ClInclude Include="..\src\Utils\CircularQueue.h" />
     <ClInclude Include="..\src\Utils\FixedQueue.h" />
   </ItemGroup>
@@ -163,6 +164,7 @@ xcopy /y $(ProjectDir)\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32\OpenAL32.d
     <ClCompile Include="..\src\spotifyserver.cpp" />
     <ClCompile Include="..\common\SocketHandling\Messenger.cpp" />
     <ClCompile Include="..\common\SocketHandling\SocketClient.cpp" />
+    <ClCompile Include="..\src\TestApp\MediaInterface.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

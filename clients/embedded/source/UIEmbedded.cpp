@@ -30,7 +30,7 @@
 #include "applog.h"
 #include "stm32f4_discovery.h"
 
-UIEmbedded::UIEmbedded( MediaInterface& m ) : m_(m)
+UIEmbedded::UIEmbedded( MediaInterface& m ) : m_(m), reqId_(0), playbackState(PLAYBACK_IDLE)
 {
     m_.registerForCallbacks( *this );
     itPlaylists_ = playlists.begin();
@@ -43,11 +43,11 @@ UIEmbedded::~UIEmbedded()
 
 void UIEmbedded::shortButtonPress()
 {
-    switch( m_.getCurrentPlaybackState() )
+    switch( playbackState )
     {
         case PLAYBACK_IDLE:
             if( itPlaylists_ != playlists.end() )
-                m_.play((*itPlaylists_).getLink()); // -> PLAYING
+                m_.play( (*itPlaylists_).getLink(), this, reqId_++ ); // -> PLAYING
             break;
 
         case PLAYBACK_PAUSED:
@@ -61,7 +61,7 @@ void UIEmbedded::shortButtonPress()
 }
 void UIEmbedded::longButtonPress()
 {
-    switch( m_.getCurrentPlaybackState() )
+    switch( playbackState )
     {
         case PLAYBACK_IDLE:
         case PLAYBACK_PAUSED:
@@ -72,7 +72,7 @@ void UIEmbedded::longButtonPress()
                 if( itPlaylists_ == playlists.end())
                     itPlaylists_ = playlists.begin();
 
-                m_.play((*itPlaylists_).getLink()); // -> PLAYING
+                m_.play( (*itPlaylists_).getLink(), this, reqId_++ ); // -> PLAYING
             }
             break;
 
@@ -82,16 +82,8 @@ void UIEmbedded::longButtonPress()
     }
 }
 
-void UIEmbedded::rootFolderUpdatedInd( Folder& f )
+void UIEmbedded::rootFolderUpdatedInd()
 {
-    playlists.clear();
-
-    for( LibSpotify::FolderContainer::iterator it = f.getFolders().begin(); it != f.getFolders().end() ; it++)
-        playlists.insert( playlists.end(), (*it).getPlaylists().begin(), (*it).getPlaylists().end());
-
-    playlists.insert( playlists.end(), f.getPlaylists().begin(), f.getPlaylists().end());
-
-    itPlaylists_ = playlists.begin();
 }
 
 void UIEmbedded::connectionState( bool up )
@@ -114,15 +106,46 @@ void UIEmbedded::connectionState( bool up )
     }
 }
 
-void UIEmbedded::getTracksResponse( MediaInterfaceRequestId reqId, const std::deque<Track>& tracks )
+void UIEmbedded::getPlaylistsResponse( MediaInterfaceRequestId reqId, Folder& f )
 {
+    playlists.clear();
+
+    for( LibSpotify::FolderContainer::iterator it = f.getFolders().begin(); it != f.getFolders().end() ; it++)
+        playlists.insert( playlists.end(), (*it).getPlaylists().begin(), (*it).getPlaylists().end());
+
+    playlists.insert( playlists.end(), f.getPlaylists().begin(), f.getPlaylists().end());
+
+    itPlaylists_ = playlists.begin();
 }
 
+void UIEmbedded::getTracksResponse( MediaInterfaceRequestId reqId, const std::deque<Track>& tracks )
+{}
 void UIEmbedded::getImageResponse( MediaInterfaceRequestId reqId, const void* data, size_t dataSize )
 {}
 void UIEmbedded::getAlbumResponse( MediaInterfaceRequestId reqId, const Album& album )
 {}
 void UIEmbedded::genericSearchCallback( MediaInterfaceRequestId reqId, std::deque<Track>& listOfTracks, const std::string& didYouMean)
 {}
+
+
+void UIEmbedded::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress )
+{
+    statusUpdateInd( state, repeatStatus, shuffleStatus );
+}
+
+void UIEmbedded::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus )
+{
+    playbackState = state;
+}
+
+void UIEmbedded::getStatusResponse( MediaInterfaceRequestId reqId, PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress )
+{
+    statusUpdateInd( state, repeatStatus, shuffleStatus, currentTrack, progress );
+}
+void UIEmbedded::getStatusResponse( MediaInterfaceRequestId reqId, PlaybackState_t state, bool repeatStatus, bool shuffleStatus )
+{
+    statusUpdateInd( state, repeatStatus, shuffleStatus );
+}
+
 
 

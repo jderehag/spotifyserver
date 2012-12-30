@@ -140,7 +140,7 @@ void UIConsole::run()
             std::cin >> uri;
 
             if (uri == "w") uri = "spotify:track:2CT3r93YuSHtm57mjxvjhH";
-            m_.play( uri );
+            m_.play( uri, this, reqId_++ );
             break;
         }
         case 'a':
@@ -182,18 +182,21 @@ void UIConsole::run()
     log(LOG_NOTICE) << "Exiting UI";
 }
 
-void UIConsole::rootFolderUpdatedInd( Folder& f )
+void UIConsole::rootFolderUpdatedInd()
 {
-    for( LibSpotify::FolderContainer::iterator it = f.getFolders().begin(); it != f.getFolders().end() ; it++)
-        playlists.insert( playlists.end(), (*it).getPlaylists().begin(), (*it).getPlaylists().end());
-
-    playlists.insert( playlists.end(), f.getPlaylists().begin(), f.getPlaylists().end());
-
-    itPlaylists_ = playlists.begin();
 }
 
 void UIConsole::connectionState( bool up )
 {}
+void UIConsole::getPlaylistsResponse( MediaInterfaceRequestId reqId, const Folder& rootfolder )
+{
+    for( LibSpotify::FolderContainer::const_iterator it = rootfolder.getFolders().begin(); it != rootfolder.getFolders().end() ; it++)
+        playlists.insert( playlists.end(), (*it).getPlaylists().begin(), (*it).getPlaylists().end());
+
+    playlists.insert( playlists.end(), rootfolder.getPlaylists().begin(), rootfolder.getPlaylists().end());
+
+    itPlaylists_ = playlists.begin();
+}
 void UIConsole::getTracksResponse( MediaInterfaceRequestId reqId, const std::deque<Track>& tracks )
 {}
 void UIConsole::getImageResponse( MediaInterfaceRequestId reqId, const void* data, size_t dataSize )
@@ -202,4 +205,17 @@ void UIConsole::getAlbumResponse( MediaInterfaceRequestId reqId, const Album& al
 {}
 void UIConsole::genericSearchCallback( MediaInterfaceRequestId reqId, std::deque<Track>& listOfTracks, const std::string& didYouMean)
 {}
+
+void UIConsole::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress )
+{
+}
+void UIConsole::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus )
+{
+}
+void UIConsole::getStatusResponse( MediaInterfaceRequestId reqId, PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress )
+{
+}
+void UIConsole::getStatusResponse( MediaInterfaceRequestId reqId, PlaybackState_t state, bool repeatStatus, bool shuffleStatus )
+{
+}
 

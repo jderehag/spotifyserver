@@ -183,6 +183,9 @@
     <ClInclude Include="..\common\MediaContainers\Track.h">
       <Filter>src\MediaContainers</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\TestApp\MediaInterface.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\spotifyserver.cpp">
@@ -304,6 +307,9 @@
     </ClCompile>
     <ClCompile Include="..\common\SocketHandling\SocketServer.cpp">
       <Filter>src\SocketHandling</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TestApp\MediaInterface.cpp">
+      <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -40,17 +40,24 @@ private:
     MediaInterface& m_;
     unsigned int reqId_;
 
+    PlaybackState_t playbackState;
+
     PlaylistContainer::iterator itPlaylists_;
     PlaylistContainer playlists;
 
     /* Implements IMediaInterfaceCallbackSubscriber */
     virtual void connectionState( bool up );
     virtual void rootFolderUpdatedInd( Folder& f );
+    virtual void statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress );
+    virtual void statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus );
 
+    virtual void getPlaylistsResponse( MediaInterfaceRequestId reqId, const Folder& rootfolder );
     virtual void getTracksResponse( MediaInterfaceRequestId reqId, const std::deque<Track>& tracks );
     virtual void getImageResponse( MediaInterfaceRequestId reqId, const void* data, size_t dataSize );
     virtual void getAlbumResponse( MediaInterfaceRequestId reqId, const Album& album );
     virtual void genericSearchCallback( MediaInterfaceRequestId reqId, std::deque<Track>& listOfTracks, const std::string& didYouMean);
+    virtual void getStatusResponse( MediaInterfaceRequestId reqId, PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress );
+    virtual void getStatusResponse( MediaInterfaceRequestId reqId, PlaybackState_t state, bool repeatStatus, bool shuffleStatus );
 
 public:
     UIEmbedded(MediaInterface& m);

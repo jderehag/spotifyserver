@@ -55,7 +55,6 @@ private:
 
     void doRequest( Message* msg, MediaInterfaceRequestId mediaReqId, IMediaInterfaceCallbackSubscriber* subscriber );
 public:
-    PlaybackState_t playbackState_;
 
     RemoteMediaInterface(Messenger& messenger);
     virtual ~RemoteMediaInterface();
@@ -66,7 +65,7 @@ public:
     virtual void connectionState( bool up );
 
     /*Implements MediaInterface*/
-    virtual void getImage( std::string uri, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId mediaReqId );
+    virtual void getImage( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId mediaReqId );
     virtual void previous();
     virtual void next();
     virtual void resume();
@@ -75,14 +74,12 @@ public:
     virtual void setRepeat( bool repeatOn );
     virtual void getStatus( IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId mediaReqId );
     virtual void getPlaylists( IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId mediaReqId );
-    virtual void getTracks( std::string uri, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId mediaReqId );
-    virtual void play( std::string uri, int startIndex );
-    virtual void play( std::string uri );
-    virtual void getAlbum( std::string uri, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId mediaReqId );
+    virtual void getTracks( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId mediaReqId );
+    virtual void play( std::string link, int startIndex, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId mediaReqId );
+    virtual void play( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId mediaReqId );
+    virtual void getAlbum( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId mediaReqId );
     virtual void search( std::string query, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId mediaReqId );
     virtual void addAudio();
-
-    virtual PlaybackState_t getCurrentPlaybackState();
 
 };
 

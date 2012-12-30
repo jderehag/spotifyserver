@@ -80,14 +80,22 @@ bool Folder::findPlaylist(const std::string& playlist, Playlist& pl)
     return false; /*nope, not in here*/
 }
 
-std::deque<Playlist>& Folder::getPlaylists()
+const PlaylistContainer& Folder::getPlaylists() const
 {
-	return playlists_;
+    return playlists_;
+}
+PlaylistContainer& Folder::getPlaylists()
+{
+    return playlists_;
 }
 
-std::vector<Folder>& Folder::getFolders()
+const FolderContainer& Folder::getFolders() const
 {
-	return folders_;
+    return folders_;
+}
+FolderContainer& Folder::getFolders()
+{
+    return folders_;
 }
 
 void Folder::getAllTracks(std::deque<Track>& trackList) const

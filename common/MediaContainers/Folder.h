@@ -63,8 +63,10 @@ public:
 	bool findPlaylist(const std::string& playlist , Playlist& pl);
 
 	const std::string& getName() const;
-	PlaylistContainer& getPlaylists();
-	FolderContainer& getFolders();
+    PlaylistContainer& getPlaylists();
+    const PlaylistContainer& getPlaylists() const;
+    FolderContainer& getFolders();
+    const FolderContainer& getFolders() const;
 	void getAllTracks(std::deque<Track>& allTracks) const;
 
     Tlv* toTlv() const;
