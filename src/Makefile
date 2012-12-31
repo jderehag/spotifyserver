@@ -12,6 +12,7 @@ TARGET = spotifyserver
 VPATH += ConfigHandling \
 	 ConfigHandling/Configs \
 	 LibSpotifyIf \
+	 ../common/MediaInterface \
 	 ../common/MediaContainers \
 	 LibSpotifyIf/LibSpotifyStub \
 	 ClientHandler \
@@ -36,6 +37,7 @@ COMMON_OBJECTS += spotifyserver.o \
 		  LibSpotifyIfCallbackWrapper.o \
 		  LibSpotifyIfHelpers.o \
 		  LibSpotifyPlaybackHandler.o \
+		  MediaInterface.o \
 		  Folder.o \
 		  Playlist.o \
 		  Track.o \

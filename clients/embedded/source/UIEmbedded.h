@@ -29,7 +29,7 @@
 #ifndef UIEMBEDDED_H_
 #define UIEMBEDDED_H_
 
-#include "TestApp/MediaInterface.h"
+#include "MediaInterface/MediaInterface.h"
 #include "SocketHandling/Messenger.h"
 
 using namespace LibSpotify;

@@ -29,7 +29,7 @@
 #define UICONSOLE_H_
 
 #include "Platform/Threads/Runnable.h"
-#include "MediaInterface.h"
+#include "MediaInterface/MediaInterface.h"
 
 
 class UIConsole : public Platform::Runnable, public IMediaInterfaceCallbackSubscriber

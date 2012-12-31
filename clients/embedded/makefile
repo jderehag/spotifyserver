@@ -52,14 +52,20 @@ VPATH += ../../src/ ../../common/ ./source/
 
 # List C source files here. (C dependencies are automatically generated.)
 # use file-extension c for "c-only"-files
-SRC  =	syscalls.c powerHandler.c \
-		$(addprefix freeRTOS/, list.c queue.c tasks.c timers.c heap_3.c) \
+
+SRC  =	syscalls.c powerHandler.c
+
+#FreeRTOS
+SRC +=	$(addprefix freeRTOS/, list.c queue.c tasks.c timers.c heap_3.c) \
 		$(addprefix freeRTOS/port/, port.c) \
-		hooks.c \
-		$(addprefix STM32F4XX/, stm32f4_discovery.c system_stm32f4xx.c stm32f4xx_it.c stm32f4x7_eth_bsp.c netconf.c) \
+		hooks.c
+
+#ST drivers and libraries
+SRC +=	$(addprefix STM32F4XX/, stm32f4_discovery.c system_stm32f4xx.c stm32f4xx_it.c stm32f4x7_eth_bsp.c netconf.c) \
 		$(addprefix STM32F4XX/STM32F4xx_StdPeriph_Driver/src/, misc.c stm32f4xx_dma.c stm32f4xx_exti.c stm32f4xx_gpio.c stm32f4xx_syscfg.c stm32f4xx_rcc.c stm32f4xx_pwr.c stm32f4xx_rtc.c) \
 		STM32F4XX/STM32F4x7_ETH_Driver/src/stm32f4x7_eth.c
-		
+
+#lwIP		
 SRC +=	$(addprefix lwip_v1.4.0/src/core/, init.c tcp_out.c memp.c netif.c pbuf.c raw.c stats.c sys.c tcp.c tcp_in.c udp.c dhcp.c def.c timers.c ipv4/ip.c ipv4/ip_addr.c ipv4/icmp.c ipv4/ip_frag.c ipv4/inet.c ipv4/inet_chksum.c ipv4/autoip.c) \
 		$(addprefix lwip_v1.4.0/src/api/, tcpip.c api_msg.c err.c api_lib.c netbuf.c sockets.c ) \
 		$(addprefix lwip_v1.4.0/src/netif/, etharp.c ) \
@@ -71,15 +77,13 @@ SRC +=	$(addprefix lwip_v1.4.0/src/core/, init.c tcp_out.c memp.c netif.c pbuf.c
 CPPSRC = main.cpp buttonHandler.cpp UIEmbedded.cpp heapWrap.cpp \
 		$(addprefix MediaContainers/, Album.cpp Artist.cpp Folder.cpp Playlist.cpp Track.cpp) \
 		$(addprefix MessageFactory/, Message.cpp MessageDecoder.cpp MessageEncoder.cpp TlvDefinitions.cpp Tlvs.cpp SocketReader.cpp SocketWriter.cpp) \
-		$(addprefix TestApp/, RemoteMediaInterface.cpp MediaInterface.cpp ) \
+		$(addprefix TestApp/, RemoteMediaInterface.cpp ) \
 		$(addprefix SocketHandling/, Messenger.cpp SocketClient.cpp ) \
+		MediaInterface/MediaInterface.cpp \
 		Logger/Logger.cpp \
 		ConfigHandling/Configs/LoggerConfig.cpp \
 		Platform/Socket/LwIP/LwIPSocket.cpp \
-		Platform/Threads/FreeRTOS/FreeRTOSMessagebox.cpp \
-		Platform/Threads/FreeRTOS/FreeRTOSMutex.cpp \
-		Platform/Threads/FreeRTOS/FreeRTOSCondition.cpp \
-		Platform/Threads/FreeRTOS/FreeRTOSRunnable.cpp
+		$(addprefix Platform/Threads/FreeRTOS/, FreeRTOSMessagebox.cpp FreeRTOSMutex.cpp FreeRTOSCondition.cpp FreeRTOSRunnable.cpp)
 
 AUDIOSRC =	STM32F4XX/stm32f4_discovery_audio_codec.c \
 			$(addprefix STM32F4XX/STM32F4xx_StdPeriph_Driver/src/, stm32f4xx_i2c.c stm32f4xx_dac.c stm32f4xx_spi.c)

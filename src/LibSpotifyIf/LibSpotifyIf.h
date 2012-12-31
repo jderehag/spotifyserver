@@ -38,7 +38,7 @@
 #include "MessageFactory/Message.h"
 #include "Platform/Threads/Runnable.h"
 #include "Platform/Threads/Condition.h"
-#include "TestApp/MediaInterface.h"
+#include "MediaInterface/MediaInterface.h"
 #include <libspotify/api.h>
 #include <set>
 #include <vector>

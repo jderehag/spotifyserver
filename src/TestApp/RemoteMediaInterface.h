@@ -30,7 +30,7 @@
 
 #include "SocketHandling/Messenger.h"
 #include "MessageFactory/TlvDefinitions.h"
-#include "MediaInterface.h"
+#include "MediaInterface/MediaInterface.h"
 #include <string>
 #include <map>
 

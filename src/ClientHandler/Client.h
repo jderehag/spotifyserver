@@ -28,7 +28,7 @@
 #ifndef CLIENT_H_
 #define CLIENT_H_
 
-#include "TestApp/MediaInterface.h"
+#include "MediaInterface/MediaInterface.h"
 #include "SocketHandling/SocketPeer.h"
 #include "MessageFactory/MessageEncoder.h"
 #include "Platform/AudioEndpoints/AudioEndpointRemote.h"

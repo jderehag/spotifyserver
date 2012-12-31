@@ -82,6 +82,7 @@ xcopy /y $(ProjectDir)\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32\wrap_oal.d
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\common\MediaInterface\MediaInterface.h" />
     <ClInclude Include="..\src\ClientHandler\Client.h" />
     <ClInclude Include="..\src\ClientHandler\ClientHandler.h" />
     <ClInclude Include="..\common\SocketHandling\SocketPeer.h" />
@@ -121,12 +122,12 @@ xcopy /y $(ProjectDir)\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32\wrap_oal.d
     <ClInclude Include="..\common\Platform\Utils\Utils.h" />
     <ClInclude Include="..\common\SocketHandling\Messenger.h" />
     <ClInclude Include="..\common\SocketHandling\SocketClient.h" />
-    <ClInclude Include="..\src\TestApp\MediaInterface.h" />
     <ClInclude Include="..\src\Utils\CircularQueue.h" />
     <ClInclude Include="..\src\Utils\FixedQueue.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\spotifyserver_deps\appkey.c" />
+    <ClCompile Include="..\common\MediaInterface\MediaInterface.cpp" />
     <ClCompile Include="..\src\ClientHandler\Client.cpp" />
     <ClCompile Include="..\src\ClientHandler\ClientHandler.cpp" />
     <ClCompile Include="..\common\SocketHandling\SocketPeer.cpp" />
@@ -166,7 +167,6 @@ xcopy /y $(ProjectDir)\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32\wrap_oal.d
     <ClCompile Include="..\src\spotifyserver.cpp" />
     <ClCompile Include="..\common\SocketHandling\Messenger.cpp" />
     <ClCompile Include="..\common\SocketHandling\SocketClient.cpp" />
-    <ClCompile Include="..\src\TestApp\MediaInterface.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
