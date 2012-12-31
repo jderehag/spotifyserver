@@ -55,7 +55,8 @@
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y $(ProjectDir)\..\..\spotifyserver_deps\lib\libspotify-10.1.16-win32-release\lib\libspotify.dll $(OutDir)
-xcopy /y $(ProjectDir)\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32\OpenAL32.dll $(OutDir)</Command>
+xcopy /y $(ProjectDir)\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32\OpenAL32.dll $(OutDir)
+xcopy /y $(ProjectDir)\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32\wrap_oal.dll $(OutDir)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -76,7 +77,8 @@ xcopy /y $(ProjectDir)\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32\OpenAL32.d
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y $(ProjectDir)\..\..\spotifyserver_deps\lib\libspotify-10.1.16-win32-release\lib\libspotify.dll $(OutDir)
-xcopy /y $(ProjectDir)\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32\OpenAL32.dll $(OutDir)</Command>
+xcopy /y $(ProjectDir)\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32\OpenAL32.dll $(OutDir)
+xcopy /y $(ProjectDir)\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32\wrap_oal.dll $(OutDir)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
