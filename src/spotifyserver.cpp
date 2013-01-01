@@ -36,6 +36,7 @@
 #include "Platform/AudioEndpoints/AudioEndpointLocal.h"
 #include "ConfigHandling/ConfigHandler.h"
 #include "Platform/Utils/Utils.h"
+#include "TestApp/UIConsole.h"
 
 
 
@@ -109,7 +110,8 @@ int main(int argc, char *argv[])
 
 	ClientHandler clienthandler(ch.getNetworkConfig(), libspotifyif);
 
-	while (getchar() != 'q');
+	UIConsole ui( libspotifyif );
+	ui.joinThread();
 
 	libspotifyif.logOut();
 

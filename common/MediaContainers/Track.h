@@ -67,13 +67,13 @@ public:
     void setAlbumLink(const std::string& link);
 	unsigned int getDurationMillisecs() const;
 	void setDurationMillisecs(unsigned int duration);
-	bool isStarred();
+	bool isStarred() const;
 	void setIsStarred(bool isStarred);
-	bool isLocal();
+	bool isLocal() const;
 	void setIsLocal(bool isStarred);
-	bool isAutoLinked();
+	bool isAutoLinked() const;
 	void setIsAutoLinked(bool isStarred);
-	int getIndex();
+	int getIndex() const;
 	void setIndex(int index);
 
 	void write(MessageEncoder* msg) const;

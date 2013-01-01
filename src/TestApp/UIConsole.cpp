@@ -28,6 +28,10 @@
 #include "UIConsole.h"
 #include "applog.h"
 
+static void printFolder( const Folder& f, int indent );
+static void printTracks( const std::deque<Track>& tracks );
+
+
 UIConsole::UIConsole( MediaInterface& m ) : m_(m),
                                             reqId_(0),
                                             itPlaylists_(playlists.begin()),
@@ -182,14 +186,15 @@ void UIConsole::run()
     log(LOG_NOTICE) << "Exiting UI";
 }
 
-void UIConsole::rootFolderUpdatedInd()
-{
-}
 
+void UIConsole::rootFolderUpdatedInd()
+{}
 void UIConsole::connectionState( bool up )
 {}
 void UIConsole::getPlaylistsResponse( MediaInterfaceRequestId reqId, const Folder& rootfolder )
 {
+    printFolder( rootfolder, 2 );
+
     for( LibSpotify::FolderContainer::const_iterator it = rootfolder.getFolders().begin(); it != rootfolder.getFolders().end() ; it++)
         playlists.insert( playlists.end(), (*it).getPlaylists().begin(), (*it).getPlaylists().end());
 
@@ -198,13 +203,21 @@ void UIConsole::getPlaylistsResponse( MediaInterfaceRequestId reqId, const Folde
     itPlaylists_ = playlists.begin();
 }
 void UIConsole::getTracksResponse( MediaInterfaceRequestId reqId, const std::deque<Track>& tracks )
-{}
+{
+    printTracks( tracks );
+}
 void UIConsole::getImageResponse( MediaInterfaceRequestId reqId, const void* data, size_t dataSize )
 {}
 void UIConsole::getAlbumResponse( MediaInterfaceRequestId reqId, const Album& album )
-{}
+{
+    std::cout << "  " << album.getName() << " - " << album.getLink() << std::endl;
+    std::cout << "  By " << album.getArtist().getName() << " - " << album.getArtist().getLink() << std::endl;
+    printTracks( album.getTracks() );
+}
 void UIConsole::genericSearchCallback( MediaInterfaceRequestId reqId, std::deque<Track>& listOfTracks, const std::string& didYouMean)
-{}
+{
+    printTracks( listOfTracks );
+}
 
 void UIConsole::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress )
 {
@@ -219,3 +232,26 @@ void UIConsole::getStatusResponse( MediaInterfaceRequestId reqId, PlaybackState_
 {
 }
 
+
+
+void printFolder( const Folder& f, int indent )
+{
+    std::cout << std::string( indent, ' ') << f.getName() << std::endl;
+
+    for( LibSpotify::FolderContainer::const_iterator it = f.getFolders().begin(); it != f.getFolders().end() ; it++)
+        printFolder( (*it), indent+2 );
+
+    for( LibSpotify::PlaylistContainer::const_iterator it = f.getPlaylists().begin(); it != f.getPlaylists().end() ; it++)
+        std::cout << std::string( indent+2, ' ') << (*it).getName() << "  -  " << (*it).getLink() << std::endl;
+}
+
+void printTracks( const std::deque<Track>& tracks )
+{
+    for( std::deque<Track>::const_iterator it = tracks.begin(); it != tracks.end() ; it++)
+    {
+        if ( (*it).getIndex() == -1 )
+            std::cout << "  " << (*it).getName() << "  -  "  << (*it).getLink() << std::endl;
+        else
+            std::cout << "  " << (*it).getIndex() << ". " <<(*it).getName() << "  -  "  << (*it).getLink() << std::endl;
+    }
+}

@@ -53,10 +53,8 @@ int main(int argc, char *argv[])
     RemoteMediaInterface m(sc);
     UIConsole ui(m);
 
-    do
-    {
-        sleep_ms( 10 );
-    } while ( !ui.isCancellationPending() );
+    /* wait for ui thread to exit */
+    ui.joinThread();
 
     std::cout << "Exiting" << std::endl;
 

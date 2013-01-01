@@ -51,16 +51,16 @@ void Track::setAlbumLink(const std::string& link){ albumLink_ = link; }
 unsigned int Track::getDurationMillisecs() const {return durationMillisecs_;}
 void Track::setDurationMillisecs(unsigned int duration){durationMillisecs_ = duration;}
 
-bool Track::isStarred() { return isStarred_; }
+bool Track::isStarred() const { return isStarred_; }
 void Track::setIsStarred(bool isStarred) { isStarred_ = isStarred; }
 
-bool Track::isLocal() { return isLocal_; }
+bool Track::isLocal() const { return isLocal_; }
 void Track::setIsLocal(bool isLocal) { isLocal_ = isLocal; }
 
-bool Track::isAutoLinked() { return isAutoLinked_; }
+bool Track::isAutoLinked() const { return isAutoLinked_; }
 void Track::setIsAutoLinked(bool isAutoLinked) { isAutoLinked_ = isAutoLinked; }
 
-int Track::getIndex() { return index_; }
+int Track::getIndex() const { return index_; }
 void Track::setIndex(int index) { index_ = index; }
 
 Tlv* Track::toTlv() const
