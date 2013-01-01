@@ -50,6 +50,7 @@ public:
     Playlist(const std::string& name, const std::string& link,bool nullObject);
 	Playlist(const std::string& name, const std::string& link);
 	Playlist(const char* name, const char* link);
+	Playlist(const TlvContainer* tlv);
 	virtual ~Playlist();
 
 	bool isCollaborative();

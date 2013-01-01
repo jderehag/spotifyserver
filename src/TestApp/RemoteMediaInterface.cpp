@@ -70,41 +70,6 @@ void RemoteMediaInterface::doRequest( Message* msg, unsigned int mediaReqId, IMe
     messenger_.queueMessage( msg, myId );
 }
 
-Playlist decodePlaylist( TlvContainer* tlv )
-{
-    const StringTlv* tlvName = (const StringTlv*) tlv->getTlv(TLV_NAME);
-    const StringTlv* tlvLink = (const StringTlv*) tlv->getTlv(TLV_LINK);
-    Playlist p(tlvName ? tlvName->getString() : "no-name", tlvLink ? tlvLink->getString() : "no-link");
-    return p;
-}
-
-Folder decodeFolder( TlvContainer* tlv )
-{
-    const StringTlv* tlvName = (const StringTlv*) tlv->getTlv(TLV_NAME);
-    Folder f(tlvName ? tlvName->getString() : "no-name", 0, NULL);
-    for ( TlvContainer::iterator it = tlv->begin(); it != tlv->end(); it++ )
-    {
-        switch( (*it)->getType() )
-        {
-            case TLV_FOLDER:
-            {
-                Folder subfolder = decodeFolder((TlvContainer*) (*it));
-                f.addFolder(subfolder);
-            }
-            break;
-            case TLV_PLAYLIST:
-            {
-                Playlist p = decodePlaylist((TlvContainer*) (*it));
-                f.addPlaylist(p);
-            }
-            break;
-            default:
-                break;
-        }
-    }
-    return f;
-}
-
 void RemoteMediaInterface::receivedMessage( Message* msg )
 {
     log(LOG_DEBUG) << *msg;
@@ -116,20 +81,35 @@ void RemoteMediaInterface::receivedMessage( Message* msg )
             PlaybackState_t playbackState = PLAYBACK_IDLE;
             bool shuffleState = false;
             bool repeatState = false;
-            IntTlv* tlv = (IntTlv*) msg->getTlv(TLV_STATE);
+            const IntTlv* tlv = (const IntTlv*) msg->getTlv(TLV_STATE);
             if ( tlv ) playbackState = (PlaybackState_t)tlv->getVal();
-            tlv = (IntTlv*) msg->getTlv(TLV_PLAY_MODE_REPEAT);
+            tlv = (const IntTlv*) msg->getTlv(TLV_PLAY_MODE_REPEAT);
             if ( tlv ) repeatState = (tlv->getVal() != 0);
-            tlv = (IntTlv*) msg->getTlv(TLV_PLAY_MODE_SHUFFLE);
+            tlv = (const IntTlv*) msg->getTlv(TLV_PLAY_MODE_SHUFFLE);
             if ( tlv ) shuffleState = (tlv->getVal() != 0);
 
-            /*todo decode track*/
+            const TlvContainer* trackTlv = (const TlvContainer*) msg->getTlv(TLV_TRACK);
 
             callbackSubscriberMtx_.lock();
-            for( std::set<IMediaInterfaceCallbackSubscriber*>::iterator it = callbackSubscriberList_.begin();
-                 it != callbackSubscriberList_.end(); it++)
+            if ( trackTlv != NULL )
             {
-                (*it)->statusUpdateInd( playbackState, repeatState, shuffleState );
+                int progress = 0;
+                tlv = (const IntTlv*) msg->getTlv(TLV_PROGRESS);
+                if ( tlv ) progress = tlv->getVal();
+
+                for( std::set<IMediaInterfaceCallbackSubscriber*>::iterator it = callbackSubscriberList_.begin();
+                     it != callbackSubscriberList_.end(); it++)
+                {
+                    (*it)->statusUpdateInd( playbackState, repeatState, shuffleState, Track( trackTlv ), progress );
+                }
+            }
+            else
+            {
+                for( std::set<IMediaInterfaceCallbackSubscriber*>::iterator it = callbackSubscriberList_.begin();
+                     it != callbackSubscriberList_.end(); it++)
+                {
+                    (*it)->statusUpdateInd( playbackState, repeatState, shuffleState );
+                }
             }
             callbackSubscriberMtx_.unlock();
         }
@@ -156,14 +136,23 @@ void RemoteMediaInterface::receivedResponse( Message* rsp, Message* req )
         {
             case GET_PLAYLISTS_RSP:
             {
-                Folder f = decodeFolder( (TlvContainer*) rsp->getTlv(TLV_FOLDER) );
-                mediaReq.subscriber->getPlaylistsResponse( mediaReq.mediaReqId, f );
+                mediaReq.subscriber->getPlaylistsResponse( mediaReq.mediaReqId, Folder( (const TlvContainer*) rsp->getTlv(TLV_FOLDER) ) );
             }
             break;
 
             case GET_TRACKS_RSP:
             {
-                std::deque<Track> tracks; /*todo decode message*/
+                std::deque<Track> tracks;
+
+                for ( TlvContainer::const_iterator it = rsp->getTlvRoot()->begin();
+                        it != rsp->getTlvRoot()->end(); it++ )
+                {
+                    if ( (*it)->getType() == TLV_TRACK )
+                    {
+                        tracks.push_back( Track( (const TlvContainer*)(*it) ) );
+                    }
+                }
+
                 mediaReq.subscriber->getTracksResponse( mediaReq.mediaReqId, tracks );
             }
             break;
@@ -173,15 +162,27 @@ void RemoteMediaInterface::receivedResponse( Message* rsp, Message* req )
                 PlaybackState_t playbackState = PLAYBACK_IDLE;
                 bool shuffleState = false;
                 bool repeatState = false;
-                IntTlv* tlv = (IntTlv*) rsp->getTlv(TLV_STATE);
+                const IntTlv* tlv = (const IntTlv*) rsp->getTlv(TLV_STATE);
                 if ( tlv ) playbackState = (PlaybackState_t)tlv->getVal();
-                tlv = (IntTlv*) rsp->getTlv(TLV_PLAY_MODE_REPEAT);
+                tlv = (const IntTlv*) rsp->getTlv(TLV_PLAY_MODE_REPEAT);
                 if ( tlv ) repeatState = (tlv->getVal() != 0);
-                tlv = (IntTlv*) rsp->getTlv(TLV_PLAY_MODE_SHUFFLE);
+                tlv = (const IntTlv*) rsp->getTlv(TLV_PLAY_MODE_SHUFFLE);
                 if ( tlv ) shuffleState = (tlv->getVal() != 0);
 
-                /*todo decode track*/
-                mediaReq.subscriber->getStatusResponse( mediaReq.mediaReqId, playbackState, repeatState, shuffleState );
+                const TlvContainer* trackTlv = (const TlvContainer*) rsp->getTlv(TLV_TRACK);
+
+                if ( trackTlv != NULL )
+                {
+                    int progress = 0;
+                    tlv = (const IntTlv*) rsp->getTlv(TLV_PROGRESS);
+                    if ( tlv ) progress = tlv->getVal();
+
+                    mediaReq.subscriber->getStatusResponse( mediaReq.mediaReqId, playbackState, repeatState, shuffleState, Track( trackTlv ), progress );
+                }
+                else
+                {
+                    mediaReq.subscriber->getStatusResponse( mediaReq.mediaReqId, playbackState, repeatState, shuffleState );
+                }
             }
             break;
 
@@ -195,14 +196,28 @@ void RemoteMediaInterface::receivedResponse( Message* rsp, Message* req )
 
             case GET_ALBUM_RSP:
             {
-                Album album("", ""); /*todo decode message*/
-                mediaReq.subscriber->getAlbumResponse( mediaReq.mediaReqId, album );
+                const TlvContainer* albumTlv = (const TlvContainer*)rsp->getTlv(TLV_ALBUM);
+                if ( albumTlv )
+                {
+                    Album album( albumTlv );
+                    mediaReq.subscriber->getAlbumResponse( mediaReq.mediaReqId, album );
+                }
             }
             break;
 
             case GENERIC_SEARCH_RSP:
             {
-                std::deque<Track> tracks; /*todo decode message*/
+                std::deque<Track> tracks;
+
+                for ( TlvContainer::const_iterator it = rsp->getTlvRoot()->begin();
+                        it != rsp->getTlvRoot()->end(); it++ )
+                {
+                    if ( (*it)->getType() == TLV_TRACK )
+                    {
+                        tracks.push_back( Track( (const TlvContainer*)(*it) ) );
+                    }
+                }
+
                 mediaReq.subscriber->genericSearchCallback( mediaReq.mediaReqId, tracks, "" );
             }
             break;

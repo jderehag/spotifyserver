@@ -33,6 +33,36 @@ namespace LibSpotify
 
 Track::Track(const std::string& name, const std::string& link) : name_(name), link_(link), index_(-1) { }
 Track::Track(const char* name, const char* link) : name_(name), link_(link), index_(-1) { }
+Track::Track( const TlvContainer* tlv )
+{
+    const StringTlv* tlvName = (const StringTlv*) tlv->getTlv(TLV_NAME);
+    const StringTlv* tlvLink = (const StringTlv*) tlv->getTlv(TLV_LINK);
+    const IntTlv* tlvIndex = (const IntTlv*) tlv->getTlv(TLV_TRACK_INDEX);
+    const IntTlv* tlvDuration = (const IntTlv*) tlv->getTlv(TLV_TRACK_DURATION);
+    const TlvContainer* tlvAlbum = (const TlvContainer*) tlv->getTlv(TLV_ALBUM);
+    name_ = (tlvName ? tlvName->getString() : "no-name");
+    link_ = (tlvLink ? tlvLink->getString() : "no-link");
+    index_ = ( tlvIndex ? (int)tlvIndex->getVal() : -1);
+    durationMillisecs_ = ( tlvDuration ? (int)tlvDuration->getVal() : 0 );
+
+    if ( tlvAlbum )
+    {
+        tlvName = (const StringTlv*) tlvAlbum->getTlv(TLV_NAME);
+        tlvLink = (const StringTlv*) tlvAlbum->getTlv(TLV_LINK);
+        album_ = (tlvName ? tlvName->getString() : "");
+        albumLink_ = (tlvLink ? tlvLink->getString() : "");
+    }
+
+    for ( TlvContainer::const_iterator it = tlv->begin();
+            it != tlv->end(); it++ )
+    {
+        if ( (*it)->getType() == TLV_ARTIST )
+        {
+            Artist artist( (const TlvContainer*)(*it) );
+            addArtist( artist );
+        }
+    }
+}
 Track::~Track() { }
 
 const std::string& Track::getLink() const { return link_; }

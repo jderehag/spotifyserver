@@ -38,6 +38,34 @@ static void insertTabs(std::ostream& os, unsigned short numberOfTabs);
 
 Folder::Folder(const std::string& name, unsigned long long id, Folder* parentFolder) : name_(name), id_(id), parentFolder_(parentFolder) { }
 Folder::Folder(const char* name, unsigned long long id, Folder* parentFolder) : name_(name), id_(id), parentFolder_(parentFolder) { }
+Folder::Folder( const TlvContainer* tlv )
+{
+    const StringTlv* tlvName = (const StringTlv*) tlv->getTlv(TLV_NAME);
+    name_ = (tlvName ? tlvName->getString() : "no-name");
+    parentFolder_ = NULL;
+
+    for ( TlvContainer::const_iterator it = tlv->begin(); it != tlv->end(); it++ )
+    {
+        switch( (*it)->getType() )
+        {
+            case TLV_FOLDER:
+            {
+                Folder subfolder( (TlvContainer*) (*it) );
+                addFolder( subfolder );
+            }
+            break;
+            case TLV_PLAYLIST:
+            {
+                Playlist playlist( (TlvContainer*) (*it) );
+                addPlaylist( playlist );
+            }
+            break;
+            default:
+                break;
+        }
+    }
+
+}
 Folder::~Folder(){ }
 
 void Folder::addFolder(Folder& folder)

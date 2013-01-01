@@ -31,11 +31,28 @@ namespace LibSpotify
 {
 
 Artist::Artist(const char* name) : name_(name), link_("") { }
+Artist::Artist(const TlvContainer* tlv)
+{
+    const StringTlv* tlvName = (const StringTlv*) tlv->getTlv(TLV_NAME);
+    const StringTlv* tlvLink = (const StringTlv*) tlv->getTlv(TLV_LINK);
+    name_ = (tlvName ? tlvName->getString() : "no-name");
+    link_ = (tlvLink ? tlvLink->getString() : "no-link");
+}
 Artist::~Artist() { }
 
 const std::string& Artist::getName() const { return name_; }
 
 const std::string& Artist::getLink() const { return link_; }
 void Artist::setLink(const std::string& link){ link_ = link; }
+
+Tlv* Artist::toTlv() const
+{
+    TlvContainer* artist = new TlvContainer( TLV_ARTIST );
+
+    artist->addTlv(TLV_NAME, name_);
+    artist->addTlv(TLV_LINK, link_);
+
+    return artist;
+}
 
 } /* namespace LibSpotify */

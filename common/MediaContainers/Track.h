@@ -54,6 +54,7 @@ private:
 public:
 	Track(const std::string& name, const std::string& link);
 	Track(const char* name, const char* link);
+    Track( const TlvContainer* tlv );
 	virtual ~Track();
 
 	const std::string& getLink() const;

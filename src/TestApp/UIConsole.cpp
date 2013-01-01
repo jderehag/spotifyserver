@@ -221,15 +221,35 @@ void UIConsole::genericSearchCallback( MediaInterfaceRequestId reqId, std::deque
 
 void UIConsole::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress )
 {
+    statusUpdateInd( state, repeatStatus, shuffleStatus );
+
+    std::cout << "  Current track: " << currentTrack.getName() << "  -  "  << currentTrack.getLink() << std::endl;
+    std::cout << "    " << currentTrack.getAlbum() << "  -  "  << currentTrack.getAlbumLink() << std::endl;
+    for ( std::vector<Artist>::const_iterator it = currentTrack.getArtists().begin();
+            it != currentTrack.getArtists().end(); it++ )
+    {
+        std::cout << "    " << (*it).getName() << "  -  "  << (*it).getLink() << std::endl;
+    }
+    std::cout << "  Duration " << currentTrack.getDurationMillisecs() << std::endl;
+    std::cout << "  Progress " << progress << std::endl;
 }
 void UIConsole::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus )
 {
+    switch( state )
+    {
+        case PLAYBACK_IDLE:    std::cout << "  Playback stopped "; break;
+        case PLAYBACK_PLAYING: std::cout << "  Playback playing "; break;
+        case PLAYBACK_PAUSED:  std::cout << "  Playback paused  "; break;
+    }
+    std::cout << " - Repeat " << (repeatStatus ? "on" : "off") << ", Shuffle " << (shuffleStatus ? "on" : "off") << std::endl;
 }
 void UIConsole::getStatusResponse( MediaInterfaceRequestId reqId, PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress )
 {
+    statusUpdateInd( state, repeatStatus, shuffleStatus, currentTrack, progress );
 }
 void UIConsole::getStatusResponse( MediaInterfaceRequestId reqId, PlaybackState_t state, bool repeatStatus, bool shuffleStatus )
 {
+    statusUpdateInd( state, repeatStatus, shuffleStatus );
 }
 
 

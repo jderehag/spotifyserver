@@ -37,8 +37,26 @@ namespace LibSpotify
 
 Playlist::Playlist(const std::string& name, const std::string& link) : name_(name), link_(link) { }
 Playlist::Playlist(const std::string& name, const std::string& link, bool nullObject) : name_(name), link_(link) { }
-
 Playlist::Playlist(const char* name, const char* link) : name_(name), link_(link) { }
+Playlist::Playlist(const TlvContainer* tlv)
+{
+    const StringTlv* tlvName = (const StringTlv*) tlv->getTlv(TLV_NAME);
+    const StringTlv* tlvLink = (const StringTlv*) tlv->getTlv(TLV_LINK);
+    name_ = (tlvName ? tlvName->getString() : "no-name");
+    link_ = (tlvLink ? tlvLink->getString() : "no-link");
+    isStarred_ = false;
+    isCollaborative_ = false;
+
+    for ( TlvContainer::const_iterator it = tlv->begin();
+            it != tlv->end(); it++ )
+    {
+        if ( (*it)->getType() == TLV_TRACK )
+        {
+            tracks_.push_back( Track( (const TlvContainer*)(*it) ) );
+        }
+    }
+}
+
 Playlist::~Playlist(){ }
 
 bool Playlist::isCollaborative()

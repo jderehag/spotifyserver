@@ -28,6 +28,7 @@
 #ifndef ARTIST_H_
 #define ARTIST_H_
 
+#include "MessageFactory/Tlvs.h"
 #include <string>
 
 namespace LibSpotify
@@ -41,12 +42,15 @@ private:
 
 public:
     Artist(const char* name);
+    Artist(const TlvContainer* tlv);
     virtual ~Artist();
 
     const std::string& getName() const;
 
     const std::string& getLink() const;
     void setLink(const std::string& link);
+
+    Tlv* toTlv() const;
 
 };
 

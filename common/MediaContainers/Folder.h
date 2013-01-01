@@ -54,6 +54,7 @@ private:
 public:
 	Folder(const std::string& name, unsigned long long id, Folder* parentFolder);
 	Folder(const char* name, unsigned long long id, Folder* parentFolder);
+    Folder( const TlvContainer* tlv );
 	virtual ~Folder();
 
 	void addFolder(Folder& folder);

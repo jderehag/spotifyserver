@@ -46,6 +46,7 @@ private:
 
 public:
     Album(const char* name, const char* link);
+    Album(const TlvContainer* tlv);
     virtual ~Album();
 
     void setYear( int year );

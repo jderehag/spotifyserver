@@ -38,6 +38,18 @@ Album::Album(const char* name, const char* link) : Playlist(name, link),
                                                    isAvailable_(false), 
                                                    artist_(Artist(""))
 { }
+Album::Album(const TlvContainer* tlv) : Playlist(tlv), artist_(Artist(""))
+{
+    const IntTlv* tlvYear = (const IntTlv*) tlv->getTlv(TLV_ALBUM_RELEASE_YEAR);
+    const StringTlv* tlvReview = (const StringTlv*) tlv->getTlv(TLV_ALBUM_REVIEW);
+    const IntTlv* tlvIsAvailable = (const IntTlv*) tlv->getTlv(TLV_ALBUM_IS_AVAILABLE);
+    const TlvContainer* tlvArtist = (const TlvContainer*) tlv->getTlv(TLV_ARTIST);
+    year_ = (tlvYear ? tlvYear->getVal() : 0);
+    review_ = (tlvReview ? tlvReview->getString() : "");
+    isAvailable_ = (tlvIsAvailable ? tlvIsAvailable->getVal() != 0 : false);
+    if ( tlvArtist )
+        artist_ = Artist( tlvArtist );
+}
 Album::~Album() { }
 /*
 const std::string& Album::getName() const { return name_; }
@@ -61,7 +73,6 @@ const Artist& Album::getArtist() const { return artist_; }
 TlvContainer* Album::toTlv() const
 {
     TlvContainer* album = new TlvContainer(TLV_ALBUM);
-    TlvContainer* artist = new TlvContainer(TLV_ARTIST);
 
     album->addTlv( TLV_NAME, name_ );
     album->addTlv( TLV_LINK, link_ );
@@ -69,8 +80,7 @@ TlvContainer* Album::toTlv() const
     album->addTlv( TLV_ALBUM_REVIEW, review_ );
     album->addTlv( TLV_ALBUM_IS_AVAILABLE, isAvailable_ ? 1 : 0 );
 
-    artist->addTlv( TLV_NAME, artist_.getName());
-    artist->addTlv( TLV_LINK, artist_.getLink());
+    album->addTlv( artist_.toTlv() );
 
     return album;
 }
