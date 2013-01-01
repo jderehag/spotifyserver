@@ -113,6 +113,9 @@ Socket* SocketPeer::getSocket() const
     return socket_;
 }
 
-
+bool SocketPeer::pendingSend()
+{
+    return ( Messenger::pendingSend() || !writer_.isEmpty() );
+}
 
 

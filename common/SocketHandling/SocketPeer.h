@@ -56,6 +56,8 @@ public:
 
     Socket* getSocket() const;
 
+    virtual bool pendingSend();
+
 };
 
 #endif /* SOCKETPEER_H_ */

@@ -64,7 +64,7 @@ public:
 
     void addSubscriber( IMessageSubscriber* subscriber );
 
-    bool pendingSend();
+    virtual bool pendingSend();
 };
 
 #endif /* MESSENGER_H_ */
