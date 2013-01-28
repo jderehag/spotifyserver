@@ -47,7 +47,7 @@ private:
 
     /* Implements IMediaInterfaceCallbackSubscriber */
     virtual void connectionState( bool up );
-    virtual void rootFolderUpdatedInd( Folder& f );
+    virtual void rootFolderUpdatedInd();
     virtual void statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress );
     virtual void statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus );
 

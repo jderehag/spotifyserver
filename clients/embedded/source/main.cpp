@@ -30,6 +30,7 @@
 #include "stm32f4x7_eth_bsp.h"
 #include "netconf.h"
 #include "UIEmbedded.h"
+#include "TestApp/RemoteMediaInterface.h"
 #include "buttonHandler.h"
 #include "powerHandler.h"
 #include "SocketHandling/SocketClient.h"

@@ -1,0 +1,31 @@
+OpenOCD 0.6.1
+commit date: Sun, 7 Oct 2012 08:17:48
+build date: 07.10.2012
+package date: 07.10.2012
+build system: Linux arch 3.5.5-1-ARCH #1 SMP PREEMPT Tue Oct 2 22:30:55 CEST 2012 x86_64 GNU/Linux (hosted in
+	VirtualBox 4.1.22r80657 on Windows 7 Ultimate SP1 64-bit)
+compiler: GCC 4.7.2 (i686-w64-mingw32 / x86_64-w64-mingw32; rubenvb 120923)
+
+Libraries used:
+libftdi-0.20
+libusb-win32-1.2.6.0
+libusbx-1.0.13
+
+Build commands used for 32-bit version:
+../configure --host=i686-w64-mingw32 --enable-amtjtagaccel --enable-arm-jtag-ew --enable-ft2232_libftdi --enable-ftdi
+	--enable-gw16012 --enable-jlink --enable-parport --disable-parport-ppdev --enable-parport-giveio
+	--enable-presto_libftdi --enable-rlink --enable-stlink --enable-ulink --enable-usb_blaster_libftdi --enable-usbprog
+	--enable-vsllink 
+make
+i686-w64-mingw32-strip src/openocd.exe
+
+Build commands used for 64-bit version:
+../configure --host=x86_64-w64-mingw32 --enable-amtjtagaccel --enable-arm-jtag-ew --enable-ft2232_libftdi --enable-ftdi
+	--enable-gw16012 --enable-jlink --enable-parport --disable-parport-ppdev --enable-parport-giveio
+	--enable-presto_libftdi --enable-rlink --enable-stlink --enable-ulink --enable-usb_blaster_libftdi --enable-usbprog
+	--enable-vsllink 
+make
+x86_64-w64-mingw32-strip src/openocd.exe
+
+This package and info about it can be found on Freddie Chopin's website:
+http://www.freddiechopin.info/

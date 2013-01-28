@@ -106,14 +106,14 @@ void UIEmbedded::connectionState( bool up )
     }
 }
 
-void UIEmbedded::getPlaylistsResponse( MediaInterfaceRequestId reqId, Folder& f )
+void UIEmbedded::getPlaylistsResponse( MediaInterfaceRequestId reqId, const Folder& rootfolder )
 {
     playlists.clear();
 
-    for( LibSpotify::FolderContainer::iterator it = f.getFolders().begin(); it != f.getFolders().end() ; it++)
+    for( LibSpotify::FolderContainer::const_iterator it = rootfolder.getFolders().begin(); it != rootfolder.getFolders().end() ; it++)
         playlists.insert( playlists.end(), (*it).getPlaylists().begin(), (*it).getPlaylists().end());
 
-    playlists.insert( playlists.end(), f.getPlaylists().begin(), f.getPlaylists().end());
+    playlists.insert( playlists.end(), rootfolder.getPlaylists().begin(), rootfolder.getPlaylists().end());
 
     itPlaylists_ = playlists.begin();
 }

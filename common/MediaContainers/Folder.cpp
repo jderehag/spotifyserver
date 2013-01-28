@@ -64,7 +64,6 @@ Folder::Folder( const TlvContainer* tlv )
                 break;
         }
     }
-
 }
 Folder::~Folder(){ }
 
