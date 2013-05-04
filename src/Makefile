@@ -26,6 +26,7 @@ VPATH += ConfigHandling \
 	 TestApp
 
 COMMON_OBJECTS += spotifyserver.o \
+		  UIConsole.o \
 		  ConfigHandler.o \
 		  ConfigParser.o \
 		  SpotifyConfig.o \

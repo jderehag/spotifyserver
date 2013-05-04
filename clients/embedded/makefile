@@ -162,7 +162,7 @@ LOADFORMAT = both
 
 # Debugging format.
 #DEBUG = stabs
-DEBUG = dwarf-2
+#DEBUG = dwarf-2
 
 # Place project-specific -D (define) and/or 
 # -U options for C here.
@@ -292,27 +292,24 @@ endif
 # Options for OpenOCD flash-programming
 # see openocd.pdf/openocd.texi for further information
 #
-OOCD_LOADFILE+=$(OUTDIR)/$(TARGET).elf
+OOCD_LOADFILE+=$(OUTDIR)/$(TARGET).hex
 # if OpenOCD is in the $PATH just set OPENOCDEXE=openocd
-OOCD_EXE=./OpenOCD/bin/openocd
+OOCD_EXE=openocd-0.6.1
 # debug level
 OOCD_CL=-d0
 #OOCD_CL=-d3
 # interface and board/target settings (using the OOCD target-library here)
-## OOCD_CL+=-f interface/jtagkey2.cfg -f target/stm32.cfg
-OOCD_CL+=-f interface/jtagkey.cfg -f target/stm32.cfg
+OOCD_CL+=-f board\stm32f4discovery.cfg  
 # initialize
 OOCD_CL+=-c init
 # enable "fast mode" - can be disabled for tests
-OOCD_CL+=-c "fast enable"
-# show the targets
-OOCD_CL+=-c targets
+#OOCD_CL+=-c "fast enable"
 # commands to prepare flash-write
-OOCD_CL+= -c "reset halt"
+OOCD_CL+= -c "reset halt" -c "sleep 100" -c "wait_halt 2"
 # increase JTAG frequency a little bit - can be disabled for tests
 OOCD_CL+= -c "jtag_khz 1200"
 # flash-write and -verify
-OOCD_CL+=-c "flash write_image erase $(OOCD_LOADFILE)" -c "verify_image $(OOCD_LOADFILE)"
+OOCD_CL+=-c "flash write_image erase $(OOCD_LOADFILE)" -c "sleep 100" -c "verify_image $(OOCD_LOADFILE)"
 # reset target
 OOCD_CL+=-c "reset run"
 # terminate OOCD after programming
@@ -443,8 +440,6 @@ sizeafter:
 gccversion : 
 	@$(CC) --version
 
-# Program the device.
-ifeq ($(FLASH_TOOL),OPENOCD)
 # Program the device with Dominic Rath's OPENOCD in "batch-mode", needs cfg and "reset-script".
 program: $(OUTDIR)/$(TARGET).elf
 	@echo "Programming with OPENOCD"
@@ -452,7 +447,6 @@ ifdef SHELL_IS_WIN32
 	$(subst /,\,$(OOCD_EXE)) $(OOCD_CL)
 else
 	$(OOCD_EXE) $(OOCD_CL)
-endif
 endif
 
 # Create final output file (.hex) from ELF output file.

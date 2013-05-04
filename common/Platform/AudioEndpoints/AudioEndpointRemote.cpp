@@ -32,7 +32,7 @@
 
 namespace Platform {
 
-AudioEndpointRemote::AudioEndpointRemote() : m("192.168.5.211"/*"127.0.0.1"*/, 7789), reqId(0)
+AudioEndpointRemote::AudioEndpointRemote() : m("192.168.5.211"/*"127.0.0.1"*/, "7789"), reqId(0)
 {
     m.addSubscriber( this );
 }

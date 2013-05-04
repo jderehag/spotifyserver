@@ -114,7 +114,6 @@ xcopy /y $(ProjectDir)\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32\wrap_oal.d
     <ClInclude Include="..\common\Platform\AudioEndpoints\AudioEndpointRemote.h" />
     <ClInclude Include="..\common\Platform\AudioEndpoints\AudioFifo.h" />
     <ClInclude Include="..\common\Platform\Socket\Socket.h" />
-    <ClInclude Include="..\common\Platform\Socket\Windows\WindowsSocket.h" />
     <ClInclude Include="..\common\Platform\Threads\Condition.h" />
     <ClInclude Include="..\common\Platform\Threads\Mutex.h" />
     <ClInclude Include="..\common\Platform\Threads\Runnable.h" />

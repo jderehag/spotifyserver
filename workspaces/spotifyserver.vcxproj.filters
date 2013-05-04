@@ -78,9 +78,6 @@
     <ClInclude Include="..\common\Platform\Threads\Mutex.h">
       <Filter>src\Platform\Threads</Filter>
     </ClInclude>
-    <ClInclude Include="..\common\Platform\Socket\Windows\WindowsSocket.h">
-      <Filter>src\Platform\Socket\Windows</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\ClientHandler\Client.h">
       <Filter>src\ClientHandler</Filter>
     </ClInclude>

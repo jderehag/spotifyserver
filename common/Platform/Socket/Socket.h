@@ -41,12 +41,11 @@ private:
 
     int WaitForConnect();
 public:
-
     Socket();
-    int BindToAddr(std::string addr, int port);
-    int BindToDevice(std::string device, int port);
+    int BindToAddr(const std::string& addr, const std::string& port);
+    int BindToDevice(const std::string& device, const std::string& port);
     int Listen();
-    int Connect(std::string addr, int port);
+    int Connect(const std::string& addr, const std::string& port);
     int Send(const void* msg, int msgLen);
     int Receive(void* buf, int bufLen);
     Socket* Accept();

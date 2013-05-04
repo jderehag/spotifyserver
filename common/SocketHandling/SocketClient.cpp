@@ -35,7 +35,7 @@
 #include "applog.h"
 
 
-SocketClient::SocketClient(std::string serveraddr, int serverport) : serveraddr_(serveraddr), serverport_(serverport)
+SocketClient::SocketClient(const std::string& serveraddr, const std::string& serverport) : serveraddr_(serveraddr), serverport_(serverport)
 {
     startThread();
 }

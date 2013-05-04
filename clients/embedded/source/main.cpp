@@ -101,9 +101,9 @@ int main(void)
 
     LedFlasher* fl = new LedFlasher;
 #if 0
-    SocketClient* sc = new SocketClient("192.168.5.163", 7788);
+    SocketClient* sc = new SocketClient("192.168.5.98", "7788");
 #else
-    SocketClient* sc = new SocketClient("192.168.5.98", 7788);
+    SocketClient* sc = new SocketClient("192.168.5.198", "7788");
 #endif
     RemoteMediaInterface* m = new RemoteMediaInterface( *sc );
     UIEmbedded* ui = new UIEmbedded(*m);

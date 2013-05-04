@@ -31,6 +31,8 @@
 #include "applog.h"
 
 #include <string.h>
+#include <stdlib.h>     /* atoi */
+
 
 typedef struct SocketHandle_t
 {
@@ -60,14 +62,14 @@ Socket::Socket()
 
 }
 
-int Socket::BindToAddr(std::string addr, int port)
+int Socket::BindToAddr(const std::string& addr, const std::string& port)
 {
     struct sockaddr_in my_addr;
 
     memset(&my_addr, 0, sizeof(struct sockaddr_in));
     my_addr.sin_family = AF_INET;
     my_addr.sin_addr.s_addr = INADDR_ANY;
-    my_addr.sin_port = htons(port);
+    my_addr.sin_port = atoi(port.c_str());
 
     if (addr != "ANY" && inet_addr(addr.c_str()) != INADDR_NONE)
     {
@@ -85,19 +87,19 @@ int Socket::BindToAddr(std::string addr, int port)
     return 0;
 }
 
-int Socket::BindToDevice(std::string device, int port)
+int Socket::BindToDevice(const std::string& device, const std::string& port)
 {
     return -1;
 }
 
-int Socket::Connect(std::string addr, int port)
+int Socket::Connect(const std::string& addr, const std::string& port)
 {
     int rc;
     struct sockaddr_in serv_addr;
     memset( &serv_addr, 0, sizeof(struct sockaddr_in) );
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = inet_addr( addr.c_str() );
-    serv_addr.sin_port = htons( port );
+    serv_addr.sin_port = atoi(port.c_str());
     rc = lwip_connect( socket_->fd, (struct sockaddr*)&serv_addr, sizeof(serv_addr) );
 
     if (rc < 0 && errno == EINPROGRESS)
