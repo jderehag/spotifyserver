@@ -14,14 +14,14 @@ ifeq ($(ARCH),Windows_whatever)
 
 else ifeq ($(ARCH),Linux_x86_64)
 	EXECUTABLE_EXT = elf
-	VPATH += Platform/Socket/Linux Platform/Threads/Linux Platform/Utils/Linux
+	VPATH += ../common/Platform/Socket/Linux ../common/Platform/Threads/Linux ../common/Platform/Utils/Linux
 	ARCH_OBJECTS +=  LinuxRunnable.o LinuxMutex.o LinuxCondition.o LinuxSocket.o LinuxUtils.o LinuxMessagebox.o
 	LIBSPOTIFY = $(DEPS_PATH)/lib/libspotify-Linux-x86_64-release
 	AUDIO_DRIVER=alsa
 
 else ifeq ($(ARCH),Linux_i686)
 	EXECUTABLE_EXT = elf
-	VPATH += Platform/Socket/Linux Platform/Threads/Linux Platform/Utils/Linux
+	VPATH += ../common/Platform/Socket/Linux ../common/Platform/Threads/Linux ../common/Platform/Utils/Linux
 	ARCH_OBJECTS +=  LinuxRunnable.o LinuxMutex.o LinuxCondition.o LinuxSocket.o LinuxUtils.o LinuxMessagebox.o
 	LIBSPOTIFY = $(DEPS_PATH)/lib/libspotify-Linux-i686-release
 	AUDIO_DRIVER=alsa
@@ -34,10 +34,19 @@ ifdef NO_CYGWIN
 	LIBSPOTIFY = $(DEPS_PATH)/lib/libspotify-Linux-i686-release
 	CFLAGS += -mno-cygwin
 else
-	VPATH += Platform/Socket/Linux Platform/Threads/Linux Platform/Utils/Linux
+	VPATH += ../common/Platform/Socket/Linux ../common/Platform/Threads/Linux ../common/Platform/Utils/Linux
 	ARCH_OBJECTS +=  LinuxRunnable.o LinuxMutex.o LinuxCondition.o LinuxSocket.o LinuxUtils.o LinuxMessagebox.o
 	LIBSPOTIFY = $(DEPS_PATH)/lib/libspotify-10.1.16-win32-release
 endif
+	EXECUTABLE_EXT = exe
+	AUDIO_DRIVER=stub
+	CFLAGS += -maccumulate-outgoing-args -fomit-frame-pointer
+
+else ifeq ($(ARCH),CYGWIN_NT-6.2-WOW64_i686)
+
+	VPATH += ../common/Platform/Socket/Linux ../common/Platform/Threads/Linux ../common/Platform/Utils/Linux
+	ARCH_OBJECTS +=  LinuxRunnable.o LinuxMutex.o LinuxCondition.o LinuxSocket.o LinuxUtils.o LinuxMessagebox.o
+	LIBSPOTIFY = $(DEPS_PATH)/lib/libspotify-10.1.16-win32-release
 	EXECUTABLE_EXT = exe
 	AUDIO_DRIVER=stub
 	CFLAGS += -maccumulate-outgoing-args -fomit-frame-pointer

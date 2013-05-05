@@ -91,6 +91,11 @@
 			<locationURI>PROJECT_SRCROOT/clients</locationURI>
 		</link>
 		<link>
+			<name>common</name>
+			<type>2</type>
+			<locationURI>PROJECT_SRCROOT/common</locationURI>
+		</link>
+		<link>
 			<name>doc</name>
 			<type>2</type>
 			<locationURI>PROJECT_SRCROOT/doc</locationURI>

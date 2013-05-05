@@ -48,38 +48,58 @@ OUTDIR = .out
 TARGET = spotifyclient_rom
 
 # root directories to look for source files in
-VPATH += ../../src/ ./source/
+VPATH += ../../src/ ../../common/ ./source/
 
 # List C source files here. (C dependencies are automatically generated.)
 # use file-extension c for "c-only"-files
-SRC  =	syscalls.c powerHandler.c \
-		$(addprefix freeRTOS/, list.c queue.c tasks.c timers.c heap_3.c) \
+
+SRC  =	syscalls.c powerHandler.c
+
+#FreeRTOS
+SRC +=	$(addprefix freeRTOS/, list.c queue.c tasks.c timers.c heap_3.c) \
 		$(addprefix freeRTOS/port/, port.c) \
-		hooks.c \
-		$(addprefix STM32F4XX/, stm32f4_discovery.c system_stm32f4xx.c stm32f4xx_it.c stm32f4x7_eth_bsp.c netconf.c) \
+		hooks.c
+
+#ST drivers and libraries
+SRC +=	$(addprefix STM32F4XX/, stm32f4_discovery.c system_stm32f4xx.c stm32f4xx_it.c stm32f4x7_eth_bsp.c netconf.c) \
 		$(addprefix STM32F4XX/STM32F4xx_StdPeriph_Driver/src/, misc.c stm32f4xx_dma.c stm32f4xx_exti.c stm32f4xx_gpio.c stm32f4xx_syscfg.c stm32f4xx_rcc.c stm32f4xx_pwr.c stm32f4xx_rtc.c) \
 		STM32F4XX/STM32F4x7_ETH_Driver/src/stm32f4x7_eth.c
-		
+
+#lwIP		
 SRC +=	$(addprefix lwip_v1.4.0/src/core/, init.c tcp_out.c memp.c netif.c pbuf.c raw.c stats.c sys.c tcp.c tcp_in.c udp.c dhcp.c def.c timers.c ipv4/ip.c ipv4/ip_addr.c ipv4/icmp.c ipv4/ip_frag.c ipv4/inet.c ipv4/inet_chksum.c ipv4/autoip.c) \
 		$(addprefix lwip_v1.4.0/src/api/, tcpip.c api_msg.c err.c api_lib.c netbuf.c sockets.c ) \
 		$(addprefix lwip_v1.4.0/src/netif/, etharp.c ) \
 		$(addprefix lwip_v1.4.0/port/STM32F4x7/FreeRTOS/, sys_arch.c ethernetif.c)
-		
-		
+
 
 # List C++ source files here.
 # use file-extension .cpp for C++-files (not .C)
 CPPSRC = main.cpp buttonHandler.cpp UIEmbedded.cpp heapWrap.cpp \
-		$(addprefix LibSpotifyIf/MediaContainers/, Album.cpp Artist.cpp Folder.cpp Playlist.cpp Track.cpp) \
+		$(addprefix MediaContainers/, Album.cpp Artist.cpp Folder.cpp Playlist.cpp Track.cpp) \
 		$(addprefix MessageFactory/, Message.cpp MessageDecoder.cpp MessageEncoder.cpp TlvDefinitions.cpp Tlvs.cpp SocketReader.cpp SocketWriter.cpp) \
-		TestApp/Messenger.cpp \
-		TestApp/IUserInterface.cpp \
+		$(addprefix TestApp/, RemoteMediaInterface.cpp ) \
+		$(addprefix SocketHandling/, Messenger.cpp SocketClient.cpp ) \
+		MediaInterface/MediaInterface.cpp \
 		Logger/Logger.cpp \
 		ConfigHandling/Configs/LoggerConfig.cpp \
 		Platform/Socket/LwIP/LwIPSocket.cpp \
-		Platform/Threads/FreeRTOS/FreeRTOSMessagebox.cpp \
-		Platform/Threads/FreeRTOS/FreeRTOSMutex.cpp \
-		Platform/Threads/FreeRTOS/FreeRTOSRunnable.cpp
+		$(addprefix Platform/Threads/FreeRTOS/, FreeRTOSMessagebox.cpp FreeRTOSMutex.cpp FreeRTOSCondition.cpp FreeRTOSRunnable.cpp)
+
+AUDIOSRC =	STM32F4XX/stm32f4_discovery_audio_codec.c \
+			$(addprefix STM32F4XX/STM32F4xx_StdPeriph_Driver/src/, stm32f4xx_i2c.c stm32f4xx_dac.c stm32f4xx_spi.c)
+		
+AUDIOSRCCPP =		ConfigHandling/Configs/AudioEndpointConfig.cpp \
+					ConfigHandling/Configs/NetworkConfig.cpp \
+					$(addprefix SocketHandling/, SocketServer.cpp SocketPeer.cpp ) \
+					Platform/AudioEndpoints/AudioFifo.cpp \
+					Platform/AudioEndpoints/Endpoints/AudioEndpoint-CS43L22.cpp \
+					TestApp/AudioEndpointRemoteSocketServer.cpp \
+					TestApp/AudioEndpointRemotePeer.cpp
+
+
+SRC += $(AUDIOSRC)
+CPPSRC += $(AUDIOSRCCPP)
+
 
 # List Assembler source files here.
 # Make them always end in a capital .S. Files ending in a lowercase .s
@@ -100,7 +120,8 @@ EXTRAINCDIRS  += ./source/freertos/include \
 		  ./source/STM32F4XX/STM32F4xx_StdPeriph_Driver/inc \
 		  ./source/STM32F4XX/STM32F4x7_ETH_Driver/inc \
 		  ./../../src \
-		  ./../../src/Logger \
+		  ./../../common \
+		  ./../../common/Logger \
 		  ./source/lwip_v1.4.0/src/include \
 		  ./source/lwip_v1.4.0/src/include/ipv4 \
 		  ./source/lwip_v1.4.0/port/STM32F4x7/FreeRTOS \
@@ -141,7 +162,7 @@ LOADFORMAT = both
 
 # Debugging format.
 #DEBUG = stabs
-DEBUG = dwarf-2
+#DEBUG = dwarf-2
 
 # Place project-specific -D (define) and/or 
 # -U options for C here.
@@ -271,27 +292,24 @@ endif
 # Options for OpenOCD flash-programming
 # see openocd.pdf/openocd.texi for further information
 #
-OOCD_LOADFILE+=$(OUTDIR)/$(TARGET).elf
+OOCD_LOADFILE+=$(OUTDIR)/$(TARGET).hex
 # if OpenOCD is in the $PATH just set OPENOCDEXE=openocd
-OOCD_EXE=./OpenOCD/bin/openocd
+OOCD_EXE=openocd-0.6.1
 # debug level
 OOCD_CL=-d0
 #OOCD_CL=-d3
 # interface and board/target settings (using the OOCD target-library here)
-## OOCD_CL+=-f interface/jtagkey2.cfg -f target/stm32.cfg
-OOCD_CL+=-f interface/jtagkey.cfg -f target/stm32.cfg
+OOCD_CL+=-f board\stm32f4discovery.cfg  
 # initialize
 OOCD_CL+=-c init
 # enable "fast mode" - can be disabled for tests
-OOCD_CL+=-c "fast enable"
-# show the targets
-OOCD_CL+=-c targets
+#OOCD_CL+=-c "fast enable"
 # commands to prepare flash-write
-OOCD_CL+= -c "reset halt"
+OOCD_CL+= -c "reset halt" -c "sleep 100" -c "wait_halt 2"
 # increase JTAG frequency a little bit - can be disabled for tests
 OOCD_CL+= -c "jtag_khz 1200"
 # flash-write and -verify
-OOCD_CL+=-c "flash write_image erase $(OOCD_LOADFILE)" -c "verify_image $(OOCD_LOADFILE)"
+OOCD_CL+=-c "flash write_image erase $(OOCD_LOADFILE)" -c "sleep 100" -c "verify_image $(OOCD_LOADFILE)"
 # reset target
 OOCD_CL+=-c "reset run"
 # terminate OOCD after programming
@@ -422,8 +440,6 @@ sizeafter:
 gccversion : 
 	@$(CC) --version
 
-# Program the device.
-ifeq ($(FLASH_TOOL),OPENOCD)
 # Program the device with Dominic Rath's OPENOCD in "batch-mode", needs cfg and "reset-script".
 program: $(OUTDIR)/$(TARGET).elf
 	@echo "Programming with OPENOCD"
@@ -431,7 +447,6 @@ ifdef SHELL_IS_WIN32
 	$(subst /,\,$(OOCD_EXE)) $(OOCD_CL)
 else
 	$(OOCD_EXE) $(OOCD_CL)
-endif
 endif
 
 # Create final output file (.hex) from ELF output file.

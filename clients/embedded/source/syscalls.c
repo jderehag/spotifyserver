@@ -64,7 +64,9 @@ caddr_t _sbrk(int incr)
 #if 1
 	if (heap_end + incr > get_stack_top()) {
 	//	xprintf("Heap and stack collision\n");
-		abort();
+		//abort();
+	    errno = ENOMEM;
+	    return (caddr_t) -1;
 	}
 #endif
 	heap_end += incr;

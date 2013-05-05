@@ -36,7 +36,7 @@ namespace ConfigHandling
 NetworkConfig::NetworkConfig() : bindType_(NetworkConfig::IP),
                                  ip_("ANY"),
                                  device_(""),
-                                 port_(7788)
+                                 port_("7788")
 { }
 
 NetworkConfig::BindType NetworkConfig::getBindType() const
@@ -54,7 +54,7 @@ const std::string& NetworkConfig::getIp() const
     return ip_;
 }
 
-int NetworkConfig::getPort() const
+const std::string& NetworkConfig::getPort() const
 {
     return port_;
 }
@@ -95,12 +95,7 @@ void NetworkConfig::setIp(const std::string& ip)
 
 void NetworkConfig::setPort(const std::string& port)
 {
-    if(!port.empty())
-    {
-        int tmp;
-        std::istringstream s(port);
-        if (!(s >> tmp).fail()) port_ = tmp;
-    }
+    if(!port.empty())port_ = port;
 }
 
 void NetworkConfig::setUsername(std::string& username)

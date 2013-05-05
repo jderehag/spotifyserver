@@ -12,18 +12,21 @@ TARGET = spotifyserver
 VPATH += ConfigHandling \
 	 ConfigHandling/Configs \
 	 LibSpotifyIf \
-	 LibSpotifyIf/MediaContainers \
+	 ../common/MediaInterface \
+	 ../common/MediaContainers \
 	 LibSpotifyIf/LibSpotifyStub \
 	 ClientHandler \
-	 Platform/Threads \
-	 Platform/Socket \
-	 Platform/AudioEndpoints \
-	 Platform/AudioEndpoints/Endpoints \
-	 MessageFactory \
-	 Logger \
+	 ../common/Platform/Threads \
+	 ../common/Platform/Socket \
+	 ../common/Platform/AudioEndpoints \
+	 ../common/Platform/AudioEndpoints/Endpoints \
+	 ../common/MessageFactory \
+	 ../common/Logger \
+	 ../common/SocketHandling \
 	 TestApp
 
 COMMON_OBJECTS += spotifyserver.o \
+		  UIConsole.o \
 		  ConfigHandler.o \
 		  ConfigParser.o \
 		  SpotifyConfig.o \
@@ -35,6 +38,7 @@ COMMON_OBJECTS += spotifyserver.o \
 		  LibSpotifyIfCallbackWrapper.o \
 		  LibSpotifyIfHelpers.o \
 		  LibSpotifyPlaybackHandler.o \
+		  MediaInterface.o \
 		  Folder.o \
 		  Playlist.o \
 		  Track.o \
@@ -42,11 +46,15 @@ COMMON_OBJECTS += spotifyserver.o \
 		  Album.o \
 		  ClientHandler.o \
 		  Client.o \
+		  SocketServer.o \
 		  SocketPeer.o \
 		  AudioFifo.o \
+		  AudioEndpointRemote.o \
 		  MessageDecoder.o \
 		  MessageEncoder.o \
 		  Message.o \
+		  Messenger.o \
+		  SocketClient.o \
 		  SocketReader.o \
 		  SocketWriter.o \
 		  Tlvs.o \
@@ -54,9 +62,12 @@ COMMON_OBJECTS += spotifyserver.o \
 		  
 COMMON_OBJECTS += $(ARCH_OBJECTS) $(AUDIO_OBJECTS)
 
-TESTAPP_OBJECTS +=  testapp2.o \
+TESTAPP_OBJECTS +=  testapp.o \
+					UIConsole.o \
 					Messenger.o \
-					IUserInterface.o \
+					SocketClient.o \
+					RemoteMediaInterface.o \
+					MediaInterface.o \
 					LoggerConfig.o \
 					Logger.o \
 					MessageDecoder.o \
@@ -70,12 +81,21 @@ TESTAPP_OBJECTS +=  testapp2.o \
 					Playlist.o \
 					Track.o \
 					Artist.o \
-					Album.o
+					Album.o \
+					NetworkConfig.o \
+					AudioEndpointConfig.o \
+					SocketServer.o \
+					SocketPeer.o \
+					AudioFifo.o \
+					AudioEndpointRemoteSocketServer.o \
+					AudioEndpointRemotePeer.o
+					
 
-TESTAPP_OBJECTS += $(ARCH_OBJECTS)
+TESTAPP_OBJECTS += $(ARCH_OBJECTS) $(AUDIO_OBJECTS)
 
 INCLUDES += -I./ \
-		-ILogger \
+		-I../common/ \
+		-I../common/Logger \
 	    -IUtils \
 	    -I$(LIBSPOTIFY)/include
 
@@ -84,16 +104,12 @@ LIBPATHS += -L$(LIBSPOTIFY)/lib
 	
 APPKEYOBJ=$(addsuffix .o, $(basename $(APPKEY)))
 
-.PHONY: all clean
+.PHONY: all clean test
 .SILENT:
 
 all: $(TARGET) test stub
 
-test: testapp.o
-	@echo ...Linking testapp for $(ARCH)
-	$(CCX) -o testapp.$(EXECUTABLE_EXT) testapp.o
-
-test2: $(TESTAPP_OBJECTS)
+test: $(TESTAPP_OBJECTS)
 	@echo ...Linking testapp for $(ARCH)
 	$(CCX) -o testapp.$(EXECUTABLE_EXT) $(TESTAPP_OBJECTS) $(LIBS)
 
