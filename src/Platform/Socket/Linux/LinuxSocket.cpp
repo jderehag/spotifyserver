@@ -36,6 +36,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <stdint.h>
+#include <unistd.h>
 
 typedef struct SocketHandle_t
 {
