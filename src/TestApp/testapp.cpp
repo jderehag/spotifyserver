@@ -26,7 +26,9 @@
  */
 
 #include "SocketHandling/SocketClient.h"
+#if AUDIO_SERVER
 #include "AudioEndpointRemoteSocketServer.h"
+#endif
 #include "RemoteMediaInterface.h"
 #include "UIConsole.h"
 #include "Platform/Utils/Utils.h"
@@ -39,12 +41,14 @@ int main(int argc, char *argv[])
     ConfigHandling::LoggerConfig cfg;
     cfg.setLogTo(ConfigHandling::LoggerConfig::STDOUT);
     Logger::Logger logger(cfg);
+
+#if AUDIO_SERVER
     ConfigHandling::NetworkConfig audioepservercfg;
     audioepservercfg.setPort("7789");
     ConfigHandling::AudioEndpointConfig audiocfg;
 
     AudioEndpointRemoteSocketServer audioserver( audiocfg, audioepservercfg );
-
+#endif
 
     if(argc > 1)
         servaddr = std::string(argv[1]);
@@ -61,7 +65,9 @@ int main(int argc, char *argv[])
     /* cleanup */
     ui.destroy();
     sc.destroy();
-    audioserver.destroy();
 
+#if AUDIO_SERVER
+    audioserver.destroy();
+#endif
     return 0;
 }

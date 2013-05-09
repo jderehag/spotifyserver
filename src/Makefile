@@ -49,7 +49,6 @@ COMMON_OBJECTS += spotifyserver.o \
 		  SocketServer.o \
 		  SocketPeer.o \
 		  AudioFifo.o \
-		  AudioEndpointRemote.o \
 		  MessageDecoder.o \
 		  MessageEncoder.o \
 		  Message.o \
@@ -86,9 +85,9 @@ TESTAPP_OBJECTS +=  testapp.o \
 					AudioEndpointConfig.o \
 					SocketServer.o \
 					SocketPeer.o \
-					AudioFifo.o \
-					AudioEndpointRemoteSocketServer.o \
-					AudioEndpointRemotePeer.o
+					AudioFifo.o 
+#					AudioEndpointRemoteSocketServer.o \
+#					AudioEndpointRemotePeer.o
 					
 
 TESTAPP_OBJECTS += $(ARCH_OBJECTS) $(AUDIO_OBJECTS)

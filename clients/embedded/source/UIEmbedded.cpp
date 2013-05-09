@@ -124,7 +124,7 @@ void UIEmbedded::getImageResponse( MediaInterfaceRequestId reqId, const void* da
 {}
 void UIEmbedded::getAlbumResponse( MediaInterfaceRequestId reqId, const Album& album )
 {}
-void UIEmbedded::genericSearchCallback( MediaInterfaceRequestId reqId, std::deque<Track>& listOfTracks, const std::string& didYouMean)
+void UIEmbedded::genericSearchCallback( MediaInterfaceRequestId reqId, const std::deque<Track>& listOfTracks, const std::string& didYouMean)
 {}
 
 

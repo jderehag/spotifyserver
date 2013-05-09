@@ -105,7 +105,7 @@ static struct addrinfo* toAddrinfo( const std::string& addr, const std::string& 
     }
     else
     {
-        Hints.ai_family = PF_INET6;    // Accept either IPv4 or IPv6, whatever addr is
+        Hints.ai_family = PF_INET6;    // Request IPv6, we'll get a IPv6 mapped address if addr is IPv4
         RetVal = getaddrinfo(addr.c_str(), port.c_str(), &Hints, &AddrInfo);
     }
 

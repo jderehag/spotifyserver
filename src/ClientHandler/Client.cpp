@@ -228,11 +228,11 @@ void Client::getImageResponse(MediaInterfaceRequestId reqId, const void* data, s
         queueResponse( msg, reqId );
         pendingMessageMap_.erase(msgIt);
     }
-    else log(LOG_WARN) << "Could not match the genericSearchCallback() to a pending response";
+    else log(LOG_WARN) << "Could not match the getImageResponse() to a pending response";
 
 }
 
-void Client::genericSearchCallback(MediaInterfaceRequestId reqId, std::deque<Track>& tracks, const std::string& didYouMean)
+void Client::genericSearchCallback(MediaInterfaceRequestId reqId, const std::deque<Track>& tracks, const std::string& didYouMean)
 {
     log(LOG_DEBUG) << "\tdid you mean:" << didYouMean;
 

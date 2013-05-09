@@ -214,7 +214,7 @@ void UIConsole::getAlbumResponse( MediaInterfaceRequestId reqId, const Album& al
     std::cout << "  By " << album.getArtist().getName() << " - " << album.getArtist().getLink() << std::endl;
     printTracks( album.getTracks() );
 }
-void UIConsole::genericSearchCallback( MediaInterfaceRequestId reqId, std::deque<Track>& listOfTracks, const std::string& didYouMean)
+void UIConsole::genericSearchCallback( MediaInterfaceRequestId reqId, const std::deque<Track>& listOfTracks, const std::string& didYouMean)
 {
     printTracks( listOfTracks );
 }

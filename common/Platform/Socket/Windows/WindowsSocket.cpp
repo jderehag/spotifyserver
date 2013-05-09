@@ -158,31 +158,8 @@ int Socket::BindToAddr(const std::string& addr, const std::string& port)
 
 int Socket::BindToDevice(const std::string& device, const std::string& port)
 {
-    struct sockaddr_in my_addr;
-
-    memset(&my_addr, 0, sizeof(struct sockaddr_in));
-    my_addr.sin_family = AF_INET;
-    my_addr.sin_addr.s_addr = INADDR_ANY;
-    //my_addr.sin_port = htons(port);
-
-#if 0 //todo
-    log(LOG_NOTICE) << "binding to device " << device;
-    if (setsockopt(socket->handle, SOL_SOCKET, SO_BINDTODEVICE, (void *) device.c_str(), device.length()) == SOCKET_ERROR)
-    {
-        log(LOG_NOTICE) << "setsockopt failed!";
-        return -1;
-    }
-
-    if (bind(socket->handle, (struct sockaddr *) &my_addr, sizeof(my_addr)) == SOCKET_ERROR)
-    {
-        log(LOG_EMERG) << "Error on bind!";
-        return -1;
-    }
-
-    return 0;
-#else
+    /* can't really do this on windows */
     return -1;
-#endif
 }
 
 int Socket::Connect(const std::string& addr, const std::string& port)

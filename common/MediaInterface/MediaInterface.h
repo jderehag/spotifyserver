@@ -53,7 +53,7 @@ public:
     virtual void getTracksResponse( MediaInterfaceRequestId reqId, const std::deque<Track>& tracks ) = 0;
     virtual void getImageResponse( MediaInterfaceRequestId reqId, const void* data, size_t dataSize ) = 0;
     virtual void getAlbumResponse( MediaInterfaceRequestId reqId, const Album& album ) = 0;
-    virtual void genericSearchCallback( MediaInterfaceRequestId reqId, std::deque<Track>& listOfTracks, const std::string& didYouMean) = 0;
+    virtual void genericSearchCallback( MediaInterfaceRequestId reqId, const std::deque<Track>& listOfTracks, const std::string& didYouMean) = 0;
     virtual void getStatusResponse( MediaInterfaceRequestId reqId, PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress ) = 0;
     virtual void getStatusResponse( MediaInterfaceRequestId reqId, PlaybackState_t state, bool repeatStatus, bool shuffleStatus ) = 0;
 
