@@ -300,6 +300,7 @@ Socket* Socket::Accept()
         char str[INET6_ADDRSTRLEN];
         inet_ntop( AF_INET6, INETADDR_ADDRESS((struct sockaddr*)&sockaddr), str, sizeof(str));
 
+        log(LOG_NOTICE) << "accept! " << str << " fd " << newSocket;
         SocketHandle_t* handle = new SocketHandle_t;
         handle->fd = newSocket;
         return new Socket(handle);
