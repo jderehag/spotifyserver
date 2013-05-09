@@ -33,6 +33,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <assert.h>
+#include <time.h>
 
 Logger::Logger* logger = NULL;
 
@@ -46,6 +47,24 @@ static const char* level_strings[] =
     "NOTICE",
     "DEBUG"
 };
+#ifdef _WIN32
+#define localtime_r(a, b) localtime_s(b, a) /*goddammit microsoft!*/
+#endif
+
+static std::string logprefix( LogLevel level, const char* functionName )
+{
+    time_t rawtime;
+    struct tm timeinfo;
+    std::stringstream str;
+    char tmp[10] = {0};
+
+    time (&rawtime);
+    localtime_r (&rawtime, &timeinfo);
+    strftime( tmp, sizeof(tmp), "%H:%M:%S", &timeinfo );
+
+    str << tmp << " [" << level_strings[level] << "] " << functionName << ": ";
+    return str.str();
+}
 
 Logger::Logger(const ConfigHandling::LoggerConfig& config) : config_(config)
 {
@@ -66,7 +85,7 @@ void Logger::logAppend(LogLevel level, const char* functionName, const char* log
             std::ostream os(&fb);
             if(fb.open(config_.getLogFile().c_str(), std::ios::out|std::ios::app) != NULL)
             {
-                os << "[" << level_strings[level] << "] " << functionName << ": " << log << std::endl;
+                os << logprefix(level, functionName) << log << std::endl;
                 fb.close();
             }
             else
@@ -80,7 +99,7 @@ void Logger::logAppend(LogLevel level, const char* functionName, const char* log
 
         case ConfigHandling::LoggerConfig::STDOUT:
         {
-            std::cout << "[" << level_strings[level] << "] " << functionName << ": " << log << std::endl;
+            std::cout << logprefix(level, functionName) << log << std::endl;
         }
         break;
 
@@ -93,7 +112,7 @@ void Logger::logAppend(LogLevel level, const char* functionName, const char* log
 LoggerStreamBuffer* Logger::logAppend(LogLevel level, const char* functionName)
 {
     LoggerStreamBuffer* buff = new LoggerStreamBuffer(*this);
-    *buff << "[" << level_strings[level] << "] " << functionName << ": ";
+    *buff << logprefix(level, functionName);
     return buff;
 }
 void Logger::flush(std::stringstream* buff)

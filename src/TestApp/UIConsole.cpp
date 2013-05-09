@@ -207,7 +207,9 @@ void UIConsole::getTracksResponse( MediaInterfaceRequestId reqId, const std::deq
     printTracks( tracks );
 }
 void UIConsole::getImageResponse( MediaInterfaceRequestId reqId, const void* data, size_t dataSize )
-{}
+{
+    std::cout << "Got " << dataSize << " bytes image " << std::endl;
+}
 void UIConsole::getAlbumResponse( MediaInterfaceRequestId reqId, const Album& album )
 {
     std::cout << "  " << album.getName() << " - " << album.getLink() << std::endl;
@@ -231,7 +233,7 @@ void UIConsole::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool 
         std::cout << "    " << (*it).getName() << "  -  "  << (*it).getLink() << std::endl;
     }
     std::cout << "  Duration " << currentTrack.getDurationMillisecs() << std::endl;
-    std::cout << "  Progress " << progress << std::endl;
+    std::cout << "  Progress " << progress << std::endl << std::endl;
 }
 void UIConsole::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus )
 {
@@ -241,7 +243,7 @@ void UIConsole::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool 
         case PLAYBACK_PLAYING: std::cout << "  Playback playing "; break;
         case PLAYBACK_PAUSED:  std::cout << "  Playback paused  "; break;
     }
-    std::cout << " - Repeat " << (repeatStatus ? "on" : "off") << ", Shuffle " << (shuffleStatus ? "on" : "off") << std::endl;
+    std::cout << " - Repeat " << (repeatStatus ? "on" : "off") << ", Shuffle " << (shuffleStatus ? "on" : "off") << std::endl << std::endl;
 }
 void UIConsole::getStatusResponse( MediaInterfaceRequestId reqId, PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress )
 {

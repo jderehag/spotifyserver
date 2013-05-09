@@ -13,6 +13,10 @@
 
 #include "stm32f4xx.h"
 
+#include <sys/time.h>
+#include "FreeRTOS.h"
+#include "task.h"
+
 //#include "term_io.h"
 
 
@@ -125,4 +129,13 @@ int _write(int file, char *ptr, int len)
 	//	xputc(*ptr++);
 	}
 	return len;
+}
+
+int _gettimeofday ( struct timeval* tp, struct timezone* ignore	)
+{
+	(void) ignore;
+	int tick = xTaskGetTickCount();
+	tp->tv_sec = tick/1000;
+	tp->tv_usec = (tick%1000) * 1000;
+	return 0;
 }

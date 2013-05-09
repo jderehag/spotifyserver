@@ -69,7 +69,7 @@ int Socket::BindToAddr(const std::string& addr, const std::string& port)
     memset(&my_addr, 0, sizeof(struct sockaddr_in));
     my_addr.sin_family = AF_INET;
     my_addr.sin_addr.s_addr = INADDR_ANY;
-    my_addr.sin_port = atoi(port.c_str());
+    my_addr.sin_port = htons(atoi(port.c_str()));
 
     if (addr != "ANY" && inet_addr(addr.c_str()) != INADDR_NONE)
     {
@@ -99,7 +99,7 @@ int Socket::Connect(const std::string& addr, const std::string& port)
     memset( &serv_addr, 0, sizeof(struct sockaddr_in) );
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = inet_addr( addr.c_str() );
-    serv_addr.sin_port = atoi(port.c_str());
+    serv_addr.sin_port = htons(atoi(port.c_str()));
     rc = lwip_connect( socket_->fd, (struct sockaddr*)&serv_addr, sizeof(serv_addr) );
 
     if (rc < 0 && errno == EINPROGRESS)
