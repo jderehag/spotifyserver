@@ -57,13 +57,13 @@
 //#define I2S_INTERRUPT                 /* Uncomment this line to enable audio transfert with I2S interrupt*/ 
 
 /* Audio Transfer mode (DMA, Interrupt or Polling) */
-#define AUDIO_MAL_MODE_NORMAL         /* Uncomment this line to enable the audio 
+/* #define AUDIO_MAL_MODE_NORMAL */        /* Uncomment this line to enable the audio
                                          Transfer using DMA */
-/* #define AUDIO_MAL_MODE_CIRCULAR */ /* Uncomment this line to enable the audio 
+#define AUDIO_MAL_MODE_CIRCULAR  /* Uncomment this line to enable the audio
                                          Transfer using DMA */
 
 /* For the DMA modes select the interrupt that will be used */
-#define AUDIO_MAL_DMA_IT_TC_EN        /* Uncomment this line to enable DMA Transfer Complete interrupt */
+ #define AUDIO_MAL_DMA_IT_TC_EN       /* Uncomment this line to enable DMA Transfer Complete interrupt */
 /* #define AUDIO_MAL_DMA_IT_HT_EN */  /* Uncomment this line to enable DMA Half Transfer Complete interrupt */
 /* #define AUDIO_MAL_DMA_IT_TE_EN */  /* Uncomment this line to enable DMA Transfer Error interrupt */
 

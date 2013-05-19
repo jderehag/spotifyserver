@@ -63,7 +63,7 @@
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.useDefaultBuildCmd</key>
-					<value>false</value>
+					<value>true</value>
 				</dictionary>
 			</arguments>
 		</buildCommand>
@@ -91,9 +91,19 @@
 			<locationURI>PROJECT_SRCROOT/clients</locationURI>
 		</link>
 		<link>
+			<name>common</name>
+			<type>2</type>
+			<locationURI>PROJECT_SRCROOT/common</locationURI>
+		</link>
+		<link>
 			<name>doc</name>
 			<type>2</type>
 			<locationURI>PROJECT_SRCROOT/doc</locationURI>
+		</link>
+		<link>
+			<name>spotifyserver_deps</name>
+			<type>2</type>
+			<locationURI>ECLIPSE_SUCKS/spotifyserver_deps</locationURI>
 		</link>
 		<link>
 			<name>src</name>
@@ -154,6 +164,10 @@
 		</filter>
 	</filteredResources>
 	<variableList>
+		<variable>
+			<name>ECLIPSE_SUCKS</name>
+			<value>$%7BPARENT-1-PROJECT_SRCROOT%7D</value>
+		</variable>
 		<variable>
 			<name>PROJECT_SRCROOT</name>
 			<value>$%7BPARENT-1-PROJECT_LOC%7D</value>

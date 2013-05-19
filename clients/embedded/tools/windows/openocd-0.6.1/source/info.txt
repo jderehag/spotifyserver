@@ -1,0 +1,2 @@
+You can download the source code from sourceforge
+https://sourceforge.net/projects/openocd/files/openocd/0.6.1/

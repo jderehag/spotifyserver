@@ -214,9 +214,9 @@ void EXTI0_IRQHandler(void)
 {
     if (EXTI_GetITStatus(EXTI_Line0) != RESET)
     {
-        buttonHandler_action( (STM_EVAL_PBGetState(BUTTON_USER) != 0) ? 1 : 0 );
         /* Clear the EXTI line 0 pending bit */
         EXTI_ClearITPendingBit(EXTI_Line0);
+        buttonHandler_action( (STM_EVAL_PBGetState(BUTTON_USER) != 0) ? 1 : 0 );
     }
 }
 

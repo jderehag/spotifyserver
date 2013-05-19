@@ -92,7 +92,7 @@ public:
     BindType getBindType() const;
     const std::string& getDevice() const;
     const std::string& getIp() const;
-    int getPort() const;
+    const std::string& getPort() const;
     const std::string& getUsername() const;
     const std::string& getPassword() const;
     void setBindType(const std::string& bindType);
@@ -106,7 +106,7 @@ private:
     // IP is kept as string for now since ip representation is different on different platforms
     std::string ip_;
     std::string device_;
-    int port_;
+    std::string port_;
 
     /*login stuff on client side*/
     std::string username_;

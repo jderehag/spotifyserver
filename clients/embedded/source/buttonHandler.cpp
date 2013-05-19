@@ -27,11 +27,13 @@
 
 
 #include "buttonHandler.h"
+#include "powerHandler.h"
 #include "FreeRTOS.h"
 #include "task.h"
 #include "timers.h"
 
 static UIEmbedded* ui = NULL;
+static portTickType pressTime = 0;
 
 void buttonHandler_setUI(UIEmbedded* ui_)
 {
@@ -41,6 +43,8 @@ void buttonHandler_setUI(UIEmbedded* ui_)
 static void timerCb( xTimerHandle xTimer )
 {
     (void) xTimer;
+    pressTime = 0;
+
     /*fire long press*/
     if (ui)
     {
@@ -48,14 +52,18 @@ static void timerCb( xTimerHandle xTimer )
     }
 }
 
-void buttonHandler_action(uint8_t pressed)
+void buttonHandler_action( uint8_t pressed )
 {
-    static portTickType pressTime = 0;
     static xTimerHandle tmr = xTimerCreate( (const signed char *)"btn",1000/portTICK_RATE_MS,pdFALSE, NULL, timerCb );
+
+    pwrKeepAlive();
+
     if ( pressed )
     {
         portBASE_TYPE higherPrioTaskWoken;
+
         pressTime = xTaskGetTickCountFromISR();
+
         /*launch timer for long press detection*/
         xTimerStartFromISR( tmr, &higherPrioTaskWoken );
 
@@ -64,13 +72,14 @@ void buttonHandler_action(uint8_t pressed)
             vPortYieldFromISR();
         }
     }
-    else if ( xTimerIsTimerActive( tmr ) )
+    else if ( pressTime != 0 ) /*handle release if we have caught a press*/
     {
         portBASE_TYPE higherPrioTaskWoken;
-        xTimerStopFromISR( tmr, &higherPrioTaskWoken );
         portTickType totalTime = xTaskGetTickCountFromISR() - pressTime;
+        pressTime = 0;
+        xTimerStopFromISR( tmr, &higherPrioTaskWoken );
 
-        if ( totalTime > 20 )
+        if ( totalTime > 5 )
         {
             /*fire short press*/
             if (ui)

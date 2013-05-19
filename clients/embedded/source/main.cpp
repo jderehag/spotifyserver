@@ -29,15 +29,18 @@
 #include "stm32f4_discovery.h"
 #include "stm32f4x7_eth_bsp.h"
 #include "netconf.h"
-#include "Platform/Threads/Runnable.h"
-#include "Platform/Threads/Messagebox.h"
 #include "UIEmbedded.h"
+#include "TestApp/RemoteMediaInterface.h"
 #include "buttonHandler.h"
+#include "powerHandler.h"
+#include "SocketHandling/SocketClient.h"
+//#include "TestApp/AudioEndpointRemoteSocketServer.h"
 #include "FreeRTOS.h"
 #include "task.h"
 #include "applog.h"
-#include "MessageFactory/Message.h"
 
+
+#include "Platform/Threads/Runnable.h"
 
 class LedFlasher : public Platform::Runnable
 {
@@ -49,7 +52,7 @@ public:
     virtual void destroy();
 };
 
-LedFlasher::LedFlasher() : Platform::Runnable(false)
+LedFlasher::LedFlasher() : Platform::Runnable(false, SIZE_SMALL, PRIO_LOW)
 {
     startThread();
 }
@@ -70,7 +73,7 @@ void LedFlasher::run()
     while( isCancellationPending() == false )
     {
         vTaskDelayUntil( &t, delay );
-        STM_EVAL_LEDToggle( LED3 );
+        STM_EVAL_LEDToggle( LED5 );
     }
 }
 
@@ -88,14 +91,24 @@ int main(void)
     cfg->setLogTo(ConfigHandling::LoggerConfig::NOWHERE);
     Logger::Logger* l = new Logger::Logger(*cfg);
 
+#if 0
+    ConfigHandling::NetworkConfig* audioepservercfg = new ConfigHandling::NetworkConfig;
+    audioepservercfg->setPort("7789");
+    ConfigHandling::AudioEndpointConfig* audiocfg = new ConfigHandling::AudioEndpointConfig;
+
+    AudioEndpointRemoteSocketServer* audioserver = new AudioEndpointRemoteSocketServer( *audiocfg, *audioepservercfg );
+#endif
+
     LedFlasher* fl = new LedFlasher;
 #if 0
-    Messenger* m = new Messenger("192.168.5.163");
+    SocketClient* sc = new SocketClient("192.168.5.98", "7788");
 #else
-    Messenger* m = new Messenger("192.168.5.98");
+    SocketClient* sc = new SocketClient("192.168.5.198", "7788");
 #endif
+    RemoteMediaInterface* m = new RemoteMediaInterface( *sc );
     UIEmbedded* ui = new UIEmbedded(*m);
 
+    pwrInit();
     buttonHandler_setUI(ui);
 
     /* configure ethernet (GPIOs, clocks, MAC, DMA) */

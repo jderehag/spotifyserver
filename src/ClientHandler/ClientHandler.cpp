@@ -26,132 +26,22 @@
  */
 
 #include "ClientHandler.h"
+#include "Client.h"
 #include "applog.h"
-#include <stdlib.h>
-#include <string.h>
 
-ClientHandler::ClientHandler(const ConfigHandling::NetworkConfig& config, LibSpotifyIf& spotifyif) : config_(config),
-                                                                                                     spotify_(spotifyif),
-                                                                                                     socket_(NULL)
+ClientHandler::ClientHandler(const ConfigHandling::NetworkConfig& config, LibSpotifyIf& spotifyif) : SocketServer(config),
+                                                                                                     spotify_(spotifyif)
 {
-    startThread();
 }
 
 ClientHandler::~ClientHandler()
 {
-    while(!clients_.empty())
-    {
-        Client* c = clients_.front();
-        delete c;
-        clients_.pop_front();
-    }
 }
 
-void ClientHandler::run()
+SocketPeer* ClientHandler::newPeer( Socket* s )
 {
-    Socket* clientsock;
-    int rc = -1;
-    socket_ = new Socket();
-
-    if (config_.getBindType() == ConfigHandling::NetworkConfig::IP)
-    {
-        rc = socket_->BindToAddr(config_.getIp(), config_.getPort());
-    }
-    else if (config_.getBindType() == ConfigHandling::NetworkConfig::DEVICE)
-    {
-        rc = socket_->BindToDevice(config_.getDevice(), config_.getPort());
-    }
-
-    if ( rc < 0 )
-        exit(1);
-
-    rc = socket_->Listen();
-
-    if ( rc < 0 )
-        exit(1);
-
-    log(LOG_NOTICE) << "Server is listening";
-
-    while (isCancellationPending() == false)
-    {
-        std::set<Socket*> readsockets;
-        std::set<Socket*> writesockets;
-        std::set<Socket*> errsockets;
-        std::list<Client*>::iterator it;
-
-        readsockets.insert(socket_);
-        errsockets.insert(socket_);
-
-        for (it = clients_.begin(); it != clients_.end(); it++)
-        {
-            readsockets.insert((*it)->getSocket());
-            if ((*it)->pendingSend())
-                writesockets.insert((*it)->getSocket());
-        }
-
-        rc = select(&readsockets, &writesockets, &errsockets, 100);
-
-        if ( rc < 0 )
-            break;
-
-        /* Check listen socket first */
-        if (errsockets.find(socket_) != errsockets.end())
-            break; /*uh-oh we're shutting down*/
-
-        if (readsockets.find(socket_) != readsockets.end())
-        {
-            /* read on listen socket, accept! */
-            clientsock = socket_->Accept();
-            if (clientsock == NULL)
-            {
-                log(LOG_WARN) << "Error on accept!";
-                break;
-            }
-            else
-            {
-                Client* c = new Client(clientsock, spotify_);
-                c->setUsername(config_.getUsername());
-                c->setPassword(config_.getPassword());
-                clients_.push_front(c);
-            }
-        }
-
-        it = clients_.begin();
-        while ( it != clients_.end() )
-        {
-            if (readsockets.find((*it)->getSocket()) != readsockets.end())
-            {
-                if ((*it)->doRead() < 0)
-                {
-                    log(LOG_NOTICE) << "read failed, removing client";
-                    delete (*it);
-                    it = clients_.erase(it);
-                    continue;
-                }
-            }
-            if (writesockets.find((*it)->getSocket()) != writesockets.end())
-            {
-                if ((*it)->doWrite() < 0)
-                {
-                    log(LOG_NOTICE) << "write failed, removing client";
-                    delete (*it);
-                    it = clients_.erase(it);
-                    continue;
-                }
-            }
-
-            it++;
-        }
-    }
-
-
-    log(LOG_DEBUG) << "Exit ClientHandler::run()";
+    Client* c = new Client(s, spotify_);
+    c->setUsername(config_.getUsername());
+    c->setPassword(config_.getPassword());
+    return c;
 }
-
-void ClientHandler::destroy()
-{
-    cancelThread();
-    if(socket_ != NULL) socket_->Shutdown();
-    joinThread();
-}
-

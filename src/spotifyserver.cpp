@@ -32,12 +32,11 @@
 #include "applog.h"
 
 #include "LibSpotifyIf/LibSpotifyIf.h"
-#include "LibSpotifyIf/MediaContainers/Folder.h"
-#include "LibSpotifyIf/MediaContainers/Playlist.h"
 #include "ClientHandler/ClientHandler.h"
-#include "Platform/AudioEndpoints/AudioEndpoint.h"
+#include "Platform/AudioEndpoints/AudioEndpointLocal.h"
 #include "ConfigHandling/ConfigHandler.h"
 #include "Platform/Utils/Utils.h"
+#include "TestApp/UIConsole.h"
 
 
 
@@ -81,7 +80,7 @@ int main(int argc, char *argv[])
 
     Logger::Logger logger(ch.getLoggerConfig());
 
-    Platform::AudioEndpoint audioEndpoint(ch.getAudioEndpointConfig());
+    Platform::AudioEndpointLocal audioEndpoint(ch.getAudioEndpointConfig());
     ConfigHandling::SpotifyConfig spConfig = ch.getSpotifyConfig();
     if (spConfig.getUsername().empty())
     {
@@ -111,8 +110,8 @@ int main(int argc, char *argv[])
 
 	ClientHandler clienthandler(ch.getNetworkConfig(), libspotifyif);
 
-	while (getchar() != 'q');
-	//std::cout << "Root:" << libspotifyif.getRootFolder();
+	UIConsole ui( libspotifyif );
+	ui.joinThread();
 
 	libspotifyif.logOut();
 

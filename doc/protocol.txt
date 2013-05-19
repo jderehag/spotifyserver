@@ -40,8 +40,6 @@ The Length field should include the total size of all sub-TLVs.
 
 4. Description of different messages
 
-* below means optionally.
-
 4.1 Session control messages
 
 4.1.1 HELLO_REQ
@@ -60,15 +58,15 @@ This is only a header message, no TLVs needed. Total size 12 bytes
 A playlist response always contains at least the "root" folder, which should contain all playlists if no
 extra folders are available 
 MessageHeader
-  TLV_FOLDER        root-folder. Required. May be the last TLV, if no sub folders or playlists exist.
-   	TLV_NAME      
-   	TLV_FOLDER 0..n        
-   	  TLV_NAME   
-   	  TLV_FOLDER 0..n    
-   	    TLV_NAME
-   	    TLV_PLAYLIST 0..n
-   	      TLV_NAME
-   	      TLV_LINK   
+TLV_FOLDER        root-folder. Required. May be the last TLV, if no sub folders or playlists exist.
+  TLV_NAME      
+  TLV_FOLDER 0..n        
+    TLV_NAME   
+    TLV_FOLDER 0..n    
+      TLV_NAME
+      TLV_PLAYLIST 0..n
+        TLV_NAME
+        TLV_LINK   
     TLV_PLAYLIST 0..n     
       TLV_NAME
       TLV_LINK
@@ -88,10 +86,11 @@ TLV_TRACK              0..n
   TLV_NAME
   TLV_LINK
   TLV_TRACK_DURATION
+  TLV_TRACK_INDEX
   TLV_ARTIST 1..n
     TLV_NAME
     TLV_LINK
-  TLV_TRACK_ALBUM
+  TLV_ALBUM
     TLV_NAME
     TLV_LINK
 
@@ -117,7 +116,7 @@ TLV_TRACK			0..n
   TLV_ARTIST 1..n
     TLV_NAME
     TLV_LINK
-  TLV_TRACK_ALBUM
+  TLV_ALBUM
     TLV_NAME
     TLV_LINK
 
@@ -126,15 +125,19 @@ TLV_TRACK			0..n
 
 4.3.1	PLAY_REQ
 This message requires a single TLV, identifying the item (track, playlist, etc..) to be played.
+An optional TLV_TRACK_INDEX can be provided, if present it identifies the first track (in for example a playlist) to be played 
 TLV_LINK
+TLV_TRACK_INDEX	0..1
 
 4.3.2	PLAY_RSP
 Server response to a client request to play an item
 No TLVs needed.
 
 4.3.3	PLAY_CONTROL_REQ
-Request server to perform specified action on playback (prev/next/pause/resume)
-TLV_PLAY_OP
+Request server to perform specified action on playback (prev/next/pause/resume) or enable/disable play modes. For enable/disable zero means off and non-zero means on
+TLV_PLAY_OP	0..n
+TLV_PLAY_MODE_SHUFFLE	0..1
+TLV_PLAY_MODE_REPEAT	0..1
 
 4.3.4	PLAY_CONTROL_RSP
 Empty message to acknowledge reception of request
@@ -156,7 +159,7 @@ TLV_TRACK		0..1
   TLV_ARTIST	1..n
     TLV_NAME
     TLV_LINK
-  TLV_TRACK_ALBUM
+  TLV_ALBUM
     TLV_NAME
     TLV_LINK
 

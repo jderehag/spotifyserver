@@ -28,25 +28,19 @@
 #ifndef CLIENT_H_
 #define CLIENT_H_
 
-#include "LibSpotifyIf/ILibSpotifyIfCallbackSubscriber.h"
-#include "LibSpotifyIf/LibSpotifyIf.h"
-#include "MessageFactory/Message.h"
+#include "MediaInterface/MediaInterface.h"
+#include "SocketHandling/SocketPeer.h"
 #include "MessageFactory/MessageEncoder.h"
-#include "MessageFactory/SocketReader.h"
-#include "MessageFactory/SocketWriter.h"
-#include "Platform/Threads/Mutex.h"
-#include "Platform/Socket/Socket.h"
+#include "Platform/AudioEndpoints/AudioEndpointRemote.h"
 #include <map>
-#include <queue>
 
 using namespace LibSpotify;
 
-class Client : ILibSpotifyIfCallbackSubscriber
+class Client : IMediaInterfaceCallbackSubscriber, public SocketPeer
 {
 private:
-    unsigned int requestId;
 
-    LibSpotifyIf& spotify_;
+    MediaInterface& spotify_;
 
     bool loggedIn_;
     std::string networkUsername_;
@@ -55,27 +49,37 @@ private:
     uint32_t peerProtocolMajor_;
     uint32_t peerProtocolMinor_;
 
-    SocketReader reader_;
-    SocketWriter writer_;
-
     typedef std::map<unsigned int, Message*>  PendingMessageMap;
     PendingMessageMap pendingMessageMap_;
 
-    void processMessage(const Message* msg);
+    Platform::AudioEndpointRemote* audioEp;
 
-    void rootFolderUpdatedInd();
+    unsigned int reqId_;
+
+    virtual void processMessage(const Message* msg);
+
     void playingInd(Track& currentTrack);
     void pausedInd(Track& currentTrack);
     void trackEndedInd();
-    void getTrackResponse(unsigned int reqId, const std::deque<Track>& tracks);
-    void getAlbumResponse(unsigned int reqId, const Album& album);
-    void getImageResponse(unsigned int reqId, const void* data, size_t dataSize);
-    void genericSearchCallback(unsigned int reqId, std::deque<Track>& tracks, const std::string& didYouMean);
 
+    virtual void connectionState( bool up );
+    virtual void rootFolderUpdatedInd();
+    virtual void statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress );
+    virtual void statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus );
+
+    virtual void getPlaylistsResponse( MediaInterfaceRequestId reqId, const Folder& rootfolder );
+    virtual void getTracksResponse( MediaInterfaceRequestId reqId, const std::deque<Track>& tracks );
+    virtual void getImageResponse( MediaInterfaceRequestId reqId, const void* data, size_t dataSize );
+    virtual void getAlbumResponse( MediaInterfaceRequestId reqId, const Album& album );
+    virtual void genericSearchCallback( MediaInterfaceRequestId reqId, const std::deque<Track>& listOfTracks, const std::string& didYouMean);
+    virtual void getStatusResponse( MediaInterfaceRequestId reqId, PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress );
+    virtual void getStatusResponse( MediaInterfaceRequestId reqId, PlaybackState_t state, bool repeatStatus, bool shuffleStatus );
+
+private:
     /* Message Handler functions*/
     void handleGetTracksReq(const Message* msg);
     void handleHelloReq(const Message* msg);
-    void handleGetPlaylistReq(const Message* msg);
+    void handleGetPlaylistsReq(const Message* msg);
     void handleImageReq(const Message* msg);
     void handleGetStatusReq(const Message* msg);
     void handlePlayReq(const Message* msg);
@@ -84,26 +88,17 @@ private:
     void handleGetImageReq(const Message* msg);
     void handleGenericSearchReq(const Message* msg);
     void handleGetAlbumReq(const Message* msg);
+    void handleAddAudioEpReq(const Message* msg);
+    void handleRemAudioEpReq(const Message* msg);
 
-    void queueMessage(Message* msg);
-    Message* popMessage();
-    Platform::Mutex messageQueueMtx;
-    std::queue<Message*> messageQueue;
-
-    Socket* socket_;
 public:
 
-    Client(Socket* socket, LibSpotifyIf& spotifyif);
+    Client(Socket* socket, MediaInterface& spotifyif);
     virtual ~Client();
 
     void setUsername(std::string username);
     void setPassword(std::string password);
 
-    int doRead();
-    int doWrite();
-
-    bool pendingSend();
-    Socket* getSocket() const;
 };
 
 #endif /* CLIENT_H_ */

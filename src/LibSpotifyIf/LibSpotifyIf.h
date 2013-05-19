@@ -29,7 +29,6 @@
 #define LIBSPOTIFYIF_H_
 
 #include "LibSpotifyIfCallbackWrapper.h"
-#include "ILibSpotifyIfCallbackSubscriber.h"
 #include "LibSpotifyPlaybackHandler.h"
 
 #include "ConfigHandling/ConfigHandler.h"
@@ -39,7 +38,7 @@
 #include "MessageFactory/Message.h"
 #include "Platform/Threads/Runnable.h"
 #include "Platform/Threads/Condition.h"
-
+#include "MediaInterface/MediaInterface.h"
 #include <libspotify/api.h>
 #include <set>
 #include <vector>
@@ -48,7 +47,7 @@
 namespace LibSpotify
 {
 
-class LibSpotifyIf : Platform::Runnable
+class LibSpotifyIf : Platform::Runnable, public MediaInterface
 {
 /**********************
  *
@@ -102,23 +101,23 @@ public:
     class ReqEventItem : public EventItem
     {
     public:
-        int reqId_;
-        ILibSpotifyIfCallbackSubscriber& callbackSubscriber_;
-        ReqEventItem(Event event, int reqId, ILibSpotifyIfCallbackSubscriber& callbackSubscriber) : EventItem(event), reqId_(reqId), callbackSubscriber_(callbackSubscriber) {}
+        MediaInterfaceRequestId reqId_;
+        IMediaInterfaceCallbackSubscriber* callbackSubscriber_;
+        ReqEventItem(Event event, MediaInterfaceRequestId reqId, IMediaInterfaceCallbackSubscriber* callbackSubscriber) : EventItem(event), reqId_(reqId), callbackSubscriber_(callbackSubscriber) {}
     };
 
     class QueryReqEventItem : public ReqEventItem
     {
     public:
         std::string query_;
-        QueryReqEventItem(Event event, int reqId, ILibSpotifyIfCallbackSubscriber& callbackSubscriber, std::string query) : ReqEventItem(event, reqId, callbackSubscriber), query_(query) {}
+        QueryReqEventItem(Event event, MediaInterfaceRequestId reqId, IMediaInterfaceCallbackSubscriber* callbackSubscriber, std::string query) : ReqEventItem(event, reqId, callbackSubscriber), query_(query) {}
     };
 
     class PlayReqEventItem : public QueryReqEventItem
     {
     public:
         int startIndex_;
-        PlayReqEventItem( int reqId, ILibSpotifyIfCallbackSubscriber& callbackSubscriber, std::string uri, int startIndex) : QueryReqEventItem(EVENT_PLAY_REQ, reqId, callbackSubscriber, uri), startIndex_(startIndex) {}
+        PlayReqEventItem( MediaInterfaceRequestId reqId, IMediaInterfaceCallbackSubscriber* callbackSubscriber, std::string uri, int startIndex) : QueryReqEventItem(EVENT_PLAY_REQ, reqId, callbackSubscriber, uri), startIndex_(startIndex) {}
     };
 
     enum LibSpotifyTrackStates
@@ -147,7 +146,11 @@ private:
  ***********************/
 private:
 	const ConfigHandling::SpotifyConfig& config_;
-	Platform::AudioEndpoint& endpoint_;
+	Platform::AudioEndpoint& defaultEndpoint_;
+    Platform::AudioEndpoint* currentEndpoint_;
+public:
+	void setAudioEndpoint(Platform::AudioEndpoint* endpoint);
+private:
 	Folder rootFolder_;
 
 	/*********************
@@ -164,13 +167,6 @@ private:
 	Platform::Mutex eventQueueMtx_;
 	typedef std::queue<EventItem*> EventQueueMessageQueue;
 	EventQueueMessageQueue eventQueue_;
-
-	/***********************
-	 * Callback subscription
-	 ***********************/
-	Platform::Mutex callbackSubscriberMtx_;
-	typedef std::set<ILibSpotifyIfCallbackSubscriber*> LibSpotifyCallbackSubscriberSet;
-	LibSpotifyCallbackSubscriberSet callbackSubscriberList_;
 
 	/************************
 	 * Statemachine handling
@@ -227,32 +223,29 @@ public:
 	void logIn();
 	void logOut();
 
-	void getTracks(unsigned int reqId, std::string link, ILibSpotifyIfCallbackSubscriber& callbackSubscriber);
-	void genericSearch(unsigned int reqId, std::string query, ILibSpotifyIfCallbackSubscriber& callbackSubscriber);
-    void getImage(unsigned int reqId, std::string link, ILibSpotifyIfCallbackSubscriber& callbackSubscriber);
-    void getAlbum(unsigned int reqId, std::string link, ILibSpotifyIfCallbackSubscriber& callbackSubscriber);
+    virtual void getImage( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId );
+    virtual void previous();
+    virtual void next();
+    virtual void resume();
+    virtual void pause();
+    virtual void setShuffle( bool shuffleOn );
+    virtual void setRepeat( bool repeatOn );
+    virtual void getStatus( IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId );
+    virtual void getPlaylists( IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId );
+    virtual void getTracks( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId );
+    virtual void play( std::string link, int startIndex, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId );
+    virtual void play( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId );
+    virtual void getAlbum( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId );
+    virtual void search( std::string query, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId );
+    virtual void addAudio();
 
-    LibSpotifyTrackStates getState() { return trackState_; }
-	unsigned int getProgress() { return progress_/10; }
-	Track& getCurrentTrack() { return currentTrack_; }
 
-	void play(unsigned int reqId, const std::string link, ILibSpotifyIfCallbackSubscriber& callbackSubscriber, int startIndex = -1);
-	void stop();
     void playSearchResult(const char* searchString);
     void enqueueTrack(const char* track_uri);
-	void pause();
-	void resume();
-    void next();
-    void previous();
-    void setShuffle( bool shuffleOn );
+    void stop();
 
-	Folder& getRootFolder();
-
-	void run();
-	void destroy();
-
-	void registerForCallbacks(ILibSpotifyIfCallbackSubscriber& subscriber);
-	void unRegisterForCallbacks(ILibSpotifyIfCallbackSubscriber& subscriber);
+    void run();
+    void destroy();
 
 };
 }

@@ -16,12 +16,6 @@
     <Filter Include="src\Platform\Threads">
       <UniqueIdentifier>{4f844612-184e-4891-a889-d09d55c8f202}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\Platform\Threads\Linux">
-      <UniqueIdentifier>{eedfb710-f515-4ec5-b5e7-eb46ea770035}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\LibSpotifyIf\MediaContainers">
-      <UniqueIdentifier>{9e08b6bc-2518-4724-b7f5-a72f1e7126b1}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\Platform\Socket\Windows">
       <UniqueIdentifier>{d2b722b9-0505-456a-a761-cfd4ee528fcd}</UniqueIdentifier>
     </Filter>
@@ -58,6 +52,15 @@
     <Filter Include="src\Platform\Utils\Windows">
       <UniqueIdentifier>{bd65e842-a9d2-46a9-a398-9dccd8a3bfb3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\SocketHandling">
+      <UniqueIdentifier>{48b2ae8b-a08a-408e-bca1-f5c665e72c66}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\MediaContainers">
+      <UniqueIdentifier>{9e08b6bc-2518-4724-b7f5-a72f1e7126b1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\MediaInterface">
+      <UniqueIdentifier>{974186fd-132c-4ab4-b969-c3b224c84548}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\LibSpotifyIf\LibSpotifyIf.h">
@@ -66,35 +69,20 @@
     <ClInclude Include="..\src\LibSpotifyIf\LibSpotifyIfCallbackWrapper.h">
       <Filter>src\LibSpotifyIf</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Platform\Socket\Socket.h">
+    <ClInclude Include="..\common\Platform\Socket\Socket.h">
       <Filter>src\Platform\Socket</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Platform\Threads\Condition.h">
+    <ClInclude Include="..\common\Platform\Threads\Condition.h">
       <Filter>src\Platform\Threads</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Platform\Threads\Mutex.h">
+    <ClInclude Include="..\common\Platform\Threads\Mutex.h">
       <Filter>src\Platform\Threads</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\LibSpotifyIf\MediaContainers\Folder.h">
-      <Filter>src\LibSpotifyIf\MediaContainers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\LibSpotifyIf\MediaContainers\Playlist.h">
-      <Filter>src\LibSpotifyIf\MediaContainers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\LibSpotifyIf\MediaContainers\Track.h">
-      <Filter>src\LibSpotifyIf\MediaContainers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Platform\Socket\Windows\WindowsSocket.h">
-      <Filter>src\Platform\Socket\Windows</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ClientHandler\Client.h">
       <Filter>src\ClientHandler</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ClientHandler\ClientHandler.h">
       <Filter>src\ClientHandler</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\LibSpotifyIf\MediaContainers\Artist.h">
-      <Filter>src\LibSpotifyIf\MediaContainers</Filter>
     </ClInclude>
     <ClInclude Include="..\src\LibSpotifyIf\ILibSpotifyIfCallbackSubscriber.h">
       <Filter>src\LibSpotifyIf</Filter>
@@ -105,37 +93,28 @@
     <ClInclude Include="..\src\LibSpotifyIf\LibSpotifyPlaybackHandler.h">
       <Filter>src\LibSpotifyIf</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\MessageFactory\Message.h">
+    <ClInclude Include="..\common\MessageFactory\Message.h">
       <Filter>src\MessageFactory</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\MessageFactory\MessageDecoder.h">
+    <ClInclude Include="..\common\MessageFactory\MessageDecoder.h">
       <Filter>src\MessageFactory</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\MessageFactory\MessageEncoder.h">
+    <ClInclude Include="..\common\MessageFactory\MessageEncoder.h">
       <Filter>src\MessageFactory</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\MessageFactory\TlvDefinitions.h">
+    <ClInclude Include="..\common\MessageFactory\TlvDefinitions.h">
       <Filter>src\MessageFactory</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\MessageFactory\Tlvs.h">
+    <ClInclude Include="..\common\MessageFactory\Tlvs.h">
       <Filter>src\MessageFactory</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Logger\applog.h">
-      <Filter>src\Logger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Logger\Logger.h">
-      <Filter>src\Logger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Logger\LogLevels.h">
-      <Filter>src\Logger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Platform\AudioEndpoints\AudioEndpoint.h">
+    <ClInclude Include="..\common\Platform\AudioEndpoints\AudioEndpoint.h">
       <Filter>src\Platform\AudioEndpoints</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Platform\AudioEndpoints\AudioFifo.h">
+    <ClInclude Include="..\common\Platform\AudioEndpoints\AudioFifo.h">
       <Filter>src\Platform\AudioEndpoints</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Platform\Threads\Runnable.h">
+    <ClInclude Include="..\common\Platform\Threads\Runnable.h">
       <Filter>src\Platform\Threads</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ConfigHandling\ConfigHandler.h">
@@ -144,10 +123,10 @@
     <ClInclude Include="..\src\ConfigHandling\ConfigParser.h">
       <Filter>src\ConfigHandling</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Platform\Threads\Windows\WindowsMutexPimpl.h">
+    <ClInclude Include="..\common\Platform\Threads\Windows\WindowsMutexPimpl.h">
       <Filter>src\Platform\Threads\Windows</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\MessageFactory\SocketReader.h">
+    <ClInclude Include="..\common\MessageFactory\SocketReader.h">
       <Filter>src\MessageFactory</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Utils\CircularQueue.h">
@@ -156,14 +135,59 @@
     <ClInclude Include="..\src\Utils\FixedQueue.h">
       <Filter>src\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Platform\Utils\Utils.h">
-      <Filter>src\Platform\Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\MessageFactory\SocketWriter.h">
+    <ClInclude Include="..\common\MessageFactory\SocketWriter.h">
       <Filter>src\MessageFactory</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\LibSpotifyIf\MediaContainers\Album.h">
-      <Filter>src\LibSpotifyIf\MediaContainers</Filter>
+    <ClInclude Include="..\common\Platform\AudioEndpoints\AudioEndpointLocal.h">
+      <Filter>src\Platform\AudioEndpoints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\Platform\AudioEndpoints\AudioEndpointRemote.h">
+      <Filter>src\Platform\AudioEndpoints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\SocketHandling\SocketClient.h">
+      <Filter>src\SocketHandling</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\SocketHandling\Messenger.h">
+      <Filter>src\SocketHandling</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\SocketHandling\SocketServer.h">
+      <Filter>src\SocketHandling</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\SocketHandling\SocketPeer.h">
+      <Filter>src\SocketHandling</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\Logger\applog.h">
+      <Filter>src\Logger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\Logger\LogLevels.h">
+      <Filter>src\Logger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\Platform\Utils\Utils.h">
+      <Filter>src\Platform\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\Logger\Logger.h">
+      <Filter>src\Logger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\MediaContainers\Album.h">
+      <Filter>src\MediaContainers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\MediaContainers\Artist.h">
+      <Filter>src\MediaContainers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\MediaContainers\Folder.h">
+      <Filter>src\MediaContainers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\MediaContainers\Playlist.h">
+      <Filter>src\MediaContainers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\MediaContainers\Track.h">
+      <Filter>src\MediaContainers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\MediaInterface\MediaInterface.h">
+      <Filter>src\MediaInterface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TestApp\UIConsole.h">
+      <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -176,16 +200,16 @@
     <ClCompile Include="..\src\LibSpotifyIf\LibSpotifyIfCallbackWrapper.cpp">
       <Filter>src\LibSpotifyIf</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\LibSpotifyIf\MediaContainers\Folder.cpp">
-      <Filter>src\LibSpotifyIf\MediaContainers</Filter>
+    <ClCompile Include="..\common\MediaContainers\Folder.cpp">
+      <Filter>src\MediaContainers</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\LibSpotifyIf\MediaContainers\Playlist.cpp">
-      <Filter>src\LibSpotifyIf\MediaContainers</Filter>
+    <ClCompile Include="..\common\MediaContainers\Playlist.cpp">
+      <Filter>src\MediaContainers</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\LibSpotifyIf\MediaContainers\Track.cpp">
-      <Filter>src\LibSpotifyIf\MediaContainers</Filter>
+    <ClCompile Include="..\common\MediaContainers\Track.cpp">
+      <Filter>src\MediaContainers</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Platform\Socket\Windows\WindowsSocket.cpp">
+    <ClCompile Include="..\common\Platform\Socket\Windows\WindowsSocket.cpp">
       <Filter>src\Platform\Socket\Windows</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ClientHandler\Client.cpp">
@@ -194,8 +218,8 @@
     <ClCompile Include="..\src\ClientHandler\ClientHandler.cpp">
       <Filter>src\ClientHandler</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\LibSpotifyIf\MediaContainers\Artist.cpp">
-      <Filter>src\LibSpotifyIf\MediaContainers</Filter>
+    <ClCompile Include="..\common\MediaContainers\Artist.cpp">
+      <Filter>src\MediaContainers</Filter>
     </ClCompile>
     <ClCompile Include="..\src\LibSpotifyIf\LibSpotifyIfHelpers.cpp">
       <Filter>src\LibSpotifyIf</Filter>
@@ -203,25 +227,25 @@
     <ClCompile Include="..\src\LibSpotifyIf\LibSpotifyPlaybackHandler.cpp">
       <Filter>src\LibSpotifyIf</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\MessageFactory\Message.cpp">
+    <ClCompile Include="..\common\MessageFactory\Message.cpp">
       <Filter>src\MessageFactory</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\MessageFactory\MessageDecoder.cpp">
+    <ClCompile Include="..\common\MessageFactory\MessageDecoder.cpp">
       <Filter>src\MessageFactory</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\MessageFactory\MessageEncoder.cpp">
+    <ClCompile Include="..\common\MessageFactory\MessageEncoder.cpp">
       <Filter>src\MessageFactory</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\MessageFactory\TlvDefinitions.cpp">
+    <ClCompile Include="..\common\MessageFactory\TlvDefinitions.cpp">
       <Filter>src\MessageFactory</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\MessageFactory\Tlvs.cpp">
+    <ClCompile Include="..\common\MessageFactory\Tlvs.cpp">
       <Filter>src\MessageFactory</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Logger\Logger.cpp">
+    <ClCompile Include="..\common\Logger\Logger.cpp">
       <Filter>src\Logger</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Platform\AudioEndpoints\AudioFifo.cpp">
+    <ClCompile Include="..\common\Platform\AudioEndpoints\AudioFifo.cpp">
       <Filter>src\Platform\AudioEndpoints</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ConfigHandling\ConfigHandler.cpp">
@@ -242,35 +266,56 @@
     <ClCompile Include="..\src\ConfigHandling\Configs\SpotifyConfig.cpp">
       <Filter>src\ConfigHandling\Configs</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Platform\Threads\Windows\WindowsCondition.cpp">
+    <ClCompile Include="..\common\Platform\Threads\Windows\WindowsCondition.cpp">
       <Filter>src\Platform\Threads\Windows</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Platform\Threads\Windows\WindowsMutex.cpp">
+    <ClCompile Include="..\common\Platform\Threads\Windows\WindowsMutex.cpp">
       <Filter>src\Platform\Threads\Windows</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Platform\Threads\Windows\WindowsRunnable.cpp">
+    <ClCompile Include="..\common\Platform\Threads\Windows\WindowsRunnable.cpp">
       <Filter>src\Platform\Threads\Windows</Filter>
     </ClCompile>
     <ClCompile Include="..\..\spotifyserver_deps\appkey.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\MessageFactory\SocketReader.cpp">
+    <ClCompile Include="..\common\MessageFactory\SocketReader.cpp">
       <Filter>src\MessageFactory</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Platform\AudioEndpoints\Endpoints\AudioEndpoint-OpenAL.cpp">
+    <ClCompile Include="..\common\Platform\AudioEndpoints\Endpoints\AudioEndpoint-OpenAL.cpp">
       <Filter>src\Platform\AudioEndpoints\Endpoints</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Platform\Utils\Windows\WindowsUtils.cpp">
+    <ClCompile Include="..\common\Platform\Utils\Windows\WindowsUtils.cpp">
       <Filter>src\Platform\Utils\Windows</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\MessageFactory\SocketWriter.cpp">
+    <ClCompile Include="..\common\MessageFactory\SocketWriter.cpp">
       <Filter>src\MessageFactory</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\LibSpotifyIf\MediaContainers\Album.cpp">
-      <Filter>src\LibSpotifyIf\MediaContainers</Filter>
+    <ClCompile Include="..\common\MediaContainers\Album.cpp">
+      <Filter>src\MediaContainers</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Platform\Threads\Windows\WindowsMessagebox.cpp">
+    <ClCompile Include="..\common\Platform\Threads\Windows\WindowsMessagebox.cpp">
       <Filter>src\Platform\Threads\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\Platform\AudioEndpoints\AudioEndpointRemote.cpp">
+      <Filter>src\Platform\AudioEndpoints</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\SocketHandling\SocketClient.cpp">
+      <Filter>src\SocketHandling</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\SocketHandling\Messenger.cpp">
+      <Filter>src\SocketHandling</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\SocketHandling\SocketPeer.cpp">
+      <Filter>src\SocketHandling</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\SocketHandling\SocketServer.cpp">
+      <Filter>src\SocketHandling</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\MediaInterface\MediaInterface.cpp">
+      <Filter>src\MediaInterface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TestApp\UIConsole.cpp">
+      <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
