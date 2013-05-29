@@ -59,9 +59,15 @@ class TlvMessageType:
     GET_STATUS_REQ      = int('0x401', 16) | REQ_BIT
     GET_STATUS_RSP      = int('0x401', 16) | RSP_BIT
     STATUS_IND          = int('0x401', 16) | IND_BIT
+    
+    ADD_AUDIO_ENDPOINT_REQ  = int('0x1001', 16) | REQ_BIT
+    ADD_AUDIO_ENDPOINT_RSP  = int('0x1001', 16) | RSP_BIT
+    REM_AUDIO_ENDPOINT_REQ  = int('0x1002', 16) | REQ_BIT
+    REM_AUDIO_ENDPOINT_RSP  = int('0x1002', 16) | RSP_BIT
+    AUDIO_DATA_IND          = int('0x1011', 16) | IND_BIT
 
 
-class TlvContainerType:
+class TlvType:
         
     # Container TLV's
     TLV_FOLDER                  = int('0x1', 16)
@@ -104,6 +110,15 @@ class TlvContainerType:
 
     # Error handling TLV's
     TLV_FAILURE                = int('0x1101', 16)
+    
+    #Audio endpoint TLV:s
+    TLV_AUDIO_DATA             = int('0x2001', 16)
+    TLV_AUDIO_CHANNELS         = int('0x2002', 16)
+    TLV_AUDIO_RATE             = int('0x2003', 16)
+    TLV_AUDIO_NOF_SAMPLES      = int('0x2004', 16)
+    TLV_AUDIO_DESTINATION_PORT = int('0x2005', 16)
+    TLV_AUDIO_PROTOCOL_TYPE    = int('0x2006', 16)
+
 
 class TlvFailureCause:
     # generic codes
@@ -116,8 +131,6 @@ class TlvFailureCause:
     # message errors
     FAIL_UNKNOWN_REQUEST   = int('0x21', 16) # = Unknown MessageType_t
     FAIL_MISSING_TLV       = int('0x22', 16) # = Mandatory parameter was missing in request
-    
-    
 
 class TlvPlaybackState:
     PLAYBACK_IDLE           = int('0x0', 16)
@@ -138,6 +151,11 @@ class TlvPlayOperation:
 class TlvImageFormat:
     IMAGE_FORMAT_UNKNOWN        = int('0x0', 16)
     IMAGE_FORMAT_JPEG           = int('0x1', 16)
+    
+class TlvAudioEndpointProtocolType:
+    LIGHTWEIGHT_UDP         = int('0x0', 16)
+    RTP                     = int('0x1', 16) # Not supported yet!
+
 
 
         

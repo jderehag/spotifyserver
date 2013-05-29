@@ -6,6 +6,11 @@
 	</projects>
 	<buildSpec>
 		<buildCommand>
+			<name>org.python.pydev.PyDevBuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+		<buildCommand>
 			<name>org.eclipse.cdt.managedbuilder.core.genmakebuilder</name>
 			<triggers>clean,full,incremental,</triggers>
 			<arguments>
@@ -73,6 +78,7 @@
 		<nature>org.eclipse.cdt.core.ccnature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
+		<nature>org.python.pydev.pythonNature</nature>
 	</natures>
 	<linkedResources>
 		<link>
@@ -113,7 +119,7 @@
 	</linkedResources>
 	<filteredResources>
 		<filter>
-			<id>1326146672090</id>
+			<id>1368985063837</id>
 			<name></name>
 			<type>22</type>
 			<matcher>
@@ -122,7 +128,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1326146672092</id>
+			<id>1368985063839</id>
 			<name></name>
 			<type>22</type>
 			<matcher>
@@ -131,7 +137,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1326146672098</id>
+			<id>1368985063841</id>
 			<name></name>
 			<type>22</type>
 			<matcher>
@@ -140,12 +146,30 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1326146672102</id>
+			<id>1368985063843</id>
 			<name></name>
 			<type>26</type>
 			<matcher>
 				<id>org.eclipse.ui.ide.multiFilter</id>
 				<arguments>1.0-name-matches-true-false-Obj</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1368985063846</id>
+			<name></name>
+			<type>30</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-tmp</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1368985063849</id>
+			<name></name>
+			<type>22</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-*.log</arguments>
 			</matcher>
 		</filter>
 		<filter>

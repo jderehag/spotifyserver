@@ -144,6 +144,8 @@ typedef enum
     TLV_AUDIO_CHANNELS         = 0x2002,
     TLV_AUDIO_RATE             = 0x2003,
     TLV_AUDIO_NOF_SAMPLES      = 0x2004,
+    TLV_AUDIO_DESTINATION_PORT = 0x2005,
+    TLV_AUDIO_PROTOCOL_TYPE    = 0x2006,
 }TlvType_t;
 
 
@@ -163,24 +165,30 @@ typedef enum
 
 typedef enum
 {
-    PLAYBACK_IDLE,
-    PLAYBACK_PLAYING,
-    PLAYBACK_PAUSED
+    PLAYBACK_IDLE          = 0x0,
+    PLAYBACK_PLAYING       = 0x1,
+    PLAYBACK_PAUSED        = 0x2,
 }PlaybackState_t;
 
 typedef enum
 {
-    PLAY_OP_PAUSE,
-    PLAY_OP_RESUME,
-    PLAY_OP_NEXT,
-    PLAY_OP_PREV,
+    PLAY_OP_PAUSE          = 0x0,
+    PLAY_OP_RESUME         = 0x1,
+    PLAY_OP_NEXT           = 0x2,
+    PLAY_OP_PREV           = 0x3,
 }PlayOp_t;
 
 typedef enum /*sp_imageformat*/
 {
-    IMAGE_FORMAT_UNKNOWN, /*what to do with this?*/
-    IMAGE_FORMAT_JPEG,
+    IMAGE_FORMAT_UNKNOWN   = 0x0, /*what to do with this?*/
+    IMAGE_FORMAT_JPEG      = 0x1,
 }ImageFormat_t;
+
+typedef enum
+{
+    LIGHTWEIGHT_UDP   = 0x0,
+    RTP               = 0x1, /* Not supported yet */
+}AudioEndpointProtocolType_t;
 
 
 const char* failureCauseToString(const FailureCause_t type);

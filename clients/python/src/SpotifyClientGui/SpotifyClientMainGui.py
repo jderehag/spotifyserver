@@ -30,6 +30,9 @@ import SpotifyClientConfigGui
 from SpotifyClientIf import SpotifyClient, ConfigHandler
 from threading import Thread, Event
 
+from AudioDev import PackageValidator 
+from AudioDev import AudioDev
+
 
 class SpotifyClientMainGui(Tk):
     def __init__(self):
@@ -61,7 +64,7 @@ class SpotifyClientMainGui(Tk):
         self.searchEntry.pack(side=LEFT, anchor=W)
         self.searchEntry.bind("<Return>", self.executeSearchReq)
         
-        self.playbackBar = PlaybackBar(self, height=32)
+        self.playbackBar = PlaybackBar(self, height=50)
         self.playbackBar.pack_propagate(0)
         self.playbackBar.pack(side=BOTTOM, fill=X)
         
@@ -234,8 +237,22 @@ class PlaybackBar(Frame):
     def __init__(self, parentFrame, **kwargs):
         Frame.__init__(self, parentFrame, **kwargs)
         self.spotify = None
-        #
+        
+        self._audioDev = None
+        localPlaybackState = 'disabled'
+        if PackageValidator.isLocalPlaybackPossible() == True:
+            self._audioDev = AudioDev.AudioDev()
+            localPlaybackState = 'normal'
+            
         self.__playbackState = self.STATE_STOPPED
+        
+        self.__playbackLocally = IntVar()
+        self.__checkbuttonPlaybackLocally = Checkbutton(self, text="Playback locally",
+                                                        state=localPlaybackState,
+                                                        variable=self.__playbackLocally, 
+                                                        command=self.__PlaybackLocally)
+        self.__checkbuttonPlaybackLocally.pack(side=TOP,anchor=W)
+
         
         self.__buttonPrev = Button(self, text="Prev", command=self.__PlayPrev)
         self.__buttonPrev.pack(side=LEFT,anchor=W)
@@ -278,6 +295,14 @@ class PlaybackBar(Frame):
     
     def __PlayNext(self):
         self.spotify.sendPlayOperation(self.spotify.PLAY_OP_NEXT)
+        
+    def __PlaybackLocally(self):
+        if self.__playbackLocally.get() == 1:
+            self.spotify.sendAddAudioEndpoint(self._audioDev.write_to_output_stream)
+        else:
+            self._audioDev.close_output_stream()
+            #TODO: Add close and cleanup of socket
+    
     
     def updateTrackbarTimerTick(self):
         self.__progressTimeIntVar.set(self.__progressTimeIntVar.get() + 1)

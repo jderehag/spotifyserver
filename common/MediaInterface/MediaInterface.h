@@ -60,6 +60,10 @@ public:
 };
 
 
+namespace Platform {
+    class AudioEndpoint;
+}
+
 class MediaInterface
 {
 private:
@@ -93,7 +97,7 @@ public:
     virtual void play( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId ) = 0;
     virtual void getAlbum( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId ) = 0;
     virtual void search( std::string query, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId ) = 0;
-    virtual void addAudio() = 0;
+    virtual void addAudioEndpoint(Platform::AudioEndpoint& endpoint) = 0;
 
 };
 

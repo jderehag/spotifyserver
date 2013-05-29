@@ -168,12 +168,6 @@ void UIConsole::run()
             break;
         }
 
-        case 'l':
-        {
-            m_.addAudio();
-            break;
-        }
-
         case 'q':
             cancelThread();
             continue;

@@ -32,6 +32,7 @@ COMMON_OBJECTS += spotifyserver.o \
 		  SpotifyConfig.o \
 		  NetworkConfig.o \
 		  AudioEndpointConfig.o \
+		  AudioEndpointRemote.o \
 		  LoggerConfig.o \
 		  Logger.o \
 		  LibSpotifyIf.o \

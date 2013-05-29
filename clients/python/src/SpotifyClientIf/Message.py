@@ -48,13 +48,13 @@ class Message(object):
     def toByteStream(self):
         # First construct header (calculates length, not so efficient)
         output = struct.pack('!III', self.getMsgLength() , self._MsgType ,self._MsgId)
-        for tlv in self._TlvSet[:]:
+        for tlv in self._TlvSet:
             output += tlv.toByteStream()
         return output
     
     def getMsgLength(self): #Gets total message length in bytes
         length = 12  # Header is always 12
-        for tlv in self._TlvSet[:]:
+        for tlv in self._TlvSet:
             length += tlv.getLength()
         return length
         
@@ -103,7 +103,7 @@ class Tlv(object):
     def toByteStream(self):
         output = struct.pack('!II', self._TlvType , self._TlvLength)
         if(self._TlvValue == None): # This is a container type!
-            for tlv in self._TlvSet[:]:
+            for tlv in self._TlvSet:
                 output += tlv.toByteStream()
         else:
             # Agreeably ugly to be type-aware! 
@@ -123,19 +123,19 @@ class Tlv(object):
         self._TlvSet.append(tlv)
     
     def isContainerType(self):
-        if (self._TlvType == TlvDefinitions.TlvContainerType.TLV_FOLDER or 
-            self._TlvType == TlvDefinitions.TlvContainerType.TLV_PLAYLIST or
-            self._TlvType == TlvDefinitions.TlvContainerType.TLV_TRACK or 
-            self._TlvType == TlvDefinitions.TlvContainerType.TLV_ALBUM or
-            self._TlvType == TlvDefinitions.TlvContainerType.TLV_ARTIST or
-            self._TlvType == TlvDefinitions.TlvContainerType.TLV_IMAGE):
+        if (self._TlvType == TlvDefinitions.TlvType.TLV_FOLDER or 
+            self._TlvType == TlvDefinitions.TlvType.TLV_PLAYLIST or
+            self._TlvType == TlvDefinitions.TlvType.TLV_TRACK or 
+            self._TlvType == TlvDefinitions.TlvType.TLV_ALBUM or
+            self._TlvType == TlvDefinitions.TlvType.TLV_ARTIST or
+            self._TlvType == TlvDefinitions.TlvType.TLV_IMAGE):
             return True
         else:
             return False
         
     def getAllTlvsOfType(self, tlvType):
         output = []
-        for tlv in self._TlvSet[:]:
+        for tlv in self._TlvSet:
             if(tlv._TlvType == tlvType):
                 output.append(tlv)
             elif(tlv.isContainerType()):
@@ -143,7 +143,7 @@ class Tlv(object):
         return output
     
     def getSubTlv(self, tlvType):
-        for tlv in self._TlvSet[:]:
+        for tlv in self._TlvSet:
             if(tlv._TlvType == tlvType):
                 return tlv
                 
@@ -160,12 +160,12 @@ class GetPlaylistRspMsg(Message):
     def getAllPlaylists(self):
         playlistTlvs = []
         playlists = [] #MediaContainerType
-        for tlv in self._TlvSet[:]:
-            playlistTlvs.extend(tlv.getAllTlvsOfType(TlvDefinitions.TlvContainerType.TLV_PLAYLIST))
+        for tlv in self._TlvSet:
+            playlistTlvs.extend(tlv.getAllTlvsOfType(TlvDefinitions.TlvType.TLV_PLAYLIST))
         
-        for playlistTlv in playlistTlvs[:]:
-            name = playlistTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_NAME)._TlvValue.rstrip(' \t\r\n\0')
-            uri = playlistTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_LINK)._TlvValue.rstrip(' \t\r\n\0')
+        for playlistTlv in playlistTlvs:
+            name = playlistTlv.getSubTlv(TlvDefinitions.TlvType.TLV_NAME)._TlvValue.rstrip(' \t\r\n\0')
+            uri = playlistTlv.getSubTlv(TlvDefinitions.TlvType.TLV_LINK)._TlvValue.rstrip(' \t\r\n\0')
             playlists.append(Playlist(name, uri))
         return playlists
     
@@ -174,17 +174,17 @@ class GetPlaylistRspMsg(Message):
         TODO: have only started on this one..
         '''
         rootFolder = Folder("tmp", 0)
-        for tlv in self._TlvSet[:]:
-            if(tlv._TlvType == TlvDefinitions.TlvContainerType.TLV_FOLDER):
-                rootFolder.setName(tlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_NAME)._TlvValue.rstrip(' \t\r\n\0'))
+        for tlv in self._TlvSet:
+            if(tlv._TlvType == TlvDefinitions.TlvType.TLV_FOLDER):
+                rootFolder.setName(tlv.getSubTlv(TlvDefinitions.TlvType.TLV_NAME)._TlvValue.rstrip(' \t\r\n\0'))
                 
 
         
 class GetTracksReqMsg(Message):
     def __init__(self, msgId, playlistUri):
         Message.__init__(self, TlvDefinitions.TlvMessageType.GET_TRACKS_REQ, msgId)
-        playlistUriTlv = Tlv.Create(TlvDefinitions.TlvContainerType.TLV_LINK, len(playlistUri), playlistUri)
-        playlistTlv = Tlv.CreateContainer(TlvDefinitions.TlvContainerType.TLV_PLAYLIST)
+        playlistUriTlv = Tlv.Create(TlvDefinitions.TlvType.TLV_LINK, len(playlistUri), playlistUri)
+        playlistTlv = Tlv.CreateContainer(TlvDefinitions.TlvType.TLV_PLAYLIST)
         playlistTlv.addTlv(playlistUriTlv)
         self.addTlv(playlistTlv)
         
@@ -196,36 +196,36 @@ class GetTracksRspMsg(Message):
         trackTlvs = []
         tracks = []
         #Find all Track TLV:s recursively
-        for tlv in self._TlvSet[:]:
-            if(tlv._TlvType == TlvDefinitions.TlvContainerType.TLV_TRACK):
+        for tlv in self._TlvSet:
+            if(tlv._TlvType == TlvDefinitions.TlvType.TLV_TRACK):
                 trackTlvs.append(tlv)
-            trackTlvs.extend(tlv.getAllTlvsOfType(TlvDefinitions.TlvContainerType.TLV_TRACK))
+            trackTlvs.extend(tlv.getAllTlvsOfType(TlvDefinitions.TlvType.TLV_TRACK))
         
         #Create all the track mediacontainers
-        for trackTlv in trackTlvs[:]:
-            name = trackTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_NAME)._TlvValue.rstrip(' \t\r\n\0')
-            uri = trackTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_LINK)._TlvValue.rstrip(' \t\r\n\0')
+        for trackTlv in trackTlvs:
+            name = trackTlv.getSubTlv(TlvDefinitions.TlvType.TLV_NAME)._TlvValue.rstrip(' \t\r\n\0')
+            uri = trackTlv.getSubTlv(TlvDefinitions.TlvType.TLV_LINK)._TlvValue.rstrip(' \t\r\n\0')
             
-            durationTlv = trackTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_TRACK_DURATION)
+            durationTlv = trackTlv.getSubTlv(TlvDefinitions.TlvType.TLV_TRACK_DURATION)
             duration = None
             if(durationTlv != None):
                 duration, = struct.unpack('!I', durationTlv._TlvValue)
                 
-            indexTlv = trackTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_TRACK_INDEX)
+            indexTlv = trackTlv.getSubTlv(TlvDefinitions.TlvType.TLV_TRACK_INDEX)
             index = None
             if(indexTlv != None):
                 index, = struct.unpack('!I', indexTlv._TlvValue)
             
             artists = []
-            for artistTlv in trackTlv.getAllTlvsOfType(TlvDefinitions.TlvContainerType.TLV_ARTIST):
-                artistName = artistTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_NAME)._TlvValue.rstrip(' \t\r\n\0')
-                artistLink = artistTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_LINK)._TlvValue.rstrip(' \t\r\n\0')
+            for artistTlv in trackTlv.getAllTlvsOfType(TlvDefinitions.TlvType.TLV_ARTIST):
+                artistName = artistTlv.getSubTlv(TlvDefinitions.TlvType.TLV_NAME)._TlvValue.rstrip(' \t\r\n\0')
+                artistLink = artistTlv.getSubTlv(TlvDefinitions.TlvType.TLV_LINK)._TlvValue.rstrip(' \t\r\n\0')
                 artists.append(Artist(artistName,artistLink))
             
             album = None
-            for albumTlv in trackTlv.getAllTlvsOfType(TlvDefinitions.TlvContainerType.TLV_ALBUM):
-                albumName = albumTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_NAME)._TlvValue.rstrip(' \t\r\n\0')
-                albumLink = albumTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_LINK)._TlvValue.rstrip(' \t\r\n\0')
+            for albumTlv in trackTlv.getAllTlvsOfType(TlvDefinitions.TlvType.TLV_ALBUM):
+                albumName = albumTlv.getSubTlv(TlvDefinitions.TlvType.TLV_NAME)._TlvValue.rstrip(' \t\r\n\0')
+                albumLink = albumTlv.getSubTlv(TlvDefinitions.TlvType.TLV_LINK)._TlvValue.rstrip(' \t\r\n\0')
                 album = Album(albumName, albumLink)
             tracks.append(Track(name, uri, artists, album, False, False, False, duration, index))
         return tracks
@@ -233,7 +233,7 @@ class GetTracksRspMsg(Message):
 class GenericSearchReqMsg(Message):
     def __init__(self, msgId, query):
         Message.__init__(self, TlvDefinitions.TlvMessageType.GENERIC_SEARCH_REQ, msgId)
-        self._TlvSet.append(Tlv.Create(TlvDefinitions.TlvContainerType.TLV_SEARCH_QUERY, len(query), query))        
+        self._TlvSet.append(Tlv.Create(TlvDefinitions.TlvType.TLV_SEARCH_QUERY, len(query), query))        
         
 class GenericSearchRspMsg(Message):
     def __init__(self, msgId):
@@ -243,36 +243,36 @@ class GenericSearchRspMsg(Message):
         trackTlvs = []
         tracks = []
         #Find all Track TLV:s recursively
-        for tlv in self._TlvSet[:]:
-            if(tlv._TlvType == TlvDefinitions.TlvContainerType.TLV_TRACK):
+        for tlv in self._TlvSet:
+            if(tlv._TlvType == TlvDefinitions.TlvType.TLV_TRACK):
                 trackTlvs.append(tlv)
-            trackTlvs.extend(tlv.getAllTlvsOfType(TlvDefinitions.TlvContainerType.TLV_TRACK))
+            trackTlvs.extend(tlv.getAllTlvsOfType(TlvDefinitions.TlvType.TLV_TRACK))
         
         #Create all the track mediacontainers
-        for trackTlv in trackTlvs[:]:
-            name = trackTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_NAME)._TlvValue.rstrip(' \t\r\n\0')
-            uri = trackTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_LINK)._TlvValue.rstrip(' \t\r\n\0')
+        for trackTlv in trackTlvs:
+            name = trackTlv.getSubTlv(TlvDefinitions.TlvType.TLV_NAME)._TlvValue.rstrip(' \t\r\n\0')
+            uri = trackTlv.getSubTlv(TlvDefinitions.TlvType.TLV_LINK)._TlvValue.rstrip(' \t\r\n\0')
             
-            durationTlv = trackTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_TRACK_DURATION)
+            durationTlv = trackTlv.getSubTlv(TlvDefinitions.TlvType.TLV_TRACK_DURATION)
             duration = None
             if(durationTlv != None):
                 duration, = struct.unpack('!I', durationTlv._TlvValue)
             
-            indexTlv = trackTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_TRACK_INDEX)
+            indexTlv = trackTlv.getSubTlv(TlvDefinitions.TlvType.TLV_TRACK_INDEX)
             index = None
             if(indexTlv != None):
                 index, = struct.unpack('!I', indexTlv._TlvValue)
                 
             artists = []
-            for artistTlv in trackTlv.getAllTlvsOfType(TlvDefinitions.TlvContainerType.TLV_ARTIST):
-                artistName = artistTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_NAME)._TlvValue.rstrip(' \t\r\n\0')
-                artistLink = artistTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_LINK)._TlvValue.rstrip(' \t\r\n\0')
+            for artistTlv in trackTlv.getAllTlvsOfType(TlvDefinitions.TlvType.TLV_ARTIST):
+                artistName = artistTlv.getSubTlv(TlvDefinitions.TlvType.TLV_NAME)._TlvValue.rstrip(' \t\r\n\0')
+                artistLink = artistTlv.getSubTlv(TlvDefinitions.TlvType.TLV_LINK)._TlvValue.rstrip(' \t\r\n\0')
                 artists.append(Artist(artistName,artistLink))
             
             album = None
-            for albumTlv in trackTlv.getAllTlvsOfType(TlvDefinitions.TlvContainerType.TLV_ALBUM):
-                albumName = albumTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_NAME)._TlvValue.rstrip(' \t\r\n\0')
-                albumLink = albumTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_LINK)._TlvValue.rstrip(' \t\r\n\0')
+            for albumTlv in trackTlv.getAllTlvsOfType(TlvDefinitions.TlvType.TLV_ALBUM):
+                albumName = albumTlv.getSubTlv(TlvDefinitions.TlvType.TLV_NAME)._TlvValue.rstrip(' \t\r\n\0')
+                albumLink = albumTlv.getSubTlv(TlvDefinitions.TlvType.TLV_LINK)._TlvValue.rstrip(' \t\r\n\0')
                 album = Album(albumName, albumLink)
             tracks.append(Track(name, uri, artists, album, False, False, False, duration, index))
         return tracks
@@ -282,40 +282,40 @@ class StatusIndMsg(Message):
         Message.__init__(self, TlvDefinitions.TlvMessageType.STATUS_IND, msgId)
 
     def getState(self):
-        for tlv in self._TlvSet[:]:
-            if(tlv._TlvType == TlvDefinitions.TlvContainerType.TLV_STATE):
+        for tlv in self._TlvSet:
+            if(tlv._TlvType == TlvDefinitions.TlvType.TLV_STATE):
                 state, = struct.unpack('!I', tlv._TlvValue)
                 return state
         return None
     
     def getPlayingTrack(self):
-        for tlv in self._TlvSet[:]:
-            if(tlv._TlvType == TlvDefinitions.TlvContainerType.TLV_TRACK):
-                name = tlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_NAME)._TlvValue.rstrip(' \t\r\n\0')
-                uri = tlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_LINK)._TlvValue.rstrip(' \t\r\n\0')
+        for tlv in self._TlvSet:
+            if(tlv._TlvType == TlvDefinitions.TlvType.TLV_TRACK):
+                name = tlv.getSubTlv(TlvDefinitions.TlvType.TLV_NAME)._TlvValue.rstrip(' \t\r\n\0')
+                uri = tlv.getSubTlv(TlvDefinitions.TlvType.TLV_LINK)._TlvValue.rstrip(' \t\r\n\0')
                 
-                durationTlv = tlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_TRACK_DURATION)._TlvValue
+                durationTlv = tlv.getSubTlv(TlvDefinitions.TlvType.TLV_TRACK_DURATION)._TlvValue
                 duration = None
                 if(durationTlv != None):
                     duration, = struct.unpack('!I', durationTlv)
                 
                 artists = []
-                for artistTlv in tlv.getAllTlvsOfType(TlvDefinitions.TlvContainerType.TLV_ARTIST):
-                    artistName = artistTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_NAME)._TlvValue.rstrip(' \t\r\n\0')
-                    artistLink = artistTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_LINK)._TlvValue.rstrip(' \t\r\n\0')
+                for artistTlv in tlv.getAllTlvsOfType(TlvDefinitions.TlvType.TLV_ARTIST):
+                    artistName = artistTlv.getSubTlv(TlvDefinitions.TlvType.TLV_NAME)._TlvValue.rstrip(' \t\r\n\0')
+                    artistLink = artistTlv.getSubTlv(TlvDefinitions.TlvType.TLV_LINK)._TlvValue.rstrip(' \t\r\n\0')
                     artists.append(Artist(artistName,artistLink))
                 
                 album = None
-                for albumTlv in tlv.getAllTlvsOfType(TlvDefinitions.TlvContainerType.TLV_ALBUM):
-                    albumName = albumTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_NAME)._TlvValue.rstrip(' \t\r\n\0')
-                    albumLink = albumTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_LINK)._TlvValue.rstrip(' \t\r\n\0')
+                for albumTlv in tlv.getAllTlvsOfType(TlvDefinitions.TlvType.TLV_ALBUM):
+                    albumName = albumTlv.getSubTlv(TlvDefinitions.TlvType.TLV_NAME)._TlvValue.rstrip(' \t\r\n\0')
+                    albumLink = albumTlv.getSubTlv(TlvDefinitions.TlvType.TLV_LINK)._TlvValue.rstrip(' \t\r\n\0')
                     album = Album(albumName, albumLink)
                 return Track(name, uri, artists, album, False, False, False, duration, None)
         return None
     
     def getProgress(self):
-        for tlv in self._TlvSet[:]:
-            if(tlv._TlvType == TlvDefinitions.TlvContainerType.TLV_PROGRESS):
+        for tlv in self._TlvSet:
+            if(tlv._TlvType == TlvDefinitions.TlvType.TLV_PROGRESS):
                 progress, = struct.unpack('!I', tlv._TlvValue)
                 return progress
         return None
@@ -324,9 +324,9 @@ class StatusIndMsg(Message):
 class PlayReqMsg(Message):
     def __init__(self, msgId, uri, startAtIndex):
         Message.__init__(self, TlvDefinitions.TlvMessageType.PLAY_REQ, msgId)
-        self.addTlv(Tlv.Create(TlvDefinitions.TlvContainerType.TLV_LINK, len(uri), uri))
+        self.addTlv(Tlv.Create(TlvDefinitions.TlvType.TLV_LINK, len(uri), uri))
         if(startAtIndex != None):
-            self.addTlv(Tlv.Create(TlvDefinitions.TlvContainerType.TLV_TRACK_INDEX, 4, startAtIndex)) 
+            self.addTlv(Tlv.Create(TlvDefinitions.TlvType.TLV_TRACK_INDEX, 4, startAtIndex)) 
         
 class PlayRspMsg(Message):
     def __init__(self, msgId):
@@ -335,7 +335,7 @@ class PlayRspMsg(Message):
 class PlayOperationReqMsg(Message):
     def __init__(self, msgId, operation):
         Message.__init__(self,TlvDefinitions.TlvMessageType.PLAY_CONTROL_REQ, msgId)
-        self._TlvSet.append(Tlv.Create(TlvDefinitions.TlvContainerType.TLV_PLAY_OPERATION, 4, operation))
+        self._TlvSet.append(Tlv.Create(TlvDefinitions.TlvType.TLV_PLAY_OPERATION, 4, operation))
 
 class PlayOperationRspMsg(Message):
     def __init__(self, msgId):
@@ -350,40 +350,40 @@ class GetStatusRspMsg(Message):
         Message.__init__(self, TlvDefinitions.TlvMessageType.GET_STATUS_RSP, msgId)
     
     def getState(self):
-        for tlv in self._TlvSet[:]:
-            if(tlv._TlvType == TlvDefinitions.TlvContainerType.TLV_STATE):
+        for tlv in self._TlvSet:
+            if(tlv._TlvType == TlvDefinitions.TlvType.TLV_STATE):
                 state, = struct.unpack('!I', tlv._TlvValue)
                 return state
         return None
     
     def getPlayingTrack(self):
-        for tlv in self._TlvSet[:]:
-            if(tlv._TlvType == TlvDefinitions.TlvContainerType.TLV_TRACK):
-                name = tlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_NAME)._TlvValue.rstrip(' \t\r\n\0')
-                uri = tlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_LINK)._TlvValue.rstrip(' \t\r\n\0')
+        for tlv in self._TlvSet:
+            if(tlv._TlvType == TlvDefinitions.TlvType.TLV_TRACK):
+                name = tlv.getSubTlv(TlvDefinitions.TlvType.TLV_NAME)._TlvValue.rstrip(' \t\r\n\0')
+                uri = tlv.getSubTlv(TlvDefinitions.TlvType.TLV_LINK)._TlvValue.rstrip(' \t\r\n\0')
                 
-                durationTlv = tlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_TRACK_DURATION)._TlvValue
+                durationTlv = tlv.getSubTlv(TlvDefinitions.TlvType.TLV_TRACK_DURATION)._TlvValue
                 duration = None
                 if(durationTlv != None):
                     duration, = struct.unpack('!I', durationTlv)
                 
                 artists = []
-                for artistTlv in tlv.getAllTlvsOfType(TlvDefinitions.TlvContainerType.TLV_ARTIST):
-                    artistName = artistTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_NAME)._TlvValue.rstrip(' \t\r\n\0')
-                    artistLink = artistTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_LINK)._TlvValue.rstrip(' \t\r\n\0')
+                for artistTlv in tlv.getAllTlvsOfType(TlvDefinitions.TlvType.TLV_ARTIST):
+                    artistName = artistTlv.getSubTlv(TlvDefinitions.TlvType.TLV_NAME)._TlvValue.rstrip(' \t\r\n\0')
+                    artistLink = artistTlv.getSubTlv(TlvDefinitions.TlvType.TLV_LINK)._TlvValue.rstrip(' \t\r\n\0')
                     artists.append(Artist(artistName,artistLink))
                 
                 album = None
-                for albumTlv in tlv.getAllTlvsOfType(TlvDefinitions.TlvContainerType.TLV_ALBUM):
-                    albumName = albumTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_NAME)._TlvValue.rstrip(' \t\r\n\0')
-                    albumLink = albumTlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_LINK)._TlvValue.rstrip(' \t\r\n\0')
+                for albumTlv in tlv.getAllTlvsOfType(TlvDefinitions.TlvType.TLV_ALBUM):
+                    albumName = albumTlv.getSubTlv(TlvDefinitions.TlvType.TLV_NAME)._TlvValue.rstrip(' \t\r\n\0')
+                    albumLink = albumTlv.getSubTlv(TlvDefinitions.TlvType.TLV_LINK)._TlvValue.rstrip(' \t\r\n\0')
                     album = Album(albumName, albumLink)
                 return Track(name, uri, artists, album, False, False, False, duration, None)
         return None
     
     def getProgress(self):
-        for tlv in self._TlvSet[:]:
-            if(tlv._TlvType == TlvDefinitions.TlvContainerType.TLV_PROGRESS):
+        for tlv in self._TlvSet:
+            if(tlv._TlvType == TlvDefinitions.TlvType.TLV_PROGRESS):
                 progress, = struct.unpack('!I', tlv._TlvValue)
                 return progress
         return None
@@ -392,21 +392,67 @@ class GetStatusRspMsg(Message):
 class GetImageReqMsg(Message):
     def __init__(self, msgId, uri):
         Message.__init__(self, TlvDefinitions.TlvMessageType.GET_IMAGE_REQ, msgId)
-        self.addTlv(Tlv.Create(TlvDefinitions.TlvContainerType.TLV_LINK, len(uri), uri))
+        self.addTlv(Tlv.Create(TlvDefinitions.TlvType.TLV_LINK, len(uri), uri))
     
 class GetImageRspMsg(Message):
     def __init__(self, msgId):
         Message.__init__(self, TlvDefinitions.TlvMessageType.GET_IMAGE_RSP, msgId)
         
     def getImageData(self):
-        for tlv in self._TlvSet[:]:
-            if(tlv._TlvType == TlvDefinitions.TlvContainerType.TLV_IMAGE):
-                return tlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_IMAGE_DATA)._TlvValue
+        for tlv in self._TlvSet:
+            if(tlv._TlvType == TlvDefinitions.TlvType.TLV_IMAGE):
+                return tlv.getSubTlv(TlvDefinitions.TlvType.TLV_IMAGE_DATA)._TlvValue
         return None
                
     def getImageFormat(self):
-        for tlv in self._TlvSet[:]:
-            if(tlv._TlvType == TlvDefinitions.TlvContainerType.TLV_IMAGE):
-                imageFormat, = struct.unpack('!I', tlv.getSubTlv(TlvDefinitions.TlvContainerType.TLV_IMAGE_FORMAT)._TlvValue)
+        for tlv in self._TlvSet:
+            if(tlv._TlvType == TlvDefinitions.TlvType.TLV_IMAGE):
+                imageFormat, = struct.unpack('!I', tlv.getSubTlv(TlvDefinitions.TlvType.TLV_IMAGE_FORMAT)._TlvValue)
                 return imageFormat
         return None
+
+
+class AddAudioEndpointReqMsg(Message):
+    def __init__(self, msgId, src_port, protocol_type):
+        Message.__init__(self, TlvDefinitions.TlvMessageType.ADD_AUDIO_ENDPOINT_REQ, msgId)
+        self.addTlv(Tlv.Create(TlvDefinitions.TlvType.TLV_AUDIO_DESTINATION_PORT, 4, src_port))
+        self.addTlv(Tlv.Create(TlvDefinitions.TlvType.TLV_AUDIO_PROTOCOL_TYPE, 4, protocol_type))
+        
+class AddAudioEndpointRspMsg(Message):
+    def __init__(self, msgId):
+        Message.__init__(self, TlvDefinitions.TlvMessageType.ADD_AUDIO_ENDPOINT_RSP, msgId)
+
+class RemAudioEndpointReqMsg(Message):
+    def __init__(self, msgId):
+        Message.__init__(self, TlvDefinitions.TlvMessageType.REM_AUDIO_ENDPOINT_REQ, msgId)
+
+class RemAudioEndpointRspMsg(Message):
+    def __init__(self, msgId):
+        Message.__init__(self, TlvDefinitions.TlvMessageType.REM_AUDIO_ENDPOINT_RSP, msgId)
+
+class AudioDataIndMsg(Message):
+    def __init__(self, msgId):
+        Message.__init__(self, TlvDefinitions.TlvMessageType.AUDIO_DATA_IND, msgId)
+    
+    def getChannels(self):
+        for tlv in self._TlvSet:
+            if(tlv._TlvType == TlvDefinitions.TlvAudioEndpoint.TLV_AUDIO_CHANNELS):
+                channels, = struct.unpack('!I', tlv._TlvValue)
+                return channels
+            
+    def getBitRate(self):
+        for tlv in self._TlvSet:
+            if(tlv._TlvType == TlvDefinitions.TlvAudioEndpoint.TLV_AUDIO_RATE):
+                rate, = struct.unpack('!I', tlv._TlvValue)
+                return rate
+        
+    def getNofSamples(self):
+        for tlv in self._TlvSet:
+            if(tlv._TlvType == TlvDefinitions.TlvAudioEndpoint.TLV_AUDIO_NOF_SAMPLES):
+                nsamples, = struct.unpack('!I', tlv._TlvValue)
+                return nsamples
+        
+    def getAudioData(self):
+        for tlv in self._TlvSet:
+            if(tlv._TlvType == TlvDefinitions.TlvAudioEndpoint.TLV_AUDIO_DATA):
+                return tlv._TlvValue

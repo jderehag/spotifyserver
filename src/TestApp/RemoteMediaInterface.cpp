@@ -188,8 +188,8 @@ void RemoteMediaInterface::receivedResponse( Message* rsp, Message* req )
 
             case GET_IMAGE_RSP:
             {
-                void* data; /*todo decode message*/
-                size_t dataSize;
+                void* data = 0; /*todo decode message*/
+                size_t dataSize = 0;
                 mediaReq.subscriber->getImageResponse( mediaReq.mediaReqId, data, dataSize );
             }
             break;
@@ -335,8 +335,4 @@ void RemoteMediaInterface::search( std::string query, IMediaInterfaceCallbackSub
     doRequest( msg, mediaReqId, subscriber );
 }
 
-void RemoteMediaInterface::addAudio()
-{
-    Message* msg = new Message( ADD_AUDIO_ENDPOINT_REQ );
-    messenger_.queueMessage( msg, reqId++ );
-}
+void RemoteMediaInterface::addAudioEndpoint(Platform::AudioEndpoint& endpoint) {};

@@ -146,10 +146,9 @@ private:
  ***********************/
 private:
 	const ConfigHandling::SpotifyConfig& config_;
-	Platform::AudioEndpoint& defaultEndpoint_;
-    Platform::AudioEndpoint* currentEndpoint_;
-public:
-	void setAudioEndpoint(Platform::AudioEndpoint* endpoint);
+	typedef  std::vector<Platform::AudioEndpoint*> AudioEndpointVector;
+	AudioEndpointVector audioEndpoints_;
+
 private:
 	Folder rootFolder_;
 
@@ -237,12 +236,14 @@ public:
     virtual void play( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId );
     virtual void getAlbum( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId );
     virtual void search( std::string query, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId );
-    virtual void addAudio();
+    virtual void addAudioEndpoint(Platform::AudioEndpoint& endpoint);
 
 
     void playSearchResult(const char* searchString);
     void enqueueTrack(const char* track_uri);
     void stop();
+
+
 
     void run();
     void destroy();

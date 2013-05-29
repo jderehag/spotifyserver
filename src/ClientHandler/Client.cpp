@@ -499,8 +499,8 @@ void Client::handleGetAlbumReq(const Message* msg)
 
 void Client::handleAddAudioEpReq(const Message* msg)
 {
-    /*audioEp = new Platform::AudioEndpointRemote();
-    spotify_.setAudioEndpoint(audioEp);*/
+    audioEp = new Platform::AudioEndpointRemote();
+    spotify_.addAudioEndpoint(*audioEp);
 }
 
 

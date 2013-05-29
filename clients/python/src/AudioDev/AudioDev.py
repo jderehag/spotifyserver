@@ -25,43 +25,91 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 '''
 
-
-import pyaudio
+try:
+    import pyaudio
+except:
+    pass
 
 from threading import Thread, Event
 
-FORMAT = pyaudio.paInt16 
-CHANNELS = 1
-RATE = 44100  
-INPUT_BLOCK_TIME = 0.05
-INPUT_FRAMES_PER_BLOCK = int(RATE*INPUT_BLOCK_TIME)
+import wave
+
+MIC_FORMAT = pyaudio.paInt16 
+MIC_CHANNELS = 1
+MIC_RATE = 44100  
+MIC_INPUT_BLOCK_TIME = 0.05
+MIC_INPUT_FRAMES_PER_BLOCK = int(MIC_RATE*MIC_INPUT_BLOCK_TIME)
 
 
 class AudioDev(Thread):
-    def __init__(self, audioCallback):
+    def __init__(self, useMic = False, audioCallback=None):
         Thread.__init__(self)
         self._pa = pyaudio.PyAudio()
-        self._stream = self.open_mic_stream()
-        self._cancellationPending = Event()
-        self._audioCallback = audioCallback
-        self.daemon = True
-        self.start()
+        self._useMic = useMic
+        
+        self._output_stream = None
+        self._channels = 0
+        self._rate = 0
+        self._format = 0
+        
+        if useMic:
+            self._cancellationPending = Event()
+            self._audioCallback = audioCallback
+        
+            self._stream = self.open_mic_stream()
+            self.daemon = True
+            self.start()
+
+    def __del__(self):
+        if self._output_stream != None:
+            self._output_stream.close()
+        self._pa.terminate()
         
     def stop(self):
-        self.stream.close()
+        if self._useMic:
+            self.stream.close()
 
-    def open_mic_stream( self ):
+    def open_mic_stream(self):
+        assert self._useMic == True
+        
         device_index = self.find_input_device()
-        stream = self._pa.open(format = FORMAT,
-                              channels = CHANNELS,
-                              rate = RATE,
+        stream = self._pa.open(format = MIC_FORMAT,
+                              channels = MIC_CHANNELS,
+                              rate = MIC_RATE,
                               input = True,
                               input_device_index = device_index,
-                              frames_per_buffer = INPUT_FRAMES_PER_BLOCK)
+                              frames_per_buffer = MIC_INPUT_FRAMES_PER_BLOCK)
 
         return stream
     
+    
+    def open_output_stream(self, channels, rate, format_ = pyaudio.paInt32):
+        self.close_output_stream()
+        # open stream based on the wave object which has been input.
+        # format = paFloat32, paInt32, paInt24, paInt16, paInt8, paUInt8, paCustomFormat
+        self._output_stream = self._pa.open(format = format_,
+                               channels = channels,
+                               rate = rate,
+                               output = True)
+        
+        self._channels = channels
+        self._rate = rate
+        self._format = format
+        
+    
+    def close_output_stream(self):
+        if self._output_stream != None:
+            self._output_stream.close()
+
+    def write_to_output_stream(self, channels, rate, nsamples, data):
+        if channels != self._channels or rate != self._rate:
+            self.open_output_stream(channels, rate)
+            
+        self._output_stream.write(data, nsamples)
+            
     def find_input_device(self):
+        assert self._useMic == True
+        
         device_index = None            
         for i in range( self._pa.get_device_count() ):     
             devinfo = self._pa.get_device_info_by_index(i)   
@@ -81,7 +129,7 @@ class AudioDev(Thread):
     def run(self):
         while (self._cancellationPending.is_set() == False):
             try:
-                self._audioCallback(self._stream.read(INPUT_FRAMES_PER_BLOCK))
+                self._audioCallback(self._stream.read(MIC_INPUT_FRAMES_PER_BLOCK))
             except IOError, e:
                 print( "(%d) Error recording: %s"%(self.errorcount,e) )
             

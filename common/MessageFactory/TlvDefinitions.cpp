@@ -33,132 +33,118 @@ const char* messageTypeToString(const MessageType_t type)
 {
     switch (type)
     {
-        case GET_PLAYLISTS_REQ:
-            return "GET_PLAYLISTS_REQ";
-        case GET_PLAYLISTS_RSP:
-            return "GET_PLAYLISTS_RSP";
-        case GET_TRACKS_REQ:
-            return "GET_TRACKS_REQ";
-        case GET_TRACKS_RSP:
-            return "GET_TRACKS_RSP";
-        case PLAY_TRACK_REQ:
-            return "PLAY_TRACK_REQ";
-        case PLAY_TRACK_RSP:
-            return "PLAY_TRACK_RSP";
-        case GENERIC_SEARCH_REQ:
-            return "GENERIC_SEARCH_REQ";
-        case GENERIC_SEARCH_RSP:
-            return "GENERIC_SEARCH_RSP";
-        case GET_STATUS_REQ:
-            return "GET_STATUS_REQ";
-        case GET_STATUS_RSP:
-            return "GET_STATUS_RSP";
-        case STATUS_IND:
-            return "STATUS_IND";
-        case PLAY_REQ:
-            return "PLAY_REQ";
-        case PLAY_RSP:
-            return "PLAY_RSP";
-        case PLAY_CONTROL_REQ:
-            return "PLAY_CONTROL_REQ";
-        case PLAY_CONTROL_RSP:
-            return "PLAY_CONTROL_RSP";
-        case GET_IMAGE_REQ:
-            return "GET_IMAGE_REQ";
-        case GET_IMAGE_RSP:
-            return "GET_IMAGE_RSP";
-
         STR(HELLO_REQ);
         STR(HELLO_RSP);
+
+        STR(GET_PLAYLISTS_REQ);
+        STR(GET_PLAYLISTS_RSP);
         STR(GET_ALBUM_REQ);
         STR(GET_ALBUM_RSP);
         STR(GET_ARTIST_REQ);
         STR(GET_ARTIST_RSP);
+        STR(GET_TRACKS_REQ);
+        STR(GET_TRACKS_RSP);
+        STR(GET_IMAGE_REQ);
+        STR(GET_IMAGE_RSP);
+
+        STR(PLAY_TRACK_REQ);
+        STR(PLAY_TRACK_RSP);
+        STR(GENERIC_SEARCH_REQ);
+        STR(GENERIC_SEARCH_RSP);
+        STR(GET_STATUS_REQ);
+        STR(GET_STATUS_RSP);
+        STR(STATUS_IND);
+        STR(PLAY_REQ);
+        STR(PLAY_RSP);
+        STR(PLAY_CONTROL_REQ);
+        STR(PLAY_CONTROL_RSP);
+
+        STR(ADD_AUDIO_ENDPOINT_REQ);
+        STR(ADD_AUDIO_ENDPOINT_RSP);
+        STR(REM_AUDIO_ENDPOINT_REQ);
+        STR(REM_AUDIO_ENDPOINT_RSP);
+
+        STR(AUDIO_DATA_IND);
+
+        default:
+            return "Unknown MessageType";
     }
-    return "Unknown MessageType";
+
 }
 
 const char* tlvTypeToString(const TlvType_t type)
 {
     switch(type)
     {
-        case TLV_FOLDER:
-            return "TLV_FOLDER";
-        case TLV_PLAYLIST:
-            return "TLV_PLAYLIST";
-        case TLV_TRACK:
-            return "TLV_TRACK";
-        case TLV_ARTIST:
-            return "TLV_ARTIST";
-        case TLV_ALBUM:
-            return "TLV_ALBUM";
-        case TLV_TRACK_DURATION:
-            return "TLV_TRACK_DURATION";
-        STR( TLV_TRACK_INDEX );
+        STR(TLV_FOLDER);
+        STR(TLV_PLAYLIST);
+        STR(TLV_TRACK);
+        STR(TLV_ARTIST);
+        STR(TLV_ALBUM);
+        STR(TLV_TRACK_DURATION);
+        STR(TLV_TRACK_INDEX );
         
-        case TLV_SEARCH_QUERY:
-            return "TLV_SEARCH_QUERY";
-        case TLV_STATE:
-            return "TLV_STATE";
-        case TLV_PROGRESS:
-            return "TLV_PROGRESS";
-        case TLV_VOLUME:
-            return "TLV_VOLUME";
-        case TLV_PLAY_OPERATION:
-            return "TLV_PLAY_OPERATION";
+        STR(TLV_SEARCH_QUERY);
+        STR(TLV_STATE);
+        STR(TLV_PROGRESS);
+        STR(TLV_VOLUME);
+        STR(TLV_PLAY_OPERATION);
 
-        STR( TLV_PLAY_MODE_SHUFFLE );
-        STR( TLV_PLAY_MODE_REPEAT );
+        STR(TLV_PLAY_MODE_SHUFFLE);
+        STR(TLV_PLAY_MODE_REPEAT);
 
-        case TLV_LINK:
-            return "TLV_LINK";
-        case TLV_NAME:
-            return "TLV_NAME";
-        case TLV_IMAGE:
-            return "TLV_IMAGE";
-        case TLV_IMAGE_FORMAT:
-            return "TLV_IMAGE_FORMAT";
-        case TLV_IMAGE_DATA:
-            return "TLV_IMAGE_DATA";
+        STR(TLV_LINK);
+        STR(TLV_NAME);
+        STR(TLV_IMAGE);
+        STR(TLV_IMAGE_FORMAT);
+        STR(TLV_IMAGE_DATA);
         
-        STR( TLV_ALBUM_RELEASE_YEAR );
-        STR( TLV_ALBUM_REVIEW );
-        STR( TLV_ALBUM_IS_AVAILABLE );
-        STR( TLV_ALBUM_TYPE );
+        STR(TLV_ALBUM_RELEASE_YEAR);
+        STR(TLV_ALBUM_REVIEW);
+        STR(TLV_ALBUM_IS_AVAILABLE);
+        STR(TLV_ALBUM_TYPE);
 
-        STR( TLV_LOGIN_USERNAME );
-        STR( TLV_LOGIN_PASSWORD );
-        STR( TLV_PROTOCOL_VERSION_MAJOR );
-        STR( TLV_PROTOCOL_VERSION_MINOR );
-        STR( TLV_FAILURE );
+        STR(TLV_LOGIN_USERNAME);
+        STR(TLV_LOGIN_PASSWORD);
+        STR(TLV_PROTOCOL_VERSION_MAJOR);
+        STR(TLV_PROTOCOL_VERSION_MINOR);
+        STR(TLV_FAILURE);
+
+        STR(TLV_AUDIO_DATA);
+        STR(TLV_AUDIO_CHANNELS);
+        STR(TLV_AUDIO_RATE);
+        STR(TLV_AUDIO_NOF_SAMPLES);
+
+        default:
+            return "Unknown TlvType";
     }
-    return "Unknown TlvType";
+
 }
 
 const char* failureCauseToString(const FailureCause_t type)
 {
     switch(type)
     {
-        STR( FAIL_GENERAL_ERROR );
-        STR( FAIL_BAD_LOGIN );
-        STR( FAIL_PROTOCOL_MISMATCH );
-        STR( FAIL_UNKNOWN_REQUEST );
-        STR( FAIL_MISSING_TLV );
+        STR(FAIL_GENERAL_ERROR);
+        STR(FAIL_BAD_LOGIN);
+        STR(FAIL_PROTOCOL_MISMATCH);
+        STR(FAIL_UNKNOWN_REQUEST);
+        STR(FAIL_MISSING_TLV);
+        default:
+            return "Unknown FailureCause";
     }
-    return "Unknown FailureCause";
+
 }
 const char* playbackStateToString(const PlaybackState_t type)
 {
     switch(type)
     {
-        case PLAYBACK_IDLE:
-            return "PLAYBACK_IDLE";
-        case PLAYBACK_PLAYING:
-            return "PLAYBACK_PLAYING";
-        case PLAYBACK_PAUSED:
-            return "PLAYBACK_PAUSED";
+        STR(PLAYBACK_IDLE);
+        STR(PLAYBACK_PLAYING);
+        STR(PLAYBACK_PAUSED);
+        default:
+            return "Unknown PlaybackState";
     }
-    return "Unknown PlaybackState";
 }
 
 

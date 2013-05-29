@@ -67,7 +67,12 @@ class SpotifyClient(Thread):
         self.__getRspMsgObserversLock = Lock()
         self.__getRspMsgObservers = {}
         
+        self.__getAudioDataObserverLock = Lock() 
+        self.__getAudioDataObserver = None
+        
         self.fd = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.audioEndpointfd = None
+        
         Thread.__init__(self)
         self.daemon = True
         self.start()
@@ -98,8 +103,13 @@ class SpotifyClient(Thread):
                 except socket.error:
                     continue
                     
+            
+                fds = []
+                if self.audioEndpointfd != None:
+                    fds.append(self.audioEndpointfd)
+                fds.append(self.fd)
             try:
-                inputFds,outputFds,exceptFds = select.select([self.fd], [], [], 1)
+                inputFds,outputFds,exceptFds = select.select(fds, [], [], 1)
             except:
                 self.__isConnected.clear()
                 self.__connectionObserverLock.acquire()
@@ -107,136 +117,147 @@ class SpotifyClient(Thread):
                     obs.disconnectedIndCb()
                 self.__connectionObserverLock.release()
                 continue
-                        
+            
             for fd in inputFds:
-                if fd == self.fd:
-                    msg = self.recvMsg()
-                    if(msg == None):
-                        continue
-                    msgType, msgId = struct.unpack('!II', msg[4:12])
+                msg = self.recvMsg(fd)
+                if(msg == None):
+                    continue
+                msgType, msgId = struct.unpack('!II', msg[4:12])
+                
+                '''
+                TODO: Right now we are parsing all message types on all fd:s,
+                which is a bit inefficient since we can be sure that some messages will only arrive
+                on some fd:s
+                '''
+                if(msgType == TlvDefinitions.TlvMessageType.GET_PLAYLISTS_RSP):
+                    print "Received msg GET_PLAYLISTS_RSP"
+                    msgObj = Message.GetPlaylistRspMsg(msgId)
+                    msgObj.Decode(msg)
+                    self.__playlists = msgObj.getAllPlaylists()
+                    self.__playlistUpdatedObserversLock.acquire()
+                    for observer in self.__playlistUpdatedObservers:
+                        observer.playlistUpdatedIndCb()
+                    self.__playlistUpdatedObserversLock.release()
                     
-                    if(msgType == TlvDefinitions.TlvMessageType.GET_PLAYLISTS_RSP):
-                        print "Received msg GET_PLAYLISTS_RSP"
-                        msgObj = Message.GetPlaylistRspMsg(msgId)
-                        msgObj.Decode(msg)
-                        self.__playlists = msgObj.getAllPlaylists()
-                        self.__playlistUpdatedObserversLock.acquire()
-                        for observer in self.__playlistUpdatedObservers:
-                            observer.playlistUpdatedIndCb()
-                        self.__playlistUpdatedObserversLock.release()
-                        
-                    elif(msgType == TlvDefinitions.TlvMessageType.GET_TRACKS_RSP):
-                        print "Received msg GET_TRACKS_RSP"
-                        msgObj = Message.GetTracksRspMsg(msgId)
-                        msgObj.Decode(msg)
-                        tracks = msgObj.getAllTracks()
-                        self.__getRspMsgObserversLock.acquire()
-                        try:
-                            self.__getRspMsgObservers[msgId].getTracksRspCb(tracks)
-                            del self.__getRspMsgObservers[msgId]
-                        except KeyError:
-                            print "Unknown msgId " + str(msgId)
-                        self.__getRspMsgObserversLock.release()
-                        
-                    elif(msgType == TlvDefinitions.TlvMessageType.GENERIC_SEARCH_RSP):
-                        print "Received msg GENERIC_SEARCH_RSP"
-                        msgObj = Message.GenericSearchRspMsg(msgId)
-                        msgObj.Decode(msg)
-                        tracks = msgObj.getAllTracks()
-                        self.__getRspMsgObserversLock.acquire()
-                        try:
-                            self.__getRspMsgObservers[msgId].searchRspCb(tracks)
-                            del self.__getRspMsgObservers[msgId]
-                        except KeyError:
-                            print "Unknown msgId " + str(msgId)
-                        self.__getRspMsgObserversLock.release()
-                        
-                    elif(msgType == TlvDefinitions.TlvMessageType.STATUS_IND):
-                        print "Received msg STATUS_IND"
-                        msgObj = Message.StatusIndMsg(msgId)
-                        msgObj.Decode(msg)
-                        state = msgObj.getState()
-                        if(state == TlvDefinitions.TlvPlaybackState.PLAYBACK_IDLE):
-                            self.__statusIndObserversLock.acquire()
-                            for obs in self.__statusIndObservers:
-                                obs.statusIndCb(self.PLAYBACK_IDLE, None, msgObj.getProgress())
-                            self.__statusIndObserversLock.release()
-                        
-                        elif(state == TlvDefinitions.TlvPlaybackState.PLAYBACK_PLAYING):
-                            self.__statusIndObserversLock.acquire()
-                            for obs in self.__statusIndObservers:
-                                obs.statusIndCb(self.PLAYBACK_PLAYING, msgObj.getPlayingTrack(), msgObj.getProgress())
-                            self.__statusIndObserversLock.release()
-                            
-                        elif(state == TlvDefinitions.TlvPlaybackState.PLAYBACK_PAUSED):
-                            self.__statusIndObserversLock.acquire()
-                            for obs in self.__statusIndObservers:
-                                obs.statusIndCb(self.PLAYBACK_PAUSED, msgObj.getPlayingTrack(), msgObj.getProgress())
-                            self.__statusIndObserversLock.release()
-                        else:
-                            print "Unknown state=" + str(state)
-                            
-                    elif(msgType == TlvDefinitions.TlvMessageType.PLAY_RSP):
-                        print "Received msg PLAY_RSP"
-                        msgObj = Message.PlayRspMsg(msgId)
-                        msgObj.Decode(msg)
-    
-                    elif(msgType == TlvDefinitions.TlvMessageType.PLAY_CONTROL_RSP):
-                        print "Received msg PLAY_CONTROL_RSP"
-                        msgObj = Message.PlayOperationRspMsg(msgId)
-                        msgObj.Decode(msg)
+                elif(msgType == TlvDefinitions.TlvMessageType.GET_TRACKS_RSP):
+                    print "Received msg GET_TRACKS_RSP"
+                    msgObj = Message.GetTracksRspMsg(msgId)
+                    msgObj.Decode(msg)
+                    tracks = msgObj.getAllTracks()
+                    self.__getRspMsgObserversLock.acquire()
+                    try:
+                        self.__getRspMsgObservers[msgId].getTracksRspCb(tracks)
+                        del self.__getRspMsgObservers[msgId]
+                    except KeyError:
+                        print "Unknown msgId " + str(msgId)
+                    self.__getRspMsgObserversLock.release()
                     
-                    elif(msgType == TlvDefinitions.TlvMessageType.GET_STATUS_RSP):
-                        print "Received msg GET_STATUS_RSP"
-                        msgObj = Message.GetStatusRspMsg(msgId)
-                        msgObj.Decode(msg)
-                        state = msgObj.getState()
-                        if(state == TlvDefinitions.TlvPlaybackState.PLAYBACK_IDLE):
-                            self.__statusIndObserversLock.acquire()
-                            for obs in self.__statusIndObservers:
-                                obs.statusIndCb(self.PLAYBACK_IDLE, None, msgObj.getProgress())
-                            self.__statusIndObserversLock.release()
-                        
-                        elif(state == TlvDefinitions.TlvPlaybackState.PLAYBACK_PLAYING):
-                            self.__statusIndObserversLock.acquire()
-                            for obs in self.__statusIndObservers:
-                                obs.statusIndCb(self.PLAYBACK_PLAYING, msgObj.getPlayingTrack(), msgObj.getProgress())
-                            self.__statusIndObserversLock.release()
-                            
-                        elif(state == TlvDefinitions.TlvPlaybackState.PLAYBACK_PAUSED):
-                            self.__statusIndObserversLock.acquire()
-                            for obs in self.__statusIndObservers:
-                                obs.statusIndCb(self.PLAYBACK_PAUSED, msgObj.getPlayingTrack(), msgObj.getProgress())
-                            self.__statusIndObserversLock.release()
-                        else:
-                            print "Unknown state=" + str(state)
+                elif(msgType == TlvDefinitions.TlvMessageType.GENERIC_SEARCH_RSP):
+                    print "Received msg GENERIC_SEARCH_RSP"
+                    msgObj = Message.GenericSearchRspMsg(msgId)
+                    msgObj.Decode(msg)
+                    tracks = msgObj.getAllTracks()
+                    self.__getRspMsgObserversLock.acquire()
+                    try:
+                        self.__getRspMsgObservers[msgId].searchRspCb(tracks)
+                        del self.__getRspMsgObservers[msgId]
+                    except KeyError:
+                        print "Unknown msgId " + str(msgId)
+                    self.__getRspMsgObserversLock.release()
                     
-                    elif(msgType == TlvDefinitions.TlvMessageType.GET_IMAGE_RSP):
-                        print "Received msg GET_IMAGE_RSP"
-                        msgObj = Message.GetImageRspMsg(msgId)
-                        msgObj.Decode(msg)
-                        self.__getRspMsgObserversLock.acquire()
-                        try:
-                            self.__getRspMsgObservers[msgId].getImageReqCb(msgObj.getImageFormat(), 
-                                                                            msgObj.getImageData())
-                            del self.__getRspMsgObservers[msgId]
-                        except KeyError:
-                            print "Unknown msgId " + str(msgId)
-                        self.__getRspMsgObserversLock.release()
+                elif(msgType == TlvDefinitions.TlvMessageType.STATUS_IND):
+                    print "Received msg STATUS_IND"
+                    msgObj = Message.StatusIndMsg(msgId)
+                    msgObj.Decode(msg)
+                    state = msgObj.getState()
+                    if(state == TlvDefinitions.TlvPlaybackState.PLAYBACK_IDLE):
+                        self.__statusIndObserversLock.acquire()
+                        for obs in self.__statusIndObservers:
+                            obs.statusIndCb(self.PLAYBACK_IDLE, None, msgObj.getProgress())
+                        self.__statusIndObserversLock.release()
+                    
+                    elif(state == TlvDefinitions.TlvPlaybackState.PLAYBACK_PLAYING):
+                        self.__statusIndObserversLock.acquire()
+                        for obs in self.__statusIndObservers:
+                            obs.statusIndCb(self.PLAYBACK_PLAYING, msgObj.getPlayingTrack(), msgObj.getProgress())
+                        self.__statusIndObserversLock.release()
                         
-                        
-                    elif(msgType == TlvDefinitions.TlvMessageType.GET_TRACKS_REQ or
-                        msgType == TlvDefinitions.TlvMessageType.GENERIC_SEARCH_REQ or
-                        msgType == TlvDefinitions.TlvMessageType.PLAY_REQ or
-                        msgType == TlvDefinitions.TlvMessageType.PLAY_CONTROL_REQ or
-                        msgType == TlvDefinitions.TlvMessageType.GET_STATUS_REQ or
-                        msgType == TlvDefinitions.TlvMessageType.GET_IMAGE_REQ):
-                        print "Received REQ message eventhough we are the client!! Strange! type=" + hex(msgType)
-                        break
+                    elif(state == TlvDefinitions.TlvPlaybackState.PLAYBACK_PAUSED):
+                        self.__statusIndObserversLock.acquire()
+                        for obs in self.__statusIndObservers:
+                            obs.statusIndCb(self.PLAYBACK_PAUSED, msgObj.getPlayingTrack(), msgObj.getProgress())
+                        self.__statusIndObserversLock.release()
                     else:
-                        msgObj = None
+                        print "Unknown state=" + str(state)
                         
-        return
+                elif(msgType == TlvDefinitions.TlvMessageType.PLAY_RSP):
+                    print "Received msg PLAY_RSP"
+                    msgObj = Message.PlayRspMsg(msgId)
+                    msgObj.Decode(msg)
+
+                elif(msgType == TlvDefinitions.TlvMessageType.PLAY_CONTROL_RSP):
+                    print "Received msg PLAY_CONTROL_RSP"
+                    msgObj = Message.PlayOperationRspMsg(msgId)
+                    msgObj.Decode(msg)
+                
+                elif(msgType == TlvDefinitions.TlvMessageType.GET_STATUS_RSP):
+                    print "Received msg GET_STATUS_RSP"
+                    msgObj = Message.GetStatusRspMsg(msgId)
+                    msgObj.Decode(msg)
+                    state = msgObj.getState()
+                    if(state == TlvDefinitions.TlvPlaybackState.PLAYBACK_IDLE):
+                        self.__statusIndObserversLock.acquire()
+                        for obs in self.__statusIndObservers:
+                            obs.statusIndCb(self.PLAYBACK_IDLE, None, msgObj.getProgress())
+                        self.__statusIndObserversLock.release()
+                    
+                    elif(state == TlvDefinitions.TlvPlaybackState.PLAYBACK_PLAYING):
+                        self.__statusIndObserversLock.acquire()
+                        for obs in self.__statusIndObservers:
+                            obs.statusIndCb(self.PLAYBACK_PLAYING, msgObj.getPlayingTrack(), msgObj.getProgress())
+                        self.__statusIndObserversLock.release()
+                        
+                    elif(state == TlvDefinitions.TlvPlaybackState.PLAYBACK_PAUSED):
+                        self.__statusIndObserversLock.acquire()
+                        for obs in self.__statusIndObservers:
+                            obs.statusIndCb(self.PLAYBACK_PAUSED, msgObj.getPlayingTrack(), msgObj.getProgress())
+                        self.__statusIndObserversLock.release()
+                    else:
+                        print "Unknown state=" + str(state)
+                
+                elif(msgType == TlvDefinitions.TlvMessageType.GET_IMAGE_RSP):
+                    print "Received msg GET_IMAGE_RSP"
+                    msgObj = Message.GetImageRspMsg(msgId)
+                    msgObj.Decode(msg)
+                    self.__getRspMsgObserversLock.acquire()
+                    try:
+                        self.__getRspMsgObservers[msgId].getImageReqCb(msgObj.getImageFormat(), 
+                                                                        msgObj.getImageData())
+                        del self.__getRspMsgObservers[msgId]
+                    except KeyError:
+                        print "Unknown msgId " + str(msgId)
+                    self.__getRspMsgObserversLock.release()
+                    
+                elif(msgType == TlvDefinitions.TlvMessageType.AUDIO_DATA_IND):
+                    print "Received msg AUDIO_DATA_IND"
+                    msgObj = Message.AudioDataIndMsg(msgId)
+                    msgObj.Decode(msg)
+                    self.__getAudioDataMsgObserverLock.aquire()
+                    self.__getAudioDataObserver(msgObj.getChannels(),msgObj.getBitRate(), msgObj.getNofSamples(), msgObj.getAudioData())
+                    self.__getAudioDataMsgObserverLock.release() 
+                    
+                        
+                elif(msgType == TlvDefinitions.TlvMessageType.GET_TRACKS_REQ or
+                    msgType == TlvDefinitions.TlvMessageType.GENERIC_SEARCH_REQ or
+                    msgType == TlvDefinitions.TlvMessageType.PLAY_REQ or
+                    msgType == TlvDefinitions.TlvMessageType.PLAY_CONTROL_REQ or
+                    msgType == TlvDefinitions.TlvMessageType.GET_STATUS_REQ or
+                    msgType == TlvDefinitions.TlvMessageType.GET_IMAGE_REQ):
+                    print "Received REQ message eventhough we are the client!! Strange! type=" + hex(msgType)
+                    break
+                else:
+                    msgObj = None                        
+
     def stop(self):
         self.__cancellationPending.set()
             
@@ -299,10 +320,23 @@ class SpotifyClient(Thread):
     def sendGetStatusReq(self):
         if self.__isConnected.is_set():
             self.fd.sendall(Message.GetStatusReqMsg(self.getNextMsgId()).toByteStream())
+            
+    def sendAddAudioEndpoint(self, audioDataCb):
+        if self.__isConnected.is_set():
+            self.__getAudioDataObserverLock.acquire()
+            self.__getAudioDataObserver = audioDataCb
+            self.__getAudioDataObserverLock.release()
+            
+            self.audioEndpointfd = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self.audioEndpointfd.bind(("",0))
+            addr, src_port = self.audioEndpointfd.getsockname()
+            
+            self.fd.sendall(Message.AddAudioEndpointReqMsg(self.getNextMsgId(),src_port, 
+                                       TlvDefinitions.TlvAudioEndpointProtocolType.LIGHTWEIGHT_UDP).toByteStream())
                 
-    def recvMsg(self):
+    def recvMsg(self, fd):
         try:
-            inputStr = self.fd.recv(1500)
+            inputStr = fd.recv(1500)
             if(inputStr == None):
                 return
         except:
@@ -311,7 +345,7 @@ class SpotifyClient(Thread):
         totalLength, = header
         while totalLength > len(inputStr):
             try:
-                inputStr += self.fd.recv(1500)
+                inputStr += fd.recv(1500)
             except:
                 return
         return inputStr
