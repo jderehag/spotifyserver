@@ -101,23 +101,22 @@ public:
     class ReqEventItem : public EventItem
     {
     public:
-        MediaInterfaceRequestId reqId_;
-        IMediaInterfaceCallbackSubscriber* callbackSubscriber_;
-        ReqEventItem(Event event, MediaInterfaceRequestId reqId, IMediaInterfaceCallbackSubscriber* callbackSubscriber) : EventItem(event), reqId_(reqId), callbackSubscriber_(callbackSubscriber) {}
+        PendingMediaRequestData reqData;
+        ReqEventItem(Event event, IMediaInterfaceCallbackSubscriber* callbackSubscriber, void* subscriberData) : EventItem(event), reqData(callbackSubscriber, subscriberData) {}
     };
 
     class QueryReqEventItem : public ReqEventItem
     {
     public:
         std::string query_;
-        QueryReqEventItem(Event event, MediaInterfaceRequestId reqId, IMediaInterfaceCallbackSubscriber* callbackSubscriber, std::string query) : ReqEventItem(event, reqId, callbackSubscriber), query_(query) {}
+        QueryReqEventItem(Event event, IMediaInterfaceCallbackSubscriber* callbackSubscriber, void* subscriberData, std::string query) : ReqEventItem(event, callbackSubscriber, subscriberData), query_(query) {}
     };
 
     class PlayReqEventItem : public QueryReqEventItem
     {
     public:
         int startIndex_;
-        PlayReqEventItem( MediaInterfaceRequestId reqId, IMediaInterfaceCallbackSubscriber* callbackSubscriber, std::string uri, int startIndex) : QueryReqEventItem(EVENT_PLAY_REQ, reqId, callbackSubscriber, uri), startIndex_(startIndex) {}
+        PlayReqEventItem( IMediaInterfaceCallbackSubscriber* callbackSubscriber, void* subscriberData, std::string uri, int startIndex) : QueryReqEventItem(EVENT_PLAY_REQ, callbackSubscriber, subscriberData, uri), startIndex_(startIndex) {}
     };
 
     enum LibSpotifyTrackStates
@@ -222,27 +221,27 @@ public:
 	void logIn();
 	void logOut();
 
-    virtual void getImage( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId );
+    /* Implements MediaInterface */
+    virtual void getImage( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
     virtual void previous();
     virtual void next();
     virtual void resume();
     virtual void pause();
     virtual void setShuffle( bool shuffleOn );
     virtual void setRepeat( bool repeatOn );
-    virtual void getStatus( IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId );
-    virtual void getPlaylists( IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId );
-    virtual void getTracks( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId );
-    virtual void play( std::string link, int startIndex, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId );
-    virtual void play( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId );
-    virtual void getAlbum( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId );
-    virtual void search( std::string query, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId );
+    virtual void getStatus( IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
+    virtual void getPlaylists( IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
+    virtual void getTracks( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
+    virtual void play( std::string link, int startIndex, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
+    virtual void play( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
+    virtual void getAlbum( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
+    virtual void search( std::string query, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
     virtual void addAudioEndpoint(Platform::AudioEndpoint& endpoint);
 
 
     void playSearchResult(const char* searchString);
     void enqueueTrack(const char* track_uri);
     void stop();
-
 
 
     void run();

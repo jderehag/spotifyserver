@@ -31,17 +31,12 @@
 #include "Messenger.h"
 #include "Platform/Threads/Runnable.h"
 #include <string>
-#include <map>
 
 class SocketClient : public Messenger, public Platform::Runnable
 {
 private:
     std::string serveraddr_;
     std::string serverport_;
-
-    /* pending requests sent to other side of connection */
-    typedef std::map<unsigned int, Message*>  PendingMessageMap;
-    PendingMessageMap pendingMessageMap_;
 
 public:
     SocketClient(const std::string& serveraddr, const std::string& serverport);

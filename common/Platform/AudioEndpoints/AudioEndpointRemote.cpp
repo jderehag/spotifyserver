@@ -32,9 +32,8 @@
 
 namespace Platform {
 
-AudioEndpointRemote::AudioEndpointRemote() : m("192.168.5.211"/*"127.0.0.1"*/, "7789"), reqId(0)
+AudioEndpointRemote::AudioEndpointRemote() : m("192.168.5.211"/*"127.0.0.1"*/, "7789")
 {
-    m.addSubscriber( this );
 }
 
 AudioEndpointRemote::~AudioEndpointRemote()
@@ -52,7 +51,7 @@ void AudioEndpointRemote::sendAudioData()
         msg->addTlv( TLV_AUDIO_RATE, afd->rate );
         msg->addTlv( TLV_AUDIO_NOF_SAMPLES, afd->nsamples );
         msg->addTlv( new BinaryTlv( TLV_AUDIO_DATA, (const uint8_t*) /*ugh, should hton this*/ afd->samples, afd->nsamples * sizeof(int16_t) * afd->channels ) );
-        m.queueMessage( msg, reqId++ );
+        m.queueMessage( msg );
 
         free( afd );
     }
@@ -75,20 +74,6 @@ int AudioEndpointRemote::enqueueAudioData(unsigned short channels, unsigned int 
 }
 
 void AudioEndpointRemote::flushAudioData()
-{
-}
-
-void AudioEndpointRemote::connectionState( bool up )
-{
-
-}
-
-void AudioEndpointRemote::receivedMessage( Message* msg )
-{
-
-}
-
-void AudioEndpointRemote::receivedResponse( Message* rsp, Message* req )
 {
 }
 

@@ -41,7 +41,8 @@ private:
     SocketReader reader_;
     SocketWriter writer_;
 
-    virtual void processMessage(const Message* msg) = 0;
+    virtual void processMessage( const Message* msg ) = 0;
+    virtual void processResponse( const Message* rsp, void* userData ) = 0;
 
     Socket* socket_;
 

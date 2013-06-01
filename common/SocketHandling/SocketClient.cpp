@@ -77,7 +77,13 @@ void SocketClient::run()
             SocketReader reader(&socket);
             SocketWriter writer(&socket);
 
-            if ( subscriber_ ) subscriber_->connectionState( true );
+            callbackSubscriberMtx_.lock();
+            for( std::set<IMessageSubscriber*>::iterator it = callbackSubscriberList_.begin();
+                    it != callbackSubscriberList_.end(); it++)
+            {
+                (*it)->connectionState( true );
+            }
+            callbackSubscriberMtx_.unlock();
 
             while(isCancellationPending() == false)
             {
@@ -119,18 +125,27 @@ void SocketClient::run()
                         {
                             if ( MSG_IS_RESPONSE( msg->getType() ) )
                             {
-                                PendingMessageMap::iterator msgIt = pendingMessageMap_.find(msg->getId());
+                                PendingDataMap::iterator msgIt = pendingMessageMap_.find(msg->getId());
                                 if (msgIt != pendingMessageMap_.end())
                                 {
-                                    Message* req = msgIt->second;
-                                    if ( subscriber_ ) subscriber_->receivedResponse( msg, req );
+                                    PendingData pdata = msgIt->second;
+                                    Message* req = pdata.req;
+                                    void* userData = pdata.userData;
+                                    /*todo: verify origin still exists*/
+                                    if ( pdata.origin ) pdata.origin->receivedResponse( msg, req, userData );
                                     pendingMessageMap_.erase(msgIt);
                                     delete req;
                                 }
                             }
                             else
                             {
-                                if ( subscriber_ ) subscriber_->receivedMessage( msg );
+                                callbackSubscriberMtx_.lock();
+                                for( std::set<IMessageSubscriber*>::iterator it = callbackSubscriberList_.begin();
+                                        it != callbackSubscriberList_.end(); it++)
+                                {
+                                    (*it)->receivedMessage( msg );
+                                }
+                                callbackSubscriberMtx_.unlock();
                             }
                             delete msg;
                         }
@@ -146,14 +161,16 @@ void SocketClient::run()
                         Message* msg = popMessage();
                         if ( msg != NULL )
                         {
+                            if ( !msg->hasId() )
+                            {
+                                log(LOG_WARN) << "Message without id!";
+                            }
+
                             MessageEncoder* encoder = msg->encode();
                             encoder->printHex();
                             log(LOG_DEBUG) << *msg;
-                            if ( MSG_IS_REQUEST( msg->getType() ) )
-                            {
-                                pendingMessageMap_[msg->getId()] = msg;
-                            }
-                            else
+
+                            if ( !MSG_IS_REQUEST( msg->getType() ) )
                             {
                                 delete msg;
                             }
@@ -170,7 +187,13 @@ void SocketClient::run()
             }
         }
         socket.Close();
-        if ( subscriber_ ) subscriber_->connectionState( false );
+        callbackSubscriberMtx_.lock();
+        for( std::set<IMessageSubscriber*>::iterator it = callbackSubscriberList_.begin();
+                it != callbackSubscriberList_.end(); it++)
+        {
+            (*it)->connectionState( false );
+        }
+        callbackSubscriberMtx_.unlock();
     }
 }
 

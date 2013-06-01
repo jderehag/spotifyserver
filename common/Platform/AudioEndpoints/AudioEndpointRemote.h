@@ -35,11 +35,10 @@
 namespace Platform
 {
 
-class AudioEndpointRemote : public AudioEndpoint, public IMessageSubscriber
+class AudioEndpointRemote : public AudioEndpoint
 {
 private:
     SocketClient m;
-    unsigned int reqId;
 
     void sendAudioData();
 
@@ -50,12 +49,6 @@ public:
     /* AudioEndpoint implementation */
     virtual int enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples);
     virtual void flushAudioData();
-
-    /* IMessageSubscriber implementation */
-    virtual void connectionState( bool up );
-    virtual void receivedMessage( Message* msg );
-    virtual void receivedResponse( Message* rsp, Message* req );
-
 };
 }
 #endif /* AUDIOENDPOINTREMOTE_H_ */

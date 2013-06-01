@@ -38,16 +38,33 @@ Message::Message(MessageType_t type) : type_(type),
 {
 }
 
+Message::Message(MessageType_t type, uint32_t id) : type_(type),
+                                                    id_(id)
+{
+}
+
 Message::~Message()
 {
 }
 
+Message* Message::createResponse() const
+{
+    if ( MSG_IS_REQUEST( type_ ) )
+    {
+        return new Message( (MessageType_t)(type_ | RSP_BIT), id_ );
+    }
+    else
+    {
+        return NULL;
+    }
+}
 
 void Message::setType (MessageType_t type) { type_ = type; }
 MessageType_t Message::getType(void) const { return type_; }
 
-void Message::setId (uint32_t id) { id_ = id; }
-uint32_t Message::getId(void) const { return id_; }
+void Message::setId( uint32_t id ) { id_ = id; }
+uint32_t Message::getId( void ) const { return id_; }
+bool Message::hasId( void ) const { return ( id_ != 0xffffffff ); }
 
 const TlvContainer* Message::getTlvRoot() const { return &tlvs; }
 const Tlv* Message::getTlv(TlvType_t tlv) const { return tlvs.getTlv(tlv); }

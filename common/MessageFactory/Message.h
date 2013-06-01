@@ -45,12 +45,16 @@ protected:
 public:
     Message();
     Message(MessageType_t type);
+    Message(MessageType_t type, uint32_t id);
+
+    Message* createResponse() const;
 
     void setType (MessageType_t type);
     MessageType_t getType(void) const;
 
-    void setId (uint32_t id);
-    uint32_t getId(void) const;
+    void setId( uint32_t id );
+    uint32_t getId( void ) const;
+    bool hasId( void ) const;
 
     const TlvContainer* getTlvRoot() const;
     const Tlv* getTlv(TlvType_t tlv) const;

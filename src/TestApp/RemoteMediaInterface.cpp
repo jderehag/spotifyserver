@@ -29,14 +29,14 @@
 #include "MessageFactory/Message.h"
 #include "applog.h"
 
-RemoteMediaInterface::RemoteMediaInterface(Messenger& m) : messenger_(m),
-                                                           reqId(0)
+RemoteMediaInterface::RemoteMediaInterface(Messenger& m) : messenger_(m)
 {
     messenger_.addSubscriber(this);
 }
 
 RemoteMediaInterface::~RemoteMediaInterface()
 {
+    messenger_.removeSubscriber(this);
 }
 
 void RemoteMediaInterface::connectionState( bool up )
@@ -50,7 +50,7 @@ void RemoteMediaInterface::connectionState( bool up )
         hello->addTlv(TLV_LOGIN_USERNAME, "wonder");
         hello->addTlv(TLV_LOGIN_PASSWORD, "wall");
 
-        messenger_.queueMessage( hello, reqId++ ); /* we should make sure this goes out first, ahead of any old pending messages from an old connection */
+        messenger_.queueRequest( hello, this, NULL ); /* we should make sure this goes out first, ahead of any old pending messages from an old connection */
     }
 
     callbackSubscriberMtx_.lock();
@@ -60,14 +60,6 @@ void RemoteMediaInterface::connectionState( bool up )
         (*it)->connectionState( up );
     }
     callbackSubscriberMtx_.unlock();
-}
-
-void RemoteMediaInterface::doRequest( Message* msg, unsigned int mediaReqId, IMediaInterfaceCallbackSubscriber* subscriber )
-{
-    unsigned int myId = reqId++;
-    //pendingReqsMap[myId] = PendingRequest( mediaReqId, subscriber );
-    pendingReqsMap.insert( PendingReqsMap::value_type ( myId, PendingRequest( mediaReqId, subscriber ) ) );
-    messenger_.queueMessage( msg, myId );
 }
 
 void RemoteMediaInterface::receivedMessage( Message* msg )
@@ -121,13 +113,18 @@ void RemoteMediaInterface::receivedMessage( Message* msg )
     }
 }
 
-void RemoteMediaInterface::receivedResponse( Message* rsp, Message* req )
+void RemoteMediaInterface::receivedResponse( Message* rsp, Message* req, void* userData )
 {
-    PendingReqsMap::iterator it = pendingReqsMap.find( rsp->getId() );
-    if ( it != pendingReqsMap.end() )
-    {
-        log(LOG_DEBUG) << *rsp;
-        PendingRequest mediaReq = it->second;
+    PendingMediaRequestData* reqData = (PendingMediaRequestData*) userData;
+    if( reqData == NULL )
+        return;
+
+    IMediaInterfaceCallbackSubscriber* subscriber = reqData->first;
+    void* subscriberData = reqData->second;
+
+    delete reqData;
+
+    log(LOG_DEBUG) << *rsp;
 
         callbackSubscriberMtx_.lock();
         /* todo verify subscriber still exists */
@@ -136,7 +133,7 @@ void RemoteMediaInterface::receivedResponse( Message* rsp, Message* req )
         {
             case GET_PLAYLISTS_RSP:
             {
-                mediaReq.subscriber->getPlaylistsResponse( mediaReq.mediaReqId, Folder( (const TlvContainer*) rsp->getTlv(TLV_FOLDER) ) );
+                subscriber->getPlaylistsResponse( Folder( (const TlvContainer*) rsp->getTlv(TLV_FOLDER) ), subscriberData );
             }
             break;
 
@@ -153,7 +150,7 @@ void RemoteMediaInterface::receivedResponse( Message* rsp, Message* req )
                     }
                 }
 
-                mediaReq.subscriber->getTracksResponse( mediaReq.mediaReqId, tracks );
+                subscriber->getTracksResponse( tracks, subscriberData );
             }
             break;
 
@@ -177,11 +174,11 @@ void RemoteMediaInterface::receivedResponse( Message* rsp, Message* req )
                     tlv = (const IntTlv*) rsp->getTlv(TLV_PROGRESS);
                     if ( tlv ) progress = tlv->getVal();
 
-                    mediaReq.subscriber->getStatusResponse( mediaReq.mediaReqId, playbackState, repeatState, shuffleState, Track( trackTlv ), progress );
+                    subscriber->getStatusResponse( playbackState, repeatState, shuffleState, Track( trackTlv ), progress, subscriberData );
                 }
                 else
                 {
-                    mediaReq.subscriber->getStatusResponse( mediaReq.mediaReqId, playbackState, repeatState, shuffleState );
+                    subscriber->getStatusResponse( playbackState, repeatState, shuffleState, subscriberData );
                 }
             }
             break;
@@ -190,7 +187,7 @@ void RemoteMediaInterface::receivedResponse( Message* rsp, Message* req )
             {
                 void* data = 0; /*todo decode message*/
                 size_t dataSize = 0;
-                mediaReq.subscriber->getImageResponse( mediaReq.mediaReqId, data, dataSize );
+                subscriber->getImageResponse( data, dataSize, subscriberData );
             }
             break;
 
@@ -200,7 +197,7 @@ void RemoteMediaInterface::receivedResponse( Message* rsp, Message* req )
                 if ( albumTlv )
                 {
                     Album album( albumTlv );
-                    mediaReq.subscriber->getAlbumResponse( mediaReq.mediaReqId, album );
+                    subscriber->getAlbumResponse( album, subscriberData );
                 }
             }
             break;
@@ -218,7 +215,7 @@ void RemoteMediaInterface::receivedResponse( Message* rsp, Message* req )
                     }
                 }
 
-                mediaReq.subscriber->genericSearchCallback( mediaReq.mediaReqId, tracks, "" );
+                subscriber->genericSearchCallback( tracks, "", subscriberData );
             }
             break;
 
@@ -226,113 +223,106 @@ void RemoteMediaInterface::receivedResponse( Message* rsp, Message* req )
                 break;
         }
         callbackSubscriberMtx_.unlock();
-        pendingReqsMap.erase( it );
-    }
-    else
-    {
-        /*todo remove me when all requests use pendingReqsMap*/
-        receivedMessage( rsp );
-    }
 }
 
 
-void RemoteMediaInterface::getImage( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId mediaReqId )
+void RemoteMediaInterface::getImage( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
     Message* msg = new Message( GET_IMAGE_REQ );
     msg->addTlv(TLV_LINK, link);
-    doRequest( msg, mediaReqId, subscriber );
+    messenger_.queueRequest( msg, this, new PendingMediaRequestData(subscriber, userData) );
 }
 
 void RemoteMediaInterface::previous()
 {
     Message* msg = new Message( PLAY_CONTROL_REQ );
     msg->addTlv( TLV_PLAY_OPERATION, PLAY_OP_PREV );
-    messenger_.queueMessage( msg, reqId++ );
+    messenger_.queueRequest( msg, this, NULL );
 }
 
 void RemoteMediaInterface::next()
 {
     Message* msg = new Message( PLAY_CONTROL_REQ );
     msg->addTlv( TLV_PLAY_OPERATION, PLAY_OP_NEXT );
-    messenger_.queueMessage( msg, reqId++ );
+    messenger_.queueRequest( msg, this, NULL );
 }
 
 void RemoteMediaInterface::resume()
 {
     Message* msg = new Message( PLAY_CONTROL_REQ );
     msg->addTlv( TLV_PLAY_OPERATION, PLAY_OP_RESUME );
-    messenger_.queueMessage( msg, reqId++ );
+    messenger_.queueRequest( msg, this, NULL );
 }
 
 void RemoteMediaInterface::pause()
 {
     Message* msg = new Message( PLAY_CONTROL_REQ );
     msg->addTlv( TLV_PLAY_OPERATION, PLAY_OP_PAUSE );
-    messenger_.queueMessage( msg, reqId++ );
+    messenger_.queueRequest( msg, this, NULL );
 }
 
 void RemoteMediaInterface::setShuffle( bool shuffleOn )
 {
     Message* msg = new Message( PLAY_CONTROL_REQ );
     msg->addTlv( TLV_PLAY_MODE_SHUFFLE, shuffleOn ? 1 : 0 );
-    messenger_.queueMessage( msg, reqId++ );
+    messenger_.queueRequest( msg, this, NULL );
 }
 
 void RemoteMediaInterface::setRepeat( bool repeatOn )
 {
     Message* msg = new Message( PLAY_CONTROL_REQ );
     msg->addTlv( TLV_PLAY_MODE_REPEAT, repeatOn ? 1 : 0 );
-    messenger_.queueMessage( msg, reqId++ );
+    messenger_.queueRequest( msg, this, NULL );
 }
 
-void RemoteMediaInterface::getStatus( IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId mediaReqId )
+void RemoteMediaInterface::getStatus( IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
     Message* msg = new Message( GET_STATUS_REQ );
-    doRequest( msg, mediaReqId, subscriber );
+    messenger_.queueRequest( msg, this, new PendingMediaRequestData(subscriber, userData) );
 }
 
-void RemoteMediaInterface::getPlaylists( IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId mediaReqId )
+void RemoteMediaInterface::getPlaylists( IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
     Message* msg = new Message(GET_PLAYLISTS_REQ);
-    doRequest( msg, mediaReqId, subscriber );
+    messenger_.queueRequest( msg, this, new PendingMediaRequestData(subscriber, userData) );
 }
 
-void RemoteMediaInterface::getTracks( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId mediaReqId )
+void RemoteMediaInterface::getTracks( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
     Message* msg = new Message(GET_TRACKS_REQ);
     TlvContainer* p = new TlvContainer(TLV_PLAYLIST);
     p->addTlv(TLV_LINK, link);
     msg->addTlv(p);
-    doRequest( msg, mediaReqId, subscriber );
+    messenger_.queueRequest( msg, this, new PendingMediaRequestData(subscriber, userData) );
 }
 
-void RemoteMediaInterface::play( std::string link, int startIndex, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId mediaReqId )
+void RemoteMediaInterface::play( std::string link, int startIndex, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
     Message* msg = new Message( PLAY_REQ );
     msg->addTlv(TLV_LINK, link);
     msg->addTlv(TLV_TRACK_INDEX, startIndex);
-    doRequest( msg, mediaReqId, subscriber );
+    messenger_.queueRequest( msg, this, new PendingMediaRequestData(subscriber, userData) );
 }
 
-void RemoteMediaInterface::play( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId mediaReqId )
+void RemoteMediaInterface::play( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
     Message* msg = new Message( PLAY_REQ );
     msg->addTlv(TLV_LINK, link);
-    doRequest( msg, mediaReqId, subscriber );
+    messenger_.queueRequest( msg, this, new PendingMediaRequestData(subscriber, userData) );
 }
 
-void RemoteMediaInterface::getAlbum( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId mediaReqId )
+void RemoteMediaInterface::getAlbum( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
     Message* msg = new Message( GET_ALBUM_REQ);
     msg->addTlv(TLV_LINK, link);
-    doRequest( msg, mediaReqId, subscriber );
+    messenger_.queueRequest( msg, this, new PendingMediaRequestData(subscriber, userData) );
 }
 
-void RemoteMediaInterface::search( std::string query, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId mediaReqId )
+void RemoteMediaInterface::search( std::string query, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
     Message* msg = new Message( GENERIC_SEARCH_REQ );
     msg->addTlv( TLV_SEARCH_QUERY, query );
-    doRequest( msg, mediaReqId, subscriber );
+    messenger_.queueRequest( msg, this, new PendingMediaRequestData(subscriber, userData) );
 }
 
 void RemoteMediaInterface::addAudioEndpoint(Platform::AudioEndpoint& endpoint) {};

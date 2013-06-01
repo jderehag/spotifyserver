@@ -72,7 +72,23 @@ int SocketPeer::doRead()
 
             if (msg != NULL)
             {
-                processMessage(msg);
+                if ( MSG_IS_RESPONSE( msg->getType() ) )
+                {
+                    PendingDataMap::iterator msgIt = pendingMessageMap_.find(msg->getId());
+                    if (msgIt != pendingMessageMap_.end())
+                    {
+                        PendingData pdata = msgIt->second;
+                        Message* req = pdata.req;
+                        void* userData = pdata.userData;
+                        processResponse(msg, userData);
+                        pendingMessageMap_.erase(msgIt);
+                        delete req;
+                    }
+                }
+                else
+                {
+                    processMessage(msg);
+                }
                 delete msg;
             }
             else
@@ -98,10 +114,18 @@ int SocketPeer::doWrite()
         if (msg == NULL )
             return 0;
 
+        if ( !msg->hasId() )
+        {
+            log(LOG_WARN) << "Message without id!";
+        }
+
         MessageEncoder* encoder = msg->encode();
         encoder->printHex();
         log(LOG_DEBUG) << *msg;
-        delete msg;
+        if ( !MSG_IS_REQUEST( msg->getType() ) )
+        {
+            delete msg;
+        }
         writer_.setData(encoder); // SocketWriter takes ownership of encoder
     }
 

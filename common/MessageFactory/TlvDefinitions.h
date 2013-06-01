@@ -34,8 +34,9 @@
 #define RSP_BIT 0x80000000
 #define IND_BIT 0x40000000
 
-#define MSG_IS_REQUEST( id ) ( ( id & ( RSP_BIT | IND_BIT ) ) == 0 )
-#define MSG_IS_RESPONSE( id ) ( ( id & RSP_BIT ) != 0 )
+#define MSG_IS_REQUEST( type ) ( ( type & ( RSP_BIT | IND_BIT ) ) == 0 )
+#define MSG_IS_RESPONSE( type ) ( ( type & RSP_BIT ) != 0 )
+#define MSG_IS_INDICATION( type ) ( ( type & IND_BIT ) != 0 )
 
 #define REQ(name, value) name##_REQ = value, name##_RSP = (value | RSP_BIT),
 #define IND(name, value) name##_IND = (value | IND_BIT),

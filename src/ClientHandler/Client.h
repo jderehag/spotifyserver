@@ -32,7 +32,6 @@
 #include "SocketHandling/SocketPeer.h"
 #include "MessageFactory/MessageEncoder.h"
 #include "Platform/AudioEndpoints/AudioEndpointRemote.h"
-#include <map>
 
 using namespace LibSpotify;
 
@@ -49,14 +48,10 @@ private:
     uint32_t peerProtocolMajor_;
     uint32_t peerProtocolMinor_;
 
-    typedef std::map<unsigned int, Message*>  PendingMessageMap;
-    PendingMessageMap pendingMessageMap_;
-
     Platform::AudioEndpointRemote* audioEp;
 
-    unsigned int reqId_;
-
-    virtual void processMessage(const Message* msg);
+    virtual void processMessage( const Message* msg );
+    virtual void processResponse( const Message* rsp, void* userData );
 
     void playingInd(Track& currentTrack);
     void pausedInd(Track& currentTrack);
@@ -67,13 +62,13 @@ private:
     virtual void statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress );
     virtual void statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus );
 
-    virtual void getPlaylistsResponse( MediaInterfaceRequestId reqId, const Folder& rootfolder );
-    virtual void getTracksResponse( MediaInterfaceRequestId reqId, const std::deque<Track>& tracks );
-    virtual void getImageResponse( MediaInterfaceRequestId reqId, const void* data, size_t dataSize );
-    virtual void getAlbumResponse( MediaInterfaceRequestId reqId, const Album& album );
-    virtual void genericSearchCallback( MediaInterfaceRequestId reqId, const std::deque<Track>& listOfTracks, const std::string& didYouMean);
-    virtual void getStatusResponse( MediaInterfaceRequestId reqId, PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress );
-    virtual void getStatusResponse( MediaInterfaceRequestId reqId, PlaybackState_t state, bool repeatStatus, bool shuffleStatus );
+    virtual void getPlaylistsResponse( const Folder& rootfolder, void* userData );
+    virtual void getTracksResponse( const std::deque<Track>& tracks, void* userData );
+    virtual void getImageResponse( const void* data, size_t dataSize, void* userData );
+    virtual void getAlbumResponse( const Album& album, void* userData );
+    virtual void genericSearchCallback( const std::deque<Track>& listOfTracks, const std::string& didYouMean, void* userData );
+    virtual void getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress, void* userData );
+    virtual void getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, void* userData );
 
 private:
     /* Message Handler functions*/

@@ -36,6 +36,7 @@ class AudioEndpointRemotePeer : public SocketPeer
     Platform::AudioEndpointLocal endpoint_;
 
     virtual void processMessage(const Message* msg);
+    virtual void processResponse( const Message* rsp, void* userData );
 
 public:
     AudioEndpointRemotePeer( Socket* socket, ConfigHandling::AudioEndpointConfig& config );

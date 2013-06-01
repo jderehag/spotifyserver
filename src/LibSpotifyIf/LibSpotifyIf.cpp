@@ -89,56 +89,56 @@ void LibSpotifyIf::logOut()
     postToEventThread( new EventItem( EVENT_LOGGING_OUT ) );
 }
 
-void LibSpotifyIf::getPlaylists( IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId )
+void LibSpotifyIf::getPlaylists( IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
-    subscriber->getPlaylistsResponse( reqId, rootFolder_ );
+    subscriber->getPlaylistsResponse( rootFolder_, userData );
 }
 
-void LibSpotifyIf::getTracks( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId )
+void LibSpotifyIf::getTracks( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
-    postToEventThread( new QueryReqEventItem( EVENT_GET_TRACKS, reqId, subscriber, link ) );
+    postToEventThread( new QueryReqEventItem( EVENT_GET_TRACKS, subscriber, userData, link ) );
 }
 
-void LibSpotifyIf::search( std::string query, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId )
+void LibSpotifyIf::search( std::string query, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
-    postToEventThread( new QueryReqEventItem( EVENT_GENERIC_SEARCH, reqId, subscriber, query ) );
+    postToEventThread( new QueryReqEventItem( EVENT_GENERIC_SEARCH, subscriber, userData, query ) );
 }
 
-void LibSpotifyIf::getImage( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId )
+void LibSpotifyIf::getImage( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
-    postToEventThread( new QueryReqEventItem( EVENT_GET_IMAGE, reqId, subscriber, link ) );
+    postToEventThread( new QueryReqEventItem( EVENT_GET_IMAGE, subscriber, userData, link ) );
 }
 
-void LibSpotifyIf::getAlbum( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId )
+void LibSpotifyIf::getAlbum( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
-    postToEventThread( new QueryReqEventItem( EVENT_GET_ALBUM, reqId, subscriber, link ) );
+    postToEventThread( new QueryReqEventItem( EVENT_GET_ALBUM, subscriber, userData, link ) );
 }
 
-void LibSpotifyIf::getStatus( IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId )
+void LibSpotifyIf::getStatus( IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
     switch ( trackState_ )
     {
         case TRACK_STATE_NOT_LOADED:
-            subscriber->getStatusResponse( reqId,
-                                           PLAYBACK_IDLE,
+            subscriber->getStatusResponse( PLAYBACK_IDLE,
                                            playbackHandler_.getRepeat(),
-                                           playbackHandler_.getShuffle() );
+                                           playbackHandler_.getShuffle(),
+                                           userData );
             break;
         case TRACK_STATE_PAUSED:
-            subscriber->getStatusResponse( reqId,
-                                           PLAYBACK_PAUSED,
+            subscriber->getStatusResponse( PLAYBACK_PAUSED,
                                            playbackHandler_.getRepeat(),
                                            playbackHandler_.getShuffle(),
                                            currentTrack_,
-                                           progress_/10 );
+                                           progress_/10,
+                                           userData );
             break;
         case TRACK_STATE_PLAYING:
-            subscriber->getStatusResponse( reqId,
-                                           PLAYBACK_PLAYING,
+            subscriber->getStatusResponse( PLAYBACK_PLAYING,
                                            playbackHandler_.getRepeat(),
                                            playbackHandler_.getShuffle(),
                                            currentTrack_,
-                                           progress_/10 );
+                                           progress_/10,
+                                           userData );
             break;
     }
 }
@@ -158,13 +158,13 @@ void LibSpotifyIf::playTrack(const Track& track)
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
-void LibSpotifyIf::play( std::string link, int startIndex, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId )
+void LibSpotifyIf::play( std::string link, int startIndex, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
-    postToEventThread( new PlayReqEventItem(reqId, subscriber, link, startIndex) );
+    postToEventThread( new PlayReqEventItem(subscriber, userData, link, startIndex) );
 }
-void LibSpotifyIf::play( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId )
+void LibSpotifyIf::play( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
-    play( link, -1, subscriber, reqId );
+    play( link, -1, subscriber, userData );
 }
 
 void LibSpotifyIf::stop()
@@ -283,11 +283,11 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
 
 						if (sp_playlist_is_loaded(playlist))
 						{
+                            PendingMediaRequestData reqData = reqEvent->reqData;
 							log(LOG_DEBUG) << "Got playlist " << playlist_uri;
-	                         Playlist playlistObj = spotifyGetPlaylist(playlist, spotifySession_);
+                            Playlist playlistObj = spotifyGetPlaylist(playlist, spotifySession_);
 
-
-	                         reqEvent->callbackSubscriber_->getTracksResponse(reqEvent->reqId_, playlistObj.getTracks());
+                            reqData.first->getTracksResponse( playlistObj.getTracks(), reqData.second );
 						}
 						else
 						{
@@ -387,7 +387,8 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
                     else
                     {
                         /*not supported yet*/
-                        reqEvent->callbackSubscriber_->getImageResponse(reqEvent->reqId_, NULL, 0);
+                        PendingMediaRequestData reqData = reqEvent->reqData;
+                        reqData.first->getImageResponse( NULL, 0, reqData.second );
                     }
 
                     if (imgRef)
@@ -400,9 +401,10 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
 
                             if ( sp_image_is_loaded(img) )
                             {
+                                PendingMediaRequestData reqData = reqEvent->reqData;
                                 size_t dataSize;
                                 const void* data = sp_image_data(img, &dataSize);
-                                reqEvent->callbackSubscriber_->getImageResponse(reqEvent->reqId_, data, dataSize);
+                                reqData.first->getImageResponse( data, dataSize, reqData.second );
                                 sp_image_release(img);
                             }
                             else if ( error == SP_ERROR_IS_LOADING )
@@ -413,7 +415,8 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
                             else
                             {
                                 log(LOG_WARN) << "Image load error: " << sp_error_message(error);
-                                reqEvent->callbackSubscriber_->getImageResponse(reqEvent->reqId_, NULL, 0);
+                                PendingMediaRequestData reqData = reqEvent->reqData;
+                                reqData.first->getImageResponse( NULL, 0, reqData.second );
                                 sp_image_release(img);
                             }
                         }
@@ -423,7 +426,8 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
                 else
                 {
                     log(LOG_WARN) << "Bad link?" << linkStr;
-                    reqEvent->callbackSubscriber_->getImageResponse(reqEvent->reqId_, NULL, 0);
+                    PendingMediaRequestData reqData = reqEvent->reqData;
+                    reqData.first->getImageResponse( NULL, 0, reqData.second );
                 }
 
             }
@@ -821,7 +825,8 @@ void LibSpotifyIf::addAudioEndpoint(Platform::AudioEndpoint& endpoint)
 
 void LibSpotifyIf::genericSearchCb(sp_search *search, void *userdata)
 {
-	QueryReqEventItem* msg = static_cast<QueryReqEventItem*>(userdata);
+    QueryReqEventItem* msg = static_cast<QueryReqEventItem*>(userdata);
+    PendingMediaRequestData reqData = msg->reqData;
 
 	std::deque<Track> searchReply;
 	std::string didYouMean(sp_search_did_you_mean(search));
@@ -842,10 +847,9 @@ void LibSpotifyIf::genericSearchCb(sp_search *search, void *userdata)
     //for (i = 0; i < sp_search_num_artists(search); ++i)
         //print_artist(sp_search_artist(search, i));
 
-
-	msg->callbackSubscriber_->genericSearchCallback(msg->reqId_, searchReply, didYouMean);
-	sp_search_release(search);
-	delete msg;
+    reqData.first->genericSearchCallback( searchReply, didYouMean, reqData.second );
+    sp_search_release(search);
+    delete msg;
 }
 
 void LibSpotifyIf::imageLoadedCb(sp_image* image, void *userdata)
@@ -866,7 +870,8 @@ void LibSpotifyIf::albumLoadedCb(sp_albumbrowse* result, void *userdata)
         case EVENT_GET_ALBUM:
         {
             QueryReqEventItem* msg = static_cast<QueryReqEventItem*>(userdata);
-            msg->callbackSubscriber_->getAlbumResponse(msg->reqId_, album);
+            PendingMediaRequestData reqData = msg->reqData;
+            reqData.first->getAlbumResponse( album, reqData.second );
             delete msg;
             break;
         }
