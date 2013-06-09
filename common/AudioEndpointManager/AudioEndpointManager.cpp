@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Jens Nielsen
+ * Copyright (c) 2013, Jens Nielsen
  * All rights reserved.
 
  * Redistribution and use in source and binary forms, with or without
@@ -25,25 +25,56 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "ClientHandler.h"
-#include "Client.h"
+#include "AudioEndpointManager.h"
 #include "applog.h"
 
-ClientHandler::ClientHandler(const ConfigHandling::NetworkConfig& config, MediaInterface& media, AudioEndpointCtrlInterface& audioCtrl) :
-     SocketServer(config),
-     media_(media),
-     audioCtrl_(audioCtrl)
+AudioEndpointManager::AudioEndpointManager()
 {
 }
 
-ClientHandler::~ClientHandler()
+AudioEndpointManager::~AudioEndpointManager()
 {
 }
 
-SocketPeer* ClientHandler::newPeer( Socket* s )
+void AudioEndpointManager::addEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData )
 {
-    Client* c = new Client(s, media_, audioCtrl_);
-    c->setUsername(config_.getUsername());
-    c->setPassword(config_.getPassword());
-    return c;
+    audioEndpoints.insert( &ep );
+
+    log(LOG_DEBUG) << "Adding audio endpoint " << ep.getId();
+
+    //todo: subscriber->addEndpointResponse();
+}
+
+void AudioEndpointManager::removeEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData )
+{
+    audioEndpoints.erase( &ep );
+    //todo: subscriber->removeEndpointResponse();
+}
+
+void AudioEndpointManager::getEndpoints( IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData )
+{
+    std::set<std::string> result;
+
+    std::set<Platform::AudioEndpoint*>::const_iterator it = audioEndpoints.begin();
+    for( ; it != audioEndpoints.end(); it++ )
+    {
+        log(LOG_DEBUG) << (*it)->getId();
+        result.insert( (*it)->getId() );
+    }
+
+    subscriber->getEndpointsResponse( result, userData );
+}
+
+
+Platform::AudioEndpoint* AudioEndpointManager::getEndpoint( std::string id )
+{
+    std::set<Platform::AudioEndpoint*>::const_iterator it = audioEndpoints.begin();
+    for( ; it != audioEndpoints.end(); it++ )
+    {
+        if ( (*it)->getId() == id )
+        {
+            return (*it);
+        }
+    }
+    return NULL;
 }

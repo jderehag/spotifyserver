@@ -29,8 +29,7 @@
 #define AUDIOENDPOINTREMOTE_H_
 
 #include "AudioEndpoint.h"
-#include "SocketHandling/SocketClient.h"
-#include "Platform/Threads/Mutex.h"
+#include <string>
 
 namespace Platform
 {
@@ -38,17 +37,19 @@ namespace Platform
 class AudioEndpointRemote : public AudioEndpoint
 {
 private:
-    SocketClient m;
+    std::string id_;
 
     void sendAudioData();
 
 public:
-    AudioEndpointRemote();
+    AudioEndpointRemote( std::string id, const std::string ip, const std::string port );
     virtual ~AudioEndpointRemote();
 
     /* AudioEndpoint implementation */
     virtual int enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples);
     virtual void flushAudioData();
+
+    virtual std::string getId() const;
 };
 }
 #endif /* AUDIOENDPOINTREMOTE_H_ */

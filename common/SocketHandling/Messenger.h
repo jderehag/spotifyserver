@@ -41,8 +41,8 @@ class IMessageSubscriber
 {
 public:
     virtual void connectionState( bool up ) = 0;
-    virtual void receivedMessage( Message* msg ) = 0;
-    virtual void receivedResponse( Message* rsp, Message* req, void* userData ) = 0;
+    virtual void receivedMessage( const Message* msg ) = 0;
+    virtual void receivedResponse( const Message* rsp, const Message* req, void* userData ) = 0;
 };
 
 class Messenger

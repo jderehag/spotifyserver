@@ -47,13 +47,13 @@ Socket::Socket(SocketHandle_t* socket) : socket_(socket)
 
 }
 
-Socket::Socket()
+Socket::Socket( SockType_t type )
 {
     int on = 1;
 
     socket_ = new SocketHandle_t;
 
-    socket_->fd = lwip_socket(PF_INET, SOCK_STREAM, 0);
+    socket_->fd = lwip_socket(PF_INET, (type == SOCKTYPE_STREAM) ? SOCK_STREAM : SOCK_DGRAM, 0);
 
     lwip_setsockopt(socket_->fd, SOL_SOCKET, SO_REUSEADDR, (char*) &on, sizeof(on));
 

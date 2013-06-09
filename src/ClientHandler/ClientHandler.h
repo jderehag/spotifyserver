@@ -29,18 +29,21 @@
 #define CLIENTHANDLER_H_
 
 #include "SocketHandling/SocketServer.h"
-#include "LibSpotifyIf/LibSpotifyIf.h"
+#include "MediaInterface/MediaInterface.h"
+#include "AudioEndpointManager/AudioEndpointManagerCtrlInterface.h"
+
 
 using namespace LibSpotify;
 
 class ClientHandler : public SocketServer
 {
 private:
-    LibSpotifyIf& spotify_;
+    MediaInterface& media_;
+    AudioEndpointCtrlInterface& audioCtrl_;
 
     virtual SocketPeer* newPeer( Socket* s );
 public:
-    ClientHandler(const ConfigHandling::NetworkConfig& config, LibSpotifyIf& spotifyif);
+    ClientHandler(const ConfigHandling::NetworkConfig& config, MediaInterface& media, AudioEndpointCtrlInterface& audioCtrl);
     virtual ~ClientHandler();
 
 };

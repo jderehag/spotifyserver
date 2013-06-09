@@ -34,7 +34,8 @@
 #include "ConfigHandling/ConfigHandler.h"
 #include "MediaContainers/Folder.h"
 #include "MediaContainers/Track.h"
-#include "Platform/AudioEndpoints/AudioEndpoint.h"
+#include "AudioEndpointManager/AudioEndpointManager.h"
+#include "Platform/AudioEndpoints/AudioDispatch.h"
 #include "MessageFactory/Message.h"
 #include "Platform/Threads/Runnable.h"
 #include "Platform/Threads/Condition.h"
@@ -144,9 +145,10 @@ private:
  *
  ***********************/
 private:
-	const ConfigHandling::SpotifyConfig& config_;
-	typedef  std::vector<Platform::AudioEndpoint*> AudioEndpointVector;
-	AudioEndpointVector audioEndpoints_;
+    const ConfigHandling::SpotifyConfig& config_;
+
+    AudioEndpointManager& audioMgr_;
+    Platform::AudioDispatch audioOut_;
 
 private:
 	Folder rootFolder_;
@@ -215,7 +217,7 @@ private:
 	void logMessageCb(sp_session *session, const char *data);
 
 public:
-	LibSpotifyIf(const ConfigHandling::SpotifyConfig& config, Platform::AudioEndpoint& endpoint);
+	LibSpotifyIf(const ConfigHandling::SpotifyConfig& config, AudioEndpointManager& audioMgr );
 	virtual ~LibSpotifyIf();
 
 	void logIn();
@@ -236,7 +238,10 @@ public:
     virtual void play( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
     virtual void getAlbum( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
     virtual void search( std::string query, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
-    virtual void addAudioEndpoint(Platform::AudioEndpoint& endpoint);
+
+    virtual void addAudioEndpoint( const std::string& id, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
+    virtual void removeAudioEndpoint( const std::string& id, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
+    virtual void getCurrentAudioEndpoints( IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
 
 
     void playSearchResult(const char* searchString);

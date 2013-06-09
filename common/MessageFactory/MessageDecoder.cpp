@@ -91,6 +91,53 @@ uint32_t MessageDecoder::getTlvIntData()
     return ntohl(*p);
 }
 
+TlvContainer* MessageDecoder::decodeGroupTlv()
+{
+    uint32_t end;
+    uint32_t len = getCurrentTlvLen();
+    TlvContainer* groupTlv = new TlvContainer(getCurrentTlv());
+
+    enterTlvGroup();
+    end = len + rpos_;
+
+    while (rpos_ < end && !hasError_)
+    {
+        if(validateLength(end)) break;
+
+        switch(getCurrentTlv())
+        {
+            case TLV_IP_ADDRESS:
+            case TLV_LINK:
+            {
+                groupTlv->addTlv(getCurrentTlv(), getTlvData(), getCurrentTlvLen());
+                nextTlv();
+            }
+            break;
+
+            case TLV_PORT:
+            case TLV_AUDIO_EP_PROTOCOL:
+            {
+                groupTlv->addTlv(getCurrentTlv(), getTlvIntData());
+                nextTlv();
+            }
+            break;
+
+            default:
+                log(LOG_NOTICE) << "Unknown TLV 0x" << std::hex << getCurrentTlv() << std::dec << " at byte " << rpos_;
+                hasUnknownTlv_ = true;
+                nextTlv();
+                break;
+        }
+    }
+
+    /*validation of length field in group tlv*/
+    if (!hasError_ && rpos_ != end )
+    {
+        log(LOG_NOTICE) << "TLV 0x" << std::hex << getCurrentTlv() << std::dec << " has bad length " << len << ", ends at " << rpos_ << ", said it would end at " << end;
+        hasError_ = true;
+    }
+    return groupTlv;
+}
 
 TlvContainer* MessageDecoder::decodeImage()
 {
@@ -504,6 +551,12 @@ void MessageDecoder::decodeTlvs(TlvContainer* parent, uint32_t len)
             case TLV_ARTIST:
             {
                 parent->addTlv(decodeArtist());
+            }
+            break;
+
+            case TLV_CLIENT:
+            {
+                parent->addTlv(decodeGroupTlv());
             }
             break;
 

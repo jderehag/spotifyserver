@@ -99,7 +99,10 @@ public:
     virtual void play( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData ) = 0;
     virtual void getAlbum( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData ) = 0;
     virtual void search( std::string query, IMediaInterfaceCallbackSubscriber* subscriber, void* userData ) = 0;
-    virtual void addAudioEndpoint(Platform::AudioEndpoint& endpoint) = 0;
+
+    virtual void addAudioEndpoint( const std::string& id, IMediaInterfaceCallbackSubscriber* subscriber, void* userData ) = 0;
+    virtual void removeAudioEndpoint( const std::string& id, IMediaInterfaceCallbackSubscriber* subscriber, void* userData ) = 0;
+    virtual void getCurrentAudioEndpoints( IMediaInterfaceCallbackSubscriber* subscriber, void* userData ) = 0;
 
 };
 

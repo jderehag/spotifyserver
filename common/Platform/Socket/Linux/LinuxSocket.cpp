@@ -128,14 +128,14 @@ Socket::Socket(SocketHandle_t* socket) : socket_(socket)
     fcntl( socket_->fd, F_SETFL, flags | O_NONBLOCK );
 }
 
-Socket::Socket()
+Socket::Socket( SockType_t type )
 {
     int on = 1;
     int flags;
 
     socket_ = new SocketHandle_t;
 
-    socket_->fd = socket(PF_INET6, SOCK_STREAM, 0);
+    socket_->fd = socket(PF_INET6, (type == SOCKTYPE_STREAM) ? SOCK_STREAM : SOCK_DGRAM , 0);
 
     on = 0;
     setsockopt(socket_->fd, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&on, sizeof(on) );
@@ -407,7 +407,6 @@ int select(std::set<Socket*>* readsockets, std::set<Socket*>* writesockets, std:
             if (!FD_ISSET((*it)->socket_->fd, &writefds))
             {
                 writesockets->erase(it++);
-                log(LOG_WARN) << "nooooo ";
             }
             else
                 it++;

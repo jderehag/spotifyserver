@@ -55,9 +55,13 @@ void UIConsole::destroy()
 void UIConsole::run()
 {
     char c;
+    std::string cmd;
 
     while(isCancellationPending() == false)
     {
+        std::vector<std::string> argv;
+        std::string arg;
+
         std::cout << "'g' get playlists\n"
                      "'t' get tracks\n"
                      "'a' get album\n"
@@ -70,8 +74,37 @@ void UIConsole::run()
                      "'v' next\n"
                      "'e' toggle shuffle\n" << std::endl;
 
-        c = getchar();
+        getline( std::cin, cmd );
+        std::istringstream iss(cmd);
 
+        while( iss >> arg )
+        {
+            argv.push_back( arg );
+        }
+
+        int argc = argv.size();
+        if ( argc == 0)
+            continue;
+
+        if ( argv[0] == "addAudio")
+        {
+            std::string id = "";
+            if ( argc > 1 )
+                id = argv[1];
+            m_.addAudioEndpoint(id, this, NULL);
+            continue;
+        }
+        if ( argv[0] == "remAudio")
+        {
+            std::string id = "";
+            if ( argc > 1 )
+                id = argv[1];
+            m_.removeAudioEndpoint(id, this, NULL);
+            continue;
+        }
+
+        //handle the old commands the old way for now..
+        c = argv[0][0];
         switch(c)
         {
         case 'i':

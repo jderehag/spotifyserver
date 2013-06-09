@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Jesper Derehag
+ * Copyright (c) 2013, Jens Nielsen
  * All rights reserved.
 
  * Redistribution and use in source and binary forms, with or without
@@ -16,7 +16,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL JESPER DEREHAG BE LIABLE FOR ANY
+ * DISCLAIMED. IN NO EVENT SHALL JENS NIELSEN BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -25,32 +25,37 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef AUDIOENDPOINT_H_
-#define AUDIOENDPOINT_H_
+#ifndef AUDIODISPATCH_H_
+#define AUDIODISPATCH_H_
 
-#include "AudioFifo.h"
+#include "AudioEndpoint.h"
+#include "Platform/Threads/Mutex.h"
+#include <set>
 
-namespace Platform {
-
-class AudioEndpoint
+namespace Platform
 {
-protected:
-    AudioFifo fifo;
 
-    bool paused_;
+class AudioDispatch
+{
+private:
+    typedef std::set<Platform::AudioEndpoint*> AudioEndpointContainer;
+    AudioEndpointContainer audioEndpoints_;
+
+    Mutex mtx;
 
 public:
-    AudioEndpoint() : paused_(false) {}
-    virtual ~AudioEndpoint() {}
-    virtual int enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples) = 0;
-    virtual void flushAudioData() = 0;
+    AudioDispatch();
+    virtual ~AudioDispatch();
 
-    virtual std::string getId() const = 0;
+    void addEndpoint( AudioEndpoint& ep );
+    void removeEndpoint( AudioEndpoint& ep );
 
-    /*todo do something proper with these...*/
-    void pause() { paused_ = true; }
-    void resume() { paused_ = false; }
+    /* AudioEndpoint interface */
+    int enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples);
+    void flushAudioData();
 
+    void pause();
+    void resume();
 };
 }
-#endif /* AUDIOENDPOINT_H_ */
+#endif /* AUDIODISPATCH_H_ */

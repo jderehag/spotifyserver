@@ -92,7 +92,7 @@ Socket::Socket(SocketHandle_t* socket) : socket_(socket)
     ioctlsocket(socket_->handle, FIONBIO, &on);
 }
 
-Socket::Socket()
+Socket::Socket( SockType_t type )
 {
     u_long on = 1;
     WSADATA	wsaData;
@@ -101,7 +101,7 @@ Socket::Socket()
 
     WSAStartup(MAKEWORD(2,2), &wsaData);
 
-    socket_->handle = socket(PF_INET6, SOCK_STREAM, 0);
+    socket_->handle = socket(PF_INET6, (type == SOCKTYPE_STREAM) ? SOCK_STREAM : SOCK_DGRAM, 0);
 
     on = 0;
     setsockopt(socket_->handle, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&on, sizeof(on) );

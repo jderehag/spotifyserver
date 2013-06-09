@@ -48,9 +48,10 @@ void Messenger::queueRequest( Message* msg, IMessageSubscriber* origin, void* us
 {
     if ( MSG_IS_REQUEST( msg->getType() ) )
     {
+        PendingData p = { msg, origin, userData };
         /* todo: protect this */
         msg->setId( reqId++ );
-        pendingMessageMap_[msg->getId()] = (PendingData){msg, origin, userData};
+        pendingMessageMap_[msg->getId()] = p;
         mb_.push_back( msg );
     }
     else

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Jesper Derehag
+ * Copyright (c) 2013, Jens Nielsen
  * All rights reserved.
 
  * Redistribution and use in source and binary forms, with or without
@@ -16,7 +16,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL JESPER DEREHAG BE LIABLE FOR ANY
+ * DISCLAIMED. IN NO EVENT SHALL JENS NIELSEN BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -25,32 +25,27 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef AUDIOENDPOINT_H_
-#define AUDIOENDPOINT_H_
+#ifndef AUDIOENDPOINTMANAGER_H_
+#define AUDIOENDPOINTMANAGER_H_
 
-#include "AudioFifo.h"
+#include "AudioEndpointManagerCtrlInterface.h"
+#include "Platform/AudioEndpoints/AudioEndpoint.h"
+#include <set>
 
-namespace Platform {
-
-class AudioEndpoint
+class AudioEndpointManager : public AudioEndpointCtrlInterface
 {
-protected:
-    AudioFifo fifo;
-
-    bool paused_;
+private:
+    std::set<Platform::AudioEndpoint*> audioEndpoints;
 
 public:
-    AudioEndpoint() : paused_(false) {}
-    virtual ~AudioEndpoint() {}
-    virtual int enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples) = 0;
-    virtual void flushAudioData() = 0;
+    AudioEndpointManager();
+    virtual ~AudioEndpointManager();
 
-    virtual std::string getId() const = 0;
+    virtual void addEndpoint( Platform::AudioEndpoint& ep ,IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData );
+    virtual void removeEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData );
+    virtual void getEndpoints( IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData );
 
-    /*todo do something proper with these...*/
-    void pause() { paused_ = true; }
-    void resume() { paused_ = false; }
-
+    Platform::AudioEndpoint* getEndpoint( std::string id );
 };
-}
-#endif /* AUDIOENDPOINT_H_ */
+
+#endif /* AUDIOENDPOINTMANAGER_H_ */

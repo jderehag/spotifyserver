@@ -29,17 +29,22 @@
 #define CLIENT_H_
 
 #include "MediaInterface/MediaInterface.h"
+#include "AudioEndpointManager/AudioEndpointManagerCtrlInterface.h"
 #include "SocketHandling/SocketPeer.h"
-#include "MessageFactory/MessageEncoder.h"
 #include "Platform/AudioEndpoints/AudioEndpointRemote.h"
 
 using namespace LibSpotify;
 
-class Client : IMediaInterfaceCallbackSubscriber, public SocketPeer
+class Client : IMediaInterfaceCallbackSubscriber, IAudioEndpointCtrlCallbackSubscriber, public SocketPeer
 {
 private:
 
     MediaInterface& spotify_;
+    AudioEndpointCtrlInterface& audioCtrl_;
+    Platform::AudioEndpointRemote* audioEp;
+
+    static uint32_t count;
+    std::string id;
 
     bool loggedIn_;
     std::string networkUsername_;
@@ -47,8 +52,6 @@ private:
 
     uint32_t peerProtocolMajor_;
     uint32_t peerProtocolMinor_;
-
-    Platform::AudioEndpointRemote* audioEp;
 
     virtual void processMessage( const Message* msg );
     virtual void processResponse( const Message* rsp, void* userData );
@@ -70,7 +73,6 @@ private:
     virtual void getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress, void* userData );
     virtual void getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, void* userData );
 
-private:
     /* Message Handler functions*/
     void handleGetTracksReq(const Message* msg);
     void handleHelloReq(const Message* msg);
@@ -85,10 +87,18 @@ private:
     void handleGetAlbumReq(const Message* msg);
     void handleAddAudioEpReq(const Message* msg);
     void handleRemAudioEpReq(const Message* msg);
+    void handleGetCurrentAudioEpReq(const Message* msg);
+
+
+    virtual void getEndpointsResponse( std::set<std::string> endpoints, void* userData );
+
+    void handleCreateAudioEpReq(const Message* msg);
+    void handleDeleteAudioEpReq(const Message* msg);
+    void handleGetAudioEpReq(const Message* msg);
 
 public:
 
-    Client(Socket* socket, MediaInterface& spotifyif);
+    Client(Socket* socket, MediaInterface& spotifyif, AudioEndpointCtrlInterface& audioCtrl);
     virtual ~Client();
 
     void setUsername(std::string username);

@@ -41,7 +41,12 @@ private:
 
     int WaitForConnect();
 public:
-    Socket();
+    typedef enum
+    {
+        SOCKTYPE_DATAGRAM,
+        SOCKTYPE_STREAM,
+    } SockType_t;
+    Socket( SockType_t type = SOCKTYPE_STREAM );
     int BindToAddr(const std::string& addr, const std::string& port);
     int BindToDevice(const std::string& device, const std::string& port);
     int Listen();

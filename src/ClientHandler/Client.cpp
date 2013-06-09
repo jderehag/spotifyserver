@@ -27,15 +27,22 @@
 
 #include "Client.h"
 #include "applog.h"
-#include "MessageFactory/TlvDefinitions.h"
 
-Client::Client(Socket* socket, MediaInterface& spotifyif) : SocketPeer(socket),
+uint32_t Client::count;
+
+Client::Client(Socket* socket, MediaInterface& spotifyif, AudioEndpointCtrlInterface& audioCtrl ) :
+                                                            SocketPeer(socket),
                                                             spotify_(spotifyif),
+                                                            audioCtrl_(audioCtrl),
+                                                            audioEp(NULL),
                                                             loggedIn_(true),
                                                             networkUsername_(""),
-                                                            networkPassword_(""),
-                                                            audioEp(NULL)
+                                                            networkPassword_("")
 {
+    std::ostringstream idStr;
+    idStr << "client-" << count++;
+    id = idStr.str();
+
     spotify_.registerForCallbacks(*this);
 }
 
@@ -43,8 +50,14 @@ Client::~Client()
 {
     log(LOG_DEBUG) << "~Client";
     spotify_.unRegisterForCallbacks(*this);
-    /*todo clear pendingMessageMap_*/
-    /*todo unregister and free audioEp*/
+
+    if ( audioEp )
+    {
+        spotify_.removeAudioEndpoint( id, NULL, NULL );
+        audioCtrl_.removeEndpoint( *audioEp, NULL, NULL );
+        delete audioEp;
+        audioEp = NULL;
+    }
 }
 
 void Client::setUsername(std::string username) { networkUsername_ = username; }
@@ -72,7 +85,14 @@ void Client::processMessage(const Message* msg)
         case GET_STATUS_REQ:     handleGetStatusReq(msg);     break;
         case GET_IMAGE_REQ:      handleGetImageReq(msg);      break;
         case GET_ALBUM_REQ:      handleGetAlbumReq(msg);      break;
-        case ADD_AUDIO_ENDPOINT_REQ: handleAddAudioEpReq(msg); break;
+
+        case ADD_AUDIO_ENDPOINTS_REQ:         handleAddAudioEpReq(msg);        break;
+        case REM_AUDIO_ENDPOINTS_REQ:         handleRemAudioEpReq(msg);        break;
+        case GET_CURRENT_AUDIO_ENDPOINTS_REQ: handleGetCurrentAudioEpReq(msg); break;
+
+        case CREATE_AUDIO_ENDPOINT_REQ: handleCreateAudioEpReq(msg); break;
+        case DELETE_AUDIO_ENDPOINT_REQ: handleDeleteAudioEpReq(msg); break;
+        case GET_AUDIO_ENDPOINTS_REQ:   handleGetAudioEpReq(msg); break;
 
         default:
             break;
@@ -393,13 +413,99 @@ void Client::handleGetAlbumReq(const Message* msg)
 }
 
 
-void Client::handleAddAudioEpReq(const Message* msg)
+void Client::handleAddAudioEpReq( const Message* msg )
 {
-    audioEp = new Platform::AudioEndpointRemote();
-    spotify_.addAudioEndpoint(*audioEp);
-
     Message* rsp = msg->createResponse();
+    const StringTlv* idTlv = (const StringTlv*) msg->getTlv( TLV_LINK );
+    std::string endpointId = idTlv ? idTlv->getString() : id; /* no id specified means this client*/
+
+    //todo handle multiple tlvs
+    spotify_.addAudioEndpoint( endpointId, this, rsp );
     queueMessage( rsp );
+}
+
+void Client::handleRemAudioEpReq( const Message* msg )
+{
+    Message* rsp = msg->createResponse();
+    const StringTlv* idTlv = (const StringTlv*) msg->getTlv( TLV_LINK );
+    std::string endpointId = idTlv ? idTlv->getString() : id; /* no id specified means this client*/
+
+    //todo handle multiple tlvs
+    spotify_.removeAudioEndpoint( endpointId, this, rsp );
+    queueMessage( rsp );
+}
+
+void Client::handleGetCurrentAudioEpReq( const Message* msg )
+{
+    Message* rsp = msg->createResponse();
+    spotify_.getCurrentAudioEndpoints( this, rsp );
+    queueMessage( rsp );
+}
+
+
+
+void Client::handleCreateAudioEpReq( const Message* msg )
+{
+    Message* rsp = msg->createResponse();
+    const TlvContainer* epTlv = (const TlvContainer*) msg->getTlv( TLV_CLIENT );
+
+    if ( epTlv )
+    {
+        const IntTlv* portTlv = (const IntTlv*) epTlv->getTlv( TLV_PORT );
+        //const IntTlv* protoTlv = (const IntTlv*) epTlv->getTlv( TLV_AUDIO_EP_PROTOCOL );
+
+        if ( portTlv /* && protoTlv */ )
+        {
+            const std::string ip = "::1"; //todo
+            const uint32_t port = portTlv->getVal();
+
+            std::ostringstream portStr;
+            portStr << port;
+
+            if ( audioEp )
+            {
+                spotify_.removeAudioEndpoint( id, NULL, NULL );
+                audioCtrl_.removeEndpoint( *audioEp, NULL, NULL );
+            }
+
+            audioEp = new Platform::AudioEndpointRemote( id, ip, portStr.str());
+            audioCtrl_.addEndpoint(*audioEp, NULL, NULL);
+        }
+    }
+
+    queueMessage( rsp );
+}
+
+void Client::handleDeleteAudioEpReq( const Message* msg )
+{
+    Message* rsp = msg->createResponse();
+    if ( audioEp )
+    {
+        spotify_.removeAudioEndpoint( id, NULL, NULL );
+        audioCtrl_.removeEndpoint( *audioEp, NULL, NULL );
+    }
+    delete audioEp;
+    audioEp = NULL;
+
+    queueMessage( rsp );
+}
+
+void Client::getEndpointsResponse( std::set<std::string> endpoints, void* userData )
+{
+    Message* rsp = (Message*) userData;
+
+    for (std::set<std::string>::const_iterator it = endpoints.begin(); it != endpoints.end(); it++)
+    {
+        log(LOG_DEBUG) << (*it);
+        rsp->addTlv(TLV_LINK, (*it) );
+    }
+
+    queueMessage( rsp );
+}
+void Client::handleGetAudioEpReq( const Message* msg )
+{
+    Message* rsp = msg->createResponse();
+    audioCtrl_.getEndpoints( this, rsp );
 }
 
 

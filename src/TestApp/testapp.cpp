@@ -26,12 +26,12 @@
  */
 
 #include "SocketHandling/SocketClient.h"
-#if AUDIO_SERVER
-#include "AudioEndpointRemoteSocketServer.h"
-#endif
 #include "RemoteMediaInterface.h"
 #include "UIConsole.h"
 #include "Platform/Utils/Utils.h"
+#include "Platform/AudioEndpoints/AudioEndpointLocal.h"
+#include "AudioEndpointManager/RemoteAudioEndpointManager.h"
+
 #include "applog.h"
 
 
@@ -42,13 +42,11 @@ int main(int argc, char *argv[])
     cfg.setLogTo(ConfigHandling::LoggerConfig::STDOUT);
     Logger::Logger logger(cfg);
 
-#if AUDIO_SERVER
     ConfigHandling::NetworkConfig audioepservercfg;
     audioepservercfg.setPort("7789");
     ConfigHandling::AudioEndpointConfig audiocfg;
 
-    AudioEndpointRemoteSocketServer audioserver( audiocfg, audioepservercfg );
-#endif
+    Platform::AudioEndpointLocal audioEndpoint(audiocfg);
 
     if(argc > 1)
         servaddr = std::string(argv[1]);
@@ -56,6 +54,11 @@ int main(int argc, char *argv[])
     SocketClient sc(servaddr, "7788");
     RemoteMediaInterface m(sc);
     UIConsole ui(m);
+
+    RemoteAudioEndpointManager audioMgr(sc);
+    audioMgr.addEndpoint(audioEndpoint, NULL, NULL);
+
+    audioMgr.getEndpoints(NULL, NULL);
 
     /* wait for ui thread to exit */
     ui.joinThread();

@@ -29,7 +29,6 @@
 #define REMOTEMEDIAINTERFACE_H_
 
 #include "SocketHandling/Messenger.h"
-#include "MessageFactory/TlvDefinitions.h"
 #include "MediaInterface/MediaInterface.h"
 #include <string>
 #include <map>
@@ -47,8 +46,8 @@ public:
     virtual ~RemoteMediaInterface();
 
     /*Implements IMessageSubscriber*/
-    virtual void receivedMessage( Message* msg );
-    virtual void receivedResponse( Message* rsp, Message* req, void* userData );
+    virtual void receivedMessage( const Message* msg );
+    virtual void receivedResponse( const Message* rsp, const Message* req, void* userData );
     virtual void connectionState( bool up );
 
     /*Implements MediaInterface*/
@@ -66,7 +65,9 @@ public:
     virtual void play( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
     virtual void getAlbum( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
     virtual void search( std::string query, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
-    virtual void addAudioEndpoint(Platform::AudioEndpoint& endpoint);
+    virtual void addAudioEndpoint( const std::string& id, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
+    virtual void removeAudioEndpoint( const std::string& id, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
+    virtual void getCurrentAudioEndpoints( IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
 
 };
 

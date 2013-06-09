@@ -32,6 +32,7 @@
 #include "applog.h"
 
 #include "LibSpotifyIf/LibSpotifyIf.h"
+#include "AudioEndpointManager/AudioEndpointManager.h"
 #include "ClientHandler/ClientHandler.h"
 #include "Platform/AudioEndpoints/AudioEndpointLocal.h"
 #include "ConfigHandling/ConfigHandler.h"
@@ -81,6 +82,9 @@ int main(int argc, char *argv[])
     Logger::Logger logger(ch.getLoggerConfig());
 
     Platform::AudioEndpointLocal audioEndpoint(ch.getAudioEndpointConfig());
+    AudioEndpointManager audioMgr;
+    audioMgr.addEndpoint( audioEndpoint, NULL, NULL );
+
     ConfigHandling::SpotifyConfig spConfig = ch.getSpotifyConfig();
     if (spConfig.getUsername().empty())
     {
@@ -105,20 +109,21 @@ int main(int argc, char *argv[])
         spConfig.setPassword(pwd);
     }
 
-	LibSpotify::LibSpotifyIf libspotifyif(spConfig, audioEndpoint);
-	libspotifyif.logIn();
 
-	ClientHandler clienthandler(ch.getNetworkConfig(), libspotifyif);
+    LibSpotify::LibSpotifyIf libspotifyif(spConfig, audioMgr);
+    libspotifyif.logIn();
 
-	UIConsole ui( libspotifyif );
-	ui.joinThread();
+    ClientHandler clienthandler(ch.getNetworkConfig(), libspotifyif, audioMgr);
 
-	libspotifyif.logOut();
+    UIConsole ui( libspotifyif );
+    ui.joinThread();
 
-	/* cleanup */
-	libspotifyif.destroy();
-	clienthandler.destroy();
-	audioEndpoint.destroy();
+    libspotifyif.logOut();
 
-	return 0;
+    /* cleanup */
+    libspotifyif.destroy();
+    clienthandler.destroy();
+    audioEndpoint.destroy();
+
+    return 0;
 }

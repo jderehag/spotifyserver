@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Jesper Derehag
+ * Copyright (c) 2013, Jens Nielsen
  * All rights reserved.
 
  * Redistribution and use in source and binary forms, with or without
@@ -16,7 +16,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL JESPER DEREHAG BE LIABLE FOR ANY
+ * DISCLAIMED. IN NO EVENT SHALL JENS NIELSEN BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -25,32 +25,45 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef AUDIOENDPOINT_H_
-#define AUDIOENDPOINT_H_
+#ifndef AUDIOENDPOINTMANAGERCTRLINTERFACE_H_
+#define AUDIOENDPOINTMANAGERCTRLINTERFACE_H_
 
-#include "AudioFifo.h"
+#include "Platform/Threads/Mutex.h"
+#include "Platform/AudioEndpoints/AudioEndpoint.h"
+#include <set>
+#include <string>
 
-namespace Platform {
-
-class AudioEndpoint
+class IAudioEndpointCtrlCallbackSubscriber
 {
-protected:
-    AudioFifo fifo;
+public:
+    virtual void connectionState( bool up ) = 0;
 
-    bool paused_;
+    virtual void getEndpointsResponse( std::set<std::string> endpoints, void* userData ) = 0;
+};
+
+
+class AudioEndpointCtrlInterface
+{
+private:
+
+protected:
+    /***********************
+     * Callback subscription
+     ***********************/
+    Platform::Mutex callbackSubscriberMtx_;
+    typedef std::set<IAudioEndpointCtrlCallbackSubscriber*> AudioEndpointCtrlCallbackSubscriberSet;
+    AudioEndpointCtrlCallbackSubscriberSet callbackSubscriberList_;
 
 public:
-    AudioEndpoint() : paused_(false) {}
-    virtual ~AudioEndpoint() {}
-    virtual int enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples) = 0;
-    virtual void flushAudioData() = 0;
 
-    virtual std::string getId() const = 0;
+    void registerForCallbacks(IAudioEndpointCtrlCallbackSubscriber& subscriber);
+    void unRegisterForCallbacks(IAudioEndpointCtrlCallbackSubscriber& subscriber);
 
-    /*todo do something proper with these...*/
-    void pause() { paused_ = true; }
-    void resume() { paused_ = false; }
+    virtual void addEndpoint( Platform::AudioEndpoint& ep ,IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
+    virtual void removeEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
+    virtual void getEndpoints( IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
 
 };
-}
-#endif /* AUDIOENDPOINT_H_ */
+
+
+#endif /* AUDIOENDPOINTMANAGERCTRLINTERFACE_H_ */
