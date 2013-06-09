@@ -56,6 +56,7 @@ private:
     TlvContainer* decodeAlbum();
     TlvContainer* decodeArtist();
     TlvContainer* decodeImage();
+    TlvContainer* decodeGroupTlv();
     void decodeTlvs(TlvContainer* parent, uint32_t endPos);
 
     Message* decodeMessage(const uint8_t* message);

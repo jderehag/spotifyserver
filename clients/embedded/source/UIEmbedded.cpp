@@ -30,7 +30,7 @@
 #include "applog.h"
 #include "stm32f4_discovery.h"
 
-UIEmbedded::UIEmbedded( MediaInterface& m ) : m_(m), reqId_(0), playbackState(PLAYBACK_IDLE)
+UIEmbedded::UIEmbedded( MediaInterface& m ) : m_(m), playbackState(PLAYBACK_IDLE)
 {
     m_.registerForCallbacks( *this );
     itPlaylists_ = playlists.begin();
@@ -47,7 +47,7 @@ void UIEmbedded::shortButtonPress()
     {
         case PLAYBACK_IDLE:
             if( itPlaylists_ != playlists.end() )
-                m_.play( (*itPlaylists_).getLink(), this, reqId_++ ); // -> PLAYING
+                m_.play( (*itPlaylists_).getLink(), this, NULL ); // -> PLAYING
             break;
 
         case PLAYBACK_PAUSED:
@@ -72,7 +72,7 @@ void UIEmbedded::longButtonPress()
                 if( itPlaylists_ == playlists.end())
                     itPlaylists_ = playlists.begin();
 
-                m_.play( (*itPlaylists_).getLink(), this, reqId_++ ); // -> PLAYING
+                m_.play( (*itPlaylists_).getLink(), this, NULL ); // -> PLAYING
             }
             break;
 
@@ -91,8 +91,8 @@ void UIEmbedded::connectionState( bool up )
     if ( up )
     {
         /*new connection, check status and get playlists*/
-        m_.getStatus( this, reqId_ );
-        m_.getPlaylists( this, reqId_);
+        m_.getStatus( this, NULL );
+        m_.getPlaylists( this, NULL);
 
         /*make sure we shuffle (should be controlled by button though..)*/
         m_.setShuffle(true);
@@ -106,7 +106,7 @@ void UIEmbedded::connectionState( bool up )
     }
 }
 
-void UIEmbedded::getPlaylistsResponse( MediaInterfaceRequestId reqId, const Folder& rootfolder )
+void UIEmbedded::getPlaylistsResponse( const Folder& rootfolder, void* userData )
 {
     playlists.clear();
 
@@ -118,13 +118,13 @@ void UIEmbedded::getPlaylistsResponse( MediaInterfaceRequestId reqId, const Fold
     itPlaylists_ = playlists.begin();
 }
 
-void UIEmbedded::getTracksResponse( MediaInterfaceRequestId reqId, const std::deque<Track>& tracks )
+void UIEmbedded::getTracksResponse( const std::deque<Track>& tracks, void* userData )
 {}
-void UIEmbedded::getImageResponse( MediaInterfaceRequestId reqId, const void* data, size_t dataSize )
+void UIEmbedded::getImageResponse( const void* data, size_t dataSize, void* userData )
 {}
-void UIEmbedded::getAlbumResponse( MediaInterfaceRequestId reqId, const Album& album )
+void UIEmbedded::getAlbumResponse( const Album& album, void* userData )
 {}
-void UIEmbedded::genericSearchCallback( MediaInterfaceRequestId reqId, const std::deque<Track>& listOfTracks, const std::string& didYouMean)
+void UIEmbedded::genericSearchCallback( const std::deque<Track>& listOfTracks, const std::string& didYouMean, void* userData )
 {}
 
 
@@ -138,11 +138,11 @@ void UIEmbedded::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool
     playbackState = state;
 }
 
-void UIEmbedded::getStatusResponse( MediaInterfaceRequestId reqId, PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress )
+void UIEmbedded::getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress, void* userData )
 {
     statusUpdateInd( state, repeatStatus, shuffleStatus, currentTrack, progress );
 }
-void UIEmbedded::getStatusResponse( MediaInterfaceRequestId reqId, PlaybackState_t state, bool repeatStatus, bool shuffleStatus )
+void UIEmbedded::getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, void* userData )
 {
     statusUpdateInd( state, repeatStatus, shuffleStatus );
 }

@@ -180,9 +180,11 @@ class LeftFrame(Frame):
         self.spotify.registerStatusIndObserver(self)
         self.spotify.registerConnectionObserver(self)
         self.spotify.sendGetPlaylistReq()
+        self.spotify.sendCreateAudioEndpoint()
         
     def connectedIndCb(self):
         self.spotify.sendGetPlaylistReq()
+        self.spotify.sendCreateAudioEndpoint()
         
     def disconnectedIndCb(self):
         self.__playlists[:] = []

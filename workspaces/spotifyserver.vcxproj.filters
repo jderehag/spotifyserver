@@ -61,6 +61,9 @@
     <Filter Include="src\MediaInterface">
       <UniqueIdentifier>{974186fd-132c-4ab4-b969-c3b224c84548}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\AudioEndpointManager">
+      <UniqueIdentifier>{fc123cfd-9df8-4f7c-b68f-80828c9e7bf9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\LibSpotifyIf\LibSpotifyIf.h">
@@ -189,6 +192,15 @@
     <ClInclude Include="..\src\TestApp\UIConsole.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\AudioEndpointManager\AudioEndpointManager.h">
+      <Filter>src\AudioEndpointManager</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\AudioEndpointManager\AudioEndpointManagerCtrlInterface.h">
+      <Filter>src\AudioEndpointManager</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\Platform\AudioEndpoints\AudioDispatch.h">
+      <Filter>src\Platform\AudioEndpoints</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\spotifyserver.cpp">
@@ -316,6 +328,12 @@
     </ClCompile>
     <ClCompile Include="..\src\TestApp\UIConsole.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\AudioEndpointManager\AudioEndpointManager.cpp">
+      <Filter>src\AudioEndpointManager</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\Platform\AudioEndpoints\AudioDispatch.cpp">
+      <Filter>src\Platform\AudioEndpoints</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

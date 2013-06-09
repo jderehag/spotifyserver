@@ -412,23 +412,41 @@ class GetImageRspMsg(Message):
         return None
 
 
-class AddAudioEndpointReqMsg(Message):
+class CreateAudioEndpointReqMsg(Message):
     def __init__(self, msgId, src_port, protocol_type):
-        Message.__init__(self, TlvDefinitions.TlvMessageType.ADD_AUDIO_ENDPOINT_REQ, msgId)
-        self.addTlv(Tlv.Create(TlvDefinitions.TlvType.TLV_AUDIO_DESTINATION_PORT, 4, src_port))
-        self.addTlv(Tlv.Create(TlvDefinitions.TlvType.TLV_AUDIO_PROTOCOL_TYPE, 4, protocol_type))
-        
+        Message.__init__(self, TlvDefinitions.TlvMessageType.CREATE_AUDIO_ENDPOINT_REQ, msgId)
+        epTlv = Tlv.CreateContainer(TlvDefinitions.TlvType.TLV_CLIENT)
+        epTlv.addTlv(Tlv.Create(TlvDefinitions.TlvType.TLV_PORT, 4, src_port))
+        epTlv.addTlv(Tlv.Create(TlvDefinitions.TlvType.TLV_AUDIO_PROTOCOL_TYPE, 4, protocol_type))
+        self.addTlv(epTlv)
+
+class CreateAudioEndpointRspMsg(Message):
+    def __init__(self, msgId):
+        Message.__init__(self, TlvDefinitions.TlvMessageType.CREATE_AUDIO_ENDPOINT_RSP, msgId)
+
+class AddAudioEndpointReqMsg(Message):
+    def __init__(self, msgId):
+        Message.__init__(self, TlvDefinitions.TlvMessageType.ADD_AUDIO_ENDPOINTS_REQ, msgId)
+
 class AddAudioEndpointRspMsg(Message):
     def __init__(self, msgId):
-        Message.__init__(self, TlvDefinitions.TlvMessageType.ADD_AUDIO_ENDPOINT_RSP, msgId)
+        Message.__init__(self, TlvDefinitions.TlvMessageType.ADD_AUDIO_ENDPOINTS_RSP, msgId)
 
 class RemAudioEndpointReqMsg(Message):
     def __init__(self, msgId):
-        Message.__init__(self, TlvDefinitions.TlvMessageType.REM_AUDIO_ENDPOINT_REQ, msgId)
+        Message.__init__(self, TlvDefinitions.TlvMessageType.REM_AUDIO_ENDPOINTS_REQ, msgId)
 
 class RemAudioEndpointRspMsg(Message):
     def __init__(self, msgId):
-        Message.__init__(self, TlvDefinitions.TlvMessageType.REM_AUDIO_ENDPOINT_RSP, msgId)
+        Message.__init__(self, TlvDefinitions.TlvMessageType.REM_AUDIO_ENDPOINTS_RSP, msgId)
+
+class DelAudioEndpointReqMsg(Message):
+    def __init__(self, msgId):
+        Message.__init__(self, TlvDefinitions.TlvMessageType.DELETE_AUDIO_ENDPOINT_REQ, msgId)
+
+class DelAudioEndpointRspMsg(Message):
+    def __init__(self, msgId):
+        Message.__init__(self, TlvDefinitions.TlvMessageType.DELETE_AUDIO_ENDPOINT_RSP, msgId)
 
 class AudioDataIndMsg(Message):
     def __init__(self, msgId):

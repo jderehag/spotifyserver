@@ -39,15 +39,20 @@ class AudioEndpointRemote : public AudioEndpoint
 {
 private:
     Socket sock_;
+    std::string id_;
+
     void sendAudioData();
 
 public:
-    AudioEndpointRemote(const std::string& serveraddr, const std::string& serverport, unsigned int bufferNSecs);
+    AudioEndpointRemote(const std::string& id, const std::string& serveraddr, const std::string& serverport, unsigned int bufferNSecs);
 
     /* AudioEndpoint implementation */
     virtual int enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples);
     virtual void flushAudioData();
-    bool isLocal() const {return false;};
+
+    virtual std::string getId() const;
+
+    virtual bool isLocal() const {return false;};
 
 };
 

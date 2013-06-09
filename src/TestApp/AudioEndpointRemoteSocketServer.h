@@ -28,18 +28,21 @@
 #ifndef AUDIOENDPOINTSOCKETSERVER_H_
 #define AUDIOENDPOINTSOCKETSERVER_H_
 
-#include "SocketHandling/SocketServer.h"
+#include "Platform/Threads/Runnable.h"
+#include "Platform/Socket/Socket.h"
+#include "Platform/AudioEndpoints/AudioEndpoint.h"
 
-class AudioEndpointRemoteSocketServer : public SocketServer
+class AudioEndpointRemoteSocketServer : public Platform::Runnable
 {
 private:
-    ConfigHandling::AudioEndpointConfig audioconfig_;
+    Socket sock_;
 
-    virtual SocketPeer* newPeer( Socket* s );
 public:
-    AudioEndpointRemoteSocketServer(const ConfigHandling::AudioEndpointConfig& audioconfig, const ConfigHandling::NetworkConfig& config);
+    AudioEndpointRemoteSocketServer(Platform::AudioEndpoint& endpoint);
     virtual ~AudioEndpointRemoteSocketServer();
 
+    virtual void run();
+    virtual void destroy();
 };
 
 #endif /* AUDIOENDPOINTSOCKETSERVER_H_ */

@@ -29,7 +29,7 @@
 #include "MessageFactory/Message.h"
 #include "applog.h"
 
-Messenger::Messenger() : subscriber_(NULL)
+Messenger::Messenger() : reqId(0)
 {
 }
 
@@ -44,23 +44,49 @@ Message* Messenger::popMessage()
 }
 
 
-void Messenger::queueMessage( Message* msg, unsigned int reqId )
+void Messenger::queueRequest( Message* msg, IMessageSubscriber* origin, void* userData )
 {
-    msg->setId( reqId );
-    mb_.push_back( msg );
+    if ( MSG_IS_REQUEST( msg->getType() ) )
+    {
+        PendingData p = { msg, origin, userData };
+        /* todo: protect this */
+        msg->setId( reqId++ );
+        pendingMessageMap_[msg->getId()] = p;
+        mb_.push_back( msg );
+    }
+    else
+    {
+        log(LOG_WARN) << "Wrong message type!\n" << msg;
+        delete msg;
+    }
 }
 
-void Messenger::queueResponse( Message* rsp, const Message* req )
+void Messenger::queueMessage( Message* msg )
 {
-    rsp->setId( req->getId() );
-    mb_.push_back( rsp );
+    /* request and indication type messages needs their id set */
+    if ( MSG_IS_REQUEST( msg->getType() ) || MSG_IS_INDICATION( msg->getType() ) )
+    {
+        if( msg->hasId() )
+            log(LOG_WARN) << "Indication already has id set!\n" << msg; /*nevermind, let's override it*/
+
+        /* todo: protect this */
+        msg->setId( reqId++ );
+        mb_.push_back( msg );
+    }
+    else
+    {
+        if( msg->hasId() )
+        {
+            mb_.push_back( msg );
+        }
+        else
+        {
+            log(LOG_WARN) << "Response doesn't have an id set!\n" << msg;
+            delete msg;
+        }
+    }
 }
 
-void Messenger::queueResponse( Message* rsp, unsigned int reqId )
-{
-    rsp->setId( reqId );
-    mb_.push_back( rsp );
-}
 
 bool Messenger::pendingSend()
 {
@@ -69,5 +95,14 @@ bool Messenger::pendingSend()
 
 void Messenger::addSubscriber(IMessageSubscriber* subscriber)
 {
-    subscriber_ = subscriber;
+    callbackSubscriberMtx_.lock();
+    callbackSubscriberList_.insert(subscriber);
+    callbackSubscriberMtx_.unlock();
+}
+
+void Messenger::removeSubscriber(IMessageSubscriber* subscriber)
+{
+    callbackSubscriberMtx_.lock();
+    callbackSubscriberList_.erase(subscriber);
+    callbackSubscriberMtx_.unlock();
 }

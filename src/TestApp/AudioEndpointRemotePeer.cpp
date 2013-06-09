@@ -68,3 +68,8 @@ void AudioEndpointRemotePeer::processMessage(const Message* msg)
             break;
     }
 }
+
+void AudioEndpointRemotePeer::processResponse( const Message* rsp, void* userData )
+{
+}
+

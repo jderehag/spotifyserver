@@ -27,17 +27,23 @@
 
 #include "Client.h"
 #include "applog.h"
-#include "MessageFactory/TlvDefinitions.h"
 #include "Platform/Socket/Socket.h" /* needed so that client can resolve getSocket()->getRemoteAddr()*/
 
-Client::Client(Socket* socket, MediaInterface& spotifyif) : SocketPeer(socket),
+uint32_t Client::count;
+
+Client::Client(Socket* socket, MediaInterface& spotifyif, AudioEndpointCtrlInterface& audioCtrl ) :
+                                                            SocketPeer(socket),
                                                             spotify_(spotifyif),
+                                                            audioCtrl_(audioCtrl),
+                                                            audioEp(NULL),
                                                             loggedIn_(true),
                                                             networkUsername_(""),
-                                                            networkPassword_(""),
-                                                            audioEp(NULL),
-                                                            reqId_(0)
+                                                            networkPassword_("")
 {
+    std::ostringstream idStr;
+    idStr << "client-" << count++;
+    id = idStr.str();
+
     spotify_.registerForCallbacks(*this);
 }
 
@@ -45,8 +51,14 @@ Client::~Client()
 {
     log(LOG_DEBUG) << "~Client";
     spotify_.unRegisterForCallbacks(*this);
-    /*todo clear pendingMessageMap_*/
-    handleRemAudioEpReq(NULL);
+
+    if ( audioEp )
+    {
+        spotify_.removeAudioEndpoint( id, NULL, NULL );
+        audioCtrl_.removeEndpoint( *audioEp, NULL, NULL );
+        delete audioEp;
+        audioEp = NULL;
+    }
 }
 
 void Client::setUsername(std::string username) { networkUsername_ = username; }
@@ -74,12 +86,22 @@ void Client::processMessage(const Message* msg)
         case GET_STATUS_REQ:     handleGetStatusReq(msg);     break;
         case GET_IMAGE_REQ:      handleGetImageReq(msg);      break;
         case GET_ALBUM_REQ:      handleGetAlbumReq(msg);      break;
-        case ADD_AUDIO_ENDPOINT_REQ: handleAddAudioEpReq(msg); break;
-        case REM_AUDIO_ENDPOINT_REQ: handleRemAudioEpReq(msg); break;
+
+        case ADD_AUDIO_ENDPOINTS_REQ:         handleAddAudioEpReq(msg);        break;
+        case REM_AUDIO_ENDPOINTS_REQ:         handleRemAudioEpReq(msg);        break;
+        case GET_CURRENT_AUDIO_ENDPOINTS_REQ: handleGetCurrentAudioEpReq(msg); break;
+
+        case CREATE_AUDIO_ENDPOINT_REQ: handleCreateAudioEpReq(msg); break;
+        case DELETE_AUDIO_ENDPOINT_REQ: handleDeleteAudioEpReq(msg); break;
+        case GET_AUDIO_ENDPOINTS_REQ:   handleGetAudioEpReq(msg); break;
 
         default:
             break;
     }
+}
+
+void Client::processResponse( const Message* rsp, void* userData )
+{
 }
 
 void Client::connectionState( bool up )
@@ -107,7 +129,7 @@ void Client::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shu
     addStatusMsgMandatoryParameters( msg, state, repeatStatus, shuffleStatus );
     addStatusMsgOptionalParameters( msg, currentTrack, progress );
 
-    queueMessage( msg, reqId_++ );
+    queueMessage( msg );
 }
 
 void Client::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus )
@@ -116,143 +138,93 @@ void Client::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shu
 
     addStatusMsgMandatoryParameters( msg, state, repeatStatus, shuffleStatus );
 
-    queueMessage( msg, reqId_++ );
+    queueMessage( msg );
 }
 
-void Client::getStatusResponse( MediaInterfaceRequestId reqId, PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress )
+void Client::getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress, void* userData )
 {
-    PendingMessageMap::iterator msgIt = pendingMessageMap_.find(reqId);
-    if (msgIt != pendingMessageMap_.end())
-    {
-        Message* msg = msgIt->second;
+    Message* rsp = (Message*) userData;
 
-        addStatusMsgMandatoryParameters( msg, state, repeatStatus, shuffleStatus );
-        addStatusMsgOptionalParameters( msg, currentTrack, progress );
+    addStatusMsgMandatoryParameters( rsp, state, repeatStatus, shuffleStatus );
+    addStatusMsgOptionalParameters( rsp, currentTrack, progress );
 
-        queueResponse( msg, reqId );
-        pendingMessageMap_.erase(msgIt);
-    }
-    else log(LOG_WARN) << "Could not match the getStatusResponse() to a pending response";
-
+    queueMessage( rsp );
 }
-void Client::getStatusResponse( MediaInterfaceRequestId reqId, PlaybackState_t state, bool repeatStatus, bool shuffleStatus )
+void Client::getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, void* userData )
 {
-    PendingMessageMap::iterator msgIt = pendingMessageMap_.find(reqId);
-    if (msgIt != pendingMessageMap_.end())
-    {
-        Message* msg = msgIt->second;
+    Message* rsp = (Message*) userData;
 
-        addStatusMsgMandatoryParameters( msg, state, repeatStatus, shuffleStatus );
+    addStatusMsgMandatoryParameters( rsp, state, repeatStatus, shuffleStatus );
 
-        queueResponse( msg, reqId );
-        pendingMessageMap_.erase(msgIt);
-    }
-    else log(LOG_WARN) << "Could not match the getStatusResponse() to a pending response";
+    queueMessage( rsp );
 }
 
 
-void Client::getPlaylistsResponse( MediaInterfaceRequestId reqId, const Folder& rootfolder )
+void Client::getPlaylistsResponse( const Folder& rootfolder, void* userData )
 {
-    PendingMessageMap::iterator msgIt = pendingMessageMap_.find(reqId);
-    if (msgIt != pendingMessageMap_.end())
-    {
-        Message* msg = msgIt->second;
+    Message* rsp = (Message*) userData;
 
-        /*get playlist*/
-        msg->addTlv( rootfolder.toTlv() );
+    rsp->addTlv( rootfolder.toTlv() );
 
-        queueResponse( msg, reqId );
-        pendingMessageMap_.erase(msgIt);
-    }
-    else log(LOG_WARN) << "Could not match the getPlaylistsResponse() to a pending response";
-}
-void Client::getTracksResponse(MediaInterfaceRequestId reqId, const std::deque<Track>& tracks)
-{
-    log(LOG_DEBUG) << "Client::getTracksResponse()";
-
-    PendingMessageMap::iterator msgIt = pendingMessageMap_.find(reqId);
-    if (msgIt != pendingMessageMap_.end())
-    {
-        Message* msg = msgIt->second;
-        for (std::deque<Track>::const_iterator trackIt = tracks.begin(); trackIt != tracks.end(); trackIt++)
-        {
-            log(LOG_DEBUG) << "\t" << (*trackIt).getName();
-            msg->addTlv((*trackIt).toTlv());
-        }
-        log(LOG_DEBUG) << "#tracks found=" << tracks.size();
-
-        queueResponse( msg, reqId );
-        pendingMessageMap_.erase(msgIt);
-    }
-    else log(LOG_WARN) << "Could not match the getTracksResponse() to a pending response";
+    queueMessage( rsp );
 }
 
-void Client::getAlbumResponse(MediaInterfaceRequestId reqId, const Album& album)
+void Client::getTracksResponse( const std::deque<Track>& tracks, void* userData )
 {
-    log(LOG_DEBUG) << "Client::getAlbumResponse()";
-
-    PendingMessageMap::iterator msgIt = pendingMessageMap_.find(reqId);
-    if (msgIt != pendingMessageMap_.end())
+    Message* rsp = (Message*) userData;
+    for (std::deque<Track>::const_iterator trackIt = tracks.begin(); trackIt != tracks.end(); trackIt++)
     {
-        Message* msg = msgIt->second;
-        TlvContainer* albumTlv = album.toTlv();
-        const std::deque<Track>& tracks = album.getTracks();
-
-        for (std::deque<Track>::const_iterator trackIt = tracks.begin(); trackIt != tracks.end(); trackIt++)
-        {
-            log(LOG_DEBUG) << "\t" << (*trackIt).getName();
-            albumTlv->addTlv((*trackIt).toTlv());
-        }
-        log(LOG_DEBUG) << "#tracks found=" << tracks.size();
-
-        msg->addTlv(albumTlv);
-
-        queueResponse( msg, reqId );
-        pendingMessageMap_.erase(msgIt);
+        log(LOG_DEBUG) << "\t" << (*trackIt).getName();
+        rsp->addTlv((*trackIt).toTlv());
     }
-    else log(LOG_WARN) << "Could not match the getAlbumResponse() to a pending response";
+    log(LOG_DEBUG) << "#tracks found=" << tracks.size();
+
+    queueMessage( rsp );
 }
 
-void Client::getImageResponse(MediaInterfaceRequestId reqId, const void* data, size_t dataSize)
+void Client::getAlbumResponse( const Album& album, void* userData )
 {
-    log(LOG_DEBUG) << "Client::getImageResponse() " << dataSize << " bytes";
-    PendingMessageMap::iterator msgIt = pendingMessageMap_.find(reqId);
-    if (msgIt != pendingMessageMap_.end())
-    {
-        Message* msg = msgIt->second;
-        if(data && dataSize)
-        {
-            TlvContainer* image = new TlvContainer(TLV_IMAGE);
-            image->addTlv(TLV_IMAGE_FORMAT, IMAGE_FORMAT_JPEG);
-            image->addTlv(new BinaryTlv(TLV_IMAGE_DATA, (const uint8_t*)data, (uint32_t)dataSize));
-            msg->addTlv(image);
-        }
-        queueResponse( msg, reqId );
-        pendingMessageMap_.erase(msgIt);
-    }
-    else log(LOG_WARN) << "Could not match the getImageResponse() to a pending response";
+    Message* rsp = (Message*) userData;
+    TlvContainer* albumTlv = album.toTlv();
+    const std::deque<Track>& tracks = album.getTracks();
 
+    for (std::deque<Track>::const_iterator trackIt = tracks.begin(); trackIt != tracks.end(); trackIt++)
+    {
+        log(LOG_DEBUG) << "\t" << (*trackIt).getName();
+        albumTlv->addTlv((*trackIt).toTlv());
+    }
+    log(LOG_DEBUG) << "#tracks found=" << tracks.size();
+
+    rsp->addTlv(albumTlv);
+
+    queueMessage( rsp );
 }
 
-void Client::genericSearchCallback(MediaInterfaceRequestId reqId, const std::deque<Track>& tracks, const std::string& didYouMean)
+void Client::getImageResponse( const void* data, size_t dataSize, void* userData )
 {
-    log(LOG_DEBUG) << "\tdid you mean:" << didYouMean;
-
-    PendingMessageMap::iterator msgIt = pendingMessageMap_.find(reqId);
-    if (msgIt != pendingMessageMap_.end())
+    Message* rsp = (Message*) userData;
+    if(data && dataSize)
     {
-        Message* msg = msgIt->second;
-        for (std::deque<Track>::const_iterator trackIt = tracks.begin(); trackIt != tracks.end(); trackIt++)
-        {
-            log(LOG_DEBUG) << "\t" << (*trackIt).getName();
-            msg->addTlv((*trackIt).toTlv());
-        }
-        log(LOG_DEBUG) << "#tracks found=" << tracks.size();
-
-        queueResponse( msg, reqId );
-        pendingMessageMap_.erase(msgIt);
+        TlvContainer* image = new TlvContainer(TLV_IMAGE);
+        image->addTlv(TLV_IMAGE_FORMAT, IMAGE_FORMAT_JPEG);
+        image->addTlv(new BinaryTlv(TLV_IMAGE_DATA, (const uint8_t*)data, (uint32_t)dataSize));
+        rsp->addTlv(image);
     }
-    else log(LOG_WARN) << "Could not match the genericSearchCallback() to a pending response";
+    queueMessage( rsp );
+}
+
+void Client::genericSearchCallback( const std::deque<Track>& tracks, const std::string& didYouMean, void* userData )
+{
+    Message* rsp = (Message*) userData;
+
+    for (std::deque<Track>::const_iterator trackIt = tracks.begin(); trackIt != tracks.end(); trackIt++)
+    {
+        log(LOG_DEBUG) << "\t" << (*trackIt).getName();
+        rsp->addTlv((*trackIt).toTlv());
+    }
+    log(LOG_DEBUG) << "#tracks found=" << tracks.size();
+
+    queueMessage( rsp );
 }
 
 void Client::handleGetTracksReq(const Message* msg)
@@ -260,16 +232,14 @@ void Client::handleGetTracksReq(const Message* msg)
     GetTracksReq* req = (GetTracksReq*)msg;
     log(LOG_DEBUG) << "get tracks: " << req->getPlaylist();
 
-    Message* rsp  = new Message(GET_TRACKS_RSP);
-    unsigned int headerId = req->getId();
-    pendingMessageMap_[headerId] = rsp;
+    Message* rsp  = msg->createResponse();
 
-    spotify_.getTracks( req->getPlaylist(), this, headerId );
+    spotify_.getTracks( req->getPlaylist(), this, rsp );
 }
 
 void Client::handleHelloReq(const Message* msg)
 {
-    Message* rsp = new Message(HELLO_RSP);
+    Message* rsp = msg->createResponse();
     const IntTlv* protoMajorTlv = (const IntTlv*)msg->getTlvRoot()->getTlv(TLV_PROTOCOL_VERSION_MAJOR);
     const IntTlv* protoMinorTlv = (const IntTlv*)msg->getTlvRoot()->getTlv(TLV_PROTOCOL_VERSION_MINOR);
 
@@ -312,41 +282,21 @@ void Client::handleHelloReq(const Message* msg)
     rsp->addTlv(TLV_PROTOCOL_VERSION_MAJOR, PROTOCOL_VERSION_MAJOR);
     rsp->addTlv(TLV_PROTOCOL_VERSION_MINOR, PROTOCOL_VERSION_MINOR);
 
-    queueResponse( rsp, msg );
+    queueMessage( rsp );
 }
 
 void Client::handleGetPlaylistsReq(const Message* msg)
 {
-    unsigned int headerId = msg->getId();
-    Message* rsp = new Message(GET_PLAYLISTS_RSP);
+    Message* rsp = msg->createResponse();
 
-    /* make sure that the pending message queue does not already contain such a message */
-    if (pendingMessageMap_.find(headerId) == pendingMessageMap_.end())
-    {
-        pendingMessageMap_[headerId] = rsp;
-        spotify_.getPlaylists( this, headerId );
-    }
-    else
-    {
-        delete rsp;
-    }
+    spotify_.getPlaylists( this, rsp );
 }
 
 void Client::handleGetStatusReq(const Message* msg)
 {
-    unsigned int headerId = msg->getId();
-    Message* rsp = new Message(GET_STATUS_RSP);
+    Message* rsp = msg->createResponse();
 
-    /* make sure that the pending message queue does not already contain such a message */
-    if (pendingMessageMap_.find(headerId) == pendingMessageMap_.end())
-    {
-        pendingMessageMap_[headerId] = rsp;
-        spotify_.getStatus( this, headerId );
-    }
-    else
-    {
-        delete rsp;
-    }
+    spotify_.getStatus( this, rsp );
 }
 
 void Client::handlePlayReq(const Message* msg)
@@ -359,16 +309,16 @@ void Client::handlePlayReq(const Message* msg)
         log(LOG_DEBUG) << "spotify_.play(" << url->getString() << ")";
         if ( startIndex != NULL )
         {
-            spotify_.play( url->getString(), startIndex->getVal(), this, msg->getId() );
+            spotify_.play( url->getString(), startIndex->getVal(), this, NULL );
         }
         else
         {
-            spotify_.play( url->getString(), this, msg->getId() );
+            spotify_.play( url->getString(), this, NULL );
         }
     }
 
-    Message* rsp = new Message( PLAY_RSP );
-    queueResponse( rsp, msg );
+    Message* rsp = msg->createResponse();
+    queueMessage( rsp );
 }
 
 void Client::handlePlayTrackReq(const Message* msg)
@@ -376,10 +326,10 @@ void Client::handlePlayTrackReq(const Message* msg)
     const TlvContainer* track = (const TlvContainer*) msg->getTlvRoot()->getTlv(TLV_TRACK);
     const StringTlv* url = (const StringTlv*) track->getTlv(TLV_LINK);
     log(LOG_DEBUG) << "spotify_.play(" << url->getString() << ")";
-    spotify_.play( url->getString(), this, msg->getId() );
+    spotify_.play( url->getString(), this, NULL );
 
-    Message* rsp = new Message( PLAY_TRACK_RSP );
-    queueResponse( rsp, msg );
+    Message* rsp = msg->createResponse();
+    queueMessage( rsp );
 }
 
 void Client::handlePlayControlReq(const Message* msg)
@@ -429,28 +379,16 @@ void Client::handlePlayControlReq(const Message* msg)
                 break;
         }
     }
-    Message* rsp = new Message( PLAY_CONTROL_RSP );
-    queueResponse( rsp, msg );
+    Message* rsp = msg->createResponse();
+    queueMessage( rsp );
 }
 
 
 void Client::handleGetImageReq(const Message* msg)
 {
     const StringTlv* link = (const StringTlv*) msg->getTlvRoot()->getTlv(TLV_LINK);
-
-    unsigned int headerId = msg->getId();
-    Message* rsp = new Message(GET_IMAGE_RSP);
-
-    /* make sure that the pending message queue does not already contain such a message */
-    if (pendingMessageMap_.find(headerId) == pendingMessageMap_.end())
-    {
-        pendingMessageMap_[headerId] = rsp;
-        spotify_.getImage( link ? link->getString() : std::string(""), this, headerId );
-    }
-    else
-    {
-        delete rsp;
-    }
+    Message* rsp = msg->createResponse();
+    spotify_.getImage( link ? link->getString() : std::string(""), this, rsp );
 }
 
 void Client::handleGenericSearchReq(const Message* msg)
@@ -459,19 +397,8 @@ void Client::handleGenericSearchReq(const Message* msg)
 
     if (query && query->getString() != "")
     {
-        unsigned int headerId = msg->getId();
-        Message* rsp = new Message(GENERIC_SEARCH_RSP);
-
-        /* make sure that the pending message queue does not already contain such a message */
-        if (pendingMessageMap_.find(headerId) == pendingMessageMap_.end())
-        {
-            pendingMessageMap_[headerId] = rsp;
-            spotify_.search( query->getString(), this, headerId );
-        }
-        else
-        {
-            delete rsp;
-        }
+        Message* rsp = msg->createResponse();
+        spotify_.search( query->getString(), this, rsp );
     }
     else
     {
@@ -482,51 +409,107 @@ void Client::handleGenericSearchReq(const Message* msg)
 void Client::handleGetAlbumReq(const Message* msg)
 {
     const StringTlv* link = (const StringTlv*) msg->getTlvRoot()->getTlv(TLV_LINK);
-
-    unsigned int headerId = msg->getId();
-    Message* rsp = new Message(GET_ALBUM_RSP);
-
-    /* make sure that the pending message queue does not already contain such a message */
-    if (pendingMessageMap_.find(headerId) == pendingMessageMap_.end())
-    {
-        pendingMessageMap_[headerId] = rsp;
-        spotify_.getAlbum( link ? link->getString() : std::string(""), this, headerId );
-    }
-    else
-    {
-        delete rsp;
-    }
+    Message* rsp = msg->createResponse();
+    spotify_.getAlbum( link ? link->getString() : std::string(""), this, rsp );
 }
 
 
-void Client::handleAddAudioEpReq(const Message* msg)
+void Client::handleAddAudioEpReq( const Message* msg )
 {
-    if(audioEp == NULL)
+    Message* rsp = msg->createResponse();
+    const StringTlv* idTlv = (const StringTlv*) msg->getTlv( TLV_LINK );
+    std::string endpointId = idTlv ? idTlv->getString() : id; /* no id specified means this client*/
+
+    //todo handle multiple tlvs
+    spotify_.addAudioEndpoint( endpointId, this, rsp );
+    queueMessage( rsp );
+}
+
+void Client::handleRemAudioEpReq( const Message* msg )
+{
+    Message* rsp = msg->createResponse();
+    const StringTlv* idTlv = (const StringTlv*) msg->getTlv( TLV_LINK );
+    std::string endpointId = idTlv ? idTlv->getString() : id; /* no id specified means this client*/
+
+    //todo handle multiple tlvs
+    spotify_.removeAudioEndpoint( endpointId, this, rsp );
+    queueMessage( rsp );
+}
+
+void Client::handleGetCurrentAudioEpReq( const Message* msg )
+{
+    Message* rsp = msg->createResponse();
+    spotify_.getCurrentAudioEndpoints( this, rsp );
+    queueMessage( rsp );
+}
+
+
+
+void Client::handleCreateAudioEpReq( const Message* msg )
+{
+    Message* rsp = msg->createResponse();
+    const TlvContainer* epTlv = (const TlvContainer*) msg->getTlv( TLV_CLIENT );
+
+    if ( epTlv )
     {
-        char portstr[33];
-        const IntTlv* portTlv = (const IntTlv*)msg->getTlvRoot()->getTlv(TLV_AUDIO_DESTINATION_PORT);
-        if(portTlv != NULL)
+        const IntTlv* portTlv = (const IntTlv*) epTlv->getTlv( TLV_PORT );
+        //const IntTlv* protoTlv = (const IntTlv*) epTlv->getTlv( TLV_AUDIO_EP_PROTOCOL );
+
+        if ( portTlv /* && protoTlv */ )
         {
-            sprintf(portstr,"%d",portTlv->getVal());
-            audioEp = new Platform::AudioEndpointRemote(getSocket()->getRemoteAddr(), portstr, 10);
-            spotify_.addAudioEndpoint(*audioEp);
+            const std::string& ip = getSocket()->getRemoteAddr();
+            const uint32_t port = portTlv->getVal();
+
+            std::ostringstream portStr;
+            portStr << port;
+
+            if ( audioEp )
+            {
+                spotify_.removeAudioEndpoint( id, NULL, NULL );
+                audioCtrl_.removeEndpoint( *audioEp, NULL, NULL );
+            }
+
+            audioEp = new Platform::AudioEndpointRemote( id, ip, portStr.str(), 10);
+            audioCtrl_.addEndpoint(*audioEp, NULL, NULL);
         }
         else
         {
             log(LOG_NOTICE) << "Port TLV missing from message, add errorcode in response here!";
         }
     }
+
+    queueMessage( rsp );
 }
 
-void Client::handleRemAudioEpReq(const Message* msg)
+void Client::handleDeleteAudioEpReq( const Message* msg )
 {
-    if(audioEp != NULL)
+    Message* rsp = msg->createResponse();
+    if ( audioEp )
     {
-        spotify_.delAudioEndpoint(*audioEp);
-        delete audioEp;
-        audioEp = NULL;
+        spotify_.removeAudioEndpoint( id, NULL, NULL );
+        audioCtrl_.removeEndpoint( *audioEp, NULL, NULL );
     }
+    delete audioEp;
+    audioEp = NULL;
+
+    queueMessage( rsp );
 }
 
+void Client::getEndpointsResponse( std::set<std::string> endpoints, void* userData )
+{
+    Message* rsp = (Message*) userData;
 
+    for (std::set<std::string>::const_iterator it = endpoints.begin(); it != endpoints.end(); it++)
+    {
+        log(LOG_DEBUG) << (*it);
+        rsp->addTlv(TLV_LINK, (*it) );
+    }
+
+    queueMessage( rsp );
+}
+void Client::handleGetAudioEpReq( const Message* msg )
+{
+    Message* rsp = msg->createResponse();
+    audioCtrl_.getEndpoints( this, rsp );
+}
 

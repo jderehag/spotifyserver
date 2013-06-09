@@ -23,6 +23,7 @@ VPATH += ConfigHandling \
 	 ../common/MessageFactory \
 	 ../common/Logger \
 	 ../common/SocketHandling \
+	 ../common/AudioEndpointManager \
 	 TestApp
 
 COMMON_OBJECTS += spotifyserver.o \
@@ -33,6 +34,8 @@ COMMON_OBJECTS += spotifyserver.o \
 		  NetworkConfig.o \
 		  AudioEndpointConfig.o \
 		  AudioEndpointRemote.o \
+		  AudioEndpointManager.o \
+		  AudioDispatch.o \
 		  LoggerConfig.o \
 		  Logger.o \
 		  LibSpotifyIf.o \
@@ -86,10 +89,9 @@ TESTAPP_OBJECTS +=  testapp.o \
 					AudioEndpointConfig.o \
 					SocketServer.o \
 					SocketPeer.o \
-					AudioFifo.o 
-#					AudioEndpointRemoteSocketServer.o \
-#					AudioEndpointRemotePeer.o
-					
+					AudioFifo.o \
+					RemoteAudioEndpointManager.o \
+					AudioEndpointRemoteSocketServer.o
 
 TESTAPP_OBJECTS += $(ARCH_OBJECTS) $(AUDIO_OBJECTS)
 

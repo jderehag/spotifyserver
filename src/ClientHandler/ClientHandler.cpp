@@ -29,8 +29,10 @@
 #include "Client.h"
 #include "applog.h"
 
-ClientHandler::ClientHandler(const ConfigHandling::NetworkConfig& config, LibSpotifyIf& spotifyif) : SocketServer(config),
-                                                                                                     spotify_(spotifyif)
+ClientHandler::ClientHandler(const ConfigHandling::NetworkConfig& config, MediaInterface& media, AudioEndpointCtrlInterface& audioCtrl) :
+     SocketServer(config),
+     media_(media),
+     audioCtrl_(audioCtrl)
 {
 }
 
@@ -40,7 +42,7 @@ ClientHandler::~ClientHandler()
 
 SocketPeer* ClientHandler::newPeer( Socket* s )
 {
-    Client* c = new Client(s, spotify_);
+    Client* c = new Client(s, media_, audioCtrl_);
     c->setUsername(config_.getUsername());
     c->setPassword(config_.getPassword());
     return c;

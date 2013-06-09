@@ -421,7 +421,6 @@ int select(std::set<Socket*>* readsockets, std::set<Socket*>* writesockets, std:
             if (!FD_ISSET((*it)->socket_->fd, &writefds))
             {
                 writesockets->erase(it++);
-                log(LOG_WARN) << "nooooo ";
             }
             else
                 it++;

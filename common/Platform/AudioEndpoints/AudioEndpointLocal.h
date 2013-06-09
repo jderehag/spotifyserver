@@ -45,9 +45,11 @@ public:
     virtual int enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples);
     virtual void flushAudioData();
 
+    virtual std::string getId() const { return "local"; }
+
     virtual void run();
     virtual void destroy();
-    bool isLocal() const {return true;};
+    virtual bool isLocal() const {return true;};
 };
 
 }

@@ -33,7 +33,6 @@ static void printTracks( const std::deque<Track>& tracks );
 
 
 UIConsole::UIConsole( MediaInterface& m ) : m_(m),
-                                            reqId_(0),
                                             itPlaylists_(playlists.begin()),
                                             isShuffle(false),
                                             isRepeat(false)
@@ -56,9 +55,13 @@ void UIConsole::destroy()
 void UIConsole::run()
 {
     char c;
+    std::string cmd;
 
     while(isCancellationPending() == false)
     {
+        std::vector<std::string> argv;
+        std::string arg;
+
         std::cout << "'g' get playlists\n"
                      "'t' get tracks\n"
                      "'a' get album\n"
@@ -71,8 +74,37 @@ void UIConsole::run()
                      "'v' next\n"
                      "'e' toggle shuffle\n" << std::endl;
 
-        c = getchar();
+        getline( std::cin, cmd );
+        std::istringstream iss(cmd);
 
+        while( iss >> arg )
+        {
+            argv.push_back( arg );
+        }
+
+        int argc = argv.size();
+        if ( argc == 0)
+            continue;
+
+        if ( argv[0] == "addAudio")
+        {
+            std::string id = "";
+            if ( argc > 1 )
+                id = argv[1];
+            m_.addAudioEndpoint(id, this, NULL);
+            continue;
+        }
+        if ( argv[0] == "remAudio")
+        {
+            std::string id = "";
+            if ( argc > 1 )
+                id = argv[1];
+            m_.removeAudioEndpoint(id, this, NULL);
+            continue;
+        }
+
+        //handle the old commands the old way for now..
+        c = argv[0][0];
         switch(c)
         {
         case 'i':
@@ -81,7 +113,7 @@ void UIConsole::run()
             std::cout << "Enter Album URI" << std::endl;
             std::cin >> uri;
 
-            m_.getImage( uri, this, reqId_++ );
+            m_.getImage( uri, this, NULL );
             break;
         }
 
@@ -120,12 +152,12 @@ void UIConsole::run()
 
         case 's':
         {
-            m_.getStatus( this, reqId_++ );
+            m_.getStatus( this, NULL );
             break;
         }
         case 'g':
         {
-            m_.getPlaylists( this, reqId_++ );
+            m_.getPlaylists( this, NULL );
             break;
         }
         case 't':
@@ -134,7 +166,7 @@ void UIConsole::run()
             std::cout << "Enter Spotify URI" << std::endl;
             std::cin >> uri;
 
-            m_.getTracks( uri, this, reqId_++ );
+            m_.getTracks( uri, this, NULL );
             break;
         }
         case 'p':
@@ -144,7 +176,7 @@ void UIConsole::run()
             std::cin >> uri;
 
             if (uri == "w") uri = "spotify:track:2CT3r93YuSHtm57mjxvjhH";
-            m_.play( uri, this, reqId_++ );
+            m_.play( uri, this, NULL );
             break;
         }
         case 'a':
@@ -154,7 +186,7 @@ void UIConsole::run()
             std::cin >> uri;
 
             if (uri == "w") uri = "spotify:album:1f4I0SpE0O8yg4Eg2ywwv1";
-            m_.getAlbum( uri, this, reqId_++ );
+            m_.getAlbum( uri, this, NULL );
             break;
         }
 
@@ -164,7 +196,7 @@ void UIConsole::run()
             std::cout << "Write your search query, end with enter:" << std::endl;
             std::cin >> query;
 
-            m_.search( query, this, reqId_++ );
+            m_.search( query, this, NULL );
             break;
         }
 
@@ -185,7 +217,7 @@ void UIConsole::rootFolderUpdatedInd()
 {}
 void UIConsole::connectionState( bool up )
 {}
-void UIConsole::getPlaylistsResponse( MediaInterfaceRequestId reqId, const Folder& rootfolder )
+void UIConsole::getPlaylistsResponse( const Folder& rootfolder, void* userData )
 {
     printFolder( rootfolder, 2 );
 
@@ -196,21 +228,21 @@ void UIConsole::getPlaylistsResponse( MediaInterfaceRequestId reqId, const Folde
 
     itPlaylists_ = playlists.begin();
 }
-void UIConsole::getTracksResponse( MediaInterfaceRequestId reqId, const std::deque<Track>& tracks )
+void UIConsole::getTracksResponse( const std::deque<Track>& tracks, void* userData )
 {
     printTracks( tracks );
 }
-void UIConsole::getImageResponse( MediaInterfaceRequestId reqId, const void* data, size_t dataSize )
+void UIConsole::getImageResponse( const void* data, size_t dataSize, void* userData )
 {
     std::cout << "Got " << dataSize << " bytes image " << std::endl;
 }
-void UIConsole::getAlbumResponse( MediaInterfaceRequestId reqId, const Album& album )
+void UIConsole::getAlbumResponse( const Album& album, void* userData )
 {
     std::cout << "  " << album.getName() << " - " << album.getLink() << std::endl;
     std::cout << "  By " << album.getArtist().getName() << " - " << album.getArtist().getLink() << std::endl;
     printTracks( album.getTracks() );
 }
-void UIConsole::genericSearchCallback( MediaInterfaceRequestId reqId, const std::deque<Track>& listOfTracks, const std::string& didYouMean)
+void UIConsole::genericSearchCallback( const std::deque<Track>& listOfTracks, const std::string& didYouMean, void* userData )
 {
     printTracks( listOfTracks );
 }
@@ -239,11 +271,11 @@ void UIConsole::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool 
     }
     std::cout << " - Repeat " << (repeatStatus ? "on" : "off") << ", Shuffle " << (shuffleStatus ? "on" : "off") << std::endl << std::endl;
 }
-void UIConsole::getStatusResponse( MediaInterfaceRequestId reqId, PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress )
+void UIConsole::getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress, void* userData )
 {
     statusUpdateInd( state, repeatStatus, shuffleStatus, currentTrack, progress );
 }
-void UIConsole::getStatusResponse( MediaInterfaceRequestId reqId, PlaybackState_t state, bool repeatStatus, bool shuffleStatus )
+void UIConsole::getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, void* userData )
 {
     statusUpdateInd( state, repeatStatus, shuffleStatus );
 }

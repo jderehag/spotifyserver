@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Jens Nielsen
+ * Copyright (c) 2013, Jens Nielsen
  * All rights reserved.
 
  * Redistribution and use in source and binary forms, with or without
@@ -25,26 +25,37 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SOCKETCLIENT_H_
-#define SOCKETCLIENT_H_
+#ifndef AUDIODISPATCH_H_
+#define AUDIODISPATCH_H_
 
-#include "Messenger.h"
-#include "Platform/Threads/Runnable.h"
-#include <string>
+#include "AudioEndpoint.h"
+#include "Platform/Threads/Mutex.h"
+#include <set>
 
-class SocketClient : public Messenger, public Platform::Runnable
+namespace Platform
+{
+
+class AudioDispatch
 {
 private:
-    std::string serveraddr_;
-    std::string serverport_;
+    typedef std::set<Platform::AudioEndpoint*> AudioEndpointContainer;
+    AudioEndpointContainer audioEndpoints_;
+
+    Mutex mtx;
 
 public:
-    SocketClient(const std::string& serveraddr, const std::string& serverport);
-    virtual ~SocketClient();
+    AudioDispatch();
+    virtual ~AudioDispatch();
 
-    void run();
-    void destroy();
+    void addEndpoint( AudioEndpoint& ep );
+    void removeEndpoint( AudioEndpoint& ep );
 
+    /* AudioEndpoint interface */
+    int enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples);
+    void flushAudioData();
+
+    void pause();
+    void resume();
 };
-
-#endif /* SOCKETCLIENT_H_ */
+}
+#endif /* AUDIODISPATCH_H_ */

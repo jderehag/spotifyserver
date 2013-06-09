@@ -30,6 +30,8 @@
 
 #include "Platform/Threads/Mutex.h"
 #include "Platform/Threads/Messagebox.h"
+#include <set>
+#include <map>
 #include <stdint.h>
 
 
@@ -39,8 +41,8 @@ class IMessageSubscriber
 {
 public:
     virtual void connectionState( bool up ) = 0;
-    virtual void receivedMessage( Message* msg ) = 0;
-    virtual void receivedResponse( Message* rsp, Message* req ) = 0;
+    virtual void receivedMessage( const Message* msg ) = 0;
+    virtual void receivedResponse( const Message* rsp, const Message* req, void* userData ) = 0;
 };
 
 class Messenger
@@ -50,19 +52,28 @@ private:
     Platform::Messagebox<Message*> mb_;
 
 protected:
-    IMessageSubscriber* subscriber_;
+    Platform::Mutex callbackSubscriberMtx_;
+    typedef std::set<IMessageSubscriber*> MessageSubscriberSet;
+    MessageSubscriberSet callbackSubscriberList_;
+
+    /* pending requests sent to other side of connection */
+    typedef struct { Message* req; IMessageSubscriber* origin; void* userData; } PendingData;
+    typedef std::map<unsigned int, PendingData>  PendingDataMap;
+    PendingDataMap pendingMessageMap_;
 
     Message* popMessage();
+
+    uint32_t reqId;
 
 public:
     Messenger();
     virtual ~Messenger();
 
-    void queueMessage( Message* msg, unsigned int reqId ); /* request and indication type messages */
-    void queueResponse( Message* rsp, const Message* req ); /* response type messages */
-    void queueResponse( Message* rsp, unsigned int reqId ); /* response type messages */
+    void queueRequest( Message* msg, IMessageSubscriber* source, void* userData ); /* request type messages */
+    void queueMessage( Message* msg ); /* response and indication type messages, can also be used for request if response is ignored */
 
     void addSubscriber( IMessageSubscriber* subscriber );
+    void removeSubscriber( IMessageSubscriber* subscriber );
 
     virtual bool pendingSend();
 };

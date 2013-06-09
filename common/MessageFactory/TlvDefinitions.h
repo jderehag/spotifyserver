@@ -34,8 +34,9 @@
 #define RSP_BIT 0x80000000
 #define IND_BIT 0x40000000
 
-#define MSG_IS_REQUEST( id ) ( ( id & ( RSP_BIT | IND_BIT ) ) == 0 )
-#define MSG_IS_RESPONSE( id ) ( ( id & RSP_BIT ) != 0 )
+#define MSG_IS_REQUEST( type ) ( ( type & ( RSP_BIT | IND_BIT ) ) == 0 )
+#define MSG_IS_RESPONSE( type ) ( ( type & RSP_BIT ) != 0 )
+#define MSG_IS_INDICATION( type ) ( ( type & IND_BIT ) != 0 )
 
 #define REQ(name, value) name##_REQ = value, name##_RSP = (value | RSP_BIT),
 #define IND(name, value) name##_IND = (value | IND_BIT),
@@ -63,9 +64,16 @@ typedef enum
     IND( STATUS,           0x401 )
 
     /* Remote Audio - Experimental use only! */
-    REQ( ADD_AUDIO_ENDPOINT, 0x1001 )
-    REQ( REM_AUDIO_ENDPOINT, 0x1002 )
-    IND( AUDIO_DATA,         0x1011 )
+    REQ( CREATE_AUDIO_ENDPOINT, 0x1001 )
+    REQ( DELETE_AUDIO_ENDPOINT, 0x1002 )
+    REQ( GET_AUDIO_ENDPOINTS,   0x1003 )
+
+    IND( AUDIO_DATA,            0x1011 )
+
+    REQ( ADD_AUDIO_ENDPOINTS,    0x1021 )
+    REQ( REM_AUDIO_ENDPOINTS,    0x1022 )
+    //REQ( SET_AUDIO_ENDPOINTS,    0x1023 ) <-todo
+    REQ( GET_CURRENT_AUDIO_ENDPOINTS, 0x1024 )
 }MessageType_t;
 
 
@@ -79,6 +87,9 @@ typedef enum
     TLV_IMAGE    = 0x08,
     TLV_ALBUM    = 0x09,
     TLV_ARTIST   = 0x0a,
+
+
+    TLV_CLIENT   = 0x21,
 
     /*Folder TLV's*/
     /* TLV_FOLDER_NAME = 0x101, deprecated */
@@ -111,8 +122,10 @@ typedef enum
     TLV_PLAY_MODE_REPEAT  = 0x612,
 
     /* Generic data items */
-    TLV_LINK      = 0x701,
-    TLV_NAME      = 0x702,
+    TLV_LINK       = 0x701,
+    TLV_NAME       = 0x702,
+    TLV_IP_ADDRESS = 0x703,
+    TLV_PORT       = 0x704,
 
     /* Image TLV's */
     TLV_IMAGE_FORMAT = 0x801, /* ImageFormat_t */
@@ -144,8 +157,11 @@ typedef enum
     TLV_AUDIO_CHANNELS         = 0x2002,
     TLV_AUDIO_RATE             = 0x2003,
     TLV_AUDIO_NOF_SAMPLES      = 0x2004,
-    TLV_AUDIO_DESTINATION_PORT = 0x2005,
+//    TLV_AUDIO_DESTINATION_PORT = 0x2005,
     TLV_AUDIO_PROTOCOL_TYPE    = 0x2006,
+
+    /* Audio endpoint TLV's */
+    TLV_AUDIO_EP_PROTOCOL      = 0x2102, /*AudioEndpointProtocolType_t*/
 }TlvType_t;
 
 

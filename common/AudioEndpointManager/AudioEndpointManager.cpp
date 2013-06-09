@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Jens Nielsen
+ * Copyright (c) 2013, Jens Nielsen
  * All rights reserved.
 
  * Redistribution and use in source and binary forms, with or without
@@ -25,26 +25,56 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SOCKETCLIENT_H_
-#define SOCKETCLIENT_H_
+#include "AudioEndpointManager.h"
+#include "applog.h"
 
-#include "Messenger.h"
-#include "Platform/Threads/Runnable.h"
-#include <string>
-
-class SocketClient : public Messenger, public Platform::Runnable
+AudioEndpointManager::AudioEndpointManager()
 {
-private:
-    std::string serveraddr_;
-    std::string serverport_;
+}
 
-public:
-    SocketClient(const std::string& serveraddr, const std::string& serverport);
-    virtual ~SocketClient();
+AudioEndpointManager::~AudioEndpointManager()
+{
+}
 
-    void run();
-    void destroy();
+void AudioEndpointManager::addEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData )
+{
+    audioEndpoints.insert( &ep );
 
-};
+    log(LOG_DEBUG) << "Adding audio endpoint " << ep.getId();
 
-#endif /* SOCKETCLIENT_H_ */
+    //todo: subscriber->addEndpointResponse();
+}
+
+void AudioEndpointManager::removeEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData )
+{
+    audioEndpoints.erase( &ep );
+    //todo: subscriber->removeEndpointResponse();
+}
+
+void AudioEndpointManager::getEndpoints( IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData )
+{
+    std::set<std::string> result;
+
+    std::set<Platform::AudioEndpoint*>::const_iterator it = audioEndpoints.begin();
+    for( ; it != audioEndpoints.end(); it++ )
+    {
+        log(LOG_DEBUG) << (*it)->getId();
+        result.insert( (*it)->getId() );
+    }
+
+    subscriber->getEndpointsResponse( result, userData );
+}
+
+
+Platform::AudioEndpoint* AudioEndpointManager::getEndpoint( std::string id )
+{
+    std::set<Platform::AudioEndpoint*>::const_iterator it = audioEndpoints.begin();
+    for( ; it != audioEndpoints.end(); it++ )
+    {
+        if ( (*it)->getId() == id )
+        {
+            return (*it);
+        }
+    }
+    return NULL;
+}

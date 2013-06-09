@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Jens Nielsen
+ * Copyright (c) 2013, Jens Nielsen
  * All rights reserved.
 
  * Redistribution and use in source and binary forms, with or without
@@ -25,26 +25,27 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SOCKETCLIENT_H_
-#define SOCKETCLIENT_H_
+#ifndef AUDIOENDPOINTMANAGER_H_
+#define AUDIOENDPOINTMANAGER_H_
 
-#include "Messenger.h"
-#include "Platform/Threads/Runnable.h"
-#include <string>
+#include "AudioEndpointManagerCtrlInterface.h"
+#include "Platform/AudioEndpoints/AudioEndpoint.h"
+#include <set>
 
-class SocketClient : public Messenger, public Platform::Runnable
+class AudioEndpointManager : public AudioEndpointCtrlInterface
 {
 private:
-    std::string serveraddr_;
-    std::string serverport_;
+    std::set<Platform::AudioEndpoint*> audioEndpoints;
 
 public:
-    SocketClient(const std::string& serveraddr, const std::string& serverport);
-    virtual ~SocketClient();
+    AudioEndpointManager();
+    virtual ~AudioEndpointManager();
 
-    void run();
-    void destroy();
+    virtual void addEndpoint( Platform::AudioEndpoint& ep ,IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData );
+    virtual void removeEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData );
+    virtual void getEndpoints( IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData );
 
+    Platform::AudioEndpoint* getEndpoint( std::string id );
 };
 
-#endif /* SOCKETCLIENT_H_ */
+#endif /* AUDIOENDPOINTMANAGER_H_ */

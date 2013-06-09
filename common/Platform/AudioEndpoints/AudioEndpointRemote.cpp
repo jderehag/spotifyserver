@@ -35,21 +35,29 @@
 
 namespace Platform {
 
-AudioEndpointRemote::AudioEndpointRemote(const std::string& serveraddr, const std::string& serverport,
-        unsigned int bufferNSecs) : sock_(SOCKTYPE_DATAGRAM)
+AudioEndpointRemote::AudioEndpointRemote( const std::string& id, const std::string& serveraddr, 
+                                          const std::string& serverport, unsigned int bufferNSecs) : sock_(SOCKTYPE_DATAGRAM),
+                                                                                                     id_(id)
 {
     fifo_.setFifoBuffer(bufferNSecs);
     sock_.Connect(serveraddr, serverport);
 }
 
+std::string AudioEndpointRemote::getId() const
+{
+    return id_;
+}
+
 void AudioEndpointRemote::sendAudioData()
 {
     AudioFifoData* afd;
+    static uint32_t reqId = 0;
 
     while( (afd = fifo_.getFifoDataTimedWait(10) ) != NULL )
     {
         int rc = 0;
         Message* msg = new Message( AUDIO_DATA_IND );
+        msg->setId(reqId++); //for debug
         msg->addTlv( TLV_AUDIO_CHANNELS, afd->channels );
         msg->addTlv( TLV_AUDIO_RATE, afd->rate );
         msg->addTlv( TLV_AUDIO_NOF_SAMPLES, afd->nsamples );

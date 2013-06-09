@@ -59,10 +59,19 @@ const char* messageTypeToString(const MessageType_t type)
         STR(PLAY_CONTROL_REQ);
         STR(PLAY_CONTROL_RSP);
 
-        STR(ADD_AUDIO_ENDPOINT_REQ);
-        STR(ADD_AUDIO_ENDPOINT_RSP);
-        STR(REM_AUDIO_ENDPOINT_REQ);
-        STR(REM_AUDIO_ENDPOINT_RSP);
+        STR(ADD_AUDIO_ENDPOINTS_REQ);
+        STR(ADD_AUDIO_ENDPOINTS_RSP);
+        STR(REM_AUDIO_ENDPOINTS_REQ);
+        STR(REM_AUDIO_ENDPOINTS_RSP);
+        STR(GET_CURRENT_AUDIO_ENDPOINTS_REQ);
+        STR(GET_CURRENT_AUDIO_ENDPOINTS_RSP);
+
+        STR(CREATE_AUDIO_ENDPOINT_REQ);
+        STR(CREATE_AUDIO_ENDPOINT_RSP);
+        STR(DELETE_AUDIO_ENDPOINT_REQ);
+        STR(DELETE_AUDIO_ENDPOINT_RSP);
+        STR(GET_AUDIO_ENDPOINTS_REQ);
+        STR(GET_AUDIO_ENDPOINTS_RSP);
 
         STR(AUDIO_DATA_IND);
 
@@ -81,6 +90,8 @@ const char* tlvTypeToString(const TlvType_t type)
         STR(TLV_TRACK);
         STR(TLV_ARTIST);
         STR(TLV_ALBUM);
+        STR(TLV_CLIENT);
+
         STR(TLV_TRACK_DURATION);
         STR(TLV_TRACK_INDEX );
         
@@ -95,6 +106,9 @@ const char* tlvTypeToString(const TlvType_t type)
 
         STR(TLV_LINK);
         STR(TLV_NAME);
+        STR(TLV_IP_ADDRESS);
+        STR(TLV_PORT);
+
         STR(TLV_IMAGE);
         STR(TLV_IMAGE_FORMAT);
         STR(TLV_IMAGE_DATA);
@@ -114,6 +128,8 @@ const char* tlvTypeToString(const TlvType_t type)
         STR(TLV_AUDIO_CHANNELS);
         STR(TLV_AUDIO_RATE);
         STR(TLV_AUDIO_NOF_SAMPLES);
+
+        STR(TLV_AUDIO_EP_PROTOCOL);
 
         default:
             return "Unknown TlvType";

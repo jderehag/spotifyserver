@@ -36,21 +36,23 @@ class AudioEndpoint
 {
 
 protected:
-	AudioFifo fifo_;
+    AudioFifo fifo_;
 
-	bool paused_;
+    bool paused_;
 
 public:
-	AudioEndpoint() : paused_(false) {}
-	virtual ~AudioEndpoint() {}
-	virtual int enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples) = 0;
-	virtual void flushAudioData() = 0;
+    AudioEndpoint() : paused_(false) {}
+    virtual ~AudioEndpoint() {}
+    virtual int enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples) = 0;
+    virtual void flushAudioData() = 0;
 
-	/*todo do something proper with these...*/
-	void pause() { paused_ = true; }
-	void resume() { paused_ = false; }
+    virtual std::string getId() const = 0;
 
-	virtual bool isLocal() const = 0;
+    /*todo do something proper with these...*/
+    void pause() { paused_ = true; }
+    void resume() { paused_ = false; }
+
+    virtual bool isLocal() const = 0;
 
 };
 }

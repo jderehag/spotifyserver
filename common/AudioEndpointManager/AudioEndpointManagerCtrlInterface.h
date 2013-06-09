@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Jens Nielsen
+ * Copyright (c) 2013, Jens Nielsen
  * All rights reserved.
 
  * Redistribution and use in source and binary forms, with or without
@@ -25,26 +25,45 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SOCKETCLIENT_H_
-#define SOCKETCLIENT_H_
+#ifndef AUDIOENDPOINTMANAGERCTRLINTERFACE_H_
+#define AUDIOENDPOINTMANAGERCTRLINTERFACE_H_
 
-#include "Messenger.h"
-#include "Platform/Threads/Runnable.h"
+#include "Platform/Threads/Mutex.h"
+#include "Platform/AudioEndpoints/AudioEndpoint.h"
+#include <set>
 #include <string>
 
-class SocketClient : public Messenger, public Platform::Runnable
+class IAudioEndpointCtrlCallbackSubscriber
+{
+public:
+    virtual void connectionState( bool up ) = 0;
+
+    virtual void getEndpointsResponse( std::set<std::string> endpoints, void* userData ) = 0;
+};
+
+
+class AudioEndpointCtrlInterface
 {
 private:
-    std::string serveraddr_;
-    std::string serverport_;
+
+protected:
+    /***********************
+     * Callback subscription
+     ***********************/
+    Platform::Mutex callbackSubscriberMtx_;
+    typedef std::set<IAudioEndpointCtrlCallbackSubscriber*> AudioEndpointCtrlCallbackSubscriberSet;
+    AudioEndpointCtrlCallbackSubscriberSet callbackSubscriberList_;
 
 public:
-    SocketClient(const std::string& serveraddr, const std::string& serverport);
-    virtual ~SocketClient();
 
-    void run();
-    void destroy();
+    void registerForCallbacks(IAudioEndpointCtrlCallbackSubscriber& subscriber);
+    void unRegisterForCallbacks(IAudioEndpointCtrlCallbackSubscriber& subscriber);
+
+    virtual void addEndpoint( Platform::AudioEndpoint& ep ,IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
+    virtual void removeEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
+    virtual void getEndpoints( IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
 
 };
 
-#endif /* SOCKETCLIENT_H_ */
+
+#endif /* AUDIOENDPOINTMANAGERCTRLINTERFACE_H_ */
