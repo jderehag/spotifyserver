@@ -69,6 +69,7 @@ public:
     virtual void removeAudioEndpoint( const std::string& id, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
     virtual void getCurrentAudioEndpoints( IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
 
+
 };
 
 #endif /* REMOTEMEDIAINTERFACE_H_ */

@@ -33,6 +33,7 @@ except:
 from threading import Thread, Event
 
 import wave
+import Queue
 
 MIC_FORMAT = pyaudio.paInt16 
 MIC_CHANNELS = 1
@@ -51,6 +52,7 @@ class AudioDev(Thread):
         self._channels = 0
         self._rate = 0
         self._format = 0
+        self._output_fifo = Queue.Queue()
         
         if useMic:
             self._cancellationPending = Event()
@@ -90,7 +92,8 @@ class AudioDev(Thread):
         self._output_stream = self._pa.open(format = format_,
                                channels = channels,
                                rate = rate,
-                               output = True)
+                               output = True, 
+                               stream_callback=self._get_next_data_for_outputstream)
         
         self._channels = channels
         self._rate = rate
@@ -99,14 +102,24 @@ class AudioDev(Thread):
     
     def close_output_stream(self):
         if self._output_stream != None:
-            self._output_stream.close()
+            self._output_stream.stop_stream()
 
     def write_to_output_stream(self, channels, rate, nsamples, data):
         if channels != self._channels or rate != self._rate:
             self.open_output_stream(channels, rate)
-            
-        self._output_stream.write(data, nsamples)
-            
+        
+        sampleSize = 2
+        totalSampleSize = sampleSize * channels
+        
+        for n in range(0, nsamples):
+            sample = str(data[n * totalSampleSize : ((n+1) * totalSampleSize)])
+            self._output_fifo.put(sample)
+        
+        if not self._output_stream.is_active():
+            self._output_stream.start_stream()
+
+        
+                
     def find_input_device(self):
         assert self._useMic == True
         
@@ -132,6 +145,19 @@ class AudioDev(Thread):
                 self._audioCallback(self._stream.read(MIC_INPUT_FRAMES_PER_BLOCK))
             except IOError, e:
                 print( "(%d) Error recording: %s"%(self.errorcount,e) )
-            
+        
+    def _get_next_data_for_outputstream(self, data, requested_samples, time_info, status):        
+        samples = []
+        for n in range(requested_samples):
+            try:
+                samples.append(self._output_fifo.get(block=True, timeout=1))
+                self._output_fifo.task_done()
+            except Queue.Empty:
+                print "JESPER timedout waiting for more audio data!"
+                return (None, pyaudio.paComplete)
+        print "JESPER, returning", len(samples), "samples, requested=", requested_samples, "qsize=", self._output_fifo.qsize()
+        return (str(samples), pyaudio.paContinue)
+        
+        
 
                         

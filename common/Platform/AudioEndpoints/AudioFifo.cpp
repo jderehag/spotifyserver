@@ -32,7 +32,7 @@
 
 namespace Platform {
 
-AudioFifo::AudioFifo() : queuedSamples(0) { }
+AudioFifo::AudioFifo(unsigned int bufferNSecs) : queuedSamples_(0), bufferNSecs_(bufferNSecs) { }
 
 AudioFifo::~AudioFifo() {flush();}
 
@@ -45,51 +45,51 @@ int AudioFifo::addFifoDataBlocking(unsigned short channels, unsigned int rate, u
 			return 0; // Audio discontinuity, do nothing
 
 
-		/* Buffer one second of audio */
-		/* JESPER, queue here was probably previously defined as 1 second worth of static queue length,
-		 * investigate if we should have a const size queue instead */
-        /* JENS, reinserted this throttle to avoid fifo growing really big*/
-		fifoMtx_.lock();
-		if (queuedSamples > rate)
-        {
-            fifoMtx_.unlock();
-			return 0;
-		}
-        //fifoMtx_.unlock();
+    /* Buffer one second of audio */
+    /* JESPER, queue here was probably previously defined as 1 second worth of static queue length,
+     * investigate if we should have a const size queue instead */
+    /* JENS, reinserted this throttle to avoid fifo growing really big*/
+    fifoMtx_.lock();
+    if (queuedSamples_ > (rate * bufferNSecs_))
+    {
+        fifoMtx_.unlock();
+        return 0;
+    }
+    //fifoMtx_.unlock();
 
-		sampleLength = nsamples * sizeof(int16_t) * channels;
-		AudioFifoData* data;
-		data = static_cast<AudioFifoData*>(malloc(sizeof(AudioFifoData) + sampleLength));
+    sampleLength = nsamples * sizeof(int16_t) * channels;
+    AudioFifoData* data;
+    data = static_cast<AudioFifoData*>(malloc(sizeof(AudioFifoData) + sampleLength));
 
-		if ( data == NULL )
-		{
-		    fifoMtx_.unlock();
-		    return 0;
-		}
+    if ( data == NULL )
+    {
+        fifoMtx_.unlock();
+        return 0;
+    }
 
-		memcpy(data->samples, samples, sampleLength);
+    memcpy(data->samples, samples, sampleLength);
 
-		data->nsamples = nsamples;
-		data->rate = rate;
-		data->channels = channels;
+    data->nsamples = nsamples;
+    data->rate = rate;
+    data->channels = channels;
 
-		//fifoMtx_.lock();
-		fifo.push(data);
-        queuedSamples += nsamples;
-		cond_.signal();
-		fifoMtx_.unlock();
+    //fifoMtx_.lock();
+    fifo_.push(data);
+    queuedSamples_ += nsamples;
+    cond_.signal();
+    fifoMtx_.unlock();
 
-		return nsamples;
+    return nsamples;
 }
 
 AudioFifoData* AudioFifo::getFifoDataBlocking()
 {
 	AudioFifoData* afd = 0;
 	fifoMtx_.lock();
-	while(fifo.empty())cond_.wait(fifoMtx_);
-	afd = fifo.front();
-    queuedSamples -= afd->nsamples;
-	fifo.pop();
+	while(fifo_.empty())cond_.wait(fifoMtx_);
+	afd = fifo_.front();
+    queuedSamples_ -= afd->nsamples;
+	fifo_.pop();
 	fifoMtx_.unlock();
 	return afd;
 }
@@ -98,22 +98,22 @@ AudioFifoData* AudioFifo::getFifoDataTimedWait(unsigned int milliSeconds)
 {
 	AudioFifoData* afd = 0;
 	fifoMtx_.lock();
-	if(fifo.empty() == false)
+	if(fifo_.empty() == false)
 	{
-		afd = fifo.front();
-        queuedSamples -= afd->nsamples;
-		fifo.pop();
+		afd = fifo_.front();
+        queuedSamples_ -= afd->nsamples;
+		fifo_.pop();
 	}
 	else afd = 0; /* redundant, but kept for clarity */
 
 	if(afd == 0)
 	{
 		cond_.timedWait(fifoMtx_, milliSeconds);
-		if(fifo.empty() == false)
+		if(fifo_.empty() == false)
 		{
-			afd = fifo.front();
-            queuedSamples -= afd->nsamples;
-            fifo.pop();
+			afd = fifo_.front();
+            queuedSamples_ -= afd->nsamples;
+            fifo_.pop();
         }
 	}
 
@@ -125,17 +125,18 @@ void AudioFifo::flush()
 {
 	fifoMtx_.lock();
 	AudioFifoData* ep = 0;
-	while(!fifo.empty())
+	while(!fifo_.empty())
 	{
-	    ep = fifo.front();
+	    ep = fifo_.front();
 		free(ep);
 		ep = 0;
-		fifo.pop();
+		fifo_.pop();
 	}
-    queuedSamples = 0;
+    queuedSamples_ = 0;
 	fifoMtx_.unlock();
 }
 
+void AudioFifo::setFifoBuffer(unsigned int bufferNSecs) { bufferNSecs_ = bufferNSecs; };
 }
 
 

@@ -30,18 +30,16 @@
 #include <stdlib.h>
 
 #include <iostream>
+#include <errno.h>
 
 
 namespace Platform {
 
-AudioEndpointRemote::AudioEndpointRemote() : sock_(SOCKTYPE_DATAGRAM), id_("")
+AudioEndpointRemote::AudioEndpointRemote( const std::string& id, const std::string& serveraddr, 
+                                          const std::string& serverport, unsigned int bufferNSecs) : sock_(SOCKTYPE_DATAGRAM),
+                                                                                                     id_(id)
 {
-    sock_.Connect("127.0.0.1", "10000");
-}
-
-AudioEndpointRemote::AudioEndpointRemote( const std::string& id, const std::string& serveraddr, const std::string& serverport) : sock_(SOCKTYPE_DATAGRAM),
-                                                                                                                                 id_(id)
-{
+    fifo_.setFifoBuffer(bufferNSecs);
     sock_.Connect(serveraddr, serverport);
 }
 
@@ -54,8 +52,9 @@ void AudioEndpointRemote::sendAudioData()
 {
     AudioFifoData* afd;
 
-    if ( (afd = fifo_.getFifoDataTimedWait(0) ) != NULL )
+    while( (afd = fifo_.getFifoDataTimedWait(10) ) != NULL )
     {
+        int rc = 0;
         Message* msg = new Message( AUDIO_DATA_IND );
         msg->addTlv( TLV_AUDIO_CHANNELS, afd->channels );
         msg->addTlv( TLV_AUDIO_RATE, afd->rate );
@@ -63,7 +62,11 @@ void AudioEndpointRemote::sendAudioData()
         msg->addTlv( new BinaryTlv( TLV_AUDIO_DATA, (const uint8_t*) /*ugh, should hton this*/ afd->samples, afd->nsamples * sizeof(int16_t) * afd->channels ) );
         MessageEncoder* enc = msg->encode();
 
-        sock_.Send(enc->getBuffer(), enc->getLength());
+        if((rc = sock_.Send(enc->getBuffer(), enc->getLength()) < 0))
+        {
+            /* TODO: its probably NOT ok to use errno here, doubt its valid on WIN */
+            std::cout << "JESPER: rc=" << rc << " perror=" << errno;
+        }
 
         delete enc;
         free( afd );

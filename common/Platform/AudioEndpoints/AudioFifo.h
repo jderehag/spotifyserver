@@ -47,16 +47,18 @@ public:
 class AudioFifo
 {
 private:
-	std::queue<AudioFifoData*> fifo;
+	std::queue<AudioFifoData*> fifo_;
 	Condition cond_;
 	Mutex fifoMtx_;
-    unsigned int queuedSamples;
+    unsigned int queuedSamples_;
+    unsigned int bufferNSecs_;
 public:
-	AudioFifo();
+	AudioFifo(unsigned int bufferNSecs = 1);
 	~AudioFifo();
 	int addFifoDataBlocking(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples);
 	AudioFifoData* getFifoDataBlocking();
 	AudioFifoData* getFifoDataTimedWait(unsigned int milliSeconds);
+	void setFifoBuffer(unsigned int bufferNSecs);
 	void flush();
 };
 }

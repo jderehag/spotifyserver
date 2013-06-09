@@ -469,7 +469,7 @@ void Client::handleCreateAudioEpReq( const Message* msg )
                 audioCtrl_.removeEndpoint( *audioEp, NULL, NULL );
             }
 
-            audioEp = new Platform::AudioEndpointRemote( id, ip, portStr.str());
+            audioEp = new Platform::AudioEndpointRemote( id, ip, portStr.str(), 10);
             audioCtrl_.addEndpoint(*audioEp, NULL, NULL);
         }
         else
