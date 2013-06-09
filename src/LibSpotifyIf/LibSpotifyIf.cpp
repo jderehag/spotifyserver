@@ -813,8 +813,20 @@ int LibSpotifyIf::musicDeliveryCb(sp_session *sess, const sp_audioformat *format
         newN = (*it)->enqueueAudioData(format->channels, format->sample_rate, num_frames, static_cast<const int16_t*>(frames));
         if((*it)->isLocal())
             n = newN;*/
-        if(!(*it)->isLocal())
+
+        /* For now automatically disable local endpoint if we have any remote endpoints.
+         * In the future it shall be possible for clients to disable local endpoints */
+        if(audioEndpoints_.size() > 1)
+        {
+            if(!(*it)->isLocal())
+                n = (*it)->enqueueAudioData(format->channels, format->sample_rate, num_frames, static_cast<const int16_t*>(frames));
+        }
+        else
+        {
             n = (*it)->enqueueAudioData(format->channels, format->sample_rate, num_frames, static_cast<const int16_t*>(frames));
+        }
+
+
     }
     progress_ += (n*10000)/format->sample_rate;
     return n;
