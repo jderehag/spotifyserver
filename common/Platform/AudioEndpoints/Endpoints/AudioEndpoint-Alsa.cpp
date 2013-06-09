@@ -52,12 +52,12 @@ void AudioEndpointLocal::destroy()
 
 int AudioEndpointLocal::enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples)
 {
-    return fifo.addFifoDataBlocking(channels, rate, nsamples, samples);
+    return fifo_.addFifoDataBlocking(channels, rate, nsamples, samples);
 }
 
 void AudioEndpointLocal::flushAudioData()
 {
-    fifo.flush();
+    fifo_.flush();
 }
 
 void AudioEndpointLocal::run()
@@ -71,7 +71,7 @@ void AudioEndpointLocal::run()
 
 	while(isCancellationPending() == false)
 	{
-		if((afd = fifo.getFifoDataTimedWait(1)) != 0)
+		if((afd = fifo_.getFifoDataTimedWait(1)) != 0)
 		{
 			/* First set up the alsa device with correct parameters (rate & channels) */
 			if (!devFd || currentRate != afd->rate || currentChannels != afd->channels)
@@ -247,3 +247,5 @@ static snd_pcm_t *alsa_open(const char *dev, int rate, int channels)
 
 	return h;
 }
+
+

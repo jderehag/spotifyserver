@@ -34,8 +34,9 @@ namespace Platform {
 
 class AudioEndpoint
 {
+
 protected:
-	AudioFifo fifo;
+	AudioFifo fifo_;
 
 	bool paused_;
 
@@ -48,6 +49,8 @@ public:
 	/*todo do something proper with these...*/
 	void pause() { paused_ = true; }
 	void resume() { paused_ = false; }
+
+	virtual bool isLocal() const = 0;
 
 };
 }

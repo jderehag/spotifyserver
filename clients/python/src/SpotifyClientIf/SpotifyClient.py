@@ -104,10 +104,11 @@ class SpotifyClient(Thread):
                     continue
                     
             
-                fds = []
-                if self.audioEndpointfd != None:
-                    fds.append(self.audioEndpointfd)
-                fds.append(self.fd)
+            fds = []
+            if self.audioEndpointfd != None:
+                fds.append(self.audioEndpointfd)
+            fds.append(self.fd)
+            
             try:
                 inputFds,outputFds,exceptFds = select.select(fds, [], [], 1)
             except:
@@ -242,9 +243,10 @@ class SpotifyClient(Thread):
                     print "Received msg AUDIO_DATA_IND"
                     msgObj = Message.AudioDataIndMsg(msgId)
                     msgObj.Decode(msg)
-                    self.__getAudioDataMsgObserverLock.aquire()
+                    
+                    self.__getAudioDataObserverLock.acquire()
                     self.__getAudioDataObserver(msgObj.getChannels(),msgObj.getBitRate(), msgObj.getNofSamples(), msgObj.getAudioData())
-                    self.__getAudioDataMsgObserverLock.release() 
+                    self.__getAudioDataObserverLock.release() 
                     
                         
                 elif(msgType == TlvDefinitions.TlvMessageType.GET_TRACKS_REQ or
@@ -256,7 +258,7 @@ class SpotifyClient(Thread):
                     print "Received REQ message eventhough we are the client!! Strange! type=" + hex(msgType)
                     break
                 else:
-                    msgObj = None                        
+                    pass                     
 
     def stop(self):
         self.__cancellationPending.set()
@@ -330,14 +332,24 @@ class SpotifyClient(Thread):
             self.audioEndpointfd = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.audioEndpointfd.bind(("",0))
             addr, src_port = self.audioEndpointfd.getsockname()
-            
+            print "Creating local AudioEndpoint listening on port", src_port
             self.fd.sendall(Message.AddAudioEndpointReqMsg(self.getNextMsgId(),src_port, 
-                                       TlvDefinitions.TlvAudioEndpointProtocolType.LIGHTWEIGHT_UDP).toByteStream())
-                
+                                       TlvDefinitions.TlvAudioEndpointProtocolType.LIGHTWEIGHT_UDP).toByteStream())    
+            
+    
+    def sendRemAudioEndpoint(self):
+        self.__getAudioDataObserverLock.acquire()
+        self.__getAudioDataObserver = None
+        self.__getAudioDataObserverLock.release()
+        
+        self.audioEndpointfd.close()
+        self.audioEndpointfd = None
+        self.fd.sendall(Message.RemAudioEndpointReqMsg(self.getNextMsgId()).toByteStream())
+                    
     def recvMsg(self, fd):
         try:
             inputStr = fd.recv(1500)
-            if(inputStr == None):
+            if(inputStr == None or len(inputStr) < 4):
                 return
         except:
             return

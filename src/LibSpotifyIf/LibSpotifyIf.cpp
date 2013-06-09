@@ -804,11 +804,17 @@ int LibSpotifyIf::musicDeliveryCb(sp_session *sess, const sp_audioformat *format
                           const void *frames, int num_frames)
 {
     int n = 0;
+    int newN = 0;
     /* TODO: This is really dangerous, we should sync all endpoints to the same rate
      * letting the slowest one be the dictator */
     for(AudioEndpointVector::const_iterator it = audioEndpoints_.begin(); it != audioEndpoints_.end(); ++it)
     {
-        n = (*it)->enqueueAudioData(format->channels, format->sample_rate, num_frames, static_cast<const int16_t*>(frames));
+        /*
+        newN = (*it)->enqueueAudioData(format->channels, format->sample_rate, num_frames, static_cast<const int16_t*>(frames));
+        if((*it)->isLocal())
+            n = newN;*/
+        if(!(*it)->isLocal())
+            n = (*it)->enqueueAudioData(format->channels, format->sample_rate, num_frames, static_cast<const int16_t*>(frames));
     }
     progress_ += (n*10000)/format->sample_rate;
     return n;
@@ -817,6 +823,20 @@ int LibSpotifyIf::musicDeliveryCb(sp_session *sess, const sp_audioformat *format
 void LibSpotifyIf::addAudioEndpoint(Platform::AudioEndpoint& endpoint)
 {
     audioEndpoints_.push_back(&endpoint);
+}
+
+void LibSpotifyIf::delAudioEndpoint(Platform::AudioEndpoint& endpoint)
+{
+    for(AudioEndpointVector::iterator it = audioEndpoints_.begin(); it != audioEndpoints_.end(); ++it)
+    {
+        if(&endpoint == *it)
+        {
+            /* Dangerous to remove elements at the same time as we are iterating,
+             * but since we break here immediately it should be safe */
+            audioEndpoints_.erase(it);
+            break;
+        }
+    }
 }
 
 void LibSpotifyIf::genericSearchCb(sp_search *search, void *userdata)

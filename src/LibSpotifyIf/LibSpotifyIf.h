@@ -237,6 +237,7 @@ public:
     virtual void getAlbum( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId );
     virtual void search( std::string query, IMediaInterfaceCallbackSubscriber* subscriber, MediaInterfaceRequestId reqId );
     virtual void addAudioEndpoint(Platform::AudioEndpoint& endpoint);
+    virtual void delAudioEndpoint(Platform::AudioEndpoint& endpoint);
 
 
     void playSearchResult(const char* searchString);

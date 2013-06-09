@@ -28,6 +28,7 @@
 #include "Client.h"
 #include "applog.h"
 #include "MessageFactory/TlvDefinitions.h"
+#include "Platform/Socket/Socket.h" /* needed so that client can resolve getSocket()->getRemoteAddr()*/
 
 Client::Client(Socket* socket, MediaInterface& spotifyif) : SocketPeer(socket),
                                                             spotify_(spotifyif),
@@ -45,7 +46,7 @@ Client::~Client()
     log(LOG_DEBUG) << "~Client";
     spotify_.unRegisterForCallbacks(*this);
     /*todo clear pendingMessageMap_*/
-    /*todo unregister and free audioEp*/
+    handleRemAudioEpReq(NULL);
 }
 
 void Client::setUsername(std::string username) { networkUsername_ = username; }
@@ -74,6 +75,7 @@ void Client::processMessage(const Message* msg)
         case GET_IMAGE_REQ:      handleGetImageReq(msg);      break;
         case GET_ALBUM_REQ:      handleGetAlbumReq(msg);      break;
         case ADD_AUDIO_ENDPOINT_REQ: handleAddAudioEpReq(msg); break;
+        case REM_AUDIO_ENDPOINT_REQ: handleRemAudioEpReq(msg); break;
 
         default:
             break;
@@ -499,8 +501,31 @@ void Client::handleGetAlbumReq(const Message* msg)
 
 void Client::handleAddAudioEpReq(const Message* msg)
 {
-    audioEp = new Platform::AudioEndpointRemote();
-    spotify_.addAudioEndpoint(*audioEp);
+    if(audioEp == NULL)
+    {
+        char portstr[33];
+        const IntTlv* portTlv = (const IntTlv*)msg->getTlvRoot()->getTlv(TLV_AUDIO_DESTINATION_PORT);
+        if(portTlv != NULL)
+        {
+            sprintf(portstr,"%d",portTlv->getVal());
+            audioEp = new Platform::AudioEndpointRemote(getSocket()->getRemoteAddr(), portstr);
+            spotify_.addAudioEndpoint(*audioEp);
+        }
+        else
+        {
+            log(LOG_NOTICE) << "Port TLV missing from message, add errorcode in response here!";
+        }
+    }
+}
+
+void Client::handleRemAudioEpReq(const Message* msg)
+{
+    if(audioEp != NULL)
+    {
+        spotify_.delAudioEndpoint(*audioEp);
+        delete audioEp;
+        audioEp = NULL;
+    }
 }
 
 

@@ -111,7 +111,7 @@ static struct addrinfo* toAddrinfo( const std::string& addr, const std::string& 
 
     if (RetVal != 0)
     {
-        log(LOG_EMERG) << "getaddrinfo failed with error " << RetVal << " " << gai_strerror(RetVal);
+        log(LOG_EMERG) << "getaddrinfo for addr=" << addr << " failed with error " << RetVal << " " << gai_strerror(RetVal);
         return NULL;
     }
 
@@ -128,14 +128,25 @@ Socket::Socket(SocketHandle_t* socket) : socket_(socket)
     fcntl( socket_->fd, F_SETFL, flags | O_NONBLOCK );
 }
 
-Socket::Socket()
+Socket::Socket(SockType_t type)
 {
     int on = 1;
     int flags;
 
     socket_ = new SocketHandle_t;
 
-    socket_->fd = socket(PF_INET6, SOCK_STREAM, 0);
+    switch(type)
+    {
+        case SOCKTYPE_STREAM:
+            socket_->fd = socket(PF_INET6, SOCK_STREAM, 0);
+            break;
+        case SOCKTYPE_DATAGRAM:
+            socket_->fd = socket(PF_INET6, SOCK_DGRAM, 0);
+            break;
+        default:
+            assert(false);
+            break;
+    }
 
     on = 0;
     setsockopt(socket_->fd, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&on, sizeof(on) );
@@ -182,6 +193,7 @@ int Socket::BindToAddr(const std::string& addr, const std::string& port)
             break;
         }
     }
+    localAddr_ = str;
 
     if ( AddrInfo )
         freeaddrinfo( AddrInfo );
@@ -214,6 +226,8 @@ int Socket::Connect(const std::string& addr, const std::string& port)
     struct addrinfo *AddrInfo, *AI;
 
     AddrInfo = toAddrinfo( addr, port, false );
+    remoteAddr_ = addr;
+
 
     for ( AI = AddrInfo; AI != NULL; AI = AI->ai_next )
     {
@@ -303,7 +317,9 @@ Socket* Socket::Accept()
         log(LOG_NOTICE) << "accept! " << str << " fd " << newSocket;
         SocketHandle_t* handle = new SocketHandle_t;
         handle->fd = newSocket;
-        return new Socket(handle);
+        Socket* sock = new Socket(handle);
+        sock->remoteAddr_ = str;
+        return sock;
     }
     else
     {
@@ -336,8 +352,6 @@ void Socket::Shutdown()
 {
     shutdown(socket_->fd, SHUT_RD);
 }
-
-
 
 int select(std::set<Socket*>* readsockets, std::set<Socket*>* writesockets, std::set<Socket*>* errsockets, int timeout)
 {

@@ -29,31 +29,37 @@
 #include "MessageFactory/Message.h"
 #include <stdlib.h>
 
+#include <iostream>
+
 
 namespace Platform {
 
-AudioEndpointRemote::AudioEndpointRemote() : m("192.168.5.211"/*"127.0.0.1"*/, "7789"), reqId(0)
+AudioEndpointRemote::AudioEndpointRemote() : sock_(SOCKTYPE_DATAGRAM)
 {
-    m.addSubscriber( this );
+    sock_.Connect("127.0.0.1", "10000");
 }
 
-AudioEndpointRemote::~AudioEndpointRemote()
+AudioEndpointRemote::AudioEndpointRemote(const std::string& serveraddr, const std::string& serverport) : sock_(SOCKTYPE_DATAGRAM)
 {
+    sock_.Connect(serveraddr, serverport);
 }
 
 void AudioEndpointRemote::sendAudioData()
 {
     AudioFifoData* afd;
 
-    if ( (afd = fifo.getFifoDataTimedWait(0) ) != NULL )
+    if ( (afd = fifo_.getFifoDataTimedWait(0) ) != NULL )
     {
         Message* msg = new Message( AUDIO_DATA_IND );
         msg->addTlv( TLV_AUDIO_CHANNELS, afd->channels );
         msg->addTlv( TLV_AUDIO_RATE, afd->rate );
         msg->addTlv( TLV_AUDIO_NOF_SAMPLES, afd->nsamples );
         msg->addTlv( new BinaryTlv( TLV_AUDIO_DATA, (const uint8_t*) /*ugh, should hton this*/ afd->samples, afd->nsamples * sizeof(int16_t) * afd->channels ) );
-        m.queueMessage( msg, reqId++ );
+        MessageEncoder* enc = msg->encode();
 
+        sock_.Send(enc->getBuffer(), enc->getLength());
+
+        delete enc;
         free( afd );
     }
 
@@ -64,10 +70,7 @@ int AudioEndpointRemote::enqueueAudioData(unsigned short channels, unsigned int 
     if (nsamples == 0)
         return 0; // Audio discontinuity, do nothing
 
-    if (nsamples > 500)
-        nsamples = 500;
-
-    nsamples = fifo.addFifoDataBlocking(channels, rate, nsamples, samples);
+    nsamples = fifo_.addFifoDataBlocking(channels, rate, nsamples, samples);
 
     sendAudioData();
 
@@ -77,21 +80,6 @@ int AudioEndpointRemote::enqueueAudioData(unsigned short channels, unsigned int 
 void AudioEndpointRemote::flushAudioData()
 {
 }
-
-void AudioEndpointRemote::connectionState( bool up )
-{
-
-}
-
-void AudioEndpointRemote::receivedMessage( Message* msg )
-{
-
-}
-
-void AudioEndpointRemote::receivedResponse( Message* rsp, Message* req )
-{
-}
-
 
 
 }

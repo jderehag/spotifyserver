@@ -436,23 +436,23 @@ class AudioDataIndMsg(Message):
     
     def getChannels(self):
         for tlv in self._TlvSet:
-            if(tlv._TlvType == TlvDefinitions.TlvAudioEndpoint.TLV_AUDIO_CHANNELS):
+            if(tlv._TlvType == TlvDefinitions.TlvType.TLV_AUDIO_CHANNELS):
                 channels, = struct.unpack('!I', tlv._TlvValue)
                 return channels
             
     def getBitRate(self):
         for tlv in self._TlvSet:
-            if(tlv._TlvType == TlvDefinitions.TlvAudioEndpoint.TLV_AUDIO_RATE):
+            if(tlv._TlvType == TlvDefinitions.TlvType.TLV_AUDIO_RATE):
                 rate, = struct.unpack('!I', tlv._TlvValue)
                 return rate
         
     def getNofSamples(self):
         for tlv in self._TlvSet:
-            if(tlv._TlvType == TlvDefinitions.TlvAudioEndpoint.TLV_AUDIO_NOF_SAMPLES):
+            if(tlv._TlvType == TlvDefinitions.TlvType.TLV_AUDIO_NOF_SAMPLES):
                 nsamples, = struct.unpack('!I', tlv._TlvValue)
                 return nsamples
         
     def getAudioData(self):
         for tlv in self._TlvSet:
-            if(tlv._TlvType == TlvDefinitions.TlvAudioEndpoint.TLV_AUDIO_DATA):
+            if(tlv._TlvType == TlvDefinitions.TlvType.TLV_AUDIO_DATA):
                 return tlv._TlvValue
