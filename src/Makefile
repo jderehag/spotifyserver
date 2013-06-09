@@ -90,7 +90,8 @@ TESTAPP_OBJECTS +=  testapp.o \
 					SocketServer.o \
 					SocketPeer.o \
 					AudioFifo.o \
-					RemoteAudioEndpointManager.o
+					RemoteAudioEndpointManager.o \
+					AudioEndpointRemoteSocketServer.o
 
 TESTAPP_OBJECTS += $(ARCH_OBJECTS) $(AUDIO_OBJECTS)
 

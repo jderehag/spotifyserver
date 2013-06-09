@@ -29,7 +29,7 @@
 #include "MessageFactory/Message.h"
 #include "MessageFactory/TlvDefinitions.h"
 
-RemoteAudioEndpointManager::RemoteAudioEndpointManager( Messenger& m ) : messenger_(m)
+RemoteAudioEndpointManager::RemoteAudioEndpointManager( Messenger& m ) : messenger_(m), server(NULL)
 {
     messenger_.addSubscriber( this );
 }
@@ -37,11 +37,14 @@ RemoteAudioEndpointManager::RemoteAudioEndpointManager( Messenger& m ) : messeng
 RemoteAudioEndpointManager::~RemoteAudioEndpointManager()
 {
     messenger_.removeSubscriber( this );
+    server->destroy();
+    delete server;
 }
 
 void RemoteAudioEndpointManager::addEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData )
 {
     //todo: launch a udp listener thread and provide ep to it
+    server = new AudioEndpointRemoteSocketServer( ep );
 
     Message* msg = new Message( CREATE_AUDIO_ENDPOINT_REQ );
     TlvContainer* epTlv = new TlvContainer(TLV_CLIENT);

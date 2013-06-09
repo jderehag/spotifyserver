@@ -26,20 +26,51 @@
  */
 
 #include "AudioEndpointRemoteSocketServer.h"
-#include "AudioEndpointRemotePeer.h"
+#include "MessageFactory/Message.h"
+#include "MessageFactory/MessageDecoder.h"
+#include "MessageFactory/SocketReader.h"
+#include <set>
 #include "applog.h"
 
-AudioEndpointRemoteSocketServer::AudioEndpointRemoteSocketServer(const ConfigHandling::AudioEndpointConfig& audioconfig, const ConfigHandling::NetworkConfig& networkconfig)
-        : SocketServer(networkconfig), audioconfig_(audioconfig)
+AudioEndpointRemoteSocketServer::AudioEndpointRemoteSocketServer(Platform::AudioEndpoint& endpoint) : sock_(SOCKTYPE_DATAGRAM)
 {
+    startThread();
 }
 
 AudioEndpointRemoteSocketServer::~AudioEndpointRemoteSocketServer()
 {
 }
 
-SocketPeer* AudioEndpointRemoteSocketServer::newPeer( Socket* socket )
+
+void AudioEndpointRemoteSocketServer::run()
 {
-    AudioEndpointRemotePeer* p = new AudioEndpointRemotePeer( socket, audioconfig_ );
-    return p;
+    int rc;
+    SocketReader reader(&sock_);
+
+    sock_.BindToAddr("ANY", "7789");
+
+    while( !isCancellationPending() )
+    {
+        std::set<Socket*> readsockets;
+        std::set<Socket*> writesockets;
+        std::set<Socket*> errsockets;
+
+        readsockets.insert(&sock_);
+        errsockets.insert(&sock_);
+
+        rc = select(&readsockets, &writesockets, &errsockets, 1000);
+
+        if ( !readsockets.empty() )
+        {
+            reader.doread();
+        }
+    }
 }
+
+void AudioEndpointRemoteSocketServer::destroy()
+{
+    cancelThread();
+    sock_.Shutdown();
+    joinThread();
+}
+

@@ -157,7 +157,7 @@ typedef enum
     TLV_AUDIO_CHANNELS         = 0x2002,
     TLV_AUDIO_RATE             = 0x2003,
     TLV_AUDIO_NOF_SAMPLES      = 0x2004,
-    TLV_AUDIO_DESTINATION_PORT = 0x2005,
+//    TLV_AUDIO_DESTINATION_PORT = 0x2005,
     TLV_AUDIO_PROTOCOL_TYPE    = 0x2006,
 
     /* Audio endpoint TLV's */

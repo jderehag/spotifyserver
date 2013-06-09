@@ -90,6 +90,8 @@ const char* tlvTypeToString(const TlvType_t type)
         STR(TLV_TRACK);
         STR(TLV_ARTIST);
         STR(TLV_ALBUM);
+        STR(TLV_CLIENT);
+
         STR(TLV_TRACK_DURATION);
         STR(TLV_TRACK_INDEX );
         
@@ -126,6 +128,8 @@ const char* tlvTypeToString(const TlvType_t type)
         STR(TLV_AUDIO_CHANNELS);
         STR(TLV_AUDIO_RATE);
         STR(TLV_AUDIO_NOF_SAMPLES);
+
+        STR(TLV_AUDIO_EP_PROTOCOL);
 
         default:
             return "Unknown TlvType";

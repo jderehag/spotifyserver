@@ -51,11 +51,13 @@ std::string AudioEndpointRemote::getId() const
 void AudioEndpointRemote::sendAudioData()
 {
     AudioFifoData* afd;
+    static uint32_t reqId = 0;
 
     while( (afd = fifo_.getFifoDataTimedWait(10) ) != NULL )
     {
         int rc = 0;
         Message* msg = new Message( AUDIO_DATA_IND );
+        msg->setId(reqId++); //for debug
         msg->addTlv( TLV_AUDIO_CHANNELS, afd->channels );
         msg->addTlv( TLV_AUDIO_RATE, afd->rate );
         msg->addTlv( TLV_AUDIO_NOF_SAMPLES, afd->nsamples );

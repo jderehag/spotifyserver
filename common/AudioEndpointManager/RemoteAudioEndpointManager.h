@@ -10,11 +10,13 @@
 
 #include "AudioEndpointManagerCtrlInterface.h"
 #include "SocketHandling/Messenger.h"
+#include "TestApp/AudioEndpointRemoteSocketServer.h"
+
 class RemoteAudioEndpointManager : public AudioEndpointCtrlInterface, public IMessageSubscriber
 {
 private:
     Messenger& messenger_;
-
+    AudioEndpointRemoteSocketServer* server;
 public:
     RemoteAudioEndpointManager( Messenger& m );
     virtual ~RemoteAudioEndpointManager();

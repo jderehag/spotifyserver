@@ -60,10 +60,20 @@ class TlvMessageType:
     GET_STATUS_RSP      = int('0x401', 16) | RSP_BIT
     STATUS_IND          = int('0x401', 16) | IND_BIT
     
-    ADD_AUDIO_ENDPOINT_REQ  = int('0x1001', 16) | REQ_BIT
-    ADD_AUDIO_ENDPOINT_RSP  = int('0x1001', 16) | RSP_BIT
-    REM_AUDIO_ENDPOINT_REQ  = int('0x1002', 16) | REQ_BIT
-    REM_AUDIO_ENDPOINT_RSP  = int('0x1002', 16) | RSP_BIT
+    CREATE_AUDIO_ENDPOINT_REQ  = int('0x1001', 16) | REQ_BIT
+    CREATE_AUDIO_ENDPOINT_RSP  = int('0x1001', 16) | RSP_BIT
+    DELETE_AUDIO_ENDPOINT_REQ  = int('0x1002', 16) | REQ_BIT
+    DELETE_AUDIO_ENDPOINT_RSP  = int('0x1002', 16) | RSP_BIT
+    GET_AUDIO_ENDPOINTS_REQ    = int('0x1003', 16) | REQ_BIT
+    GET_AUDIO_ENDPOINTS_RSP    = int('0x1003', 16) | RSP_BIT
+
+    ADD_AUDIO_ENDPOINTS_REQ         = int('0x1021', 16) | REQ_BIT
+    ADD_AUDIO_ENDPOINTS_RSP         = int('0x1021', 16) | RSP_BIT
+    REM_AUDIO_ENDPOINTS_REQ         = int('0x1022', 16) | REQ_BIT
+    REM_AUDIO_ENDPOINTS_RSP         = int('0x1022', 16) | RSP_BIT
+    GET_CURRENT_AUDIO_ENDPOINTS_REQ = int('0x1024', 16) | REQ_BIT
+    GET_CURRENT_AUDIO_ENDPOINTS_RSP = int('0x1024', 16) | RSP_BIT
+    
     AUDIO_DATA_IND          = int('0x1011', 16) | IND_BIT
 
 
@@ -78,6 +88,8 @@ class TlvType:
     TLV_ALBUM                   = int('0x9',16)
     TLV_ARTIST                  = int('0xa',16)
     
+    TLV_CLIENT                  = int('0x21',16)
+
     # Track TLV's
     TLV_TRACK_DURATION          = int('0x304', 16)
     TLV_TRACK_INDEX             = int('0x307', 16)
@@ -97,10 +109,12 @@ class TlvType:
     # Generic data items */
     TLV_LINK                    = int('0x701', 16)
     TLV_NAME                    = int('0x702', 16)
+    TLV_IP_ADDRESS              = int('0x703', 16)
+    TLV_PORT                    = int('0x704', 16)
     
     # Image TLV's */
-    TLV_IMAGE_FORMAT            = int('0x701', 16)
-    TLV_IMAGE_DATA              = int('0x702', 16)
+    TLV_IMAGE_FORMAT            = int('0x801', 16)
+    TLV_IMAGE_DATA              = int('0x802', 16)
 
     # Session TLV's
     TLV_LOGIN_USERNAME         = int('0x1001', 16)
@@ -116,7 +130,7 @@ class TlvType:
     TLV_AUDIO_CHANNELS         = int('0x2002', 16)
     TLV_AUDIO_RATE             = int('0x2003', 16)
     TLV_AUDIO_NOF_SAMPLES      = int('0x2004', 16)
-    TLV_AUDIO_DESTINATION_PORT = int('0x2005', 16)
+    #TLV_AUDIO_DESTINATION_PORT = int('0x2005', 16)
     TLV_AUDIO_PROTOCOL_TYPE    = int('0x2006', 16)
 
 
