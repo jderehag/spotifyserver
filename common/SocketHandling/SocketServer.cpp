@@ -50,7 +50,7 @@ void SocketServer::run()
 {
     Socket* peersock;
     int rc = -1;
-    socket_ = new Socket();
+    socket_ = new Socket(SOCKTYPE_STREAM);
 
     if (config_.getBindType() == ConfigHandling::NetworkConfig::IP)
     {

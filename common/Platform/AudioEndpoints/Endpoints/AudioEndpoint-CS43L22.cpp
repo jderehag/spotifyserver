@@ -61,12 +61,12 @@ void AudioEndpointLocal::destroy()
 int AudioEndpointLocal::enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples)
 {
     STM_EVAL_LEDToggle( LED3 );
-    return fifo.addFifoDataBlocking(channels, rate, nsamples, samples);
+    return fifo_.addFifoDataBlocking(channels, rate, nsamples, samples);
 }
 
 void AudioEndpointLocal::flushAudioData()
 {
-    fifo.flush();
+    fifo_.flush();
 }
 
 void AudioEndpointLocal::run()
@@ -78,7 +78,7 @@ void AudioEndpointLocal::run()
     {
         STM_EVAL_LEDToggle( LED6 );
         /* check if there's more audio available */
-        if ( ( afd = fifo.getFifoDataTimedWait(1) ) == NULL )
+        if ( ( afd = fifo_.getFifoDataTimedWait(1) ) == NULL )
             continue;
 
         if ( afd->rate != currentrate )

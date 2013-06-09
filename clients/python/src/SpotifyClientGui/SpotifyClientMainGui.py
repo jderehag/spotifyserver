@@ -300,8 +300,9 @@ class PlaybackBar(Frame):
         if self.__playbackLocally.get() == 1:
             self.spotify.sendAddAudioEndpoint(self._audioDev.write_to_output_stream)
         else:
+            #Also stops the callbacks, make sure to do this prior to closing output_stream
+            self.spotify.sendRemAudioEndpoint() 
             self._audioDev.close_output_stream()
-            #TODO: Add close and cleanup of socket
     
     
     def updateTrackbarTimerTick(self):

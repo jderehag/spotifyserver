@@ -49,6 +49,7 @@ public:
 
     virtual void run();
     virtual void destroy();
+    virtual bool isLocal() const {return true;};
 };
 
 }

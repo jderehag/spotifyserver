@@ -29,15 +29,20 @@
 #include "MessageFactory/Message.h"
 #include <stdlib.h>
 
+#include <iostream>
+
 
 namespace Platform {
 
-AudioEndpointRemote::AudioEndpointRemote( std::string id, const std::string ip, const std::string port ) : id_(id)
+AudioEndpointRemote::AudioEndpointRemote() : sock_(SOCKTYPE_DATAGRAM), id_("")
 {
+    sock_.Connect("127.0.0.1", "10000");
 }
 
-AudioEndpointRemote::~AudioEndpointRemote()
+AudioEndpointRemote::AudioEndpointRemote( const std::string& id, const std::string& serveraddr, const std::string& serverport) : sock_(SOCKTYPE_DATAGRAM),
+                                                                                                                                 id_(id)
 {
+    sock_.Connect(serveraddr, serverport);
 }
 
 std::string AudioEndpointRemote::getId() const
@@ -49,15 +54,18 @@ void AudioEndpointRemote::sendAudioData()
 {
     AudioFifoData* afd;
 
-    if ( (afd = fifo.getFifoDataTimedWait(0) ) != NULL )
+    if ( (afd = fifo_.getFifoDataTimedWait(0) ) != NULL )
     {
         Message* msg = new Message( AUDIO_DATA_IND );
         msg->addTlv( TLV_AUDIO_CHANNELS, afd->channels );
         msg->addTlv( TLV_AUDIO_RATE, afd->rate );
         msg->addTlv( TLV_AUDIO_NOF_SAMPLES, afd->nsamples );
         msg->addTlv( new BinaryTlv( TLV_AUDIO_DATA, (const uint8_t*) /*ugh, should hton this*/ afd->samples, afd->nsamples * sizeof(int16_t) * afd->channels ) );
-       // m.queueMessage( msg );
+        MessageEncoder* enc = msg->encode();
 
+        sock_.Send(enc->getBuffer(), enc->getLength());
+
+        delete enc;
         free( afd );
     }
 
@@ -68,10 +76,7 @@ int AudioEndpointRemote::enqueueAudioData(unsigned short channels, unsigned int 
     if (nsamples == 0)
         return 0; // Audio discontinuity, do nothing
 
-    if (nsamples > 500)
-        nsamples = 500;
-
-    nsamples = fifo.addFifoDataBlocking(channels, rate, nsamples, samples);
+    nsamples = fifo_.addFifoDataBlocking(channels, rate, nsamples, samples);
 
     sendAudioData();
 
@@ -81,7 +86,6 @@ int AudioEndpointRemote::enqueueAudioData(unsigned short channels, unsigned int 
 void AudioEndpointRemote::flushAudioData()
 {
 }
-
 
 
 }

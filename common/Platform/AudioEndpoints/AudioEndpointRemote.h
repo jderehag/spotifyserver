@@ -29,6 +29,7 @@
 #define AUDIOENDPOINTREMOTE_H_
 
 #include "AudioEndpoint.h"
+#include "Platform/Socket/Socket.h"
 #include <string>
 
 namespace Platform
@@ -37,19 +38,24 @@ namespace Platform
 class AudioEndpointRemote : public AudioEndpoint
 {
 private:
+    Socket sock_;
     std::string id_;
 
     void sendAudioData();
 
 public:
-    AudioEndpointRemote( std::string id, const std::string ip, const std::string port );
-    virtual ~AudioEndpointRemote();
+    AudioEndpointRemote();
+    AudioEndpointRemote(const std::string& id, const std::string& serveraddr, const std::string& serverport);
 
     /* AudioEndpoint implementation */
     virtual int enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples);
     virtual void flushAudioData();
 
     virtual std::string getId() const;
+
+    virtual bool isLocal() const {return false;};
+
 };
+
 }
 #endif /* AUDIOENDPOINTREMOTE_H_ */

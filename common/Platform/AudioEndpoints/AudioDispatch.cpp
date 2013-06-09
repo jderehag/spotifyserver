@@ -73,7 +73,22 @@ int AudioDispatch::enqueueAudioData(unsigned short channels, unsigned int rate, 
      * letting the slowest one be the dictator */
     for(AudioEndpointContainer::const_iterator it = audioEndpoints_.begin(); it != audioEndpoints_.end(); ++it)
     {
-        n = (*it)->enqueueAudioData( channels, rate, nsamples, samples );
+        /*
+        newN = (*it)->enqueueAudioData(format->channels, format->sample_rate, num_frames, static_cast<const int16_t*>(frames));
+        if((*it)->isLocal())
+            n = newN;*/
+
+        /* For now automatically disable local endpoint if we have any remote endpoints.
+         * In the future it shall be possible for clients to disable local endpoints */
+        if(audioEndpoints_.size() > 1)
+        {
+            if(!(*it)->isLocal())
+                n = (*it)->enqueueAudioData(channels, rate, nsamples, samples);
+        }
+        else
+        {
+            n = (*it)->enqueueAudioData(channels, rate, nsamples, samples);
+        }
     }
     mtx.unlock();
 

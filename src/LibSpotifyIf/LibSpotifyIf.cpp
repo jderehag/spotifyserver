@@ -846,11 +846,11 @@ void LibSpotifyIf::removeAudioEndpoint( const std::string& id, IMediaInterfaceCa
     }
     //todo: subscriber->
 }
+
 void LibSpotifyIf::getCurrentAudioEndpoints( IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
 
 }
-
 
 void LibSpotifyIf::genericSearchCb(sp_search *search, void *userdata)
 {

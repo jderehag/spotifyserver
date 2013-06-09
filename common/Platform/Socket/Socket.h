@@ -32,21 +32,24 @@
 #include <set>
 #include <stdint.h>
 
+typedef enum SockType_s
+{
+    SOCKTYPE_STREAM,
+    SOCKTYPE_DATAGRAM
+}SockType_t;
+
 class Socket
 {
 private:
     struct SocketHandle_t* socket_;
+    std::string remoteAddr_;
+    std::string localAddr_;
 
     Socket(struct SocketHandle_t* socket);
 
     int WaitForConnect();
 public:
-    typedef enum
-    {
-        SOCKTYPE_DATAGRAM,
-        SOCKTYPE_STREAM,
-    } SockType_t;
-    Socket( SockType_t type = SOCKTYPE_STREAM );
+    Socket(SockType_t type);
     int BindToAddr(const std::string& addr, const std::string& port);
     int BindToDevice(const std::string& device, const std::string& port);
     int Listen();
@@ -59,6 +62,9 @@ public:
     ~Socket();
 
     friend int select(std::set<Socket*>* readsockets, std::set<Socket*>* writesockets, std::set<Socket*>* errsockets, int timeout);
+
+    const std::string& getRemoteAddr() const {return remoteAddr_;};
+    const std::string& getLocalAddr() const {return localAddr_;};
 };
 
 

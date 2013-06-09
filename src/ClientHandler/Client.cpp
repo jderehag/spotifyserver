@@ -27,6 +27,7 @@
 
 #include "Client.h"
 #include "applog.h"
+#include "Platform/Socket/Socket.h" /* needed so that client can resolve getSocket()->getRemoteAddr()*/
 
 uint32_t Client::count;
 
@@ -456,7 +457,7 @@ void Client::handleCreateAudioEpReq( const Message* msg )
 
         if ( portTlv /* && protoTlv */ )
         {
-            const std::string ip = "::1"; //todo
+            const std::string& ip = getSocket()->getRemoteAddr();
             const uint32_t port = portTlv->getVal();
 
             std::ostringstream portStr;
@@ -470,6 +471,10 @@ void Client::handleCreateAudioEpReq( const Message* msg )
 
             audioEp = new Platform::AudioEndpointRemote( id, ip, portStr.str());
             audioCtrl_.addEndpoint(*audioEp, NULL, NULL);
+        }
+        else
+        {
+            log(LOG_NOTICE) << "Port TLV missing from message, add errorcode in response here!";
         }
     }
 
@@ -507,6 +512,4 @@ void Client::handleGetAudioEpReq( const Message* msg )
     Message* rsp = msg->createResponse();
     audioCtrl_.getEndpoints( this, rsp );
 }
-
-
 

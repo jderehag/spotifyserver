@@ -31,6 +31,7 @@
 #include "../Socket.h"
 #include "applog.h"
 #include <stdint.h>
+#include <assert.h>
 
 typedef struct SocketHandle_t
 {
@@ -101,8 +102,18 @@ Socket::Socket( SockType_t type )
 
     WSAStartup(MAKEWORD(2,2), &wsaData);
 
-    socket_->handle = socket(PF_INET6, (type == SOCKTYPE_STREAM) ? SOCK_STREAM : SOCK_DGRAM, 0);
-
+    switch(type)
+    {
+        case SOCKTYPE_STREAM:
+            socket_->handle = socket(PF_INET6, SOCK_STREAM, 0);
+            break;
+        case SOCKTYPE_DATAGRAM:
+            socket_->handle = socket(PF_INET6, SOCK_DGRAM, 0);
+            break;
+        default:
+            assert(false);
+            break;
+    }
     on = 0;
     setsockopt(socket_->handle, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&on, sizeof(on) );
 
@@ -149,6 +160,7 @@ int Socket::BindToAddr(const std::string& addr, const std::string& port)
             log(LOG_EMERG) << "bind attempt failed with error " << err;
         }
     }
+    localAddr_ = str;
 
     if ( AddrInfo )
         freeaddrinfo( AddrInfo );
@@ -171,6 +183,7 @@ int Socket::Connect(const std::string& addr, const std::string& port)
     struct addrinfo *AddrInfo, *AI;
     
     AddrInfo = toAddrinfo( addr, port, false );
+    remoteAddr_ = addr;
 
     for ( AI = AddrInfo; AI != NULL; AI = AI->ai_next )
     {
@@ -257,7 +270,9 @@ Socket* Socket::Accept()
         log(LOG_NOTICE) << "accept! " << str << " fd " << newSocket;
         SocketHandle_t* handle = new SocketHandle_t;
         handle->handle = newSocket;
-        return new Socket(handle);
+        Socket* sock = new Socket(handle);
+        sock->remoteAddr_ = str;
+        return sock;
     }
     else
     {

@@ -48,7 +48,7 @@ void SocketClient::run()
 {
     while(isCancellationPending() == false)
     {
-        Socket socket;
+        Socket socket(SOCKTYPE_STREAM);
 
         if ( socket.Connect( serveraddr_, serverport_ ) == 0 )
         {
