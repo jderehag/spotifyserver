@@ -247,6 +247,7 @@ class SpotifyClient(Thread):
                         self.__getAudioDataObserverLock.acquire()
                         self.__getAudioDataObserver(msgObj.getChannels(),msgObj.getBitRate(), msgObj.getNofSamples(), msgObj.getAudioData())
                         self.__getAudioDataObserverLock.release()
+                        
                     except:
                         print "TODO: JESPER got exception!"
                     

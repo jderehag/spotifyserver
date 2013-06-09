@@ -52,7 +52,7 @@ class AudioDev(Thread):
         self._channels = 0
         self._rate = 0
         self._format = 0
-        self._output_fifo = Queue.Queue()
+        self._output_fifo = Queue.Queue(0)
         
         if useMic:
             self._cancellationPending = Event()
@@ -86,7 +86,7 @@ class AudioDev(Thread):
     
     
     def open_output_stream(self, channels, rate, format_ = pyaudio.paInt32):
-        self.close_output_stream()
+        # self.close_output_stream()
         # open stream based on the wave object which has been input.
         # format = paFloat32, paInt32, paInt24, paInt16, paInt8, paUInt8, paCustomFormat
         self._output_stream = self._pa.open(format = format_,
@@ -115,8 +115,10 @@ class AudioDev(Thread):
             sample = str(data[n * totalSampleSize : ((n+1) * totalSampleSize)])
             self._output_fifo.put(sample)
         
+        
         if not self._output_stream.is_active():
-            self._output_stream.start_stream()
+            if self._output_fifo.qsize() > 100000:
+                self._output_stream.start_stream()
 
         
                 
