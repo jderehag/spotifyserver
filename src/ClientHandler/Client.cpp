@@ -508,7 +508,7 @@ void Client::handleAddAudioEpReq(const Message* msg)
         if(portTlv != NULL)
         {
             sprintf(portstr,"%d",portTlv->getVal());
-            audioEp = new Platform::AudioEndpointRemote(getSocket()->getRemoteAddr(), portstr);
+            audioEp = new Platform::AudioEndpointRemote(getSocket()->getRemoteAddr(), portstr, 10);
             spotify_.addAudioEndpoint(*audioEp);
         }
         else

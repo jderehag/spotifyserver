@@ -42,8 +42,7 @@ private:
     void sendAudioData();
 
 public:
-    AudioEndpointRemote();
-    AudioEndpointRemote(const std::string& serveraddr, const std::string& serverport);
+    AudioEndpointRemote(const std::string& serveraddr, const std::string& serverport, unsigned int bufferNSecs);
 
     /* AudioEndpoint implementation */
     virtual int enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples);

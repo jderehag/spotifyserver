@@ -242,11 +242,15 @@ class SpotifyClient(Thread):
                 elif(msgType == TlvDefinitions.TlvMessageType.AUDIO_DATA_IND):
                     print "Received msg AUDIO_DATA_IND"
                     msgObj = Message.AudioDataIndMsg(msgId)
-                    msgObj.Decode(msg)
+                    try:
+                        msgObj.Decode(msg)
+                        self.__getAudioDataObserverLock.acquire()
+                        self.__getAudioDataObserver(msgObj.getChannels(),msgObj.getBitRate(), msgObj.getNofSamples(), msgObj.getAudioData())
+                        self.__getAudioDataObserverLock.release()
+                    except:
+                        print "TODO: JESPER got exception!"
                     
-                    self.__getAudioDataObserverLock.acquire()
-                    self.__getAudioDataObserver(msgObj.getChannels(),msgObj.getBitRate(), msgObj.getNofSamples(), msgObj.getAudioData())
-                    self.__getAudioDataObserverLock.release() 
+ 
                     
                         
                 elif(msgType == TlvDefinitions.TlvMessageType.GET_TRACKS_REQ or
