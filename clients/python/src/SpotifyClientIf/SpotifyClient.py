@@ -240,7 +240,7 @@ class SpotifyClient(Thread):
                     self.__getRspMsgObserversLock.release()
                     
                 elif(msgType == TlvDefinitions.TlvMessageType.AUDIO_DATA_IND):
-                    print "Received msg AUDIO_DATA_IND"
+                    #print "Received msg AUDIO_DATA_IND"
                     msgObj = Message.AudioDataIndMsg(msgId)
                     try:
                         msgObj.Decode(msg)

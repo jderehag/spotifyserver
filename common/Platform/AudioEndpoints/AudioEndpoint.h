@@ -29,6 +29,7 @@
 #define AUDIOENDPOINT_H_
 
 #include "AudioFifo.h"
+#include <string>
 
 namespace Platform {
 

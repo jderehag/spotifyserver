@@ -300,12 +300,17 @@ class PlaybackBar(Frame):
         
     def __PlaybackLocally(self):
         if self.__playbackLocally.get() == 1:
+            self.__audioQueueTimer = RepeatTimer(1.0, self.__printBuffers)
+            self.__audioQueueTimer.play()
             self.spotify.sendAddAudioEndpoint(self._audioDev.write_to_output_stream)
         else:
             #Also stops the callbacks, make sure to do this prior to closing output_stream
             self.spotify.sendRemAudioEndpoint() 
             self._audioDev.close_output_stream()
+            self.__audioQueueTimer.stop()
     
+    def __printBuffers(self):
+        print "Buffer:", self._audioDev.getBufferInSeconds(),"sec", self._audioDev.getBufferInBytes(), "bytes" 
     
     def updateTrackbarTimerTick(self):
         self.__progressTimeIntVar.set(self.__progressTimeIntVar.get() + 1)

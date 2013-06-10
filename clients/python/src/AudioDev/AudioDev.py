@@ -32,7 +32,6 @@ except:
 
 from threading import Thread, Event
 
-import wave
 import Queue
 
 MIC_FORMAT = pyaudio.paInt16 
@@ -40,6 +39,7 @@ MIC_CHANNELS = 1
 MIC_RATE = 44100  
 MIC_INPUT_BLOCK_TIME = 0.05
 MIC_INPUT_FRAMES_PER_BLOCK = int(MIC_RATE*MIC_INPUT_BLOCK_TIME)
+AUDIO_SAMPLESIZE = 2 # uint16_t
 
 
 class AudioDev(Thread):
@@ -85,13 +85,14 @@ class AudioDev(Thread):
         return stream
     
     
-    def open_output_stream(self, channels, rate, format_ = pyaudio.paInt32):
-        # self.close_output_stream()
+    def create_output_stream(self, channels, rate, format_ = pyaudio.paInt32):
+        self.close_output_stream()
         # open stream based on the wave object which has been input.
         # format = paFloat32, paInt32, paInt24, paInt16, paInt8, paUInt8, paCustomFormat
         self._output_stream = self._pa.open(format = format_,
                                channels = channels,
                                rate = rate,
+                               start = False,
                                output = True, 
                                stream_callback=self._get_next_data_for_outputstream)
         
@@ -106,10 +107,10 @@ class AudioDev(Thread):
 
     def write_to_output_stream(self, channels, rate, nsamples, data):
         if channels != self._channels or rate != self._rate:
-            self.open_output_stream(channels, rate)
+            self.create_output_stream(channels, rate)
         
-        sampleSize = 2
-        totalSampleSize = sampleSize * channels
+        
+        totalSampleSize = AUDIO_SAMPLESIZE * channels
         
         for n in range(0, nsamples):
             sample = str(data[n * totalSampleSize : ((n+1) * totalSampleSize)])
@@ -152,14 +153,19 @@ class AudioDev(Thread):
         samples = []
         for n in range(requested_samples):
             try:
+                # TODO: This is bad, we are not allowed to block in this callback
+                # since its called from a high-prio thread (i.e close to realtime characteristics) 
                 samples.append(self._output_fifo.get(block=True, timeout=1))
                 self._output_fifo.task_done()
             except Queue.Empty:
                 print "JESPER timedout waiting for more audio data!"
                 return (None, pyaudio.paComplete)
-        print "JESPER, returning", len(samples), "samples, requested=", requested_samples, "qsize=", self._output_fifo.qsize()
         return (str(samples), pyaudio.paContinue)
         
         
-
+    def getBufferInSeconds(self):
+        return float(self._output_fifo.qsize()) / self._rate
+    
+    def getBufferInBytes(self):
+        return self._output_fifo.qsize() * AUDIO_SAMPLESIZE * self._channels
                         
