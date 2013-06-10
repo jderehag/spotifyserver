@@ -327,16 +327,8 @@ class SpotifyClient(Thread):
     def sendGetStatusReq(self):
         if self.__isConnected.is_set():
             self.fd.sendall(Message.GetStatusReqMsg(self.getNextMsgId()).toByteStream())
-    
-    def sendAddAudioEndpoint(self, audioDataCb):
-        if self.__isConnected.is_set():
-            self.__getAudioDataObserverLock.acquire()
-            self.__getAudioDataObserver = audioDataCb
-            self.__getAudioDataObserverLock.release()
-            print "Adding local AudioEndpoint to playback"
-            self.fd.sendall(Message.AddAudioEndpointReqMsg(self.getNextMsgId()).toByteStream())
             
-    def sendCreateAudioEndpoint(self):
+    def sendCreateAudioEndpoint(self, audioDataCb):
         if self.__isConnected.is_set():
             self.audioEndpointfd = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.audioEndpointfd.bind(("",0))
@@ -345,18 +337,21 @@ class SpotifyClient(Thread):
             self.fd.sendall(Message.CreateAudioEndpointReqMsg(self.getNextMsgId(),src_port, 
                                        TlvDefinitions.TlvAudioEndpointProtocolType.LIGHTWEIGHT_UDP).toByteStream())
             
+            self.__getAudioDataObserverLock.acquire()
+            self.__getAudioDataObserver = audioDataCb
+            self.__getAudioDataObserverLock.release()
+            
+            self.fd.sendall(Message.AddAudioEndpointReqMsg(self.getNextMsgId()).toByteStream())
+            
     def sendDelAudioEndpoint(self):
-        self.audioEndpointfd.close()
-        self.audioEndpointfd = None
-        print "Closing local AudioEndpoint"
-        self.fd.sendall(Message.DelAudioEndpointReqMsg(self.getNextMsgId()).toByteStream())
-    
-    def sendRemAudioEndpoint(self):
         self.__getAudioDataObserverLock.acquire()
         self.__getAudioDataObserver = None
         self.__getAudioDataObserverLock.release()
-        print "Removing local AudioEndpoint from playback"
+        self.audioEndpointfd.close()
+        self.audioEndpointfd = None
+        print "Closing local AudioEndpoint"
         self.fd.sendall(Message.RemAudioEndpointReqMsg(self.getNextMsgId()).toByteStream())
+        self.fd.sendall(Message.DelAudioEndpointReqMsg(self.getNextMsgId()).toByteStream())
         
     def recvMsg(self, fd):
         try:

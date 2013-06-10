@@ -180,11 +180,9 @@ class LeftFrame(Frame):
         self.spotify.registerStatusIndObserver(self)
         self.spotify.registerConnectionObserver(self)
         self.spotify.sendGetPlaylistReq()
-        self.spotify.sendCreateAudioEndpoint()
         
     def connectedIndCb(self):
         self.spotify.sendGetPlaylistReq()
-        self.spotify.sendCreateAudioEndpoint()
         
     def disconnectedIndCb(self):
         self.__playlists[:] = []
@@ -302,10 +300,10 @@ class PlaybackBar(Frame):
         if self.__playbackLocally.get() == 1:
             self.__audioQueueTimer = RepeatTimer(1.0, self.__printBuffers)
             self.__audioQueueTimer.play()
-            self.spotify.sendAddAudioEndpoint(self._audioDev.write_to_output_stream)
+            self.spotify.sendCreateAudioEndpoint(self._audioDev.write_to_output_stream)
         else:
             #Also stops the callbacks, make sure to do this prior to closing output_stream
-            self.spotify.sendRemAudioEndpoint() 
+            self.spotify.sendDelAudioEndpoint() 
             self._audioDev.close_output_stream()
             self.__audioQueueTimer.stop()
     
