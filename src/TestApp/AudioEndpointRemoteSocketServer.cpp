@@ -32,7 +32,8 @@
 #include <set>
 #include "applog.h"
 
-AudioEndpointRemoteSocketServer::AudioEndpointRemoteSocketServer(Platform::AudioEndpoint& endpoint) : sock_(SOCKTYPE_DATAGRAM)
+AudioEndpointRemoteSocketServer::AudioEndpointRemoteSocketServer(Platform::AudioEndpoint& endpoint) : sock_(SOCKTYPE_DATAGRAM),
+                                                                                                      ep_(endpoint)
 {
     startThread();
 }
@@ -62,7 +63,43 @@ void AudioEndpointRemoteSocketServer::run()
 
         if ( !readsockets.empty() )
         {
-            reader.doread();
+            char buf[8249];
+            sock_.Receive(buf, sizeof(buf));
+
+            MessageDecoder dec;
+            Message* msg = dec.decode((uint8_t*)buf);
+
+            if ( msg )
+            {
+                log(LOG_NOTICE) << *(msg);
+
+                switch(msg->getType())
+                {
+                    case AUDIO_DATA_IND:
+                    {
+                        const IntTlv* channelstlv = (const IntTlv*)msg->getTlvRoot()->getTlv(TLV_AUDIO_CHANNELS);
+                        const IntTlv* ratetlv     = (const IntTlv*)msg->getTlvRoot()->getTlv(TLV_AUDIO_RATE);
+                        const IntTlv* nsamplestlv = (const IntTlv*)msg->getTlvRoot()->getTlv(TLV_AUDIO_NOF_SAMPLES);
+                        const BinaryTlv* samplestlv = (const BinaryTlv*)msg->getTlvRoot()->getTlv(TLV_AUDIO_DATA);
+
+                        if ( channelstlv && ratetlv && samplestlv && samplestlv )
+                        {
+                            unsigned short channels = channelstlv->getVal();
+                            unsigned int rate       = ratetlv->getVal();
+                            unsigned int nsamples   = nsamplestlv->getVal();
+                            const int16_t* samples  = (const int16_t*)samplestlv->getData(); /* todo ntoh me! */
+
+                            ep_.enqueueAudioData(channels, rate, nsamples, samples);
+                        }
+                    }
+                    break;
+
+                    default:
+                        break;
+                }
+
+                delete msg;
+            }
         }
     }
 }

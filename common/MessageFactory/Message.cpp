@@ -125,6 +125,7 @@ bool GetTracksReq::validate()
 
 std::ostream& operator <<(std::ostream& os, const Message& rhs)
 {
+    os << messageTypeToString(rhs.getType()) << " (0x" << std::hex << rhs.getType() << ") "  << std::dec << " # " << rhs.getId() << '\n';
     os << rhs.getTlvRoot()->print();
     return os;
 }

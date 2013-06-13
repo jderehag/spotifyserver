@@ -36,6 +36,7 @@ class AudioEndpointRemoteSocketServer : public Platform::Runnable
 {
 private:
     Socket sock_;
+    Platform::AudioEndpoint& ep_;
 
 public:
     AudioEndpointRemoteSocketServer(Platform::AudioEndpoint& endpoint);
