@@ -34,7 +34,9 @@
 #include "buttonHandler.h"
 #include "powerHandler.h"
 #include "SocketHandling/SocketClient.h"
-//#include "TestApp/AudioEndpointRemoteSocketServer.h"
+#include "AudioEndpointManager/RemoteAudioEndpointManager.h"
+#include "TestApp/AudioEndpointRemoteSocketServer.h"
+#include "Platform/AudioEndpoints/AudioEndpointLocal.h"
 #include "FreeRTOS.h"
 #include "task.h"
 #include "applog.h"
@@ -91,20 +93,18 @@ int main(void)
     cfg->setLogTo(ConfigHandling::LoggerConfig::NOWHERE);
     Logger::Logger* l = new Logger::Logger(*cfg);
 
-#if 0
-    ConfigHandling::NetworkConfig* audioepservercfg = new ConfigHandling::NetworkConfig;
-    audioepservercfg->setPort("7789");
-    ConfigHandling::AudioEndpointConfig* audiocfg = new ConfigHandling::AudioEndpointConfig;
-
-    AudioEndpointRemoteSocketServer* audioserver = new AudioEndpointRemoteSocketServer( *audiocfg, *audioepservercfg );
-#endif
-
     LedFlasher* fl = new LedFlasher;
 #if 0
     SocketClient* sc = new SocketClient("192.168.5.98", "7788");
 #else
     SocketClient* sc = new SocketClient("192.168.5.198", "7788");
 #endif
+
+  //  ConfigHandling::AudioEndpointConfig* audiocfg = new ConfigHandling::AudioEndpointConfig;
+  //  Platform::AudioEndpointLocal* audioEndpoint = new Platform::AudioEndpointLocal( *audiocfg );
+  //  RemoteAudioEndpointManager* audioMgr = new RemoteAudioEndpointManager( *sc );
+  //  audioMgr->addEndpoint( *audioEndpoint, NULL, NULL );
+
     RemoteMediaInterface* m = new RemoteMediaInterface( *sc );
     UIEmbedded* ui = new UIEmbedded(*m);
 
@@ -114,7 +114,7 @@ int main(void)
     /* configure ethernet (GPIOs, clocks, MAC, DMA) */
     ETH_BSP_Config();
 
-    /* Initilaize the LwIP stack */
+    /* Initialise the LwIP stack */
     LwIP_Init();
 
     vTaskStartScheduler();

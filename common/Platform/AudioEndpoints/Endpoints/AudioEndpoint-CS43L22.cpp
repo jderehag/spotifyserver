@@ -27,7 +27,6 @@
 
 #include "../AudioEndpointLocal.h"
 #include "stm32f4_discovery.h"
-#include <stdlib.h>
 
 extern "C"
 {
@@ -39,12 +38,22 @@ namespace Platform {
 
 xSemaphoreHandle xSemaphore;
 
-AudioEndpointLocal::AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config) : Platform::Runnable(false, SIZE_SMALL, PRIO_HIGH), config_(config)
+AudioEndpointLocal::AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config) : AudioEndpoint(false),
+                                                                                            Platform::Runnable(false, SIZE_SMALL, PRIO_HIGH),
+                                                                                            config_(config)
 {
     vSemaphoreCreateBinary( xSemaphore );
 
     /* Initialize I2S interface */
     EVAL_AUDIO_SetAudioInterface(AUDIO_INTERFACE_I2S);
+
+    for ( int i = 0; i < 5; i++)
+    {
+        /* todo these should probably be static */
+        size_t sampleLength = 2048 * sizeof(int16_t) * 2;
+        AudioFifoData* buffer = static_cast<AudioFifoData*>(malloc(sizeof(AudioFifoData) + sampleLength));
+        fifo_.returnFifoDataBuffer(buffer);
+    }
 
     startThread();
 }
@@ -90,7 +99,7 @@ void AudioEndpointLocal::run()
         }
 
         EVAL_AUDIO_Play((uint16_t*)afd->samples, afd->nsamples * afd->channels * sizeof(uint16_t) );
-        free( afd );
+        fifo_.returnFifoDataBuffer( afd );
         xSemaphoreTake( xSemaphore, portMAX_DELAY ); // wait until play complete
     }
 }

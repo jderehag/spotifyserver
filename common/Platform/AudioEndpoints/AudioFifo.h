@@ -30,37 +30,49 @@
 
 #include "Platform/Threads/Condition.h"
 #include "Platform/Threads/Mutex.h"
+#include "Platform/Threads/Messagebox.h"
 
 #include <stdint.h>
+#include <stdlib.h>   /* size_t */
 #include <queue>
 
-namespace Platform {
 class AudioFifoData
 {
 public:
-	unsigned short channels;
-	unsigned int rate;
-	unsigned int nsamples;
-	int16_t samples[0];
+    unsigned short channels;
+    unsigned int rate;
+    unsigned int nsamples;
+    int16_t samples[0];
 };
+
+namespace Platform {
 
 class AudioFifo
 {
 private:
-	std::queue<AudioFifoData*> fifo_;
-	Condition cond_;
-	Mutex fifoMtx_;
+    std::queue<AudioFifoData*> fifo_;
+    Condition cond_;
+    Mutex fifoMtx_;
+    Messagebox<AudioFifoData*> bufferPool;
     unsigned int queuedSamples_;
     unsigned int bufferNSecs_;
+    const bool isDynamic_;
+
+    AudioFifoData* getFifoDataBuffer(size_t sampleLength);
 public:
-	AudioFifo(unsigned int bufferNSecs = 1);
-	~AudioFifo();
-	int addFifoDataBlocking(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples);
-	AudioFifoData* getFifoDataBlocking();
-	AudioFifoData* getFifoDataTimedWait(unsigned int milliSeconds);
-	void setFifoBuffer(unsigned int bufferNSecs);
-	void flush();
+    AudioFifo(unsigned int bufferNSecs = 1, bool isDynamic = true);
+    AudioFifo(bool isDynamic);
+    virtual ~AudioFifo();
+    int addFifoDataBlocking(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples);
+    AudioFifoData* getFifoDataBlocking();
+    AudioFifoData* getFifoDataTimedWait(unsigned int milliSeconds);
+    void setFifoBuffer(unsigned int bufferNSecs);
+    void flush();
+
+    void returnFifoDataBuffer(AudioFifoData* afd);
 };
+
 }
+
 
 #endif /* AUDIOFIFO_H_ */

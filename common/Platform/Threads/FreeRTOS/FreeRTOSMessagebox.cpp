@@ -86,6 +86,7 @@ bool Messagebox<T>::empty()
 }
 
 template class Platform::Messagebox<class Message*>;
+template class Platform::Messagebox<class AudioFifoData*>;
 
 
 

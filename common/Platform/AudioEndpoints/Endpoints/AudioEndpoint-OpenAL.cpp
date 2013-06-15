@@ -34,9 +34,6 @@
 #include <errno.h>
 #include <math.h>
 #include <stdio.h>
-#include <stdlib.h>
-/*#include <unistd.h>
-#include <sys/time.h>*/
 
 namespace Platform {
 
@@ -45,7 +42,7 @@ namespace Platform {
 
 AudioEndpointLocal::AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config) : config_(config)
 {
-	startThread();
+    startThread();
 }
 AudioEndpointLocal::~AudioEndpointLocal()
 {
@@ -53,20 +50,20 @@ AudioEndpointLocal::~AudioEndpointLocal()
 
 void AudioEndpointLocal::destroy()
 {
-	cancelThread();
-	joinThread();
-	flushAudioData();
+    cancelThread();
+    joinThread();
+    flushAudioData();
 }
 
 
 int AudioEndpointLocal::enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples)
 {
-	return fifo_.addFifoDataBlocking(channels, rate, nsamples, samples);
+    return fifo_.addFifoDataBlocking(channels, rate, nsamples, samples);
 }
 
 void AudioEndpointLocal::flushAudioData()
 {
-	fifo_.flush();
+    fifo_.flush();
 }
 
 void AudioEndpointLocal::run()
@@ -165,7 +162,7 @@ void AudioEndpointLocal::run()
             alSourceQueueBuffers(source, 1, &buffers[frame % NUM_BUFFERS]);
             frame++;
 
-            free( afd );
+            fifo_.returnFifoDataBuffer( afd );
             afd = NULL;
 
             alGetSourcei(source, AL_SOURCE_STATE, &state);

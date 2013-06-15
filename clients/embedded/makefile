@@ -90,11 +90,10 @@ AUDIOSRC =	STM32F4XX/stm32f4_discovery_audio_codec.c \
 		
 AUDIOSRCCPP =		ConfigHandling/Configs/AudioEndpointConfig.cpp \
 					ConfigHandling/Configs/NetworkConfig.cpp \
-					$(addprefix SocketHandling/, SocketServer.cpp SocketPeer.cpp ) \
 					Platform/AudioEndpoints/AudioFifo.cpp \
 					Platform/AudioEndpoints/Endpoints/AudioEndpoint-CS43L22.cpp \
 					TestApp/AudioEndpointRemoteSocketServer.cpp \
-					TestApp/AudioEndpointRemotePeer.cpp
+					AudioEndpointManager/RemoteAudioEndpointManager.cpp
 
 
 SRC += $(AUDIOSRC)

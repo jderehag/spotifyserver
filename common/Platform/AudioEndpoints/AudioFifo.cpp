@@ -24,26 +24,32 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include "AudioEndpoint.h"
+#include "AudioFifo.h"
 #include <iostream>
-#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
 namespace Platform {
 
-AudioFifo::AudioFifo(unsigned int bufferNSecs) : queuedSamples_(0), bufferNSecs_(bufferNSecs) { }
+AudioFifo::AudioFifo(unsigned int bufferNSecs, bool isDynamic) : queuedSamples_(0),
+                                                                 bufferNSecs_(bufferNSecs),
+                                                                 isDynamic_(isDynamic) 
+{ }
+
+AudioFifo::AudioFifo(bool isDynamic) : queuedSamples_(0),
+                                       bufferNSecs_(1),
+                                       isDynamic_(isDynamic) 
+{ }
 
 AudioFifo::~AudioFifo() {flush();}
 
 /* JESPER: Not very efficient at all!!! Fix someday... */
 int AudioFifo::addFifoDataBlocking(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples)
 {
-	size_t sampleLength = 0;
+    size_t sampleLength = 0;
 
-	if (nsamples == 0)
-			return 0; // Audio discontinuity, do nothing
-
+    if (nsamples == 0)
+        return 0; // Audio discontinuity, do nothing
 
     /* Buffer one second of audio */
     /* JESPER, queue here was probably previously defined as 1 second worth of static queue length,
@@ -58,8 +64,7 @@ int AudioFifo::addFifoDataBlocking(unsigned short channels, unsigned int rate, u
     //fifoMtx_.unlock();
 
     sampleLength = nsamples * sizeof(int16_t) * channels;
-    AudioFifoData* data;
-    data = static_cast<AudioFifoData*>(malloc(sizeof(AudioFifoData) + sampleLength));
+    AudioFifoData* data = getFifoDataBuffer(sampleLength);
 
     if ( data == NULL )
     {
@@ -123,20 +128,47 @@ AudioFifoData* AudioFifo::getFifoDataTimedWait(unsigned int milliSeconds)
 
 void AudioFifo::flush()
 {
-	fifoMtx_.lock();
-	AudioFifoData* ep = 0;
-	while(!fifo_.empty())
-	{
-	    ep = fifo_.front();
-		free(ep);
-		ep = 0;
-		fifo_.pop();
-	}
+    fifoMtx_.lock();
+    AudioFifoData* ep = 0;
+    while(!fifo_.empty())
+    {
+        ep = fifo_.front();
+        returnFifoDataBuffer(ep);
+        ep = 0;
+        fifo_.pop();
+    }
     queuedSamples_ = 0;
-	fifoMtx_.unlock();
+    fifoMtx_.unlock();
 }
 
 void AudioFifo::setFifoBuffer(unsigned int bufferNSecs) { bufferNSecs_ = bufferNSecs; };
+
+void AudioFifo::returnFifoDataBuffer(AudioFifoData* afd)
+{
+    if ( isDynamic_ )
+        free(afd);
+    else
+        bufferPool.push_back(afd);
 }
+
+AudioFifoData* AudioFifo::getFifoDataBuffer(size_t sampleLength)
+{
+    AudioFifoData* buffer = NULL;
+    if ( isDynamic_ )
+    {
+        buffer = static_cast<AudioFifoData*>(malloc(sizeof(AudioFifoData) + sampleLength));
+    }
+    else
+    {
+        /* todo should keep track of buffer sizes and make sure sampleLength doesn't exceed */
+        if ( !bufferPool.empty() )
+            buffer = bufferPool.pop_front();
+    }
+    return buffer;
+}
+
+
+}
+
 
 

@@ -56,13 +56,13 @@ Socket::Socket( SockType_t type )
     switch(type)
     {
         case SOCKTYPE_STREAM:
-            socket_->fd = lwip_socket(PF_INET6, SOCK_STREAM, 0);
+            socket_->fd = lwip_socket(PF_INET, SOCK_STREAM, 0);
             break;
         case SOCKTYPE_DATAGRAM:
-            socket_->fd = lwip_socket(PF_INET6, SOCK_DGRAM, 0);
+            socket_->fd = lwip_socket(PF_INET, SOCK_DGRAM, 0);
             break;
         default:
-            assert(false);
+            LWIP_ASSERT("Bad socket type", false);
             break;
     }
 

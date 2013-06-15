@@ -100,7 +100,7 @@ void AudioEndpointLocal::run()
 
 				snd_pcm_writei(devFd, afd->samples, afd->nsamples);
 			}
-			free( afd );
+			fifo_.returnFifoDataBuffer( afd );
 			afd = 0;
 		}
 	}

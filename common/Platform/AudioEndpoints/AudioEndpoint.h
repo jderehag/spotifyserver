@@ -42,7 +42,7 @@ protected:
     bool paused_;
 
 public:
-    AudioEndpoint() : paused_(false) {}
+    AudioEndpoint(bool dynamicFifo = true) : fifo_(dynamicFifo), paused_(false) {}
     virtual ~AudioEndpoint() {}
     virtual int enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples) = 0;
     virtual void flushAudioData() = 0;
