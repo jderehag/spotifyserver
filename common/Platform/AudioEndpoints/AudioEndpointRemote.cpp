@@ -61,7 +61,12 @@ void AudioEndpointRemote::sendAudioData()
         msg->addTlv( TLV_AUDIO_CHANNELS, afd->channels );
         msg->addTlv( TLV_AUDIO_RATE, afd->rate );
         msg->addTlv( TLV_AUDIO_NOF_SAMPLES, afd->nsamples );
-        msg->addTlv( new BinaryTlv( TLV_AUDIO_DATA, (const uint8_t*) /*ugh, should hton this*/ afd->samples, afd->nsamples * sizeof(int16_t) * afd->channels ) );
+
+        for( uint32_t i = 0 ; i < afd->nsamples ; i++ )
+            afd->samples[i] = Htons(afd->samples[i]);
+
+        msg->addTlv( new BinaryTlv( TLV_AUDIO_DATA, (const uint8_t*) afd->samples, afd->nsamples * sizeof(int16_t) * afd->channels ) );
+
         MessageEncoder* enc = msg->encode();
 
         if((rc = sock_.Send(enc->getBuffer(), enc->getLength()) < 0))

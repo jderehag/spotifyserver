@@ -63,42 +63,67 @@ void AudioEndpointRemoteSocketServer::run()
 
         if ( !readsockets.empty() )
         {
+            header_t* hdr;
             char buf[8249];
             sock_.Receive(buf, sizeof(buf));
+            hdr = (header_t*) buf;
 
-            MessageDecoder dec;
-            Message* msg = dec.decode((uint8_t*)buf);
 
-            if ( msg )
+            if ( Ntohl(hdr->type) == AUDIO_DATA_IND )
             {
-                log(LOG_NOTICE) << *(msg);
+                uint32_t len = Ntohl(hdr->len);
+                uint32_t n = sizeof(header_t);
+                uint32_t* pchannels = NULL;
+                uint32_t* prate = NULL;
+                uint32_t* pnsamples = NULL;
+                int16_t* psamples = NULL;
 
-                switch(msg->getType())
+                while( n < len )
                 {
-                    case AUDIO_DATA_IND:
+                    tlvheader_t* tlvhdr = (tlvheader_t*) &buf[n];
+
+                    switch( Ntohl(tlvhdr->type) )
                     {
-                        const IntTlv* channelstlv = (const IntTlv*)msg->getTlvRoot()->getTlv(TLV_AUDIO_CHANNELS);
-                        const IntTlv* ratetlv     = (const IntTlv*)msg->getTlvRoot()->getTlv(TLV_AUDIO_RATE);
-                        const IntTlv* nsamplestlv = (const IntTlv*)msg->getTlvRoot()->getTlv(TLV_AUDIO_NOF_SAMPLES);
-                        const BinaryTlv* samplestlv = (const BinaryTlv*)msg->getTlvRoot()->getTlv(TLV_AUDIO_DATA);
-
-                        if ( channelstlv && ratetlv && samplestlv && samplestlv )
+                        case TLV_AUDIO_CHANNELS:
                         {
-                            unsigned short channels = channelstlv->getVal();
-                            unsigned int rate       = ratetlv->getVal();
-                            unsigned int nsamples   = nsamplestlv->getVal();
-                            const int16_t* samples  = (const int16_t*)samplestlv->getData(); /* todo ntoh me! */
+                            pchannels = (uint32_t*)&buf[n+sizeof(tlvheader_t)];
+                            break;
+                        }
 
-                            ep_.enqueueAudioData(channels, rate, nsamples, samples);
+                        case TLV_AUDIO_RATE:
+                        {
+                            prate = (uint32_t*)&buf[n+sizeof(tlvheader_t)];
+                            break;
+                        }
+
+                        case TLV_AUDIO_NOF_SAMPLES:
+                        {
+                            pnsamples = (uint32_t*)&buf[n+sizeof(tlvheader_t)];
+                            break;
+                        }
+
+                        case TLV_AUDIO_DATA:
+                        {
+                            psamples = (int16_t*)&buf[n+sizeof(tlvheader_t)];
+                            break;
                         }
                     }
-                    break;
 
-                    default:
-                        break;
+                    n += sizeof(tlvheader_t) + Ntohl(tlvhdr->len);
+
                 }
 
-                delete msg;
+                if ( pchannels && prate && psamples && psamples )
+                {
+                    uint32_t channels = Ntohl(*pchannels);
+                    uint32_t rate = Ntohl(*prate);
+                    uint32_t nsamples = Ntohl(*pnsamples);
+
+                    for ( uint32_t i = 0; i < nsamples; i++ )
+                        psamples[i] = Ntohs(psamples[i]);
+
+                    ep_.enqueueAudioData(channels, rate, nsamples, psamples);
+                }
             }
         }
     }

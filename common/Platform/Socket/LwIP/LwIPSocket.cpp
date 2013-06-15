@@ -301,8 +301,18 @@ uint32_t Ntohl(uint32_t x)
     return ntohl(x);
 }
 
+uint16_t Ntohs(uint16_t x)
+{
+    return ntohs(x);
+}
+
 uint32_t Htonl(uint32_t x)
 {
     return htonl(x);
+}
+
+uint16_t Htons(uint16_t x)
+{
+    return htons(x);
 }
 

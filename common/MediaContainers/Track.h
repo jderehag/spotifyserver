@@ -29,7 +29,6 @@
 #define TRACK_H_
 
 #include "Artist.h"
-#include "MessageFactory/MessageEncoder.h"
 #include "MessageFactory/Tlvs.h"
 #include <string>
 #include <vector>

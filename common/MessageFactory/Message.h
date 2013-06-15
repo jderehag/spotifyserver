@@ -29,7 +29,6 @@
 #define MESSAGE_H_
 
 #include "Tlvs.h"
-#include "MessageEncoder.h"
 #include <stdint.h>
 #include <string>
 

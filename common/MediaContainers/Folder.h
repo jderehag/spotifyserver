@@ -29,7 +29,6 @@
 #define FOLDER_H_
 
 #include "Playlist.h"
-#include "MessageFactory/MessageEncoder.h"
 #include "MessageFactory/Tlvs.h"
 #include <string>
 #include <deque>

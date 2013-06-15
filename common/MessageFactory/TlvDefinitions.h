@@ -28,8 +28,17 @@
 #ifndef TLVDEFINITIONS_H_
 #define TLVDEFINITIONS_H_
 
+#include <stdint.h>
+
 #define PROTOCOL_VERSION_MAJOR 1 /*increase when not backwards compatible*/
-#define PROTOCOL_VERSION_MINOR 2 /*increase when adding new messages and/or TLV's*/
+#define PROTOCOL_VERSION_MINOR 3 /*increase when adding new messages and/or TLV's*/
+
+/* Message header */
+typedef struct {
+    uint32_t len;
+    uint32_t type;
+    uint32_t id;
+}header_t;
 
 #define RSP_BIT 0x80000000
 #define IND_BIT 0x40000000
@@ -76,6 +85,11 @@ typedef enum
     REQ( GET_CURRENT_AUDIO_ENDPOINTS, 0x1024 )
 }MessageType_t;
 
+/* TLV header */
+typedef struct {
+    uint32_t type;
+    uint32_t len;
+}tlvheader_t;
 
 typedef enum
 {

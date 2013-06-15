@@ -27,7 +27,6 @@
 
 #include "MessageDecoder.h"
 #include "TlvDefinitions.h"
-#include "MessageEncoder.h" /*tlv header definitions and stuff, move to common header file!*/
 #include "Platform/Socket/Socket.h"
 #include "applog.h"
 

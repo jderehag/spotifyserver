@@ -69,6 +69,9 @@ public:
 
 
 uint32_t Ntohl(uint32_t x);
+uint16_t Ntohs(uint16_t x);
 uint32_t Htonl(uint32_t x);
+uint16_t Htons(uint16_t x);
+
 
 #endif

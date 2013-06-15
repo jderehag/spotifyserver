@@ -27,6 +27,7 @@
 
 
 #include "Message.h"
+#include <iostream>
 
 Message::Message() : type_((MessageType_t)0xffffffff),
                      id_(0xffffffff)

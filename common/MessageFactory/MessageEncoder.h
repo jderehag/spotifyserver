@@ -33,17 +33,6 @@
 #include <stdint.h>
 
 
-typedef struct {
-	uint32_t len;
-	uint32_t type;
-	uint32_t id;
-}header_t;
-
-typedef struct {
-	uint32_t type;
-	uint32_t len;
-}tlvheader_t;
-
 typedef struct tlvgroup_s tlvgroup_t;
 
 
