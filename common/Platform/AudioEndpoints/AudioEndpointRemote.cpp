@@ -68,6 +68,7 @@ void AudioEndpointRemote::sendAudioData()
         msg->addTlv( new BinaryTlv( TLV_AUDIO_DATA, (const uint8_t*) afd->samples, afd->nsamples * sizeof(int16_t) * afd->channels ) );
 
         MessageEncoder* enc = msg->encode();
+        delete msg;
 
         if((rc = sock_.Send(enc->getBuffer(), enc->getLength()) < 0))
         {
@@ -76,7 +77,7 @@ void AudioEndpointRemote::sendAudioData()
         }
 
         delete enc;
-        free( afd );
+        fifo_.returnFifoDataBuffer( afd );
     }
 
 }
