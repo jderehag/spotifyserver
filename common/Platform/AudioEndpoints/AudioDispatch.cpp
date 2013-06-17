@@ -68,6 +68,7 @@ void AudioDispatch::removeEndpoint( AudioEndpoint& ep )
 int AudioDispatch::enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples)
 {
     int n = 0;
+
     mtx.lock();
     /* TODO: This is really dangerous, we should sync all endpoints to the same rate
      * letting the slowest one be the dictator */
@@ -82,6 +83,9 @@ int AudioDispatch::enqueueAudioData(unsigned short channels, unsigned int rate, 
          * In the future it shall be possible for clients to disable local endpoints */
         if(audioEndpoints_.size() > 1)
         {
+           /* if ( nsamples > rate/100)
+                nsamples = rate/100;*/
+
             if(!(*it)->isLocal())
                 n = (*it)->enqueueAudioData(channels, rate, nsamples, samples);
         }

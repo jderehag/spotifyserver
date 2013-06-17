@@ -38,6 +38,14 @@ namespace Platform {
 
 xSemaphoreHandle xSemaphore;
 
+typedef struct
+{
+    AudioFifoData header;
+    int16_t samples[500 * 2];
+} audioBuffer_t;
+
+audioBuffer_t fifobuffers[3];
+
 AudioEndpointLocal::AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config) : AudioEndpoint(false),
                                                                                             Platform::Runnable(false, SIZE_SMALL, PRIO_HIGH),
                                                                                             config_(config)
@@ -47,12 +55,9 @@ AudioEndpointLocal::AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig
     /* Initialize I2S interface */
     EVAL_AUDIO_SetAudioInterface(AUDIO_INTERFACE_I2S);
 
-    for ( int i = 0; i < 5; i++)
+    for ( int i = 0; i < 3; i++)
     {
-        /* todo these should probably be static */
-        size_t sampleLength = 2048 * sizeof(int16_t) * 2;
-        AudioFifoData* buffer = static_cast<AudioFifoData*>(malloc(sizeof(AudioFifoData) + sampleLength));
-        fifo_.returnFifoDataBuffer(buffer);
+        fifo_.returnFifoDataBuffer((AudioFifoData*)(&fifobuffers[i]));
     }
 
     startThread();
@@ -69,8 +74,9 @@ void AudioEndpointLocal::destroy()
 
 int AudioEndpointLocal::enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples)
 {
-    STM_EVAL_LEDToggle( LED3 );
-    return fifo_.addFifoDataBlocking(channels, rate, nsamples, samples);
+    int n;
+    n = fifo_.addFifoDataBlocking(channels, rate, nsamples, samples);
+    return n;
 }
 
 void AudioEndpointLocal::flushAudioData()
@@ -85,22 +91,28 @@ void AudioEndpointLocal::run()
 
     while(isCancellationPending() == false)
     {
-        STM_EVAL_LEDToggle( LED6 );
+
+        STM_EVAL_LEDOn( LED3 );
         /* check if there's more audio available */
         if ( ( afd = fifo_.getFifoDataTimedWait(1) ) == NULL )
             continue;
+        STM_EVAL_LEDOff( LED3 );
+
 
         if ( afd->rate != currentrate )
         {
             /* first data or rate changed */
             currentrate = afd->rate;
             /* Initialize the Audio codec and all related peripherals (I2S, I2C, IOExpander, IOs...) */
-            EVAL_AUDIO_Init(OUTPUT_DEVICE_AUTO, 100, currentrate );
+            EVAL_AUDIO_Init(OUTPUT_DEVICE_SPEAKER, 100, currentrate );
         }
 
-        EVAL_AUDIO_Play((uint16_t*)afd->samples, afd->nsamples * afd->channels * sizeof(uint16_t) );
+
+        EVAL_AUDIO_Play((uint16_t*)afd->samples, afd->nsamples * afd->channels * sizeof(int16_t) );
         fifo_.returnFifoDataBuffer( afd );
+        STM_EVAL_LEDOn( LED6 );
         xSemaphoreTake( xSemaphore, portMAX_DELAY ); // wait until play complete
+        STM_EVAL_LEDOff( LED6 );
     }
 }
 extern "C"

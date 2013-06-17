@@ -71,6 +71,8 @@ SRC +=	$(addprefix lwip_v1.4.0/src/core/, init.c tcp_out.c memp.c netif.c pbuf.c
 		$(addprefix lwip_v1.4.0/src/netif/, etharp.c ) \
 		$(addprefix lwip_v1.4.0/port/STM32F4x7/FreeRTOS/, sys_arch.c ethernetif.c)
 
+LWIP_MEM = $(addprefix lwip_v1.4.0/src/core/, mem.c)
+SRC += $(LWIP_MEM)
 
 # List C++ source files here.
 # use file-extension .cpp for C++-files (not .C)

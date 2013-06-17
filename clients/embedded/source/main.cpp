@@ -43,6 +43,10 @@
 
 
 #include "Platform/Threads/Runnable.h"
+#include "Platform/Threads/Condition.h"
+
+Platform::Condition cond;
+Platform::Mutex mtx;
 
 class LedFlasher : public Platform::Runnable
 {
@@ -74,11 +78,55 @@ void LedFlasher::run()
 
     while( isCancellationPending() == false )
     {
-        vTaskDelayUntil( &t, delay );
         STM_EVAL_LEDToggle( LED5 );
+        vTaskDelayUntil( &t, delay );
+#if 0
+        mtx.lock();
+        cond.wait(mtx);
+        mtx.unlock();
+#endif
     }
 }
 
+#if 0
+class LedFlasher2 : public Platform::Runnable
+{
+public:
+    LedFlasher2();
+    virtual ~LedFlasher2();
+
+    virtual void run();
+    virtual void destroy();
+};
+
+LedFlasher2::LedFlasher2() : Platform::Runnable(false, SIZE_SMALL, PRIO_LOW)
+{
+    startThread();
+}
+LedFlasher2::~LedFlasher2()
+{
+}
+
+void LedFlasher2::destroy()
+{
+
+}
+
+void LedFlasher2::run()
+{
+    portTickType delay = 100 / portTICK_RATE_MS;
+    portTickType t = xTaskGetTickCount();
+
+    while( isCancellationPending() == false )
+    {
+        mtx.lock();
+        vTaskDelayUntil( &t, delay );
+        cond.signal();
+        mtx.unlock();
+        taskYIELD();
+    }
+}
+#endif
 
 int main(void)
 {
@@ -91,19 +139,22 @@ int main(void)
 
     ConfigHandling::LoggerConfig* cfg = new ConfigHandling::LoggerConfig;
     cfg->setLogTo(ConfigHandling::LoggerConfig::NOWHERE);
+    cfg->setLogLevel("EMERG");
     Logger::Logger* l = new Logger::Logger(*cfg);
 
     LedFlasher* fl = new LedFlasher;
+    //LedFlasher2* fl2 = new LedFlasher2;
+
 #if 0
     SocketClient* sc = new SocketClient("192.168.5.98", "7788");
 #else
     SocketClient* sc = new SocketClient("192.168.5.198", "7788");
 #endif
 
-  //  ConfigHandling::AudioEndpointConfig* audiocfg = new ConfigHandling::AudioEndpointConfig;
-  //  Platform::AudioEndpointLocal* audioEndpoint = new Platform::AudioEndpointLocal( *audiocfg );
-  //  RemoteAudioEndpointManager* audioMgr = new RemoteAudioEndpointManager( *sc );
-  //  audioMgr->addEndpoint( *audioEndpoint, NULL, NULL );
+    ConfigHandling::AudioEndpointConfig* audiocfg = new ConfigHandling::AudioEndpointConfig;
+    Platform::AudioEndpointLocal* audioEndpoint = new Platform::AudioEndpointLocal( *audiocfg );
+    RemoteAudioEndpointManager* audioMgr = new RemoteAudioEndpointManager( *sc );
+    audioMgr->addEndpoint( *audioEndpoint, NULL, NULL );
 
     RemoteMediaInterface* m = new RemoteMediaInterface( *sc );
     UIEmbedded* ui = new UIEmbedded(*m);

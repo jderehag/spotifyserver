@@ -51,12 +51,16 @@ Condition::~Condition()
 
 void Condition::wait(Mutex& mtx)
 {
+    mtx.unlock();
     xSemaphoreTake( cond_->xSemaphore, portMAX_DELAY );
+    mtx.lock();
 }
 
 void Condition::timedWait(Mutex& mtx, unsigned int milliSeconds)
 {
+    mtx.unlock();
     xSemaphoreTake( cond_->xSemaphore, milliSeconds/portTICK_RATE_MS );
+    mtx.lock();
 }
 
 void Condition::signal()

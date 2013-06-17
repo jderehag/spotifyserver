@@ -32,7 +32,8 @@
 #include <set>
 #include "applog.h"
 
-AudioEndpointRemoteSocketServer::AudioEndpointRemoteSocketServer(Platform::AudioEndpoint& endpoint) : sock_(SOCKTYPE_DATAGRAM),
+AudioEndpointRemoteSocketServer::AudioEndpointRemoteSocketServer(Platform::AudioEndpoint& endpoint) : Platform::Runnable(true, SIZE_MEDIUM, PRIO_HIGH),
+                                                                                                      /*sock_(SOCKTYPE_DATAGRAM),*/
                                                                                                       ep_(endpoint)
 {
     startThread();
@@ -46,83 +47,100 @@ AudioEndpointRemoteSocketServer::~AudioEndpointRemoteSocketServer()
 void AudioEndpointRemoteSocketServer::run()
 {
     int rc;
-    SocketReader reader(&sock_);
-
-    sock_.BindToAddr("ANY", "7789");
+    char buf[2000];
+    //ep_.enqueueAudioData(2, 44100, 100, (int16_t*)buf);
 
     while( !isCancellationPending() )
     {
-        std::set<Socket*> readsockets;
-        std::set<Socket*> writesockets;
-        std::set<Socket*> errsockets;
+        Socket sock_(SOCKTYPE_DATAGRAM);
+        SocketReader reader(&sock_);
 
-        readsockets.insert(&sock_);
-        errsockets.insert(&sock_);
-
-        rc = select(&readsockets, &writesockets, &errsockets, 1000);
-
-        if ( !readsockets.empty() )
+        if ( sock_.BindToAddr("ANY", "7789") < 0 )
         {
-            header_t* hdr;
-            char buf[8249];
-            sock_.Receive(buf, sizeof(buf));
-            hdr = (header_t*) buf;
+            continue;
+        }
 
+        while( !isCancellationPending() )
+        {
+            std::set<Socket*> readsockets;
+            std::set<Socket*> writesockets;
+            std::set<Socket*> errsockets;
 
-            if ( Ntohl(hdr->type) == AUDIO_DATA_IND )
+            readsockets.insert(&sock_);
+            errsockets.insert(&sock_);
+
+            rc = select(&readsockets, &writesockets, &errsockets, 1000);
+
+            if ( !readsockets.empty() )
             {
-                uint32_t len = Ntohl(hdr->len);
-                uint32_t n = sizeof(header_t);
-                uint32_t* pchannels = NULL;
-                uint32_t* prate = NULL;
-                uint32_t* pnsamples = NULL;
-                int16_t* psamples = NULL;
+                header_t* hdr;
 
-                while( n < len )
+                rc = sock_.Receive(buf, sizeof(buf));
+
+                if ( rc < 0 )
+                    break;
+
+                hdr = (header_t*) buf;
+                if ( Ntohl(hdr->type) == AUDIO_DATA_IND )
                 {
-                    tlvheader_t* tlvhdr = (tlvheader_t*) &buf[n];
+                    uint32_t len = Ntohl(hdr->len);
+                    uint32_t n = sizeof(header_t);
+                    uint32_t* pchannels = NULL;
+                    uint32_t* prate = NULL;
+                    uint32_t* pnsamples = NULL;
+                    int16_t* psamples = NULL;
 
-                    switch( Ntohl(tlvhdr->type) )
+                    while( n < len )
                     {
-                        case TLV_AUDIO_CHANNELS:
+                        tlvheader_t* tlvhdr = (tlvheader_t*) &buf[n];
+
+                        switch( Ntohl(tlvhdr->type) )
                         {
-                            pchannels = (uint32_t*)&buf[n+sizeof(tlvheader_t)];
-                            break;
+                            case TLV_AUDIO_CHANNELS:
+                            {
+                                pchannels = (uint32_t*)&buf[n+sizeof(tlvheader_t)];
+                                break;
+                            }
+
+                            case TLV_AUDIO_RATE:
+                            {
+                                prate = (uint32_t*)&buf[n+sizeof(tlvheader_t)];
+                                break;
+                            }
+
+                            case TLV_AUDIO_NOF_SAMPLES:
+                            {
+                                pnsamples = (uint32_t*)&buf[n+sizeof(tlvheader_t)];
+                                break;
+                            }
+
+                            case TLV_AUDIO_DATA:
+                            {
+                                psamples = (int16_t*)&buf[n+sizeof(tlvheader_t)];
+                                break;
+                            }
                         }
 
-                        case TLV_AUDIO_RATE:
-                        {
-                            prate = (uint32_t*)&buf[n+sizeof(tlvheader_t)];
-                            break;
-                        }
+                        n += sizeof(tlvheader_t) + Ntohl(tlvhdr->len);
 
-                        case TLV_AUDIO_NOF_SAMPLES:
-                        {
-                            pnsamples = (uint32_t*)&buf[n+sizeof(tlvheader_t)];
-                            break;
-                        }
-
-                        case TLV_AUDIO_DATA:
-                        {
-                            psamples = (int16_t*)&buf[n+sizeof(tlvheader_t)];
-                            break;
-                        }
                     }
 
-                    n += sizeof(tlvheader_t) + Ntohl(tlvhdr->len);
+                    if ( pchannels && prate && psamples && psamples )
+                    {
+                        uint32_t channels = Ntohl(*pchannels);
+                        uint32_t rate = Ntohl(*prate);
+                        uint32_t nsamples = Ntohl(*pnsamples);
 
-                }
+                        printHexMsg((uint8_t*)buf, sizeof(buf));
 
-                if ( pchannels && prate && psamples && psamples )
-                {
-                    uint32_t channels = Ntohl(*pchannels);
-                    uint32_t rate = Ntohl(*prate);
-                    uint32_t nsamples = Ntohl(*pnsamples);
+                        if ( nsamples > rate/100 )
+                            nsamples = rate/100;
 
-                    for ( uint32_t i = 0; i < nsamples; i++ )
-                        psamples[i] = Ntohs(psamples[i]);
+                        for ( uint32_t i = 0; i < nsamples; i++ )
+                            psamples[i] = Ntohs(psamples[i]);
 
-                    ep_.enqueueAudioData(channels, rate, nsamples, psamples);
+                        ep_.enqueueAudioData(channels, rate, nsamples, psamples);
+                    }
                 }
             }
         }
@@ -132,7 +150,6 @@ void AudioEndpointRemoteSocketServer::run()
 void AudioEndpointRemoteSocketServer::destroy()
 {
     cancelThread();
-    sock_.Shutdown();
     joinThread();
 }
 

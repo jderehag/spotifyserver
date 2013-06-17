@@ -35,6 +35,7 @@
     .syntax unified
     .arch armv7-m
 
+#if 0
     .section .stack
     .align 3
 #ifdef __STACK_SIZE
@@ -55,7 +56,7 @@ __StackTop:
 #ifdef __HEAP_SIZE
     .equ    Heap_Size, __HEAP_SIZE
 #else
-    .equ    Heap_Size, 0x00014000
+    .equ    Heap_Size, 0x00010000
 #endif
     .globl    __HeapBase
     .globl    __HeapLimit
@@ -64,7 +65,7 @@ __HeapBase:
     .size __HeapBase, . - __HeapBase
 __HeapLimit:
     .size __HeapLimit, . - __HeapLimit
-
+#endif
     .section .isr_vector
     .align 2
     .globl __isr_vector
