@@ -32,4 +32,6 @@ void disableStdinEcho();
 void enableStdinEcho();
 
 void sleep_ms( unsigned int ms );
+unsigned int getTick_ms();
+
 #endif /* UTILS_H_ */

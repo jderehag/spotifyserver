@@ -43,6 +43,8 @@ UIEmbedded::~UIEmbedded()
 
 void UIEmbedded::shortButtonPress()
 {
+    /* TODO: do a context switch before going to MediaInterface, this function is called from
+     * ISR and the MessageBox implementation assumes non-ISR */
     switch( playbackState )
     {
         case PLAYBACK_IDLE:
@@ -61,6 +63,8 @@ void UIEmbedded::shortButtonPress()
 }
 void UIEmbedded::longButtonPress()
 {
+    /* TODO: do a context switch before going to MediaInterface, this function is called from
+     * ISR and the MessageBox implementation assumes non-ISR */
     switch( playbackState )
     {
         case PLAYBACK_IDLE:

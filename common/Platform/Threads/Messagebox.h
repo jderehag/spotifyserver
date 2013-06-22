@@ -43,7 +43,7 @@ class Messagebox
 {
     messagebox_t<T>* mb_;
 public:
-    Messagebox();
+    Messagebox( unsigned int numItems = 10 );
     virtual ~Messagebox();
 
     void push_back(const T& item_);

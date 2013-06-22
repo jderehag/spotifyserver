@@ -87,8 +87,11 @@ CPPSRC = main.cpp buttonHandler.cpp UIEmbedded.cpp heapWrap.cpp \
 		Platform/Socket/LwIP/LwIPSocket.cpp \
 		$(addprefix Platform/Threads/FreeRTOS/, FreeRTOSMessagebox.cpp FreeRTOSMutex.cpp FreeRTOSCondition.cpp FreeRTOSRunnable.cpp)
 
-AUDIOSRC =	STM32F4XX/stm32f4_discovery_audio_codec.c \
-			$(addprefix STM32F4XX/STM32F4xx_StdPeriph_Driver/src/, stm32f4xx_i2c.c stm32f4xx_dac.c stm32f4xx_spi.c)
+#AUDIOSRC =	STM32F4XX/stm32f4_discovery_audio_codec.c
+AUDIOSRC =	STM32F4XX/audio_driver.c
+#AUDIOSRC +=	STM32F4XX/audio_sample.c
+
+AUDIOSRC +=	$(addprefix STM32F4XX/STM32F4xx_StdPeriph_Driver/src/, stm32f4xx_i2c.c stm32f4xx_dac.c stm32f4xx_spi.c)
 		
 AUDIOSRCCPP =		ConfigHandling/Configs/AudioEndpointConfig.cpp \
 					ConfigHandling/Configs/NetworkConfig.cpp \
@@ -163,7 +166,7 @@ LOADFORMAT = both
 
 # Debugging format.
 #DEBUG = stabs
-#DEBUG = dwarf-2
+DEBUG = dwarf-2
 
 # Place project-specific -D (define) and/or 
 # -U options for C here.

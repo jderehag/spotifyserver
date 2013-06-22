@@ -30,36 +30,34 @@
 
 extern "C"
 {
-#include "stm32f4_discovery_audio_codec.h"
+#include "audio_driver.h"
 #include "FreeRTOS.h"
+#include "queue.h"
 #include "semphr.h"
+#include "task.h"
 }
 namespace Platform {
-
-xSemaphoreHandle xSemaphore;
 
 typedef struct
 {
     AudioFifoData header;
-    int16_t samples[500 * 2];
+    int16_t samples[400 * 2];
 } audioBuffer_t;
 
-audioBuffer_t fifobuffers[3];
+static audioBuffer_t fifobuffers[40] __attribute__ ((section (".audio_buffers")));
+static int16_t driverBuffers [2][400*2];
+static uint8_t bufferNumber = 0;
+
+//xQueueHandle xQueuedBuffers;
+xSemaphoreHandle xSem;
+
+
+static void AudioCallback(void *context,int buffer);
 
 AudioEndpointLocal::AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config) : AudioEndpoint(false),
                                                                                             Platform::Runnable(false, SIZE_SMALL, PRIO_HIGH),
                                                                                             config_(config)
 {
-    vSemaphoreCreateBinary( xSemaphore );
-
-    /* Initialize I2S interface */
-    EVAL_AUDIO_SetAudioInterface(AUDIO_INTERFACE_I2S);
-
-    for ( int i = 0; i < 3; i++)
-    {
-        fifo_.returnFifoDataBuffer((AudioFifoData*)(&fifobuffers[i]));
-    }
-
     startThread();
 }
 
@@ -84,55 +82,69 @@ void AudioEndpointLocal::flushAudioData()
     fifo_.flush();
 }
 
+
 void AudioEndpointLocal::run()
 {
     AudioFifoData* afd = NULL;
     unsigned int currentrate = 0;
+    unsigned int i;
+
+    for ( i = 0; i < 40; i++)
+    {
+        fifo_.returnFifoDataBuffer((AudioFifoData*)(&fifobuffers[i]));
+    }
+
+//    xQueuedBuffers = xQueueCreate( 2, sizeof(AudioFifoData*) );
+    xSem = xSemaphoreCreateCounting( 2, 1 );
+
+    InitializeAudio(Audio44100HzSettings);
+    SetAudioVolume(160);
+    PlayAudioWithCallback(AudioCallback, NULL);
 
     while(isCancellationPending() == false)
     {
-
-        STM_EVAL_LEDOn( LED3 );
-        /* check if there's more audio available */
-        if ( ( afd = fifo_.getFifoDataTimedWait(1) ) == NULL )
-            continue;
-        STM_EVAL_LEDOff( LED3 );
-
-
-        if ( afd->rate != currentrate )
+        do
         {
-            /* first data or rate changed */
-            currentrate = afd->rate;
-            /* Initialize the Audio codec and all related peripherals (I2S, I2C, IOExpander, IOs...) */
-            EVAL_AUDIO_Init(OUTPUT_DEVICE_SPEAKER, 100, currentrate );
+            /* check if there's more audio available */
+            afd = fifo_.getFifoDataTimedWait(1);
+        } while( afd == NULL && isCancellationPending() == false );
+
+        if ( afd != NULL )
+        {
+            uint8_t thisBufferNum;
+
+            STM_EVAL_LEDOff( LED6 );
+            xSemaphoreTake( xSem, portMAX_DELAY );
+            thisBufferNum = bufferNumber; /* bufferNumber is the last buffer that was requested by driver, it has to be unused*/
+
+            /* Extra copy because DMA can't access the CCM RAM where fifobuffers are placed.
+             * TODO: Should probably place FreeRTOS stacks there instead */
+            for ( i=0; i<afd->nsamples*2; i++ )
+                driverBuffers[thisBufferNum][i] = afd->samples[i];
+
+            if ( ProvideAudioBufferWithoutBlocking( driverBuffers[thisBufferNum], afd->nsamples*2 ) )
+            {
+                fifo_.returnFifoDataBuffer( afd );
+            }
+            else
+                while(1); /* hang to catch error, we should not be able to take the semaphore if we're not allowed to provide data */
         }
-
-
-        EVAL_AUDIO_Play((uint16_t*)afd->samples, afd->nsamples * afd->channels * sizeof(int16_t) );
-        fifo_.returnFifoDataBuffer( afd );
-        STM_EVAL_LEDOn( LED6 );
-        xSemaphoreTake( xSemaphore, portMAX_DELAY ); // wait until play complete
-        STM_EVAL_LEDOff( LED6 );
     }
 }
-extern "C"
-{
-uint16_t EVAL_AUDIO_GetSampleCallBack(void)
-{
 
-    return 0;
-}
 
-void EVAL_AUDIO_TransferComplete_CallBack(uint32_t pBuffer, uint32_t Size)
-{
-    xSemaphoreGive( xSemaphore );
-}
+/* big TODO! this function isn't always called from interrupt! */
 
-uint32_t Codec_TIMEOUT_UserCallback(void)
+static void AudioCallback(void *context __attribute__((unused)),int buffer)
 {
-    /*we should reset something...*/
-    return 1;
-}
+    portBASE_TYPE xHigherPriorityTaskWoken;
+    bufferNumber = buffer;
+    xSemaphoreGiveFromISR(xSem, &xHigherPriorityTaskWoken );
+    //STM_EVAL_LEDToggle( LED3 );
+    if ( xHigherPriorityTaskWoken )
+    {
+        vPortYieldFromISR();
+    }
 }
 
 }

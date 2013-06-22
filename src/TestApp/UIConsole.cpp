@@ -172,10 +172,11 @@ void UIConsole::run()
         case 'p':
         {
             std::string uri;
-            std::cout << "Enter Spotify URI ('w' for wonderwall)" << std::endl;
+            std::cout << "Enter Spotify URI ('w' for wonderwall, 'r' for something better...)" << std::endl;
             std::cin >> uri;
 
             if (uri == "w") uri = "spotify:track:2CT3r93YuSHtm57mjxvjhH";
+            else if (uri == "r" ) uri = "spotify:track:7J0UB6XoaehZBvEoD3vPrM";
             m_.play( uri, this, NULL );
             break;
         }

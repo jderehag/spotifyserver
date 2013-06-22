@@ -27,6 +27,7 @@
 
 #include <termios.h>
 #include <unistd.h>
+#include <time.h>
 
 
 void disableStdinEcho()
@@ -51,3 +52,13 @@ void sleep_ms( unsigned int ms )
 {
     usleep( ms * 1000 );
 }
+
+unsigned int getTick_ms()
+{
+    struct timespec t;
+    if (clock_gettime( CLOCK_MONOTONIC, &t ) == 0 )
+        return t.tv_nsec/1000000;
+    else
+        return 0;
+}
+

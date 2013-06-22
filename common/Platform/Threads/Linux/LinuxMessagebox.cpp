@@ -43,7 +43,7 @@ struct messagebox_t
 
 
 template <typename T>
-Messagebox<T>::Messagebox()
+Messagebox<T>::Messagebox( unsigned int numItems )
 {
     mb_ = new messagebox_t<T>;
 }

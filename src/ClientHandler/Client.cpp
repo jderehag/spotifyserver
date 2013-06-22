@@ -56,6 +56,7 @@ Client::~Client()
     {
         spotify_.removeAudioEndpoint( id, NULL, NULL );
         audioCtrl_.removeEndpoint( *audioEp, NULL, NULL );
+        audioEp->destroy();
         delete audioEp;
         audioEp = NULL;
     }
@@ -469,7 +470,7 @@ void Client::handleCreateAudioEpReq( const Message* msg )
                 audioCtrl_.removeEndpoint( *audioEp, NULL, NULL );
             }
 
-            audioEp = new Platform::AudioEndpointRemote( id, ip, portStr.str(), 10);
+            audioEp = new Platform::AudioEndpointRemote( id, ip, portStr.str(), 1);
             audioCtrl_.addEndpoint(*audioEp, NULL, NULL);
         }
         else

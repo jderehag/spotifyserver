@@ -83,9 +83,6 @@ int AudioDispatch::enqueueAudioData(unsigned short channels, unsigned int rate, 
          * In the future it shall be possible for clients to disable local endpoints */
         if(audioEndpoints_.size() > 1)
         {
-           /* if ( nsamples > rate/100)
-                nsamples = rate/100;*/
-
             if(!(*it)->isLocal())
                 n = (*it)->enqueueAudioData(channels, rate, nsamples, samples);
         }

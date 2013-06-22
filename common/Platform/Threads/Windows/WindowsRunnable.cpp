@@ -70,6 +70,10 @@ Runnable::~Runnable()
 void Runnable::startThread()
 {
     threadHandle_->handle_ = CreateThread(NULL, 0, runnableWrapper, this, 0, &threadHandle_->id_);
+    if( prio_ == PRIO_LOW )
+        SetThreadPriority( threadHandle_->handle_, THREAD_PRIORITY_BELOW_NORMAL );
+    else if( prio_ == PRIO_HIGH )
+        SetThreadPriority( threadHandle_->handle_, THREAD_PRIORITY_HIGHEST );
 }
 
 void Runnable::joinThread()

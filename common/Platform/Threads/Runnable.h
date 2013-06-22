@@ -55,7 +55,7 @@ private:
 	Size size_;
 	Prio prio_;
 public:
-	Runnable(bool isJoinable = 1, Size size = SIZE_LARGE, Prio prio = PRIO_HIGH);
+	Runnable(bool isJoinable = 1, Size size = SIZE_LARGE, Prio prio = PRIO_MID);
 	~Runnable();
 
 	/* startThread needs to be called from the child class to start the actual thread,
@@ -76,7 +76,7 @@ public:
 
 	/* Must always be called when destroying child class, this is so that
 	 * threads will be canceled correctly in an asynchronous way,
-	 * child class should have all destructor's private */
+	 * child class should have all destructors private */
 	virtual void destroy() = 0;
 
 };

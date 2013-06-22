@@ -41,10 +41,10 @@ struct messagebox_t
 
 
 template <typename T>
-Messagebox<T>::Messagebox()
+Messagebox<T>::Messagebox( unsigned int numItems )
 {
     mb_ = new messagebox_t<T>;
-    mb_->hdl = xQueueCreate( 10, sizeof(T) );
+    mb_->hdl = xQueueCreate( numItems, sizeof(T) );
 }
 
 template <typename T>
@@ -57,13 +57,7 @@ Messagebox<T>::~Messagebox()
 template <typename T>
 void Messagebox<T>::push_back(const T& item_)
 {
-    portBASE_TYPE higherPrioTaskWoken;
-    xQueueSendToBackFromISR( mb_->hdl, &item_, &higherPrioTaskWoken ); //todo assert success
-
-    if ( higherPrioTaskWoken )
-    {
-        vPortYieldFromISR();
-    }
+    xQueueSend( mb_->hdl, &item_, 0 ); //todo assert success, message is lost if queue is full
 }
 
 template <typename T>

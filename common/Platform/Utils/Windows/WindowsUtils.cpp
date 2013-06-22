@@ -47,3 +47,8 @@ void sleep_ms( unsigned int ms )
 {
     Sleep( ms );
 }
+
+unsigned int getTick_ms()
+{
+    return GetTickCount();
+}

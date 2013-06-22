@@ -29,13 +29,14 @@
 #define AUDIOENDPOINTREMOTE_H_
 
 #include "AudioEndpoint.h"
+#include "Platform/Threads/Runnable.h"
 #include "Platform/Socket/Socket.h"
 #include <string>
 
 namespace Platform
 {
 
-class AudioEndpointRemote : public AudioEndpoint
+class AudioEndpointRemote : public AudioEndpoint, public Platform::Runnable
 {
 private:
     Socket sock_;
@@ -54,6 +55,10 @@ public:
 
     virtual bool isLocal() const {return false;};
 
+    /* Runnable implementation*/
+    virtual void run();
+
+    virtual void destroy();
 };
 
 }

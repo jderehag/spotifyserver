@@ -29,10 +29,21 @@
 #include "MessageFactory/Message.h"
 #include "MessageFactory/MessageDecoder.h"
 #include "MessageFactory/SocketReader.h"
+#include "Platform/Utils/Utils.h"
 #include <set>
 #include "applog.h"
+#include <stdint.h>
 
-AudioEndpointRemoteSocketServer::AudioEndpointRemoteSocketServer(Platform::AudioEndpoint& endpoint) : Platform::Runnable(true, SIZE_MEDIUM, PRIO_HIGH),
+/*
+#include "Freertos.h"
+#include "task.h"
+
+extern "C"
+{
+extern uint16_t AUDIO_SAMPLE[];
+extern const uint32_t audio_sample_size;
+}*/
+AudioEndpointRemoteSocketServer::AudioEndpointRemoteSocketServer(Platform::AudioEndpoint& endpoint) : Platform::Runnable(true, SIZE_MEDIUM, PRIO_MID),
                                                                                                       /*sock_(SOCKTYPE_DATAGRAM),*/
                                                                                                       ep_(endpoint)
 {
@@ -43,12 +54,18 @@ AudioEndpointRemoteSocketServer::~AudioEndpointRemoteSocketServer()
 {
 }
 
-
 void AudioEndpointRemoteSocketServer::run()
 {
     int rc;
     char buf[2000];
-    //ep_.enqueueAudioData(2, 44100, 100, (int16_t*)buf);
+    int n = 0;
+    /*while(1)
+    {
+        n += ep_.enqueueAudioData(2, 44100, 350, (int16_t*)&AUDIO_SAMPLE[n*2]);
+        if ( n*4 >= audio_sample_size - 1764 )
+            n=0;
+        vTaskDelay(5);
+    }*/
 
     while( !isCancellationPending() )
     {
@@ -74,6 +91,7 @@ void AudioEndpointRemoteSocketServer::run()
             if ( !readsockets.empty() )
             {
                 header_t* hdr;
+                uint32_t len;
 
                 rc = sock_.Receive(buf, sizeof(buf));
 
@@ -81,9 +99,14 @@ void AudioEndpointRemoteSocketServer::run()
                     break;
 
                 hdr = (header_t*) buf;
+                len = Ntohl(hdr->len);
+
+                /* sanity check, actual received bytes must match message length */
+                if ( len != rc )
+                    continue;
+
                 if ( Ntohl(hdr->type) == AUDIO_DATA_IND )
                 {
-                    uint32_t len = Ntohl(hdr->len);
                     uint32_t n = sizeof(header_t);
                     uint32_t* pchannels = NULL;
                     uint32_t* prate = NULL;
@@ -125,21 +148,18 @@ void AudioEndpointRemoteSocketServer::run()
 
                     }
 
-                    if ( pchannels && prate && psamples && psamples )
+                    if ( pchannels && prate && pnsamples && psamples )
                     {
                         uint32_t channels = Ntohl(*pchannels);
                         uint32_t rate = Ntohl(*prate);
                         uint32_t nsamples = Ntohl(*pnsamples);
 
-                        printHexMsg((uint8_t*)buf, sizeof(buf));
-
-                        if ( nsamples > rate/100 )
-                            nsamples = rate/100;
-
-                        for ( uint32_t i = 0; i < nsamples; i++ )
+                        for ( uint32_t i = 0; i < nsamples*2; i++ )
                             psamples[i] = Ntohs(psamples[i]);
 
                         ep_.enqueueAudioData(channels, rate, nsamples, psamples);
+                        /*while( ep_.enqueueAudioData(channels, rate, nsamples, psamples) == 0 )
+                            vTaskDelay(2);*/
                     }
                 }
             }
