@@ -49,6 +49,7 @@ SocketServer::~SocketServer()
 void SocketServer::run()
 {
     Socket* peersock;
+    Socket discoverySocket = Socket( SOCKTYPE_DATAGRAM );
     int rc = -1;
     socket_ = new Socket(SOCKTYPE_STREAM);
 
@@ -69,6 +70,8 @@ void SocketServer::run()
     if ( rc < 0 )
         exit(1);
 
+    discoverySocket.BindToAddr( config_.getIp(), config_.getPort() );
+    
     log(LOG_NOTICE) << "Server is listening";
 
     while (isCancellationPending() == false)
@@ -79,6 +82,7 @@ void SocketServer::run()
         std::list<SocketPeer*>::iterator it;
 
         readsockets.insert(socket_);
+        readsockets.insert(&discoverySocket);
         errsockets.insert(socket_);
 
         for (it = peers_.begin(); it != peers_.end(); it++)
@@ -109,6 +113,18 @@ void SocketServer::run()
             else
             {
                 peers_.push_front( newPeer(peersock) );
+            }
+        }
+
+        if ( readsockets.find( &discoverySocket ) != readsockets.end() )
+        {
+            uint8_t msg;
+            std::string addr, port;
+            discoverySocket.ReceiveFrom( &msg, 1, addr, port );
+            if( msg == '?' )
+            {
+                msg = '!';
+                discoverySocket.SendTo( &msg, 1, addr, port );
             }
         }
 

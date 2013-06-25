@@ -286,6 +286,24 @@ int Socket::Send(const void* msg, int msgLen)
     return send(socket_->handle, (const char*) msg, msgLen, 0);
 }
 
+int Socket::SendTo(const void* msg, int msgLen, const std::string& addr, const std::string& port)
+{
+    struct addrinfo *AddrInfo;
+    struct sockaddr_in6 toAddr;
+    int rc = -1;
+
+    AddrInfo = toAddrinfo( addr, port, false );
+
+    if ( AddrInfo )
+    {
+        toIpv6( AddrInfo, &toAddr );
+        rc = sendto(socket_->handle, (const char*) msg, msgLen, 0, (struct sockaddr*) &toAddr, sizeof(toAddr) );
+
+        freeaddrinfo( AddrInfo );
+    }
+    return rc;
+}
+
 int Socket::Receive(void* buf, int bufLen)
 {
     int n = recv(socket_->handle, (char*) buf, bufLen, 0);
@@ -297,6 +315,33 @@ int Socket::Receive(void* buf, int bufLen)
     {
         return -1;
     }
+    return n;
+}
+
+int Socket::ReceiveFrom(void* buf, int bufLen, std::string& addr, std::string& port)
+{
+    struct sockaddr_in6 sockaddr;
+    int len = sizeof(struct sockaddr_in6);
+    char str[INET6_ADDRSTRLEN];
+    int n;
+
+    n = recvfrom( socket_->handle, (char*) buf, bufLen, 0, (struct sockaddr*)&sockaddr, &len );
+    if (n == SOCKET_ERROR && WSAGetLastError() == WSAEWOULDBLOCK)
+    {
+        return 0;
+    }
+    else if (n == 0)
+    {
+        return -1;
+    }
+
+    inet_ntop( AF_INET6, INETADDR_ADDRESS((struct sockaddr*)&sockaddr), str, sizeof(str));
+    addr = str;
+
+    std::ostringstream portStr;
+    portStr << ntohs(sockaddr.sin6_port);
+    port = portStr.str();
+
     return n;
 }
 

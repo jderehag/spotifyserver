@@ -46,6 +46,30 @@ SocketClient::~SocketClient()
 
 void SocketClient::run()
 {
+    while( serveraddr_ == "" && isCancellationPending() == false)
+    {
+        uint8_t msg[] = {'?'};
+        Socket socket( SOCKTYPE_DATAGRAM );
+
+        socket.SendTo( msg, sizeof(msg), "255.255.255.255", "7788");
+
+        std::set<Socket*> readset;
+
+        readset.insert( &socket );
+
+        if ( select(&readset, NULL, NULL, 10000) > 0 )
+        {
+            if ( readset.find( &socket ) != readset.end() )
+            {
+                std::string addr, port;
+                if ( socket.ReceiveFrom( msg, 1, addr, port ) == 1 )
+                {
+                    serveraddr_ = addr;
+                }
+            }
+        }
+    }
+
     while(isCancellationPending() == false)
     {
         Socket socket(SOCKTYPE_STREAM);

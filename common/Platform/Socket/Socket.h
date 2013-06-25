@@ -55,7 +55,9 @@ public:
     int Listen();
     int Connect(const std::string& addr, const std::string& port);
     int Send(const void* msg, int msgLen);
+    int SendTo(const void* msg, int msgLen, const std::string& addr, const std::string& port);
     int Receive(void* buf, int bufLen);
+    int ReceiveFrom(void* buf, int bufLen, std::string& addr, std::string& port);
     Socket* Accept();
     void Close();
     void Shutdown();

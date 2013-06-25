@@ -128,6 +128,7 @@ void LwIP_Init(void)
   netif_set_default(&xnetif);
 
 #ifdef USE_DHCP
+  /* dhcp should call netif_set_up once an address is obtained */
   dhcp_start(&xnetif);
 #else
  /*  When the netif is fully configured this function must be called.*/

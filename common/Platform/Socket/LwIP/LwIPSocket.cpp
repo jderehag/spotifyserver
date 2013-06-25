@@ -184,6 +184,20 @@ int Socket::Send(const void* msg, int msgLen)
     return lwip_send(socket_->fd, msg, msgLen, 0);
 }
 
+int Socket::SendTo(const void* msg, int msgLen, const std::string& addr, const std::string& port)
+{
+    struct sockaddr_in toAddr;
+    memset( &toAddr, 0, sizeof(struct sockaddr_in) );
+    toAddr.sin_family = AF_INET;
+    toAddr.sin_addr.s_addr = inet_addr( addr.c_str() );
+    toAddr.sin_port = htons(atoi(port.c_str()));
+    int rc = -1;
+
+    rc = lwip_sendto(socket_->fd, msg, msgLen, 0, (struct sockaddr*) &toAddr, sizeof(toAddr) );
+
+    return rc;
+}
+
 int Socket::Receive(void* buf, int bufLen)
 {
     int n = lwip_recv(socket_->fd, buf, bufLen, 0);
@@ -191,6 +205,28 @@ int Socket::Receive(void* buf, int bufLen)
         return 0;
     else if (n == 0)
         return -1;
+    return n;
+}
+
+int Socket::ReceiveFrom(void* buf, int bufLen, std::string& addr, std::string& port)
+{
+    struct sockaddr_in sockaddr;
+    socklen_t len = sizeof(struct sockaddr_in);
+    char str[20];
+    int n;
+
+    n = lwip_recvfrom( socket_->fd, buf, bufLen, 0, (struct sockaddr*)&sockaddr, &len );
+    if (n < 0 && errno == EWOULDBLOCK)
+        return 0;
+    else if (n == 0)
+        return -1;
+
+    inet_ntoa_r( sockaddr.sin_addr, str, sizeof(str));
+    addr = str;
+
+    snprintf(str, sizeof(str), "%u", ntohs(sockaddr.sin_port) );
+    port = str;
+
     return n;
 }
 

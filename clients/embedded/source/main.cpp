@@ -148,7 +148,7 @@ int main(void)
 #if 0
     SocketClient* sc = new SocketClient("192.168.5.98", "7788");
 #else
-    SocketClient* sc = new SocketClient("192.168.5.198", "7788");
+    SocketClient* sc = new SocketClient("", "7788");
 #endif
 
     ConfigHandling::AudioEndpointConfig* audiocfg = new ConfigHandling::AudioEndpointConfig;

@@ -44,6 +44,8 @@ Client::Client(Socket* socket, MediaInterface& spotifyif, AudioEndpointCtrlInter
     idStr << "client-" << count++;
     id = idStr.str();
 
+    std::cout << "Client " << id << " connected from " << getSocket()->getRemoteAddr() << std::endl;
+
     spotify_.registerForCallbacks(*this);
 }
 
