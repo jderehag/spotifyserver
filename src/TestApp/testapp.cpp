@@ -37,7 +37,7 @@
 
 int main(int argc, char *argv[])
 {
-    std::string servaddr("127.0.0.1");
+    std::string servaddr("");
     ConfigHandling::LoggerConfig cfg;
     cfg.setLogTo(ConfigHandling::LoggerConfig::STDOUT);
     Logger::Logger logger(cfg);
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
     if(argc > 1)
         servaddr = std::string(argv[1]);
 
-    SocketClient sc("", "7788");
+    SocketClient sc(servaddr, "7788");
     RemoteMediaInterface m(sc);
     UIConsole ui(m);
 
