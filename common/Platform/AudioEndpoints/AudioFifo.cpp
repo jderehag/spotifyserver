@@ -31,12 +31,14 @@
 
 namespace Platform {
 
-AudioFifo::AudioFifo(unsigned int bufferNSecs, bool isDynamic) : queuedSamples_(0),
+AudioFifo::AudioFifo(unsigned int bufferNSecs, bool isDynamic) : bufferPool(40),
+                                                                 queuedSamples_(0),
                                                                  bufferNSecs_(bufferNSecs),
                                                                  isDynamic_(isDynamic) 
 { }
 
-AudioFifo::AudioFifo(bool isDynamic) : queuedSamples_(0),
+AudioFifo::AudioFifo(bool isDynamic) : bufferPool(40),
+                                       queuedSamples_(0),
                                        bufferNSecs_(1),
                                        isDynamic_(isDynamic) 
 { }
@@ -81,6 +83,7 @@ int AudioFifo::addFifoDataBlocking(unsigned short channels, unsigned int rate, u
     //fifoMtx_.lock();
     fifo_.push(data);
     queuedSamples_ += nsamples;
+
     cond_.signal();
     fifoMtx_.unlock();
 

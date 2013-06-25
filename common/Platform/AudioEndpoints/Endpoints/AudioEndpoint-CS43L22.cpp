@@ -98,7 +98,7 @@ void AudioEndpointLocal::run()
     xSem = xSemaphoreCreateCounting( 2, 1 );
 
     InitializeAudio(Audio44100HzSettings);
-    SetAudioVolume(160);
+    SetAudioVolume(190);
     PlayAudioWithCallback(AudioCallback, NULL);
 
     while(isCancellationPending() == false)
@@ -113,7 +113,6 @@ void AudioEndpointLocal::run()
         {
             uint8_t thisBufferNum;
 
-            STM_EVAL_LEDOff( LED6 );
             xSemaphoreTake( xSem, portMAX_DELAY );
             thisBufferNum = bufferNumber; /* bufferNumber is the last buffer that was requested by driver, it has to be unused*/
 

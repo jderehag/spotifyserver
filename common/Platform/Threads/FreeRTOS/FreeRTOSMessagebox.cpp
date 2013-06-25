@@ -77,6 +77,11 @@ bool Messagebox<T>::empty()
     return ( uxQueueMessagesWaiting( mb_->hdl ) == 0 );
 }
 
+template <typename T>
+unsigned int Messagebox<T>::size()
+{
+    return uxQueueMessagesWaiting( mb_->hdl );
+}
 }
 
 template class Platform::Messagebox<class Message*>;

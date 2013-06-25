@@ -82,6 +82,15 @@ bool Messagebox<T>::empty()
     return ret;
 }
 
+template <typename T>
+unsigned int Messagebox<T>::size()
+{
+    unsigned int ret;
+    mb_->mtx.lock();
+    ret = mb_->q.size();
+    mb_->mtx.unlock();
+    return ret;
+}
 }
 
 template class Platform::Messagebox<class Message*>;

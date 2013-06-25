@@ -49,6 +49,7 @@ public:
     void push_back(const T& item_);
     T pop_front();
     bool empty();
+    unsigned int size();
 };
 
 }

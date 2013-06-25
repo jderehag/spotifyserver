@@ -64,7 +64,7 @@ a lot of data that needs to be copied, this should be set high. */
    sends a lot of data out of ROM (or other static memory), this
    should be set high. */
 //#define MEMP_NUM_PBUF           100
-#define MEMP_NUM_PBUF           20
+#define MEMP_NUM_PBUF           5
 /* MEMP_NUM_UDP_PCB: the number of UDP protocol control blocks. One
    per active UDP "connection". */
 //#define MEMP_NUM_UDP_PCB        6
@@ -87,7 +87,7 @@ a lot of data that needs to be copied, this should be set high. */
 
 /* ---------- Pbuf options ---------- */
 /* PBUF_POOL_SIZE: the number of buffers in the pbuf pool. */
-#define PBUF_POOL_SIZE          20
+#define PBUF_POOL_SIZE          60
 
 /* PBUF_POOL_BUFSIZE: the size of each pbuf in the pbuf pool. */
 #define PBUF_POOL_BUFSIZE       500
@@ -217,10 +217,10 @@ The STM32F4x7 allows computing and verifying the IP, UDP, TCP and ICMP checksums
 */
 
 #define TCPIP_THREAD_STACKSIZE          1000
-#define TCPIP_MBOX_SIZE                 5
-#define DEFAULT_UDP_RECVMBOX_SIZE       200
-#define DEFAULT_TCP_RECVMBOX_SIZE       200
-#define DEFAULT_ACCEPTMBOX_SIZE         200
+#define TCPIP_MBOX_SIZE                 10
+#define DEFAULT_UDP_RECVMBOX_SIZE       40
+#define DEFAULT_TCP_RECVMBOX_SIZE       40
+#define DEFAULT_ACCEPTMBOX_SIZE         20
 #define DEFAULT_THREAD_STACKSIZE        500
 #define TCPIP_THREAD_PRIO               (configMAX_PRIORITIES - 2)
 

@@ -33,6 +33,7 @@
 #include "lwip/tcpip.h"
 #include <stdio.h>
 
+#define USE_DHCP
 
 /*Static IP ADDRESS*/
 #define IP_ADDR0   192
@@ -51,7 +52,6 @@
 #define GW_ADDR1   168
 #define GW_ADDR2   5
 #define GW_ADDR3   1
-
 
 /* Private typedef -----------------------------------------------------------*/
 typedef enum 
@@ -127,8 +127,12 @@ void LwIP_Init(void)
  /*  Registers the default network interface. */
   netif_set_default(&xnetif);
 
+#ifdef USE_DHCP
+  dhcp_start(&xnetif);
+#else
  /*  When the netif is fully configured this function must be called.*/
-  netif_set_up(&xnetif); 
+  netif_set_up(&xnetif);
+#endif
 }
 
 #ifdef USE_DHCP
@@ -194,7 +198,7 @@ void LwIP_DHCP_task(void * pvParameters)
           LCD_DisplayStringLine(Line9, iptxt);
 #endif  
           /* end of DHCP process: LED1 stays ON*/
-          STM_EVAL_LEDOn(LED1);
+          //STM_EVAL_LEDOn(LED1);
           vTaskDelete(NULL);
         }
         else
@@ -230,7 +234,7 @@ void LwIP_DHCP_task(void * pvParameters)
             LCD_DisplayStringLine(Line9, iptxt);
 #endif
             /* end of DHCP process: LED1 stays ON*/
-            STM_EVAL_LEDOn(LED1);
+            //STM_EVAL_LEDOn(LED1);
             vTaskDelete(NULL);
           }
         }
@@ -241,7 +245,7 @@ void LwIP_DHCP_task(void * pvParameters)
     }
 
     /* Toggle LED1 */
-    STM_EVAL_LEDToggle(LED1);
+    //STM_EVAL_LEDToggle(LED1);
     /* wait 250 ms */
     vTaskDelay(250);
   }   
