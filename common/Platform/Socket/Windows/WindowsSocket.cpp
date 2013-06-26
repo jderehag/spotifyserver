@@ -368,19 +368,28 @@ int select(std::set<Socket*>* readsockets, std::set<Socket*>* writesockets, std:
     FD_ZERO(&writefds);
     FD_ZERO(&errfds);
 
-    for (it = readsockets->begin(); it != readsockets->end(); it++)
+    if ( readsockets )
     {
-        FD_SET((*it)->socket_->handle, &readfds);
+        for (it = readsockets->begin(); it != readsockets->end(); it++)
+        {
+            FD_SET((*it)->socket_->handle, &readfds);
+        }
     }
 
-    for (it = writesockets->begin(); it != writesockets->end(); it++)
+    if ( writesockets )
     {
-        FD_SET((*it)->socket_->handle, &writefds);
+        for (it = writesockets->begin(); it != writesockets->end(); it++)
+        {
+            FD_SET((*it)->socket_->handle, &writefds);
+        }
     }
 
-    for (it = errsockets->begin(); it != errsockets->end(); it++)
+    if ( errsockets )
     {
-        FD_SET((*it)->socket_->handle, &errfds);
+        for (it = errsockets->begin(); it != errsockets->end(); it++)
+        {
+            FD_SET((*it)->socket_->handle, &errfds);
+        }
     }
 
     tmo.tv_sec = timeout/1000;
@@ -392,31 +401,42 @@ int select(std::set<Socket*>* readsockets, std::set<Socket*>* writesockets, std:
         return rc;
     }
 
-    it = readsockets->begin();
-    while (it != readsockets->end())
+    if (readsockets)
     {
-        if (!FD_ISSET((*it)->socket_->handle, &readfds))
-            readsockets->erase(it++);
-        else
-            it++;
+        it = readsockets->begin();
+        while (it != readsockets->end())
+        {
+            if (!FD_ISSET((*it)->socket_->handle, &readfds))
+                readsockets->erase(it++);
+            else
+                it++;
+        }
     }
 
-    it = writesockets->begin();
-    while (it != writesockets->end())
+    if (writesockets)
     {
-        if (!FD_ISSET((*it)->socket_->handle, &writefds))
-            writesockets->erase(it++);
-        else
-            it++;
+        it = writesockets->begin();
+        while (it != writesockets->end())
+        {
+            if (!FD_ISSET((*it)->socket_->handle, &writefds))
+            {
+                writesockets->erase(it++);
+            }
+            else
+                it++;
+        }
     }
 
-    it = errsockets->begin();
-    while (it != errsockets->end())
+    if (errsockets)
     {
-        if (!FD_ISSET((*it)->socket_->handle, &errfds))
-            errsockets->erase(it++);
-        else
-            it++;
+        it = errsockets->begin();
+        while (it != errsockets->end())
+        {
+            if (!FD_ISSET((*it)->socket_->handle, &errfds))
+                errsockets->erase(it++);
+            else
+                it++;
+        }
     }
 
     return rc;

@@ -40,7 +40,7 @@ namespace Platform {
 
 #define NUM_BUFFERS 3
 
-AudioEndpointLocal::AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config) : config_(config)
+AudioEndpointLocal::AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config) : Platform::Runnable(true, SIZE_SMALL, PRIO_HIGH), config_(config)
 {
     startThread();
 }
