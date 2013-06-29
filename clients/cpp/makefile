@@ -1,65 +1,68 @@
 
-include ../build/arch.mk
+include ../../build/arch.mk
 
-TARGET=spotifyserver
+TARGET=spotifyclient
 
 # Directory for output files (lst, obj, dep etc.)
 #we need specific name for this since we still have dependencies between client and server
-OUTDIR = .spotifyserver.output
+OUTDIR = .spotifyclient.output
 
-DEPS_PATH = ../../spotifyserver_deps
+DEPS_PATH = ../../../spotifyserver_deps
 
 # root directories to look for source files in
-VPATH += ./../common/ ./../clients/cpp/src $(DEPS_PATH)
+VPATH +=  ./src ./../../common/ 
+
+VPATH +=  ./../../src/ 
 
 
 # List C source files here. (C dependencies are automatically generated.)
 # use file-extension c for "c-only"-files
 
-SRC =	appkey.c
+SRC  =
 
 # List C++ source files here.
 # use file-extension .cpp for C++-files (not .C)
-CPPSRC =	spotifyserver.cpp \
-			$(addprefix ClientHandler/, ClientHandler.cpp Client.cpp) \
-			$(addprefix ConfigHandling/, ConfigHandler.cpp ConfigParser.cpp) \
-			$(addprefix ConfigHandling/Configs/, SpotifyConfig.cpp NetworkConfig.cpp AudioEndpointConfig.cpp LoggerConfig.cpp) \
-			$(addprefix LibspotifyIf/, LibSpotifyIf.cpp LibSpotifyIfCallbackWrapper.cpp LibSpotifyIfHelpers.cpp LibSpotifyPlaybackHandler.cpp) \
-
-CPPSRC +=	$(addprefix MediaContainers/, Album.cpp Artist.cpp Folder.cpp Playlist.cpp Track.cpp) \
-			$(addprefix MessageFactory/, Message.cpp MessageDecoder.cpp MessageEncoder.cpp TlvDefinitions.cpp Tlvs.cpp SocketReader.cpp SocketWriter.cpp) \
-			$(addprefix SocketHandling/, Messenger.cpp SocketServer.cpp SocketPeer.cpp ) \
-			$(addprefix Platform/AudioEndpoints/, AudioEndpointRemote.cpp AudioDispatch.cpp AudioFifo.cpp ) \
-			AudioEndpointManager/AudioEndpointManager.cpp \
-			Logger/Logger.cpp \
-			MediaInterface/MediaInterface.cpp \
+CPPSRC =	spotifyclient.cpp \
+			RemoteMediaInterface.cpp \
+			AudioEndpointRemoteSocketServer.cpp \
 			UIConsole.cpp
 
-CPPSRC +=	$(ARCH_SRC) $(AUDIO_SRC)
+#common
+CPPSRC +=	$(addprefix MediaContainers/, Album.cpp Artist.cpp Folder.cpp Playlist.cpp Track.cpp) \
+			$(addprefix MessageFactory/, Message.cpp MessageDecoder.cpp MessageEncoder.cpp TlvDefinitions.cpp Tlvs.cpp SocketReader.cpp SocketWriter.cpp) \
+			$(addprefix SocketHandling/, Messenger.cpp SocketClient.cpp ) \
+			$(addprefix Platform/AudioEndpoints/, AudioFifo.cpp ) \
+			AudioEndpointManager/RemoteAudioEndpointManager.cpp \
+			MediaInterface/MediaInterface.cpp \
+			Logger/Logger.cpp
 
-STUB_SRC = LibspotifyIf/LibSpotifyStub/LibSpotifyStub.c
+#server...
+CPPSRC +=	$(addprefix ConfigHandling/Configs/, AudioEndpointConfig.cpp LoggerConfig.cpp)
+
+#arch
+CPPSRC +=	$(ARCH_SRC) $(AUDIO_SRC)
 
 # List Assembler source files here.
 ASRC = 
 
 # List any extra directories to look for include files here.
 #    Each directory must be seperated by a space.
-EXTRAINCDIRS  = ../common/ ../common/Logger Utils $(LIBSPOTIFY)/include
+EXTRAINCDIRS  = src ../../common/ ../../common/Logger
 
-EXTRAINCDIRS += ../clients/cpp/src
+EXTRAINCDIRS += ../../src
 
 # Extra libraries
 #    Each library-name must be seperated by a space.
 #    i.e. to link with libxyz.a, libabc.a and libefsl.a: 
 #    EXTRA_LIBS = xyz abc efsl
-EXTRA_LIBS = pthread rt spotify
+EXTRA_LIBS = pthread rt
 
 
 # List any extra directories to look for library files here.
 # Also add directories where the linker should search for
 # includes from linker-script to the list
 #     Each directory must be seperated by a space.
-EXTRA_LIBDIRS = $(LIBSPOTIFY)/lib
+EXTRA_LIBDIRS =
 
 
 # Place project-specific -D (define) and/or 
@@ -91,24 +94,16 @@ DEBUG = 3
 
 # Default target.
 .DEFAULT_GOAL := all
-all: spotifyserver stub
+all: spotifyclient
 
 # General make rules
-include ../build/build.mk
+include ../../build/build.mk
 
 # Specific targets.
-spotifyserver: dirs gccversion spotifyserver.$(EXECUTABLE_EXT)
-
-STUB_OBJ = $(OUTDIR)/$(basename $(STUB_SRC)).o
-$(eval $(call COMPILE_C_TEMPLATE, $(STUB_SRC)))
-
-stub: SRC += $(STUB_SRC)
-stub: TARGET=spotifyserver_stub
-stub: dirs $(STUB_OBJ) spotifyserver_stub.$(EXECUTABLE_EXT)
-spotifyserver_stub: stub
+spotifyclient: dirs gccversion spotifyclient.$(EXECUTABLE_EXT)
 
 # Listing of phony targets.
-.PHONY : spotifyserver spotifyserver_stub stub
+.PHONY : spotifyclient stub
 
 # Include the dependency files.
 ifneq ($(MAKECMDGOALS),clean)

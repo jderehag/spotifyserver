@@ -42,8 +42,6 @@ int main(int argc, char *argv[])
     cfg.setLogTo(ConfigHandling::LoggerConfig::STDOUT);
     Logger::Logger logger(cfg);
 
-    ConfigHandling::NetworkConfig audioepservercfg;
-    audioepservercfg.setPort("7789");
     ConfigHandling::AudioEndpointConfig audiocfg;
 
     Platform::AudioEndpointLocal audioEndpoint(audiocfg);
