@@ -44,8 +44,9 @@ int _getpid(void)
 }
 
 
-extern char __end__; /* Defined by the linker */
-static char *heap_end;
+extern char __heap_start__; /* Defined by the linker */
+extern char __heap_limit__; /* Defined by the linker */
+static char* heap_end;
 
 char* get_heap_end(void)
 {
@@ -62,13 +63,12 @@ caddr_t _sbrk(int incr)
 {
 	char *prev_heap_end;
 	if (heap_end == 0) {
-		heap_end = &__end__;
+		heap_end = &__heap_start__;
 	}
 	prev_heap_end = heap_end;
 #if 1
-	if (heap_end + incr > get_stack_top()) {
-	//	xprintf("Heap and stack collision\n");
-		//abort();
+	if ( heap_end + incr > &__heap_limit__ )
+	{
 	    errno = ENOMEM;
 	    return (caddr_t) -1;
 	}

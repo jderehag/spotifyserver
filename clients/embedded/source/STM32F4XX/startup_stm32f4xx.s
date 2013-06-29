@@ -35,7 +35,6 @@
     .syntax unified
     .arch armv7-m
 
-#if 0
     .section .stack
     .align 3
 #ifdef __STACK_SIZE
@@ -51,6 +50,7 @@ __StackLimit:
 __StackTop:
     .size __StackTop, . - __StackTop
 
+/*** heap now allocates entire 64k ccm section and does not need placement
     .section .heap
     .align 3
 #ifdef __HEAP_SIZE
@@ -65,7 +65,7 @@ __HeapBase:
     .size __HeapBase, . - __HeapBase
 __HeapLimit:
     .size __HeapLimit, . - __HeapLimit
-#endif
+*/
     .section .isr_vector
     .align 2
     .globl __isr_vector

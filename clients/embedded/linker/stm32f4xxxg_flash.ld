@@ -156,14 +156,12 @@ SECTIONS
 		*(COMMON)
 		__bss_end__ = .;
 	} > RAM
-	
-	.heap :
+
+	.audio_buffers :
 	{
-		__end__ = .;
-		end = __end__;
-      /* . += __heap_size__; */
-		*(.heap*)
-		/*__HeapLimit = .;*/
+		. = ALIGN(4);
+		*(.audio_buffers)
+		__used_ram_end__ = .;
 	} > RAM
 
 	/* .stack_dummy section doesn't contains any symbols. It is only
@@ -177,16 +175,18 @@ SECTIONS
 	/* Set stack top to end of RAM, and stack limit move down by
 	 * size of stack_dummy section */
 	__StackTop = ORIGIN(RAM) + LENGTH(RAM);
-	/*__StackLimit = __StackTop - SIZEOF(.stack_dummy);*/
+	__StackLimit = __StackTop - SIZEOF(.stack_dummy);
 	PROVIDE(__stack = __StackTop);
 	
 	/* Check if data + heap + stack exceeds RAM limit */
-	/*ASSERT(__StackLimit >= __HeapLimit, "region RAM overflowed with stack")*/
+	ASSERT(__StackLimit >= __used_ram_end__, "region RAM overflowed with stack")
 
-	.audio_buffers :
+	.heap :
 	{
-		*(.audio_buffers)
+		__heap_start__ = .;
+		*(.heap*)
 	} > RAM_CCM
+	__heap_limit__ = ORIGIN(RAM_CCM) + LENGTH(RAM_CCM);
 }
 
 /*** EOF **/
