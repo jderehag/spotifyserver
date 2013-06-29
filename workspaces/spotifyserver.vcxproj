@@ -46,7 +46,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\spotifyserver_deps\lib\libspotify-10.1.16-win32-release\include;..\src;..\common;..\common\Logger;..\src\Utils;..\..\spotifyserver_deps\lib\OpenAL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\spotifyserver_deps\lib\libspotify-10.1.16-win32-release\include;..\src;..\common;..\common\Logger;..\src\Utils;..\..\spotifyserver_deps\lib\OpenAL\include;..\clients\cpp\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -124,7 +124,7 @@ xcopy /y $(ProjectDir)\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32\wrap_oal.d
     <ClInclude Include="..\common\Platform\Utils\Utils.h" />
     <ClInclude Include="..\common\SocketHandling\Messenger.h" />
     <ClInclude Include="..\common\SocketHandling\SocketClient.h" />
-    <ClInclude Include="..\src\TestApp\UIConsole.h" />
+    <ClInclude Include="..\clients\cpp\src\UIConsole.h" />
     <ClInclude Include="..\src\Utils\CircularQueue.h" />
     <ClInclude Include="..\src\Utils\FixedQueue.h" />
   </ItemGroup>
@@ -172,7 +172,7 @@ xcopy /y $(ProjectDir)\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32\wrap_oal.d
     <ClCompile Include="..\src\spotifyserver.cpp" />
     <ClCompile Include="..\common\SocketHandling\Messenger.cpp" />
     <ClCompile Include="..\common\SocketHandling\SocketClient.cpp" />
-    <ClCompile Include="..\src\TestApp\UIConsole.cpp" />
+    <ClCompile Include="..\clients\cpp\src\UIConsole.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

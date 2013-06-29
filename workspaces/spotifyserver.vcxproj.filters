@@ -189,9 +189,6 @@
     <ClInclude Include="..\common\MediaInterface\MediaInterface.h">
       <Filter>src\MediaInterface</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\TestApp\UIConsole.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\common\AudioEndpointManager\AudioEndpointManager.h">
       <Filter>src\AudioEndpointManager</Filter>
     </ClInclude>
@@ -200,6 +197,9 @@
     </ClInclude>
     <ClInclude Include="..\common\Platform\AudioEndpoints\AudioDispatch.h">
       <Filter>src\Platform\AudioEndpoints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\clients\cpp\src\UIConsole.h">
+      <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -326,14 +326,14 @@
     <ClCompile Include="..\common\MediaInterface\MediaInterface.cpp">
       <Filter>src\MediaInterface</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\TestApp\UIConsole.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\common\AudioEndpointManager\AudioEndpointManager.cpp">
       <Filter>src\AudioEndpointManager</Filter>
     </ClCompile>
     <ClCompile Include="..\common\Platform\AudioEndpoints\AudioDispatch.cpp">
       <Filter>src\Platform\AudioEndpoints</Filter>
+    </ClCompile>
+    <ClCompile Include="..\clients\cpp\src\UIConsole.cpp">
+      <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
