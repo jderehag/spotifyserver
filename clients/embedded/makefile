@@ -48,8 +48,9 @@ VPATH += ../../src/ ../../common/ ./source/ ../cpp/src
 SRC  =	syscalls.c powerHandler.c
 
 #FreeRTOS
-SRC +=	$(addprefix freeRTOS/, list.c queue.c tasks.c timers.c heap_3.c) \
-		$(addprefix freeRTOS/port/, port.c) \
+SRC +=	$(addprefix freeRTOS/, list.c queue.c tasks.c timers.c ) \
+		$(addprefix freeRTOS/portable/GCC/ARM_CM4F/, port.c) \
+		freeRTOS/portable/MemMang/heap_3.c \
 		hooks.c
 
 #ST drivers and libraries
@@ -109,7 +110,7 @@ ASRC = STM32F4XX/startup_stm32f4xx.s
 # List any extra directories to look for include files here.
 #    Each directory must be seperated by a space.
 EXTRAINCDIRS  += ./source/freertos/include \
-		  ./source/freertos/port \
+		  ./source/freertos/portable/GCC/ARM_CM4F \
 		  ./source \
 		  ./source/STM32F4XX \
 		  ./source/STM32F4XX/CMSIS \

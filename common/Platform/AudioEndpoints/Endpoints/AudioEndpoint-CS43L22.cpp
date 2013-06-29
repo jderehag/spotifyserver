@@ -139,11 +139,8 @@ static void AudioCallback(void *context __attribute__((unused)),int buffer)
     portBASE_TYPE xHigherPriorityTaskWoken;
     bufferNumber = buffer;
     xSemaphoreGiveFromISR(xSem, &xHigherPriorityTaskWoken );
-    //STM_EVAL_LEDToggle( LED3 );
-    if ( xHigherPriorityTaskWoken )
-    {
-        vPortYieldFromISR();
-    }
+
+    portEND_SWITCHING_ISR( xHigherPriorityTaskWoken );
 }
 
 }
