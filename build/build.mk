@@ -2,7 +2,7 @@
 # Compiler flags.
 
 # Flags for C and C++
-CFLAGS =  -g$(DEBUG)
+CFLAGS +=  -g$(DEBUG)
 CFLAGS += -O$(OPT)
 CFLAGS += $(CDEFS)
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS)) -I.
@@ -20,7 +20,7 @@ CONLYFLAGS +=
 CONLYFLAGS += $(CSTANDARD)
 
 # flags only for C++ (arm-*-g++)
-CPPFLAGS = 
+CPPFLAGS += 
 
 # Assembler flags.
 #  -Wa,...:    tell GCC to pass this to the assembler.
@@ -36,7 +36,7 @@ ASFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 #  -Wl,...:     tell GCC to pass this to linker.
 #    -Map:      create map file
 #    --cref:    add cross reference to  map file
-LDFLAGS = -Wl,-Map=$(OUTDIR)/$(TARGET).map,--cref,--gc-sections
+LDFLAGS += -Wl,-Map=$(OUTDIR)/$(TARGET).map,--cref,--gc-sections
 #not in CPP
 #LDFLAGS += -nostartfiles
 LDFLAGS += $(patsubst %,-L%,$(EXTRA_LIBDIRS))
@@ -54,6 +54,17 @@ NM      = $(TCHAIN_PREFIX)nm
 REMOVE  = rm -rf
 SHELL   = sh
 ###COPY    = cp
+
+ifneq ($(or $(COMSPEC), $(ComSpec)),)
+$(info COMSPEC detected $(COMSPEC) $(ComSpec))
+ifeq ($(findstring cygdrive,$(shell env)),)
+SHELL:=$(or $(COMSPEC),$(ComSpec))
+SHELL_IS_WIN32=1
+else
+$(info cygwin detected)
+endif
+endif
+$(info SHELL is $(SHELL))
 
 # Define Messages
 # English
@@ -80,7 +91,7 @@ define ASSEMBLE_TEMPLATE
 $(OUTDIR)/$(basename $(1)).o : $(1)
 	@echo $(MSG_ASSEMBLING) $$< to $$@
 	$$(call makedir, $$(OUTDIR)/$$(dir $(1)))
-	@$(CC) -c $(THUMB) $$(ASFLAGS) $$< -o $$@ 
+	@$$(CC) -c $$(THUMB) $$(ASFLAGS) $$< -o $$@ 
 endef
 $(foreach src, $(ASRC), $(eval $(call ASSEMBLE_TEMPLATE, $(src)))) 
 
@@ -89,7 +100,7 @@ define COMPILE_C_TEMPLATE
 $(OUTDIR)/$(basename $(1)).o : $(1)
 	@echo $(MSG_COMPILING) $$< to $$@
 	$$(call makedir, $$(OUTDIR)/$$(dir $(1)))
-	@$(CC) -c $(THUMB) $$(CFLAGS) $$(CONLYFLAGS) $$< -o $$@ 
+	@$$(CC) -c $$(THUMB) $$(CFLAGS) $$(CONLYFLAGS) $$< -o $$@ 
 endef
 $(foreach src, $(SRC), $(eval $(call COMPILE_C_TEMPLATE, $(src)))) 
 
@@ -98,7 +109,7 @@ define COMPILE_CPP_TEMPLATE
 $(OUTDIR)/$(basename $(1)).o : $(1)
 	@echo $(MSG_COMPILINGCPP) $$< to $$@
 	$$(call makedir, $$(OUTDIR)/$$(dir $(1)))
-	@$(CC) -c $(THUMB) $$(CFLAGS) $$(CPPFLAGS) $$< -o $$@ 
+	@$$(CC) -c $$(THUMB) $$(CFLAGS) $$(CPPFLAGS) $$< -o $$@ 
 endef
 $(foreach src, $(CPPSRC), $(eval $(call COMPILE_CPP_TEMPLATE, $(src)))) 
 
@@ -139,9 +150,9 @@ $(OUTDIR)/%.sym: %.$(EXECUTABLE_EXT)
 	@echo $(MSG_LINKING) $@
 # use $(CC) for C-only projects or $(CPP) for C++-projects:
 ifeq "$(strip $(CPPSRC)$(CPPARM))" ""
-	@$(CC) $(CFLAGS) $(ALLOBJ) --output $@ -nostartfiles $(LDFLAGS)
+	@$(CC) $(THUMB) $(CFLAGS) $(ALLOBJ) --output $@ -nostartfiles $(LDFLAGS)
 else
-	@$(CPP) $(CFLAGS) $(ALLOBJ) --output $@ $(LDFLAGS)
+	@$(CPP) $(THUMB) $(CFLAGS) $(ALLOBJ) --output $@ $(LDFLAGS)
 endif
 
 

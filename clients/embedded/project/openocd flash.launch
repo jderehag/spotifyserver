@@ -4,6 +4,6 @@
 <listEntry value="org.eclipse.ui.externaltools.launchGroup"/>
 </listAttribute>
 <stringAttribute key="org.eclipse.ui.externaltools.ATTR_LOCATION" value="${workspace_loc:/embedded}\tools\windows\openocd-0.7.0\bin\openocd-0.7.0.exe"/>
-<stringAttribute key="org.eclipse.ui.externaltools.ATTR_TOOL_ARGUMENTS" value="-f board\stm32f4discovery.cfg  -c init -c &quot;reset halt&quot; -c &quot;sleep 100&quot; -c &quot;wait_halt 2&quot; -c &quot;flash write_image erase .out/spotifyclient_rom.hex&quot; -c &quot;sleep 100&quot; -c &quot;verify_image .out/spotifyclient_rom.hex&quot; -c &quot;reset run&quot; -c shutdown"/>
+<stringAttribute key="org.eclipse.ui.externaltools.ATTR_TOOL_ARGUMENTS" value="-f board\stm32f4discovery.cfg  -c init -c &quot;reset halt&quot; -c &quot;sleep 100&quot; -c &quot;wait_halt 2&quot; -c &quot;flash write_image erase .embedded.output/spotifyclient_rom.hex&quot; -c &quot;sleep 100&quot; -c &quot;verify_image .embedded.output/spotifyclient_rom.hex&quot; -c &quot;reset run&quot; -c shutdown"/>
 <stringAttribute key="org.eclipse.ui.externaltools.ATTR_WORKING_DIRECTORY" value="${workspace_loc:/embedded}"/>
 </launchConfiguration>
