@@ -37,7 +37,7 @@
 #include "Platform/AudioEndpoints/AudioEndpointLocal.h"
 #include "ConfigHandling/ConfigHandler.h"
 #include "Platform/Utils/Utils.h"
-#include "TestApp/UIConsole.h"
+#include "UIConsole.h"
 
 
 

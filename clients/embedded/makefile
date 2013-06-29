@@ -37,9 +37,9 @@ RUN_MODE=flash
 # Exception-vectors placement option is just passed as define,
 # the user has to implement the necessary operations (i.e. remapping)
 # Exception vectors in FLASH:
-##VECTOR_TABLE_LOCATION=VECT_TAB_FLASH
+VECTOR_TABLE_LOCATION=VECT_TAB_FLASH
 # Exception vectors in RAM:
-VECTOR_TABLE_LOCATION=VECT_TAB_RAM
+#VECTOR_TABLE_LOCATION=VECT_TAB_SRAM
 
 # Directory for output files (lst, obj, dep, elf, sym, map, hex, bin etc.)
 OUTDIR = .out
