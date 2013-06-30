@@ -220,21 +220,6 @@ void EXTI0_IRQHandler(void)
     }
 }
 
-/**
-  * @brief  This function handles External line 10 interrupt request.
-  * @param  None
-  * @retval None
-  */
-void EXTI15_10_IRQHandler(void)
-{
-  if(EXTI_GetITStatus(ETH_LINK_EXTI_LINE) != RESET)
-  {
-    Eth_Link_ITHandler(DP83848_PHY_ADDRESS);
-    /* Clear interrupt pending bit */
-    EXTI_ClearITPendingBit(ETH_LINK_EXTI_LINE);
-  }
-}
-
 
 extern xSemaphoreHandle s_xSemaphore;
 

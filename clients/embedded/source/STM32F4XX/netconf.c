@@ -26,12 +26,12 @@
 #include "ethernetif.h"
 
 //#include "main.h"
-#include "stm32f4xx.h"
-#include "stm32f4x7_eth_bsp.h"
+
 
 #include "netconf.h"
 #include "lwip/tcpip.h"
 #include <stdio.h>
+#include <stdint.h>
 
 #define USE_DHCP
 

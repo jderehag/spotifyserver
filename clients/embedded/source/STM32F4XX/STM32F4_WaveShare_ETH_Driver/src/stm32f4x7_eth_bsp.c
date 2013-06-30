@@ -66,7 +66,7 @@ void ETH_BSP_Config(void)
 #endif
 
   /* Configure the PHY to generate an interrupt on change of link status */
-  Eth_Link_PHYITConfig(DP83848_PHY_ADDRESS);
+  //Eth_Link_PHYITConfig(DP83848_PHY_ADDRESS);
 
   /* Configure the EXTI for Ethernet link status. */
   //Eth_Link_EXTIConfig();
