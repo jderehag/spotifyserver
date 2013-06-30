@@ -6,6 +6,7 @@ CFLAGS +=  -g$(DEBUG)
 CFLAGS += -O$(OPT)
 CFLAGS += $(CDEFS)
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS)) -I.
+CFLAGS += $(INCLUDES)
 CFLAGS += -Wall -Wextra
 CFLAGS += -Wcast-align -Wpointer-arith
 CFLAGS += -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align
@@ -40,8 +41,9 @@ LDFLAGS += -Wl,-Map=$(OUTDIR)/$(TARGET).map,--cref,--gc-sections
 #not in CPP
 #LDFLAGS += -nostartfiles
 LDFLAGS += $(patsubst %,-L%,$(EXTRA_LIBDIRS))
+LDFLAGS += $(LIBDIRS)
 LDFLAGS += $(patsubst %,-l%,$(EXTRA_LIBS)) 
-
+LDFLAGS += $(LIBS)
 
 # Define programs and commands.
 CC      = $(TCHAIN_PREFIX)gcc

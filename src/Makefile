@@ -24,7 +24,7 @@ CPPSRC =	spotifyserver.cpp \
 			$(addprefix ClientHandler/, ClientHandler.cpp Client.cpp) \
 			$(addprefix ConfigHandling/, ConfigHandler.cpp ConfigParser.cpp) \
 			$(addprefix ConfigHandling/Configs/, SpotifyConfig.cpp NetworkConfig.cpp AudioEndpointConfig.cpp LoggerConfig.cpp) \
-			$(addprefix LibspotifyIf/, LibSpotifyIf.cpp LibSpotifyIfCallbackWrapper.cpp LibSpotifyIfHelpers.cpp LibSpotifyPlaybackHandler.cpp) \
+			$(addprefix LibSpotifyIf/, LibSpotifyIf.cpp LibSpotifyIfCallbackWrapper.cpp LibSpotifyIfHelpers.cpp LibSpotifyPlaybackHandler.cpp) \
 
 CPPSRC +=	$(addprefix MediaContainers/, Album.cpp Artist.cpp Folder.cpp Playlist.cpp Track.cpp) \
 			$(addprefix MessageFactory/, Message.cpp MessageDecoder.cpp MessageEncoder.cpp TlvDefinitions.cpp Tlvs.cpp SocketReader.cpp SocketWriter.cpp) \
@@ -37,14 +37,14 @@ CPPSRC +=	$(addprefix MediaContainers/, Album.cpp Artist.cpp Folder.cpp Playlist
 
 CPPSRC +=	$(ARCH_SRC) $(AUDIO_SRC)
 
-STUB_SRC = LibspotifyIf/LibSpotifyStub/LibSpotifyStub.c
+STUB_SRC = LibSpotifyIf/LibSpotifyStub/LibSpotifyStub.c
 
 # List Assembler source files here.
 ASRC = 
 
 # List any extra directories to look for include files here.
 #    Each directory must be seperated by a space.
-EXTRAINCDIRS  = ../common/ ../common/Logger Utils $(LIBSPOTIFY)/include
+EXTRAINCDIRS += ../common/ ../common/Logger Utils $(LIBSPOTIFY)/include
 
 EXTRAINCDIRS += ../clients/cpp/src
 
@@ -52,14 +52,14 @@ EXTRAINCDIRS += ../clients/cpp/src
 #    Each library-name must be seperated by a space.
 #    i.e. to link with libxyz.a, libabc.a and libefsl.a: 
 #    EXTRA_LIBS = xyz abc efsl
-EXTRA_LIBS = pthread rt spotify
+EXTRA_LIBS += pthread rt spotify
 
 
 # List any extra directories to look for library files here.
 # Also add directories where the linker should search for
 # includes from linker-script to the list
 #     Each directory must be seperated by a space.
-EXTRA_LIBDIRS = $(LIBSPOTIFY)/lib
+EXTRA_LIBDIRS += $(LIBSPOTIFY)/lib
 
 
 # Place project-specific -D (define) and/or 
