@@ -57,7 +57,7 @@ unsigned int getTick_ms()
 {
     struct timespec t;
     if (clock_gettime( CLOCK_MONOTONIC, &t ) == 0 )
-        return t.tv_nsec/1000000;
+        return t.tv_sec*1000 + t.tv_nsec/1000000;
     else
         return 0;
 }

@@ -92,6 +92,11 @@
 			<locationURI>PROJECT_SRCROOT/UnitTests</locationURI>
 		</link>
 		<link>
+			<name>build</name>
+			<type>2</type>
+			<locationURI>PROJECT_SRCROOT/build</locationURI>
+		</link>
+		<link>
 			<name>clients</name>
 			<type>2</type>
 			<locationURI>PROJECT_SRCROOT/clients</locationURI>
