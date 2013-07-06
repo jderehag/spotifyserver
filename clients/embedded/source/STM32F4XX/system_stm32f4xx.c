@@ -204,7 +204,10 @@ static void SetSysClock(void);
   */
 void SystemInit(void)
 {
+#ifndef WITH_LCD
+    /* init led6 for hardfault */
     STM_EVAL_LEDInit(LED6);
+#endif
   /* Reset the RCC clock configuration to the default reset state ------------*/
   /* Set HSION bit */
   RCC->CR |= (uint32_t)0x00000001;

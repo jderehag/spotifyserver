@@ -49,9 +49,11 @@
 typedef enum 
 {
   LED4 = 0,
+#ifndef WITH_LCD
   LED3 = 1,
   LED5 = 2,
   LED6 = 3
+#endif
 } Led_TypeDef;
 
 typedef enum 

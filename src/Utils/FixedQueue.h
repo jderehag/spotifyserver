@@ -37,6 +37,7 @@ namespace Util
 template <class T>
 class FixedQueue
 {
+public:
     typedef typename std::deque<T> QueueType;
     typedef unsigned int SizeType;
     typedef typename std::deque<T>::iterator iterator;

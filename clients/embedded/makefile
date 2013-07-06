@@ -60,6 +60,12 @@ SRC +=	$(addprefix STM32F4XX/, stm32f4_discovery.c system_stm32f4xx.c stm32f4xx_
 		$(addprefix STM32F4XX/STM32F4xx_StdPeriph_Driver/src/, misc.c stm32f4xx_dma.c stm32f4xx_exti.c stm32f4xx_gpio.c stm32f4xx_syscfg.c stm32f4xx_rcc.c stm32f4xx_pwr.c stm32f4xx_rtc.c) \
 		$(addprefix STM32F4XX/$(ETHERNET_DRIVER)/src/, stm32f4x7_eth_bsp.c stm32f4x7_eth.c )
 
+#LCD display output
+SRC +=	$(addprefix STM32F4XX/STM32F4DIS_LCD_Driver/src/, stm32f4_discovery_lcd.c fonts.c ) \
+		$(addprefix STM32F4XX/STM32F4xx_StdPeriph_Driver/src/, stm32f4xx_fsmc.c )
+CDEFS += -DWITH_LCD
+
+
 #lwIP		
 SRC +=	$(addprefix lwip_v1.4.0/src/core/, init.c tcp_out.c memp.c netif.c pbuf.c raw.c stats.c sys.c tcp.c tcp_in.c udp.c dhcp.c def.c timers.c ipv4/ip.c ipv4/ip_addr.c ipv4/icmp.c ipv4/ip_frag.c ipv4/inet.c ipv4/inet_chksum.c ipv4/autoip.c) \
 		$(addprefix lwip_v1.4.0/src/api/, tcpip.c api_msg.c err.c api_lib.c netbuf.c sockets.c ) \
@@ -71,14 +77,13 @@ SRC += $(LWIP_MEM)
 
 # List C++ source files here.
 # use file-extension .cpp for C++-files (not .C)
-CPPSRC = main.cpp buttonHandler.cpp UIEmbedded.cpp heapWrap.cpp \
+CPPSRC = main.cpp buttonHandler.cpp UIEmbedded.cpp heapWrap.cpp LoggerEmbedded.cpp LcdLog.cpp \
 		$(addprefix MediaContainers/, Album.cpp Artist.cpp Folder.cpp Playlist.cpp Track.cpp) \
 		$(addprefix MessageFactory/, Message.cpp MessageDecoder.cpp MessageEncoder.cpp TlvDefinitions.cpp Tlvs.cpp SocketReader.cpp SocketWriter.cpp) \
 		RemoteMediaInterface.cpp \
 		$(addprefix SocketHandling/, Messenger.cpp SocketClient.cpp ) \
 		MediaInterface/MediaInterface.cpp \
 		Logger/Logger.cpp \
-		ConfigHandling/Configs/LoggerConfig.cpp \
 		Platform/Socket/LwIP/LwIPSocket.cpp \
 		$(addprefix Platform/Threads/FreeRTOS/, FreeRTOSMessagebox.cpp FreeRTOSMutex.cpp FreeRTOSCondition.cpp FreeRTOSRunnable.cpp)
 
@@ -89,7 +94,6 @@ AUDIOSRC =	STM32F4XX/audio_driver.c
 AUDIOSRC +=	$(addprefix STM32F4XX/STM32F4xx_StdPeriph_Driver/src/, stm32f4xx_i2c.c stm32f4xx_dac.c stm32f4xx_spi.c)
 		
 AUDIOSRCCPP =		ConfigHandling/Configs/AudioEndpointConfig.cpp \
-					ConfigHandling/Configs/NetworkConfig.cpp \
 					Platform/AudioEndpoints/AudioFifo.cpp \
 					Platform/AudioEndpoints/Endpoints/AudioEndpoint-CS43L22.cpp \
 					AudioEndpointRemoteSocketServer.cpp \
@@ -126,6 +130,8 @@ EXTRAINCDIRS  += ./source/freertos/include \
 		  ./source/lwip_v1.4.0/src/include/ipv4 \
 		  ./source/lwip_v1.4.0/port/STM32F4x7/FreeRTOS \
 		  ./source/lwip_v1.4.0/port/STM32F4x7
+
+EXTRAINCDIRS += ./source/STM32F4XX/STM32F4DIS_LCD_Driver/inc
 
 # Extra libraries
 #    Each library-name must be seperated by a space.

@@ -84,6 +84,7 @@ xcopy /y $(ProjectDir)\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32\wrap_oal.d
   <ItemGroup>
     <ClInclude Include="..\common\AudioEndpointManager\AudioEndpointManager.h" />
     <ClInclude Include="..\common\AudioEndpointManager\AudioEndpointManagerCtrlInterface.h" />
+    <ClInclude Include="..\common\Logger\LoggerImpl.h" />
     <ClInclude Include="..\common\MediaInterface\MediaInterface.h" />
     <ClInclude Include="..\common\Platform\AudioEndpoints\AudioDispatch.h" />
     <ClInclude Include="..\src\ClientHandler\Client.h" />
@@ -131,6 +132,7 @@ xcopy /y $(ProjectDir)\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32\wrap_oal.d
   <ItemGroup>
     <ClCompile Include="..\..\spotifyserver_deps\appkey.c" />
     <ClCompile Include="..\common\AudioEndpointManager\AudioEndpointManager.cpp" />
+    <ClCompile Include="..\common\Logger\LoggerImpl.cpp" />
     <ClCompile Include="..\common\MediaInterface\MediaInterface.cpp" />
     <ClCompile Include="..\common\Platform\AudioEndpoints\AudioDispatch.cpp" />
     <ClCompile Include="..\src\ClientHandler\Client.cpp" />

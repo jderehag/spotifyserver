@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Jens Nielsen
+ * Copyright (c) 2013, Jesper Derehag
  * All rights reserved.
 
  * Redistribution and use in source and binary forms, with or without
@@ -16,7 +16,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL JENS NIELSEN BE LIABLE FOR ANY
+ * DISCLAIMED. IN NO EVENT SHALL JESPER DEREHAG BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -25,50 +25,33 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "SocketHandling/SocketClient.h"
-#include "RemoteMediaInterface.h"
-#include "UIConsole.h"
-#include "Platform/Utils/Utils.h"
-#include "Platform/AudioEndpoints/AudioEndpointLocal.h"
-#include "AudioEndpointManager/RemoteAudioEndpointManager.h"
+#ifndef LOGGERIMPL_H_
+#define LOGGERIMPL_H_
 
-#include "applog.h"
-#include "LoggerImpl.h"
+#include "Logger.h"
+#include "ConfigHandling/ConfigHandler.h"
+#include "Platform/Threads/Mutex.h"
 
-int main(int argc, char *argv[])
+namespace Logger
 {
-    std::string servaddr("");
-    ConfigHandling::LoggerConfig cfg;
-    cfg.setLogTo(ConfigHandling::LoggerConfig::STDOUT);
-    Logger::LoggerImpl l(cfg);
 
-    ConfigHandling::AudioEndpointConfig audiocfg;
+class LoggerImpl : public Logger
+{
+    Platform::Mutex mtx_;
+    const ConfigHandling::LoggerConfig& config_;
 
-    Platform::AudioEndpointLocal audioEndpoint(audiocfg);
+    /* Make non-copyable */
+    LoggerImpl();
+    LoggerImpl(const LoggerImpl&);
+    LoggerImpl& operator=(const LoggerImpl&);
 
-    if(argc > 1)
-        servaddr = std::string(argv[1]);
+    virtual void flush(std::stringstream* buff);
+    virtual void logAppend(LogLevel level, const char* functionName, const char* log);
 
-    SocketClient sc(servaddr, "7788");
-    RemoteMediaInterface m(sc);
-    UIConsole ui(m);
+public:
+    LoggerImpl(const ConfigHandling::LoggerConfig& config);
+    virtual ~LoggerImpl();
+};
 
-    RemoteAudioEndpointManager audioMgr(sc);
-    audioMgr.addEndpoint(audioEndpoint, NULL, NULL);
-
-    audioMgr.getEndpoints(NULL, NULL);
-
-    /* wait for ui thread to exit */
-    ui.joinThread();
-
-    std::cout << "Exiting" << std::endl;
-
-    /* cleanup */
-    ui.destroy();
-    sc.destroy();
-
-#if AUDIO_SERVER
-    audioserver.destroy();
-#endif
-    return 0;
-}
+} /* namespace Logger */
+#endif /* LOGGERIMPL_H_ */

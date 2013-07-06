@@ -82,6 +82,11 @@
 	</natures>
 	<linkedResources>
 		<link>
+			<name>build</name>
+			<type>2</type>
+			<locationURI>PARENT-2-PROJECT_LOC/build</locationURI>
+		</link>
+		<link>
 			<name>common</name>
 			<type>2</type>
 			<locationURI>PARENT-2-PROJECT_LOC/common</locationURI>

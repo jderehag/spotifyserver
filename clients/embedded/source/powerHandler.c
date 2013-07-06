@@ -16,7 +16,7 @@ typedef enum
     PWR_STANDBY,
 }PowerLevel_t;
 
-static PowerLevel_t powerLevel;
+static PowerLevel_t powerLevel = PWR_ON;
 static xTimerHandle tmr;
 static int canPowerOff = 1;
 

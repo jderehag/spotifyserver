@@ -29,6 +29,8 @@
 #include "UIEmbedded.h"
 #include "applog.h"
 #include "stm32f4_discovery.h"
+#include "LcdLog.h"
+#include <sstream>
 
 UIEmbedded::UIEmbedded( MediaInterface& m ) : m_(m), playbackState(PLAYBACK_IDLE)
 {
@@ -102,11 +104,13 @@ void UIEmbedded::connectionState( bool up )
         m_.setShuffle(true);
 
         //addAudio();
+#ifndef WITH_LCD
         STM_EVAL_LEDOn( LED4 );
     }
     else
     {
         STM_EVAL_LEDOff( LED4 );
+#endif
     }
 }
 
@@ -134,12 +138,38 @@ void UIEmbedded::genericSearchCallback( const std::deque<Track>& listOfTracks, c
 
 void UIEmbedded::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress )
 {
+    unsigned int progsecs = progress/1000;
+    unsigned int dursecs = currentTrack.getDurationMillisecs()/1000;
     statusUpdateInd( state, repeatStatus, shuffleStatus );
+#ifdef WITH_LCD
+    std::stringstream out;
+    out << "Track:  " << currentTrack.getName() << std::endl;
+    out << "Album:  " << currentTrack.getAlbum() << std::endl;
+    for ( std::vector<Artist>::const_iterator it = currentTrack.getArtists().begin();
+            it != currentTrack.getArtists().end(); it++ )
+    {
+        out << "Artist: " << (*it).getName() << std::endl;
+    }
+    out << "Progress: " << progsecs/60 <<":" << (progsecs%60 < 10 ? "0" : "") << progsecs%60 <<
+                 " / " << dursecs/60 <<":" << (dursecs%60 < 10 ? "0" : "") << dursecs%60 << std::endl << std::endl;
+    lcdLog->addLine( out.str() );
+#endif
 }
 
 void UIEmbedded::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus )
 {
     playbackState = state;
+#ifdef WITH_LCD
+    std::stringstream out;
+    switch( state )
+    {
+        case PLAYBACK_IDLE:    out << "Stopped"; break;
+        case PLAYBACK_PLAYING: out << "Playing"; break;
+        case PLAYBACK_PAUSED:  out << "Paused "; break;
+    }
+    out << " - Repeat " << (repeatStatus ? "on" : "off") << ", Shuffle " << (shuffleStatus ? "on" : "off") << std::endl << std::endl;
+    lcdLog->addLine( out.str() );
+#endif
 }
 
 void UIEmbedded::getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress, void* userData )

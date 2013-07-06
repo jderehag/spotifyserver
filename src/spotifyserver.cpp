@@ -30,6 +30,7 @@
 #include <stdio.h>
 
 #include "applog.h"
+#include "LoggerImpl.h"
 
 #include "LibSpotifyIf/LibSpotifyIf.h"
 #include "AudioEndpointManager/AudioEndpointManager.h"
@@ -79,7 +80,7 @@ int main(int argc, char *argv[])
     ConfigHandling::ConfigHandler ch(configFile);
     ch.parseConfigFile();
 
-    Logger::Logger logger(ch.getLoggerConfig());
+    Logger::LoggerImpl l(ch.getLoggerConfig());
 
     Platform::AudioEndpointLocal audioEndpoint(ch.getAudioEndpointConfig());
     AudioEndpointManager audioMgr;

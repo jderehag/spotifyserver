@@ -73,7 +73,9 @@ void NMI_Handler(void)
 #if 1
 void HardFault_Handler(void)
 {
+#ifndef WITH_LCD
     STM_EVAL_LEDOn(LED6);
+#endif
     /* Go to infinite loop when Hard Fault exception occurs */
     while (1)
     {

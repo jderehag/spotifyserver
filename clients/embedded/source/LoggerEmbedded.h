@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Jens Nielsen
+ * Copyright (c) 2013, Jens Nielsen
  * All rights reserved.
 
  * Redistribution and use in source and binary forms, with or without
@@ -25,50 +25,33 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "SocketHandling/SocketClient.h"
-#include "RemoteMediaInterface.h"
-#include "UIConsole.h"
-#include "Platform/Utils/Utils.h"
-#include "Platform/AudioEndpoints/AudioEndpointLocal.h"
-#include "AudioEndpointManager/RemoteAudioEndpointManager.h"
+#ifndef LOGGEREMBEDDED_H_
+#define LOGGEREMBEDDED_H_
 
-#include "applog.h"
-#include "LoggerImpl.h"
+#include "Logger.h"
+#include "LcdLog.h"
 
-int main(int argc, char *argv[])
+namespace Logger
 {
-    std::string servaddr("");
-    ConfigHandling::LoggerConfig cfg;
-    cfg.setLogTo(ConfigHandling::LoggerConfig::STDOUT);
-    Logger::LoggerImpl l(cfg);
 
-    ConfigHandling::AudioEndpointConfig audiocfg;
-
-    Platform::AudioEndpointLocal audioEndpoint(audiocfg);
-
-    if(argc > 1)
-        servaddr = std::string(argv[1]);
-
-    SocketClient sc(servaddr, "7788");
-    RemoteMediaInterface m(sc);
-    UIConsole ui(m);
-
-    RemoteAudioEndpointManager audioMgr(sc);
-    audioMgr.addEndpoint(audioEndpoint, NULL, NULL);
-
-    audioMgr.getEndpoints(NULL, NULL);
-
-    /* wait for ui thread to exit */
-    ui.joinThread();
-
-    std::cout << "Exiting" << std::endl;
-
-    /* cleanup */
-    ui.destroy();
-    sc.destroy();
-
-#if AUDIO_SERVER
-    audioserver.destroy();
+class LoggerEmbedded: public Logger::Logger
+{
+private:
+#ifdef WITH_LCD
+    LcdLog lcdLog_;
 #endif
-    return 0;
-}
+    /* Make non-copyable */
+    LoggerEmbedded();
+    LoggerEmbedded(const LoggerEmbedded&);
+    LoggerEmbedded& operator=(const LoggerEmbedded&);
+
+    virtual void flush(std::stringstream* buff);
+    virtual void logAppend(LogLevel level, const char* functionName, const char* log);
+
+public:
+    LoggerEmbedded(LogLevel level);
+    virtual ~LoggerEmbedded();
+};
+
+} /* namespace Logger */
+#endif /* LOGGEREMBEDDED_H_ */

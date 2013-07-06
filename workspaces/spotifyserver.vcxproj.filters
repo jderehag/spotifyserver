@@ -201,6 +201,9 @@
     <ClInclude Include="..\clients\cpp\src\UIConsole.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\Logger\LoggerImpl.h">
+      <Filter>src\Logger</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\spotifyserver.cpp">
@@ -334,6 +337,9 @@
     </ClCompile>
     <ClCompile Include="..\clients\cpp\src\UIConsole.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\Logger\LoggerImpl.cpp">
+      <Filter>src\Logger</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -28,10 +28,8 @@
 #include "Logger.h"
 #include "ConfigHandling/ConfigHandler.h"
 #include <ostream>
-#include <stdio.h>
 #include <stdarg.h>
 #include <iostream>
-#include <stdlib.h>
 #include <assert.h>
 #include <time.h>
 
@@ -51,7 +49,7 @@ static const char* level_strings[] =
 #define localtime_r(a, b) localtime_s(b, a) /*goddammit microsoft!*/
 #endif
 
-static std::string logprefix( LogLevel level, const char* functionName )
+std::string logprefix( LogLevel level, const char* functionName )
 {
     time_t rawtime;
     struct tm timeinfo;
@@ -66,7 +64,7 @@ static std::string logprefix( LogLevel level, const char* functionName )
     return str.str();
 }
 
-Logger::Logger(const ConfigHandling::LoggerConfig& config) : config_(config)
+Logger::Logger(LogLevel level) : level_(level)
 {
     /* there should only exist 1 instance of logger! */
     assert(::logger == NULL);
@@ -74,40 +72,6 @@ Logger::Logger(const ConfigHandling::LoggerConfig& config) : config_(config)
 }
 Logger::~Logger(){ }
 
-void Logger::logAppend(LogLevel level, const char* functionName, const char* log)
-{
-    mtx_.lock();
-    switch (config_.getLogTo())
-    {
-        case ConfigHandling::LoggerConfig::FILE:
-        {
-            std::filebuf fb;
-            std::ostream os(&fb);
-            if(fb.open(config_.getLogFile().c_str(), std::ios::out|std::ios::app) != NULL)
-            {
-                os << logprefix(level, functionName) << log << std::endl;
-                fb.close();
-            }
-            else
-            {
-                std::cerr << "Unable to open output logfile " << config_.getLogFile();
-                fb.close();
-                exit(-1);
-            }
-        }
-        break;
-
-        case ConfigHandling::LoggerConfig::STDOUT:
-        {
-            std::cout << logprefix(level, functionName) << log << std::endl;
-        }
-        break;
-
-        default:
-            break;
-    }
-    mtx_.unlock();
-}
 
 LoggerStreamBuffer* Logger::logAppend(LogLevel level, const char* functionName)
 {
@@ -115,34 +79,11 @@ LoggerStreamBuffer* Logger::logAppend(LogLevel level, const char* functionName)
     *buff << logprefix(level, functionName);
     return buff;
 }
-void Logger::flush(std::stringstream* buff)
-{
-    mtx_.lock();
-    switch (config_.getLogTo())
-    {
-        case ConfigHandling::LoggerConfig::FILE:
-        {
-            std::fstream fstream(config_.getLogFile().c_str(), std::ios::out|std::ios::app);
-            fstream << buff->str() << std::endl;
-            fstream.close();
-        }
-        break;
 
-        case ConfigHandling::LoggerConfig::STDOUT:
-        {
-            std::cout << buff->str() << std::endl;
-        }
-        break;
-
-        default:
-            break;
-    }
-    mtx_.unlock();
-}
 
 LogLevel Logger::getConfiguredLogLevel() const
 {
-    return config_.getLogLevel();
+    return level_;
 }
 
 void Logger::operator<<=(LoggerStreamBuffer& buff) { buff.flush(); }

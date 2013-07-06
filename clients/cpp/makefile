@@ -34,7 +34,7 @@ CPPSRC +=	$(addprefix MediaContainers/, Album.cpp Artist.cpp Folder.cpp Playlist
 			$(addprefix Platform/AudioEndpoints/, AudioFifo.cpp ) \
 			AudioEndpointManager/RemoteAudioEndpointManager.cpp \
 			MediaInterface/MediaInterface.cpp \
-			Logger/Logger.cpp
+			Logger/Logger.cpp Logger/LoggerImpl.cpp
 
 #server...
 CPPSRC +=	$(addprefix ConfigHandling/Configs/, AudioEndpointConfig.cpp LoggerConfig.cpp)

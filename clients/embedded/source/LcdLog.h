@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Jens Nielsen
+ * Copyright (c) 2013, Jens Nielsen
  * All rights reserved.
 
  * Redistribution and use in source and binary forms, with or without
@@ -25,50 +25,35 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "SocketHandling/SocketClient.h"
-#include "RemoteMediaInterface.h"
-#include "UIConsole.h"
-#include "Platform/Utils/Utils.h"
-#include "Platform/AudioEndpoints/AudioEndpointLocal.h"
-#include "AudioEndpointManager/RemoteAudioEndpointManager.h"
+#ifndef LCDLOG_H_
+#define LCDLOG_H_
 
-#include "applog.h"
-#include "LoggerImpl.h"
+//#include "Utils/CircularQueue.h"
+#include "Platform/Threads/Mutex.h"
+#include <string>
 
-int main(int argc, char *argv[])
+namespace Logger
 {
-    std::string servaddr("");
-    ConfigHandling::LoggerConfig cfg;
-    cfg.setLogTo(ConfigHandling::LoggerConfig::STDOUT);
-    Logger::LoggerImpl l(cfg);
+class LcdLog
+{
+    Platform::Mutex bufferMtx_;
+    //Util::CircularQueue<std::string> buffer_;
 
-    ConfigHandling::AudioEndpointConfig audiocfg;
+    unsigned int firstLine_;
+    unsigned int firstColumn_;
+    unsigned int nLines_;
+    unsigned int width_;
+public:
+    LcdLog( unsigned int firstLine, unsigned int firstColumn, unsigned int nLines, unsigned int width );
+    virtual ~LcdLog();
 
-    Platform::AudioEndpointLocal audioEndpoint(audiocfg);
+    void addLine( const std::string& );
+    void updateDisplay();
+};
 
-    if(argc > 1)
-        servaddr = std::string(argv[1]);
+} /* namespace Logger */
 
-    SocketClient sc(servaddr, "7788");
-    RemoteMediaInterface m(sc);
-    UIConsole ui(m);
 
-    RemoteAudioEndpointManager audioMgr(sc);
-    audioMgr.addEndpoint(audioEndpoint, NULL, NULL);
+extern Logger::LcdLog* lcdLog;
 
-    audioMgr.getEndpoints(NULL, NULL);
-
-    /* wait for ui thread to exit */
-    ui.joinThread();
-
-    std::cout << "Exiting" << std::endl;
-
-    /* cleanup */
-    ui.destroy();
-    sc.destroy();
-
-#if AUDIO_SERVER
-    audioserver.destroy();
-#endif
-    return 0;
-}
+#endif /* LCDLOG_H_ */

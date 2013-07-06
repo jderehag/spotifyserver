@@ -28,8 +28,7 @@
 #ifndef LOGGER_H_
 #define LOGGER_H_
 
-#include "ConfigHandling/ConfigHandler.h"
-#include "Platform/Threads/Mutex.h"
+#include "LogLevels.h"
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -40,23 +39,23 @@ namespace Logger
 class Logger
 {
 private:
-    const ConfigHandling::LoggerConfig& config_;
-    Platform::Mutex mtx_;
+    LogLevel level_;
 
     friend class LoggerStreamBuffer;
-    void flush(std::stringstream* buff);
+    virtual void flush(std::stringstream* buff) = 0;
 
     /* Make non-copyable */
     Logger();
     Logger(const Logger&);
     Logger& operator=(const Logger&);
 
+protected:
+    Logger(LogLevel level);
 public:
-    Logger(const ConfigHandling::LoggerConfig& config);
     virtual ~Logger();
     LogLevel getConfiguredLogLevel() const;
 
-    void logAppend(LogLevel level, const char* functionName, const char* log);
+    virtual void logAppend(LogLevel level, const char* functionName, const char* log) = 0;
     class LoggerStreamBuffer* logAppend(LogLevel level, const char* functionName);
     void operator<<=(class LoggerStreamBuffer& buff);
 };
@@ -82,6 +81,8 @@ LoggerStreamBuffer& operator<<(LoggerStreamBuffer& buff, const T& rhs)
     *buff.ss_ << rhs;
     return buff;
 }
+
+std::string logprefix( LogLevel level, const char* functionName );
 
 }
 #endif

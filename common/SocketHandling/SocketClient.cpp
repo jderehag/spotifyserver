@@ -209,15 +209,17 @@ void SocketClient::run()
                     }
                 }
             }
+            log(LOG_NOTICE) << "Disconnected";
+
+            callbackSubscriberMtx_.lock();
+            for( std::set<IMessageSubscriber*>::iterator it = callbackSubscriberList_.begin();
+                    it != callbackSubscriberList_.end(); it++)
+            {
+                (*it)->connectionState( false );
+            }
+            callbackSubscriberMtx_.unlock();
         }
         socket.Close();
-        callbackSubscriberMtx_.lock();
-        for( std::set<IMessageSubscriber*>::iterator it = callbackSubscriberList_.begin();
-                it != callbackSubscriberList_.end(); it++)
-        {
-            (*it)->connectionState( false );
-        }
-        callbackSubscriberMtx_.unlock();
     }
 }
 

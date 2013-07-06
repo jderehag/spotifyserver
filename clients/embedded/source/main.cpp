@@ -40,7 +40,11 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "applog.h"
+#include "LoggerEmbedded.h"
 
+#ifdef WITH_LCD
+#include "stm32f4_discovery_lcd.h"
+#endif
 
 #include "Platform/Threads/Runnable.h"
 #include "Platform/Threads/Condition.h"
@@ -75,75 +79,33 @@ void LedFlasher::run()
 {
     portTickType delay = 500 / portTICK_RATE_MS;
     portTickType t = xTaskGetTickCount();
+    int count = 0;
 
     while( isCancellationPending() == false )
     {
+#ifdef WITH_LCD
+        LCD_DisplayChar(0,0, (count & 1) ? '.' : ' ');
+#else
         STM_EVAL_LEDToggle( LED5 );
-        vTaskDelayUntil( &t, delay );
-#if 0
-        mtx.lock();
-        cond.wait(mtx);
-        mtx.unlock();
 #endif
+        vTaskDelayUntil( &t, delay );
+        count++;
     }
 }
-
-#if 0
-class LedFlasher2 : public Platform::Runnable
-{
-public:
-    LedFlasher2();
-    virtual ~LedFlasher2();
-
-    virtual void run();
-    virtual void destroy();
-};
-
-LedFlasher2::LedFlasher2() : Platform::Runnable(false, SIZE_SMALL, PRIO_LOW)
-{
-    startThread();
-}
-LedFlasher2::~LedFlasher2()
-{
-}
-
-void LedFlasher2::destroy()
-{
-
-}
-
-void LedFlasher2::run()
-{
-    portTickType delay = 100 / portTICK_RATE_MS;
-    portTickType t = xTaskGetTickCount();
-
-    while( isCancellationPending() == false )
-    {
-        mtx.lock();
-        vTaskDelayUntil( &t, delay );
-        cond.signal();
-        mtx.unlock();
-        taskYIELD();
-    }
-}
-#endif
 
 int main(void)
 {
+    STM_EVAL_PBInit(BUTTON_USER, BUTTON_MODE_EXTI);
+#ifndef WITH_LCD
     STM_EVAL_LEDInit(LED3);
     STM_EVAL_LEDInit(LED4);
     STM_EVAL_LEDInit(LED5);
     STM_EVAL_LEDInit(LED6);
-    STM_EVAL_PBInit(BUTTON_USER, BUTTON_MODE_EXTI);
+#endif
 
 
-    ConfigHandling::LoggerConfig* cfg = new ConfigHandling::LoggerConfig;
-    cfg->setLogTo(ConfigHandling::LoggerConfig::NOWHERE);
-    cfg->setLogLevel("EMERG");
-    Logger::Logger* l = new Logger::Logger(*cfg);
-
+    Logger::LoggerEmbedded* l = new Logger::LoggerEmbedded(LOG_NOTICE);
     LedFlasher* fl = new LedFlasher;
-    //LedFlasher2* fl2 = new LedFlasher2;
 
 #if 0
     SocketClient* sc = new SocketClient("192.168.5.98", "7788");
