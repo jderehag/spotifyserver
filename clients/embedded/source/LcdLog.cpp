@@ -32,16 +32,17 @@
 #include <assert.h>
 
 
-Logger::LcdLog* lcdLog = NULL;
-
 namespace Logger
 {
+#define TEXT_COL White
+#define BACK_COL Black //ASSEMBLE_RGB(55,55,55)
 
 /* todo move this into class withoug exposing stm32f4_discovery_lcd.h */
 #define MAX_WIDTH ( LCD_HORIZONTAL_MAX / 8 )
 #define MAX_HEIGHT ( LCD_VERTICAL_MAX / 8 )
 static char buffer[MAX_HEIGHT][MAX_WIDTH+1];
-static int head = 0;
+static unsigned int head = 0;
+static unsigned int lines = 0;
 
 
 LcdLog::LcdLog( unsigned int firstLine, unsigned int firstColumn, unsigned int nLines, unsigned int width ) : //buffer_(nLines),
@@ -50,17 +51,10 @@ LcdLog::LcdLog( unsigned int firstLine, unsigned int firstColumn, unsigned int n
                                                                                                               nLines_(nLines),
                                                                                                               width_(width)
 {
-    /* provide global singleton to allow printing to screen without log prefix */
-    assert( ::lcdLog == NULL );
-    ::lcdLog = this;
-
     if ( width_ > MAX_WIDTH ) width_ = MAX_WIDTH;
     if ( nLines_ > MAX_HEIGHT ) nLines_ = MAX_HEIGHT;
 
-    STM32f4_Discovery_LCD_Init();
-    LCD_SetBackColor(Black);
-    LCD_SetTextColor(White);
-    LCD_SetFont( &Font8x8 );
+    LCD_DrawFullRect( 0, firstLine_*8, width_*8, nLines_*8, BACK_COL, BACK_COL);
 }
 
 LcdLog::~LcdLog()
@@ -96,6 +90,8 @@ void LcdLog::addLine( const std::string& line )
             pos += len;
         }
         head = (head+1) % nLines_;
+        if ( lines < nLines_ )
+            lines++;
     }
     bufferMtx_.unlock();
 
@@ -107,12 +103,13 @@ void LcdLog::updateDisplay()
 {
     unsigned int i = firstLine_;
     bufferMtx_.lock();
+
     //for( Util::CircularQueue<std::string>::const_iterator it = buffer_.begin(); it != buffer_.end() ; it++, i++ )
-    for( unsigned int j = 0; j < nLines_; j++, i++ )
+    for( unsigned int j = (nLines_ - lines); j < nLines_; j++, i++ )
     {
         //LCD_ClearLine( LINE(i) );
         //LCD_DisplayStringLine( LINE(i), (*it).c_str() );
-        LCD_DisplayStringLine( LINE(i), buffer[(head+j)%nLines_] );
+        LCD_DisplayStringLine( i*Font8x8.Height, buffer[(head+j)%nLines_], TEXT_COL, BACK_COL, &Font8x8 );
     }
     bufferMtx_.unlock();
 }

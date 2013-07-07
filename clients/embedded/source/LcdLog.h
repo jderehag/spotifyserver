@@ -54,6 +54,4 @@ public:
 } /* namespace Logger */
 
 
-extern Logger::LcdLog* lcdLog;
-
 #endif /* LCDLOG_H_ */

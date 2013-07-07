@@ -46,7 +46,7 @@
 #include "stm32f4_discovery.h"
 #include "stm32f4_discovery_lcd.h"
 #include "fonts.h"
-
+#include "applog.h"
 /** @addtogroup Utilities
   * @{
   */ 
@@ -97,10 +97,8 @@
 /** @defgroup stm32f4_discovery_LCD_Private_Variables
   * @{
   */ 
-static sFONT *LCD_Currentfonts;
 
-  /* Global variables to set the written text color */
-static __IO uint16_t TextColor = 0x0000, BackColor = 0xFFFF;
+
   
 /**
   * @}
@@ -112,8 +110,8 @@ static __IO uint16_t TextColor = 0x0000, BackColor = 0xFFFF;
 #ifndef USE_Delay
 static void delay(__IO uint32_t nCount);
 #endif /* USE_Delay*/
-static void PutPixel(int16_t x, int16_t y);
-static void LCD_PolyLineRelativeClosed(pPoint Points, uint16_t PointCount, uint16_t Closed);
+static void PutPixel(int16_t x, int16_t y, uint16_t Colour);
+static void LCD_PolyLineRelativeClosed(pPoint Points, uint16_t PointCount, uint16_t Closed, uint16_t Colour);
 /**
   * @}
   */ 
@@ -447,7 +445,6 @@ void STM32f4_Discovery_LCD_Init(void)
   {
     LCD_WriteRAM(0x0000);
   }
-  LCD_SetFont(&LCD_DEFAULT_FONT);
 }
 
 
@@ -558,53 +555,6 @@ void LCD_RGB_Test(void)
 }
 
 
-
-/**
-  * @brief  Sets the LCD Text and Background colors.
-  * @param  _TextColor: specifies the Text Color.
-  * @param  _BackColor: specifies the Background Color.
-  * @retval None
-  */
-void LCD_SetColors(__IO uint16_t _TextColor, __IO uint16_t _BackColor)
-{
-  TextColor = _TextColor; 
-  BackColor = _BackColor;
-}
-
-/**
-  * @brief  Gets the LCD Text and Background colors.
-  * @param  _TextColor: pointer to the variable that will contain the Text 
-            Color.
-  * @param  _BackColor: pointer to the variable that will contain the Background 
-            Color.
-  * @retval None
-  */
-void LCD_GetColors(__IO uint16_t *_TextColor, __IO uint16_t *_BackColor)
-{
-  *_TextColor = TextColor; *_BackColor = BackColor;
-}
-
-/**
-  * @brief  Sets the Text color.
-  * @param  Color: specifies the Text color code RGB(5-6-5).
-  * @retval None
-  */
-void LCD_SetTextColor(__IO uint16_t Color)
-{
-  TextColor = Color;
-}
-
-
-/**
-  * @brief  Sets the Background color.
-  * @param  Color: specifies the Background color code RGB(5-6-5).
-  * @retval None
-  */
-void LCD_SetBackColor(__IO uint16_t Color)
-{
-  BackColor = Color;
-}
-
 /**
 LCD_DisplayOff
   */
@@ -622,41 +572,21 @@ void LCD_DisplayOn(void)
 }
 
 /**
-  * @brief  Sets the Text Font.
-  * @param  fonts: specifies the font to be used.
-  * @retval None
-  */
-void LCD_SetFont(sFONT *fonts)
-{
-  LCD_Currentfonts = fonts;
-}
-
-/**
-  * @brief  Gets the Text Font.
-  * @param  None.
-  * @retval the used font.
-  */
-sFONT *LCD_GetFont(void)
-{
-  return LCD_Currentfonts;
-}
-
-/**
   * @brief  Clears the selected line.
   * @param  Line: the Line to be cleared.
   *   This parameter can be one of the following values:
   *     @arg Linex: where x can be 0..n
   * @retval None
   */
-void LCD_ClearLine(uint16_t Line)
+void LCD_ClearLine( uint16_t Line, uint16_t Colour, sFONT* Font )
 {
   uint16_t refcolumn = 0;
 
   do {
        /* Display one character on LCD */
-    LCD_DisplayChar(Line, refcolumn, ' ');
+    LCD_DisplayChar(Line, refcolumn, ' ', Colour, Colour, Font);
     /* Decrement the column position by 16 */
-    refcolumn += LCD_Currentfonts->Width;
+    refcolumn += Font->Width;
   } while (refcolumn < LCD_PIXEL_WIDTH);	
 }
 
@@ -683,13 +613,13 @@ void LCD_Clear(uint16_t Color)
   * @param  y: pixel y.  
   * @retval None
   */
-static void PutPixel(int16_t x, int16_t y)
+static void PutPixel(int16_t x, int16_t y, uint16_t Colour)
 { 
   if(x < 0 || x > LCD_PIXEL_WIDTH-1 || y < 0 || y > LCD_PIXEL_HEIGHT-1)
   {
     return;  
   }
-  LCD_DrawLine(x, y, 1, LCD_DIR_HORIZONTAL);
+  LCD_DrawLine(x, y, 1, LCD_DIR_HORIZONTAL, Colour);
 }
 
 /**
@@ -699,7 +629,7 @@ static void PutPixel(int16_t x, int16_t y)
   * @param  c: pointer to the character data.
   * @retval None
   */
-void LCD_DrawChar(uint16_t Xpos, uint16_t Ypos, const uint16_t *c)
+void LCD_DrawChar(uint16_t Xpos, uint16_t Ypos, const uint16_t *c, uint16_t Colour, uint16_t BackColour, uint16_t Height, uint16_t Width)
 {
   uint32_t index = 0, i = 0;
   uint16_t  Xaddress = 0;
@@ -707,21 +637,21 @@ void LCD_DrawChar(uint16_t Xpos, uint16_t Ypos, const uint16_t *c)
   
   LCD_SetCursor(Ypos, Xaddress);
   
-  for(index = 0; index < LCD_Currentfonts->Height; index++)
+  for(index = 0; index < Height; index++)
   {
     LCD_WriteRAM_Prepare(); /* Prepare to write GRAM */
-    for(i = 0; i < LCD_Currentfonts->Width; i++)
+    for(i = 0; i < Width; i++)
     {
   
-      if((((c[index] & ((0x80 << ((LCD_Currentfonts->Width / 12 ) * 8 ) ) >> i)) == 0x00) &&(LCD_Currentfonts->Width <= 12))||
-        (((c[index] & (0x1 << i)) == 0x00)&&(LCD_Currentfonts->Width > 12 )))
+      if((((c[index] & ((0x80 << ((Width / 12 ) * 8 ) ) >> i)) == 0x00) &&(Width <= 12))||
+        (((c[index] & (0x1 << i)) == 0x00)&&(Width > 12 )))
 
       {
-        LCD_WriteRAM(BackColor);
+        LCD_WriteRAM(BackColour);
       }
       else
       {
-        LCD_WriteRAM(TextColor);
+        LCD_WriteRAM(Colour);
       } 
     }
     Xaddress++;
@@ -738,10 +668,10 @@ void LCD_DrawChar(uint16_t Xpos, uint16_t Ypos, const uint16_t *c)
   * @param  Ascii: character ascii code, must be between 0x20 and 0x7E.
   * @retval None
   */
-void LCD_DisplayChar(uint16_t Line, uint16_t Column, uint8_t Ascii)
+void LCD_DisplayChar(uint16_t Line, uint16_t Column, uint8_t Ascii, uint16_t Colour, uint16_t BackColour, sFONT* Font)
 {
   Ascii -= 32;
-  LCD_DrawChar(Line, Column, &LCD_Currentfonts->table[Ascii * LCD_Currentfonts->Height]);
+  LCD_DrawChar(Line, Column, &Font->table[Ascii * Font->Height], Colour, BackColour, Font->Height, Font->Width);
 }
 
 /**
@@ -752,18 +682,23 @@ void LCD_DisplayChar(uint16_t Line, uint16_t Column, uint8_t Ascii)
   * @param  *ptr: pointer to string to display on LCD.
   * @retval None
   */
-void LCD_DisplayStringLine(uint16_t Line, const char *ptr)
+void LCD_DisplayStringLine(uint16_t Line, const char *ptr, uint16_t Colour, uint16_t BackColour, sFONT* Font )
 {
-  uint16_t refcolumn = 0;
+    LCD_DisplayStringLineCol( Line, 0, ptr, Colour, BackColour, Font );
+}
+void LCD_DisplayStringLineCol(uint16_t Line, uint16_t Column, const char *ptr, uint16_t Colour, uint16_t BackColour, sFONT* Font)
+{
+
+  uint16_t refcolumn = Column;
 
   /* Send the string character by character on lCD */
   while (*ptr != 0)
   {
     /* Display one character on LCD */
-    LCD_DisplayChar(Line, refcolumn, (uint8_t)*ptr);
+    LCD_DisplayChar(Line, refcolumn, (uint8_t)*ptr, Colour, BackColour, Font);
     /* Decrement the column position by 16 */
-    refcolumn += LCD_Currentfonts->Width;
-	if (refcolumn >= LCD_PIXEL_WIDTH) {
+    refcolumn += Font->Width;
+	if (refcolumn > (LCD_PIXEL_WIDTH - Font->Width) ) {
 		break;
 	}
     /* Point on the next character */
@@ -823,25 +758,32 @@ void LCD_WindowModeDisable(void)
   *   This parameter can be one of the following values: Vertical or Horizontal.
   * @retval None
   */
-void LCD_DrawLine(uint16_t Xpos, uint16_t Ypos, uint16_t Length, uint8_t Direction)
+void LCD_DrawLine(uint16_t Xpos, uint16_t Ypos, uint16_t Length, uint8_t Direction, uint16_t Colour)
 {
   uint32_t i = 0;
   
+  if( Xpos >= LCD_PIXEL_WIDTH || Ypos >= LCD_PIXEL_HEIGHT )
+      return;
+
   LCD_SetCursor(Xpos, Ypos);
   if(Direction == LCD_DIR_HORIZONTAL)
   {
+    if( Xpos + Length > LCD_PIXEL_WIDTH )
+      Length = LCD_PIXEL_WIDTH - Xpos;
     LCD_WriteRAM_Prepare(); /* Prepare to write GRAM */
     for(i = 0; i < Length; i++)
     {
-      LCD_WriteRAM(TextColor);
+      LCD_WriteRAM(Colour);
     }
   }
   else
   {
+    if( Ypos + Length > LCD_PIXEL_HEIGHT )
+      Length = LCD_PIXEL_HEIGHT - Ypos;
     for(i = 0; i < Length; i++)
     {
       LCD_WriteRAM_Prepare(); /* Prepare to write GRAM */
-      LCD_WriteRAM(TextColor);
+      LCD_WriteRAM(Colour);
       Ypos++;
       LCD_SetCursor(Xpos, Ypos);
     }
@@ -856,13 +798,16 @@ void LCD_DrawLine(uint16_t Xpos, uint16_t Ypos, uint16_t Length, uint8_t Directi
   * @param  Width: display rectangle width.
   * @retval None
   */
-void LCD_DrawRect(uint16_t Xpos, uint16_t Ypos, uint8_t Height, uint16_t Width)
+void LCD_DrawRect(uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Height, uint16_t Colour)
 {
-  LCD_DrawLine(Xpos, Ypos, Width, LCD_DIR_VERTICAL);
-  LCD_DrawLine((Xpos + Height-1), Ypos, Width, LCD_DIR_VERTICAL);
+  if ( Width == 0 || Height == 0)
+    return;
+
+  LCD_DrawLine(Xpos, Ypos, Height, LCD_DIR_VERTICAL, Colour);
+  LCD_DrawLine((Xpos + Width-1), Ypos, Height, LCD_DIR_VERTICAL, Colour);
   
-  LCD_DrawLine(Xpos, Ypos, Height, LCD_DIR_HORIZONTAL);
-  LCD_DrawLine(Xpos, (Ypos + Width), Height, LCD_DIR_HORIZONTAL);
+  LCD_DrawLine(Xpos, Ypos, Width, LCD_DIR_HORIZONTAL, Colour);
+  LCD_DrawLine(Xpos, (Ypos + Height-1), Width, LCD_DIR_HORIZONTAL, Colour);
 }
 
 /**
@@ -872,7 +817,7 @@ void LCD_DrawRect(uint16_t Xpos, uint16_t Ypos, uint8_t Height, uint16_t Width)
   * @param  Radius
   * @retval None
   */
-void LCD_DrawCircle(uint16_t Xpos, uint16_t Ypos, uint16_t Radius)
+void LCD_DrawCircle(uint16_t Xpos, uint16_t Ypos, uint16_t Radius, uint16_t Colour)
 {
   int32_t  D;/* Decision Variable */ 
   uint32_t  CurX;/* Current X Value */
@@ -886,28 +831,28 @@ void LCD_DrawCircle(uint16_t Xpos, uint16_t Ypos, uint16_t Radius)
   {
     LCD_SetCursor(Xpos + CurX, Ypos + CurY);
     LCD_WriteRAM_Prepare(); /* Prepare to write GRAM */
-    LCD_WriteRAM(TextColor);
+    LCD_WriteRAM(Colour);
     LCD_SetCursor(Xpos + CurX, Ypos - CurY);
     LCD_WriteRAM_Prepare(); /* Prepare to write GRAM */
-    LCD_WriteRAM(TextColor);
+    LCD_WriteRAM(Colour);
     LCD_SetCursor(Xpos - CurX, Ypos + CurY);
     LCD_WriteRAM_Prepare(); /* Prepare to write GRAM */
-    LCD_WriteRAM(TextColor);
+    LCD_WriteRAM(Colour);
     LCD_SetCursor(Xpos - CurX, Ypos - CurY);
     LCD_WriteRAM_Prepare(); /* Prepare to write GRAM */
-    LCD_WriteRAM(TextColor);
+    LCD_WriteRAM(Colour);
     LCD_SetCursor(Xpos + CurY, Ypos + CurX);
     LCD_WriteRAM_Prepare(); /* Prepare to write GRAM */
-    LCD_WriteRAM(TextColor);
+    LCD_WriteRAM(Colour);
     LCD_SetCursor(Xpos + CurY, Ypos - CurX);
     LCD_WriteRAM_Prepare(); /* Prepare to write GRAM */
-    LCD_WriteRAM(TextColor);
+    LCD_WriteRAM(Colour);
     LCD_SetCursor(Xpos - CurY, Ypos + CurX);
     LCD_WriteRAM_Prepare(); /* Prepare to write GRAM */
-    LCD_WriteRAM(TextColor);
+    LCD_WriteRAM(Colour);
     LCD_SetCursor(Xpos - CurY, Ypos - CurX);
     LCD_WriteRAM_Prepare(); /* Prepare to write GRAM */
-    LCD_WriteRAM(TextColor);
+    LCD_WriteRAM(Colour);
     if (D < 0)
     { 
       D += (CurX << 2) + 6;
@@ -926,7 +871,7 @@ void LCD_DrawCircle(uint16_t Xpos, uint16_t Ypos, uint16_t Radius)
   * @param  Pict: pointer to the picture array.
   * @retval None
   */
-void LCD_DrawMonoPict(const uint32_t *Pict)
+void LCD_DrawMonoPict(const uint32_t *Pict, uint16_t Colour, uint16_t BackColour)
 {
   uint32_t index = 0, i = 0;
   LCD_SetCursor(0, (LCD_PIXEL_WIDTH - 1)); 
@@ -937,11 +882,11 @@ void LCD_DrawMonoPict(const uint32_t *Pict)
     {
       if((Pict[index] & (1 << i)) == 0x00)
       {
-        LCD_WriteRAM(BackColor);
+        LCD_WriteRAM(BackColour);
       }
       else
       {
-        LCD_WriteRAM(TextColor);
+        LCD_WriteRAM(Colour);
       }
     }
   }
@@ -992,29 +937,26 @@ void LCD_WriteBMP(uint32_t BmpAddress)
   * @param  Width: rectangle width.
   * @retval None
   */
-void LCD_DrawFullRect(uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Height)
+void LCD_DrawFullRect(uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Height, uint16_t FrameColour, uint16_t FillColour )
 {
-  LCD_SetTextColor(TextColor);
+  if ( Width == 0 || Height == 0)
+    return;
 
-  LCD_DrawLine(Xpos, Ypos, Width, LCD_DIR_HORIZONTAL);
-  LCD_DrawLine(Xpos, (Ypos+Height), Width, LCD_DIR_HORIZONTAL);
-  
-  LCD_DrawLine(Xpos, Ypos, Height, LCD_DIR_VERTICAL);
-  LCD_DrawLine((Xpos+Width-1), Ypos, Height, LCD_DIR_VERTICAL);
+  LCD_DrawRect( Xpos, Ypos, Width, Height, FrameColour );
 
-  Height--;
-  Ypos++;
-
-  LCD_SetTextColor(BackColor);
-
-  while(Height--)
+  if ( Width > 2 && Height > 2)
   {
-    LCD_DrawLine(Xpos, Ypos++, Width, LCD_DIR_HORIZONTAL);    
-  }
+      Height-=2;
+      Ypos++;
 
-  LCD_SetTextColor(TextColor);
+      while(Height--)
+      {
+        LCD_DrawLine(Xpos+1, Ypos++, Width-2, LCD_DIR_HORIZONTAL, FillColour);
+      }
+  }
 }
 
+#if 0 //this function is broken too..
 /**
   * @brief  Displays a full circle.
   * @param  Xpos: specifies the X position.
@@ -1022,7 +964,7 @@ void LCD_DrawFullRect(uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Hei
   * @param  Radius
   * @retval None
   */
-void LCD_DrawFullCircle(uint16_t Xpos, uint16_t Ypos, uint16_t Radius)
+void LCD_DrawFullCircle(uint16_t Xpos, uint16_t Ypos, uint16_t Radius, uint16_t Colour )
 {
   int32_t  D;    /* Decision Variable */ 
   uint32_t  CurX;/* Current X Value */
@@ -1033,20 +975,18 @@ void LCD_DrawFullCircle(uint16_t Xpos, uint16_t Ypos, uint16_t Radius)
   CurX = 0;
   CurY = Radius;
   
-  LCD_SetTextColor(BackColor);
-
   while (CurX <= CurY)
   {
     if(CurY > 0) 
     {
-      LCD_DrawLine(Xpos - CurX, Ypos + CurY, 2*CurY, LCD_DIR_HORIZONTAL);
-      LCD_DrawLine(Xpos + CurX, Ypos + CurY, 2*CurY, LCD_DIR_HORIZONTAL);
+      LCD_DrawLine(Xpos - CurX, Ypos + CurY, 2*CurX, LCD_DIR_HORIZONTAL, Colour);
+      LCD_DrawLine(Xpos + CurX, Ypos + CurY, 2*CurX, LCD_DIR_HORIZONTAL, Colour);
     }
 
     if(CurX > 0) 
     {
-      LCD_DrawLine(Xpos - CurY, Ypos + CurX, 2*CurX, LCD_DIR_HORIZONTAL);
-      LCD_DrawLine(Xpos + CurY, Ypos + CurX, 2*CurX, LCD_DIR_HORIZONTAL);
+      LCD_DrawLine(Xpos - CurY, Ypos + CurX, 2*CurY, LCD_DIR_HORIZONTAL, Colour);
+      LCD_DrawLine(Xpos + CurY, Ypos + CurX, 2*CurY, LCD_DIR_HORIZONTAL, Colour);
     }
     if (D < 0)
     { 
@@ -1060,10 +1000,9 @@ void LCD_DrawFullCircle(uint16_t Xpos, uint16_t Ypos, uint16_t Radius)
     CurX++;
   }
 
-  LCD_SetTextColor(TextColor);
-  LCD_DrawCircle(Xpos, Ypos, Radius);
+  LCD_DrawCircle(Xpos, Ypos, Radius, Colour);
 }
-
+#endif
 /**
   * @brief  Displays an uni-line (between two points).
   * @param  x1: specifies the point 1 x position.
@@ -1072,7 +1011,7 @@ void LCD_DrawFullCircle(uint16_t Xpos, uint16_t Ypos, uint16_t Radius)
   * @param  y2: specifies the point 2 y position.
   * @retval None
   */
-void LCD_DrawUniLine(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2)
+void LCD_DrawUniLine(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t Colour)
 {
   int16_t deltax = 0, deltay = 0, x = 0, y = 0, xinc1 = 0, xinc2 = 0, 
   yinc1 = 0, yinc2 = 0, den = 0, num = 0, numadd = 0, numpixels = 0, 
@@ -1126,7 +1065,7 @@ void LCD_DrawUniLine(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2)
   
   for (curpixel = 0; curpixel <= numpixels; curpixel++)
   {
-    PutPixel(x, y);             /* Draw the current pixel */
+    PutPixel(x, y, Colour);             /* Draw the current pixel */
     num += numadd;              /* Increase the numerator by the top of the fraction */
     if (num >= den)             /* Check if numerator >= denominator */
     {
@@ -1145,7 +1084,7 @@ void LCD_DrawUniLine(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2)
   * @param  PointCount: Number of points.
   * @retval None
   */
-void LCD_PolyLine(pPoint Points, uint16_t PointCount)
+void LCD_PolyLine(pPoint Points, uint16_t PointCount, uint16_t Colour)
 {
   int16_t X = 0, Y = 0;
 
@@ -1159,7 +1098,7 @@ void LCD_PolyLine(pPoint Points, uint16_t PointCount)
     X = Points->X;
     Y = Points->Y;
     Points++;
-    LCD_DrawUniLine(X, Y, Points->X, Points->Y);
+    LCD_DrawUniLine(X, Y, Points->X, Points->Y, Colour);
   }
 }
 
@@ -1171,7 +1110,7 @@ void LCD_PolyLine(pPoint Points, uint16_t PointCount)
   *           1: closed, 0 : not closed.
   * @retval None
   */
-static void LCD_PolyLineRelativeClosed(pPoint Points, uint16_t PointCount, uint16_t Closed)
+static void LCD_PolyLineRelativeClosed(pPoint Points, uint16_t PointCount, uint16_t Closed, uint16_t Colour)
 {
   int16_t X = 0, Y = 0;
   pPoint First = Points;
@@ -1185,13 +1124,13 @@ static void LCD_PolyLineRelativeClosed(pPoint Points, uint16_t PointCount, uint1
   while(--PointCount)
   {
     Points++;
-    LCD_DrawUniLine(X, Y, X + Points->X, Y + Points->Y);
+    LCD_DrawUniLine(X, Y, X + Points->X, Y + Points->Y, Colour);
     X = X + Points->X;
     Y = Y + Points->Y;
   }
   if(Closed)
   {
-    LCD_DrawUniLine(First->X, First->Y, X, Y);
+    LCD_DrawUniLine(First->X, First->Y, X, Y, Colour);
   }  
 }
 
@@ -1201,10 +1140,10 @@ static void LCD_PolyLineRelativeClosed(pPoint Points, uint16_t PointCount, uint1
   * @param  PointCount: Number of points.
   * @retval None
   */
-void LCD_ClosedPolyLine(pPoint Points, uint16_t PointCount)
+void LCD_ClosedPolyLine(pPoint Points, uint16_t PointCount, uint16_t Colour)
 {
-  LCD_PolyLine(Points, PointCount);
-  LCD_DrawUniLine(Points->X, Points->Y, (Points+PointCount-1)->X, (Points+PointCount-1)->Y);
+  LCD_PolyLine(Points, PointCount, Colour);
+  LCD_DrawUniLine(Points->X, Points->Y, (Points+PointCount-1)->X, (Points+PointCount-1)->Y, Colour);
 }
 
 /**
@@ -1213,9 +1152,9 @@ void LCD_ClosedPolyLine(pPoint Points, uint16_t PointCount)
   * @param  PointCount: Number of points.
   * @retval None
   */
-void LCD_PolyLineRelative(pPoint Points, uint16_t PointCount)
+void LCD_PolyLineRelative(pPoint Points, uint16_t PointCount, uint16_t Colour)
 {
-  LCD_PolyLineRelativeClosed(Points, PointCount, 0);
+  LCD_PolyLineRelativeClosed(Points, PointCount, 0, Colour);
 }
 
 /**
@@ -1224,11 +1163,10 @@ void LCD_PolyLineRelative(pPoint Points, uint16_t PointCount)
   * @param  PointCount: Number of points.
   * @retval None
   */
-void LCD_ClosedPolyLineRelative(pPoint Points, uint16_t PointCount)
+void LCD_ClosedPolyLineRelative(pPoint Points, uint16_t PointCount, uint16_t Colour)
 {
-  LCD_PolyLineRelativeClosed(Points, PointCount, 1);
+  LCD_PolyLineRelativeClosed(Points, PointCount, 1, Colour);
 }
-
 
 /**
   * @brief  Displays a  full poly-line (between many points).
@@ -1236,7 +1174,7 @@ void LCD_ClosedPolyLineRelative(pPoint Points, uint16_t PointCount)
   * @param  PointCount: Number of points.
   * @retval None
   */
-void LCD_FillPolyLine(pPoint Points, uint16_t PointCount)
+void LCD_FillPolyLine(pPoint Points, uint16_t PointCount, uint16_t Colour )
 {
   /*  public-domain code by Darel Rex Finley, 2007 */
   uint16_t  nodes = 0, nodeX[MAX_POLY_CORNERS], pixelX = 0, pixelY = 0, i = 0,
@@ -1269,8 +1207,6 @@ void LCD_FillPolyLine(pPoint Points, uint16_t PointCount)
     }
   }
   
-  LCD_SetTextColor(BackColor);  
-
   /*  Loop through the rows of the image. */
   for (pixelY = IMAGE_TOP; pixelY < IMAGE_BOTTOM; pixelY++) 
   {  
@@ -1324,19 +1260,18 @@ void LCD_FillPolyLine(pPoint Points, uint16_t PointCount)
         {
           nodeX[i+1] = IMAGE_RIGHT;
         }
-        LCD_SetTextColor(BackColor);
-        LCD_DrawLine(pixelY, nodeX[i+1], nodeX[i+1] - nodeX[i], LCD_DIR_HORIZONTAL);
-        LCD_SetTextColor(TextColor);
-        PutPixel(pixelY, nodeX[i+1]);
-        PutPixel(pixelY, nodeX[i]);
+        //LCD_SetTextColor(BackColor);
+        LCD_DrawLine(pixelY, nodeX[i+1], nodeX[i+1] - nodeX[i], LCD_DIR_HORIZONTAL, Colour);
+        //LCD_SetTextColor(TextColor);
+        PutPixel(pixelY, nodeX[i+1], Colour);
+        PutPixel(pixelY, nodeX[i], Colour);
         /* for (j=nodeX[i]; j<nodeX[i+1]; j++) PutPixel(j,pixelY); */
       }
     }
   } 
   /* draw the edges */
-  LCD_SetTextColor(TextColor);
+  //LCD_SetTextColor(TextColor);
 }
-
 
 #ifndef USE_Delay
 /**

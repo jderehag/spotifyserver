@@ -46,12 +46,16 @@ SocketClient::~SocketClient()
 
 void SocketClient::run()
 {
+    if ( serveraddr_ == "" )
+        log(LOG_NOTICE) << "Auto discovery...";
+
     while( serveraddr_ == "" && isCancellationPending() == false)
     {
         uint8_t msg[] = {'?'};
         Socket socket( SOCKTYPE_DATAGRAM );
 
-        socket.SendTo( msg, sizeof(msg), "255.255.255.255", "7788");
+        if ( socket.SendTo( msg, sizeof(msg), "255.255.255.255", "7788") < 0 )
+            continue;
 
         std::set<Socket*> readset;
 
@@ -65,6 +69,7 @@ void SocketClient::run()
                 if ( socket.ReceiveFrom( msg, 1, addr, port ) == 1 )
                 {
                     serveraddr_ = addr;
+                    log(LOG_NOTICE) << "Auto discovery found server at " << serveraddr_;
                 }
             }
         }
@@ -74,6 +79,7 @@ void SocketClient::run()
     {
         Socket socket(SOCKTYPE_STREAM);
 
+        log(LOG_NOTICE) << "Connecting to " << serveraddr_ << "...";
         if ( socket.Connect( serveraddr_, serverport_ ) == 0 )
         {
             log(LOG_NOTICE) << "Connected";

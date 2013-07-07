@@ -84,7 +84,7 @@ void LedFlasher::run()
     while( isCancellationPending() == false )
     {
 #ifdef WITH_LCD
-        LCD_DisplayChar(0,0, (count & 1) ? '.' : ' ');
+        LCD_DisplayChar(0,0, (count & 1) ? '.' : ' ', White, Black, &Font8x8 );
 #else
         STM_EVAL_LEDToggle( LED5 );
 #endif
@@ -103,6 +103,9 @@ int main(void)
     STM_EVAL_LEDInit(LED6);
 #endif
 
+#ifdef WITH_LCD
+    STM32f4_Discovery_LCD_Init();
+#endif
 
     Logger::LoggerEmbedded* l = new Logger::LoggerEmbedded(LOG_NOTICE);
     LedFlasher* fl = new LedFlasher;

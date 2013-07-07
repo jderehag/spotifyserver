@@ -84,5 +84,11 @@ LoggerStreamBuffer& operator<<(LoggerStreamBuffer& buff, const T& rhs)
 
 std::string logprefix( LogLevel level, const char* functionName );
 
+extern "C"
+{
+void LogAppendCBinder(LogLevel level, const char* functionName, const char* format, ...);
+LogLevel getConfiguredLogLevelCBinder();
+}
+
 }
 #endif

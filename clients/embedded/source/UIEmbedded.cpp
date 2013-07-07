@@ -29,13 +29,24 @@
 #include "UIEmbedded.h"
 #include "applog.h"
 #include "stm32f4_discovery.h"
-#include "LcdLog.h"
+#include "stm32f4_discovery_lcd.h"
+#include <string.h>
 #include <sstream>
 
-UIEmbedded::UIEmbedded( MediaInterface& m ) : m_(m), playbackState(PLAYBACK_IDLE)
+static void progressTimerCb( xTimerHandle tmr )
+{
+    UIEmbedded* ui = (UIEmbedded*) pvTimerGetTimerID( tmr );
+
+    ui->progressUpdateTick();
+}
+
+UIEmbedded::UIEmbedded( MediaInterface& m ) : m_(m), playbackState(PLAYBACK_IDLE), progress_(0), currentTrackDuration_(0)
 {
     m_.registerForCallbacks( *this );
     itPlaylists_ = playlists.begin();
+
+    progressTimer = xTimerCreate((const signed char*)"prgTmr", 1000/portTICK_RATE_MS, pdTRUE, this, progressTimerCb );
+    drawDefault();
 }
 
 UIEmbedded::~UIEmbedded()
@@ -135,41 +146,116 @@ void UIEmbedded::getAlbumResponse( const Album& album, void* userData )
 void UIEmbedded::genericSearchCallback( const std::deque<Track>& listOfTracks, const std::string& didYouMean, void* userData )
 {}
 
+#define TEXT_COL White
+#define BACK_COL ASSEMBLE_RGB(55,55,55) //ASSEMBLE_RGB(71,71,71)
+#define PROGBAR_COL White
+#define FONT Font8x8
+#define PROGBAR_WIDTH (LCD_PIXEL_WIDTH - (2 * ( 4 + 5*8 + 4 )))
+#define PROGBAR_POS (LCD_PIXEL_HEIGHT - 12)
+
+static void printText( uint16_t ypos, uint16_t xpos, const char* text, sFONT* font )
+{
+    LCD_DisplayStringLineCol( ypos, xpos, text, TEXT_COL, BACK_COL, font );
+}
+
+void UIEmbedded::drawProgress()
+{
+    uint16_t progbarfill = (PROGBAR_WIDTH * progress_) / currentTrackDuration_;
+    LCD_DrawFullRect( 4 + 5*8 + 4, PROGBAR_POS, PROGBAR_WIDTH , 10, PROGBAR_COL, ASSEMBLE_RGB(20,20,20));
+    LCD_DrawFullRect( 4 + 5*8 + 4, PROGBAR_POS, progbarfill, 10, PROGBAR_COL, PROGBAR_COL );
+    //LCD_DrawFullCircle( 4 + 5*8 + 4 + progbarfill, PROGBAR_POS + 5, 5, White );
+
+    {
+        std::stringstream out;
+        out << (progress_/60 < 10 ? " " : "") << progress_/60 <<":" << (progress_%60 < 10 ? "0" : "") << progress_%60;
+        printText(PROGBAR_POS, 4, out.str().c_str(), &FONT);
+    }
+
+    {
+        std::stringstream out;
+        out << currentTrackDuration_/60 <<":" << (currentTrackDuration_%60 < 10 ? "0" : "") << currentTrackDuration_%60;// << " "; // last space is just to clear any remaining character from screen
+        printText(PROGBAR_POS, LCD_PIXEL_WIDTH - 4 - 5*8, out.str().c_str(), &FONT);
+    }
+}
+
+void UIEmbedded::drawDefault()
+{
+    uint16_t ypos = 24*8;
+    LCD_DrawLine( 0, ypos, LCD_PIXEL_WIDTH, LCD_DIR_HORIZONTAL, White );
+    ypos++;
+    LCD_DrawFullRect( 0, ypos, LCD_PIXEL_WIDTH , LCD_PIXEL_HEIGHT - 24*8, BACK_COL, BACK_COL);
+
+    drawProgress();
+}
+
+void UIEmbedded::progressUpdateTick()
+{
+    if ( playbackState == PLAYBACK_PLAYING )
+    {
+        progress_++;
+        drawProgress();
+    }
+}
 
 void UIEmbedded::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress )
 {
-    unsigned int progsecs = progress/1000;
-    unsigned int dursecs = currentTrack.getDurationMillisecs()/1000;
-    statusUpdateInd( state, repeatStatus, shuffleStatus );
+    playbackState = state;
+    progress_ = progress/1000;
+    currentTrackDuration_ = currentTrack.getDurationMillisecs()/1000;
+
+    if ( playbackState == PLAYBACK_PLAYING )
+    {
+        xTimerStart( progressTimer, 0 );
+        /* print to log when new track starts to get some history, cheap but history isn't implemented.. */
+        if ( progress == 0 )
+            log( LOG_NOTICE ) << "Playing " << (*(currentTrack.getArtists().begin())).getName() << " - " << currentTrack.getName();
+    }
+    else
+    {
+        xTimerStop( progressTimer, 0 );
+    }
 #ifdef WITH_LCD
+    drawDefault();
+
+    unsigned int ypos = 24*8;
+    ypos += 3;
+
+    printText( ypos, 4, currentTrack.getName().c_str(), &Font12x12 );
+    ypos += 13;
+
     std::stringstream out;
-    out << "Track:  " << currentTrack.getName() << std::endl;
-    out << "Album:  " << currentTrack.getAlbum() << std::endl;
     for ( std::vector<Artist>::const_iterator it = currentTrack.getArtists().begin();
             it != currentTrack.getArtists().end(); it++ )
     {
-        out << "Artist: " << (*it).getName() << std::endl;
+        out << (*it).getName();
+        if ( it+1 != currentTrack.getArtists().end() )
+            out << ", ";
     }
-    out << "Progress: " << progsecs/60 <<":" << (progsecs%60 < 10 ? "0" : "") << progsecs%60 <<
-                 " / " << dursecs/60 <<":" << (dursecs%60 < 10 ? "0" : "") << dursecs%60 << std::endl << std::endl;
-    lcdLog->addLine( out.str() );
+
+    printText(ypos, 4, out.str().c_str(), &FONT);
+    ypos += 9;
+
+    printText( ypos, 4, currentTrack.getAlbum().c_str(), &FONT );
 #endif
+
 }
 
 void UIEmbedded::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus )
 {
     playbackState = state;
+    progress_ = 0;
+    currentTrackDuration_ = 0;
 #ifdef WITH_LCD
-    std::stringstream out;
-    switch( state )
-    {
-        case PLAYBACK_IDLE:    out << "Stopped"; break;
-        case PLAYBACK_PLAYING: out << "Playing"; break;
-        case PLAYBACK_PAUSED:  out << "Paused "; break;
-    }
-    out << " - Repeat " << (repeatStatus ? "on" : "off") << ", Shuffle " << (shuffleStatus ? "on" : "off") << std::endl << std::endl;
-    lcdLog->addLine( out.str() );
+    drawDefault();
 #endif
+    if ( playbackState == PLAYBACK_PLAYING )
+    {
+        xTimerStart( progressTimer, 0 );
+    }
+    else
+    {
+        xTimerStop( progressTimer, 0 );
+    }
 }
 
 void UIEmbedded::getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress, void* userData )

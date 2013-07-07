@@ -32,6 +32,9 @@
 #include "MediaInterface/MediaInterface.h"
 #include "SocketHandling/Messenger.h"
 
+#include "FreeRTOS.h"
+#include "timers.h"
+
 using namespace LibSpotify;
 
 class UIEmbedded : public IMediaInterfaceCallbackSubscriber
@@ -43,6 +46,13 @@ private:
 
     PlaylistContainer::iterator itPlaylists_;
     PlaylistContainer playlists;
+
+    xTimerHandle progressTimer;
+    unsigned int progress_;
+    unsigned int currentTrackDuration_;
+
+    void drawDefault();
+    void drawProgress();
 
     /* Implements IMediaInterfaceCallbackSubscriber */
     virtual void connectionState( bool up );
@@ -61,6 +71,8 @@ private:
 public:
     UIEmbedded(MediaInterface& m);
     virtual ~UIEmbedded();
+
+    void progressUpdateTick();
 
     void shortButtonPress();
     void longButtonPress();

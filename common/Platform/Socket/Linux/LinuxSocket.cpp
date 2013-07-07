@@ -111,7 +111,7 @@ static struct addrinfo* toAddrinfo( const std::string& addr, const std::string& 
 
     if (RetVal != 0)
     {
-        log(LOG_EMERG) << "getaddrinfo for addr=" << addr << " failed with error " << RetVal << " " << gai_strerror(RetVal);
+        log(LOG_WARN) << "getaddrinfo for addr=" << addr << " failed with error " << RetVal << " " << gai_strerror(RetVal);
         return NULL;
     }
 
@@ -181,7 +181,7 @@ int Socket::BindToAddr(const std::string& addr, const std::string& port)
         }
 
         inet_ntop( AF_INET6, &bindAddr.sin6_addr, str, sizeof(str));
-        log(LOG_NOTICE) << "attempting bind to \"" << addr << "\" -> ip " << str << " port " << ntohs(bindAddr.sin6_port);
+        log(LOG_DEBUG) << "attempting bind to \"" << addr << "\" -> ip " << str << " port " << ntohs(bindAddr.sin6_port);
 
         if ( bind( socket_->fd, (struct sockaddr*) &bindAddr, sizeof(bindAddr) ) < 0 )
         {
@@ -242,13 +242,13 @@ int Socket::Connect(const std::string& addr, const std::string& port)
         }
 
         inet_ntop( AF_INET6, &connectAddr.sin6_addr, str, sizeof(str));
-        log(LOG_NOTICE) << "attempting connect to \"" << addr << "\" -> ip " << str << " port " << ntohs(connectAddr.sin6_port);
+        log(LOG_DEBUG) << "attempting connect to \"" << addr << "\" -> ip " << str << " port " << ntohs(connectAddr.sin6_port);
 
         rc = connect( socket_->fd, (struct sockaddr*) &connectAddr, sizeof(connectAddr) );
 
         if (rc < 0 && errno != EINPROGRESS)
         {
-            log(LOG_EMERG) << "connect attempt failed with error " << strerror(errno);
+            log(LOG_WARN) << "connect attempt failed with error " << strerror(errno);
         }
         else
         {
@@ -314,7 +314,7 @@ Socket* Socket::Accept()
         char str[INET6_ADDRSTRLEN];
         inet_ntop( AF_INET6, INETADDR_ADDRESS((struct sockaddr*)&sockaddr), str, sizeof(str));
 
-        log(LOG_NOTICE) << "accept! " << str << " fd " << newSocket;
+        log(LOG_DEBUG) << "accept! " << str << " fd " << newSocket;
         SocketHandle_t* handle = new SocketHandle_t;
         handle->fd = newSocket;
         Socket* sock = new Socket(handle);
@@ -323,7 +323,7 @@ Socket* Socket::Accept()
     }
     else
     {
-        log(LOG_NOTICE) << "accept " << strerror(errno);
+        log(LOG_WARN) << "accept failed: " << strerror(errno);
         return NULL;
     }
 }

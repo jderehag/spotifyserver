@@ -61,10 +61,13 @@ void buttonHandler_action( uint8_t pressed )
 
     if ( pressed )
     {
+        portBASE_TYPE higherPrioTaskWoken2;
         pressTime = xTaskGetTickCountFromISR();
 
         /*launch timer for long press detection*/
-        xTimerStartFromISR( tmr, &higherPrioTaskWoken );
+        xTimerStopFromISR( tmr, &higherPrioTaskWoken );
+        xTimerStartFromISR( tmr, &higherPrioTaskWoken2 );
+        higherPrioTaskWoken |= higherPrioTaskWoken2;
     }
     else if ( pressTime != 0 ) /*handle release if we have caught a press*/
     {

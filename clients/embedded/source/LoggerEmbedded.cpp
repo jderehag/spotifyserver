@@ -33,7 +33,7 @@ namespace Logger
 
 LoggerEmbedded::LoggerEmbedded(LogLevel level) : Logger(level)
 #ifdef WITH_LCD
-                                               , lcdLog_( 2, 0, 28, 40 )
+                                               , lcdLog_( 2, 0, 22, 40 )
 #endif
 {
 }

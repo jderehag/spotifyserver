@@ -87,7 +87,7 @@ int Socket::BindToAddr(const std::string& addr, const std::string& port)
         my_addr.sin_addr.s_addr = inet_addr(addr.c_str());
     }
 
-    log(LOG_NOTICE) << "binding to " << addr << " -> " << inet_ntoa(my_addr.sin_addr) << " port " << port;
+    log(LOG_DEBUG) << "binding to " << addr << " -> " << inet_ntoa(my_addr.sin_addr) << " port " << port;
 
     if (lwip_bind(socket_->fd, (struct sockaddr *) &my_addr, sizeof(my_addr)) < 0)
     {
@@ -167,14 +167,14 @@ Socket* Socket::Accept()
 
     if(newSocket >= 0)
     {
-        log(LOG_NOTICE) << "accept! " << inet_ntoa(sockaddr.sin_addr) << " fd " << newSocket;
+        log(LOG_DEBUG) << "accept! " << inet_ntoa(sockaddr.sin_addr) << " fd " << newSocket;
         SocketHandle_t* handle = new SocketHandle_t;
         handle->fd = newSocket;
         return new Socket(handle);
     }
     else
     {
-        log(LOG_NOTICE) << "accept " << strerror(errno);
+        log(LOG_WARN) << "accept failed: " << strerror(errno);
         return NULL;
     }
 }
