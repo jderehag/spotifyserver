@@ -114,8 +114,7 @@ class AudioDev(Thread):
             self._output_fifo.put(sample)
         
         if not self._output_stream.is_active():
-            if self._output_fifo.qsize() > 100000:
-                self._output_stream.start_stream()
+            self._output_stream.start_stream()
 
     def _get_next_data_for_outputstream(self, in_data, requested_samples, time_info, status):        
         samples = str()

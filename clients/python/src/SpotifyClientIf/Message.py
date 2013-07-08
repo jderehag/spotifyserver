@@ -27,6 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import TlvDefinitions
 from MediaContainers import *
 import struct
+import socket
 
 class Message(object):
     def __init__(self, msgType, msgId):
@@ -35,7 +36,7 @@ class Message(object):
         self._MsgId = msgId
         
     def Decode(self, msg):
-        msgLength, self._MsgType, self._MsgId = struct.unpack('!III', msg[0:12])
+        msgLength, self._MsgType, self._MsgId = struct.unpack('!III', msg[0:12])        
         messagePtr = 12
         while messagePtr < msgLength:
             tlv = Tlv.Decode(msg[messagePtr:msgLength])
@@ -47,7 +48,7 @@ class Message(object):
         
     def toByteStream(self):
         # First construct header (calculates length, not so efficient)
-        output = struct.pack('!III', self.getMsgLength() , self._MsgType ,self._MsgId)
+        output = struct.pack('!III', self.getMsgLength(), self._MsgType ,self._MsgId) # '!' in fmt indicates htonl
         for tlv in self._TlvSet:
             output += tlv.toByteStream()
         return output
@@ -86,7 +87,7 @@ class Tlv(object):
         obj = cls()
         # First collect this instance TLV header
         messagePtr = 0
-        obj._TlvType, obj._TlvLength = struct.unpack('!II', msg[messagePtr:messagePtr+8])
+        obj._TlvType, obj._TlvLength = struct.unpack('!II', msg[messagePtr:messagePtr+8]) # '!' in fmt indicates htonl
         messagePtr += 8
         
         # if this is a container type, parse sub TLV:s
@@ -101,7 +102,7 @@ class Tlv(object):
         return obj
     
     def toByteStream(self):
-        output = struct.pack('!II', self._TlvType , self._TlvLength)
+        output = struct.pack('!II', self._TlvType , self._TlvLength) # '!' in fmt indicates htonl
         if(self._TlvValue == None): # This is a container type!
             for tlv in self._TlvSet:
                 output += tlv.toByteStream()
@@ -471,6 +472,24 @@ class AudioDataIndMsg(Message):
                 return nsamples
         
     def getAudioData(self):
+        '''
+        Really inefficient right now, 
+        creates a new list with the ntohs values instead of changing them inline
+        '''
+        audioData = str()
         for tlv in self._TlvSet:
             if(tlv._TlvType == TlvDefinitions.TlvType.TLV_AUDIO_DATA):
-                return tlv._TlvValue
+                nsamples = self.getNofSamples()
+                nchannels = self.getChannels()
+                for sampleIndex in range(0, nsamples):
+                    sampleSize = 2 #int16
+                    samples = tlv._TlvValue[sampleIndex*sampleSize*nchannels:(sampleIndex+1)*sampleSize*nchannels]
+                    for channel in range(0, nchannels):
+                        sample = samples[channel*sampleSize:(channel+1)*sampleSize]
+                        decodedSample, = struct.unpack('!h', sample)
+                        audioData += struct.pack('h', decodedSample)
+                        
+                return audioData
+                
+            
+
