@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Express 2012 for Windows Desktop
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "spotifyserver", "spotifyserver.vcxproj", "{A318C349-D5B8-4D84-A741-EF9EF237AB63}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Common", "Visual Studio\Common\Common.vcxproj", "{70A126F9-5D3B-4AE2-A16F-86965512F94B}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ServerLib", "Visual Studio\ServerLib\ServerLib.vcxproj", "{75A1813D-35EB-446A-981D-217C6F623922}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A318C349-D5B8-4D84-A741-EF9EF237AB63}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A318C349-D5B8-4D84-A741-EF9EF237AB63}.Debug|Win32.Build.0 = Debug|Win32
+		{A318C349-D5B8-4D84-A741-EF9EF237AB63}.Release|Win32.ActiveCfg = Release|Win32
+		{A318C349-D5B8-4D84-A741-EF9EF237AB63}.Release|Win32.Build.0 = Release|Win32
+		{70A126F9-5D3B-4AE2-A16F-86965512F94B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{70A126F9-5D3B-4AE2-A16F-86965512F94B}.Debug|Win32.Build.0 = Debug|Win32
+		{70A126F9-5D3B-4AE2-A16F-86965512F94B}.Release|Win32.ActiveCfg = Release|Win32
+		{70A126F9-5D3B-4AE2-A16F-86965512F94B}.Release|Win32.Build.0 = Release|Win32
+		{75A1813D-35EB-446A-981D-217C6F623922}.Debug|Win32.ActiveCfg = Debug|Win32
+		{75A1813D-35EB-446A-981D-217C6F623922}.Debug|Win32.Build.0 = Debug|Win32
+		{75A1813D-35EB-446A-981D-217C6F623922}.Release|Win32.ActiveCfg = Release|Win32
+		{75A1813D-35EB-446A-981D-217C6F623922}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

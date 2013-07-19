@@ -12,34 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\common\AudioEndpointManager\RemoteAudioEndpointManager.cpp" />
-    <ClCompile Include="..\..\..\common\Logger\Logger.cpp" />
-    <ClCompile Include="..\..\..\common\MediaContainers\Album.cpp" />
-    <ClCompile Include="..\..\..\common\MediaContainers\Artist.cpp" />
-    <ClCompile Include="..\..\..\common\MediaContainers\Folder.cpp" />
-    <ClCompile Include="..\..\..\common\MediaContainers\Playlist.cpp" />
-    <ClCompile Include="..\..\..\common\MediaContainers\Track.cpp" />
     <ClCompile Include="..\..\..\common\MediaInterface\MediaInterface.cpp" />
-    <ClCompile Include="..\..\..\common\MessageFactory\Message.cpp" />
-    <ClCompile Include="..\..\..\common\MessageFactory\MessageDecoder.cpp" />
-    <ClCompile Include="..\..\..\common\MessageFactory\MessageEncoder.cpp" />
-    <ClCompile Include="..\..\..\common\MessageFactory\SocketReader.cpp" />
-    <ClCompile Include="..\..\..\common\MessageFactory\SocketWriter.cpp" />
-    <ClCompile Include="..\..\..\common\MessageFactory\TlvDefinitions.cpp" />
-    <ClCompile Include="..\..\..\common\MessageFactory\Tlvs.cpp" />
-    <ClCompile Include="..\..\..\common\Platform\AudioEndpoints\AudioDispatch.cpp" />
-    <ClCompile Include="..\..\..\common\Platform\AudioEndpoints\AudioEndpointRemote.cpp" />
-    <ClCompile Include="..\..\..\common\Platform\AudioEndpoints\AudioFifo.cpp" />
-    <ClCompile Include="..\..\..\common\Platform\AudioEndpoints\Endpoints\AudioEndpoint-OpenAL.cpp" />
-    <ClCompile Include="..\..\..\common\Platform\Socket\Windows\WindowsSocket.cpp" />
-    <ClCompile Include="..\..\..\common\Platform\Threads\Windows\WindowsCondition.cpp" />
-    <ClCompile Include="..\..\..\common\Platform\Threads\Windows\WindowsMessagebox.cpp" />
-    <ClCompile Include="..\..\..\common\Platform\Threads\Windows\WindowsMutex.cpp" />
-    <ClCompile Include="..\..\..\common\Platform\Threads\Windows\WindowsRunnable.cpp" />
-    <ClCompile Include="..\..\..\common\Platform\Utils\Windows\WindowsUtils.cpp" />
-    <ClCompile Include="..\..\..\common\SocketHandling\Messenger.cpp" />
-    <ClCompile Include="..\..\..\common\SocketHandling\SocketClient.cpp" />
-    <ClCompile Include="..\..\..\common\SocketHandling\SocketPeer.cpp" />
-    <ClCompile Include="..\..\..\common\SocketHandling\SocketServer.cpp" />
     <ClCompile Include="..\..\..\src\ConfigHandling\ConfigHandler.cpp" />
     <ClCompile Include="..\..\..\src\ConfigHandling\ConfigParser.cpp" />
     <ClCompile Include="..\..\..\src\ConfigHandling\Configs\AudioEndpointConfig.cpp" />
@@ -54,38 +27,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\common\AudioEndpointManager\AudioEndpointManagerCtrlInterface.h" />
     <ClInclude Include="..\..\..\common\AudioEndpointManager\RemoteAudioEndpointManager.h" />
-    <ClInclude Include="..\..\..\common\Logger\applog.h" />
-    <ClInclude Include="..\..\..\common\Logger\Logger.h" />
-    <ClInclude Include="..\..\..\common\Logger\LogLevels.h" />
-    <ClInclude Include="..\..\..\common\MediaContainers\Album.h" />
-    <ClInclude Include="..\..\..\common\MediaContainers\Artist.h" />
-    <ClInclude Include="..\..\..\common\MediaContainers\Folder.h" />
-    <ClInclude Include="..\..\..\common\MediaContainers\Playlist.h" />
-    <ClInclude Include="..\..\..\common\MediaContainers\Track.h" />
     <ClInclude Include="..\..\..\common\MediaInterface\MediaInterface.h" />
-    <ClInclude Include="..\..\..\common\MessageFactory\Message.h" />
-    <ClInclude Include="..\..\..\common\MessageFactory\MessageDecoder.h" />
-    <ClInclude Include="..\..\..\common\MessageFactory\MessageEncoder.h" />
-    <ClInclude Include="..\..\..\common\MessageFactory\SocketReader.h" />
-    <ClInclude Include="..\..\..\common\MessageFactory\SocketWriter.h" />
-    <ClInclude Include="..\..\..\common\MessageFactory\TlvDefinitions.h" />
-    <ClInclude Include="..\..\..\common\MessageFactory\Tlvs.h" />
-    <ClInclude Include="..\..\..\common\Platform\AudioEndpoints\AudioDispatch.h" />
-    <ClInclude Include="..\..\..\common\Platform\AudioEndpoints\AudioEndpoint.h" />
-    <ClInclude Include="..\..\..\common\Platform\AudioEndpoints\AudioEndpointLocal.h" />
-    <ClInclude Include="..\..\..\common\Platform\AudioEndpoints\AudioEndpointRemote.h" />
-    <ClInclude Include="..\..\..\common\Platform\AudioEndpoints\AudioFifo.h" />
-    <ClInclude Include="..\..\..\common\Platform\Socket\Socket.h" />
-    <ClInclude Include="..\..\..\common\Platform\Threads\Condition.h" />
-    <ClInclude Include="..\..\..\common\Platform\Threads\Messagebox.h" />
-    <ClInclude Include="..\..\..\common\Platform\Threads\Mutex.h" />
-    <ClInclude Include="..\..\..\common\Platform\Threads\Runnable.h" />
-    <ClInclude Include="..\..\..\common\Platform\Threads\Windows\WindowsMutexPimpl.h" />
-    <ClInclude Include="..\..\..\common\Platform\Utils\Utils.h" />
-    <ClInclude Include="..\..\..\common\SocketHandling\Messenger.h" />
-    <ClInclude Include="..\..\..\common\SocketHandling\SocketClient.h" />
-    <ClInclude Include="..\..\..\common\SocketHandling\SocketPeer.h" />
-    <ClInclude Include="..\..\..\common\SocketHandling\SocketServer.h" />
     <ClInclude Include="..\..\..\src\ConfigHandling\ConfigHandler.h" />
     <ClInclude Include="..\..\..\src\ConfigHandling\ConfigParser.h" />
     <ClInclude Include="..\src\AudioEndpointRemoteSocketServer.h" />
@@ -93,6 +35,16 @@
     <ClInclude Include="..\src\UIConsole.h" />
     <ClInclude Include="..\..\..\src\Utils\CircularQueue.h" />
     <ClInclude Include="..\..\..\src\Utils\FixedQueue.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\workspaces\Visual Studio\Common\Common.vcxproj">
+      <Project>{70a126f9-5d3b-4ae2-a16f-86965512f94b}</Project>
+      <Private>false</Private>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{C9047CAF-5D60-402E-A0BD-B4344B12B91B}</ProjectGuid>
@@ -156,7 +108,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>false</SDLCheck>
       <AdditionalIncludeDirectories>..\src;..\..\..\common;..\..\..\common\Logger;..\..\..\src;..\..\..\..\spotifyserver_deps\lib\OpenAL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>

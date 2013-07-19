@@ -1,0 +1,229 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="SocketHandling">
+      <UniqueIdentifier>{fdc68cdc-9403-4cdf-8cd4-d2a62496055c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Logger">
+      <UniqueIdentifier>{d8f976fd-f2fe-4b32-91c7-b9cf3048510b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MediaContainers">
+      <UniqueIdentifier>{740556ce-2022-41b2-baa9-641a1f90856f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MessageFactory">
+      <UniqueIdentifier>{0adab136-4b65-48db-b773-954989bd8ca8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Platform">
+      <UniqueIdentifier>{2eb4c2b0-2387-4920-9bdc-a29e32d52a58}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Platform\Socket">
+      <UniqueIdentifier>{4e21765b-a6d0-4ad2-8c44-7270ed693143}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Platform\Socket\Windows">
+      <UniqueIdentifier>{ad9a80c1-523e-4d92-a81b-9764a22c567d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Platform\Threads">
+      <UniqueIdentifier>{c8ddcdd1-2f0f-4624-9862-7ce3603c945b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Platform\Threads\Windows">
+      <UniqueIdentifier>{dcd14bbf-708d-49de-b9b5-cbbebca01802}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Platform\AudioEndpoints">
+      <UniqueIdentifier>{5dd1c745-33f7-4398-93ae-dad48a0cf030}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Platform\AudioEndpoints\Endpoints">
+      <UniqueIdentifier>{8b0e65b4-3fa1-4db9-832d-a65e636c8fef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Platform\Utils">
+      <UniqueIdentifier>{77a7cf70-ba44-4521-99f4-6c92f1215e01}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Platform\Utils\Windows">
+      <UniqueIdentifier>{fa1ef398-51e3-4ed5-9b64-f1ef42e0052f}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\common\Platform\Socket\Socket.h">
+      <Filter>Platform\Socket</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\Platform\Threads\Condition.h">
+      <Filter>Platform\Threads</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\Platform\Threads\Mutex.h">
+      <Filter>Platform\Threads</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\Platform\Threads\Runnable.h">
+      <Filter>Platform\Threads</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\Platform\Threads\Windows\WindowsMutexPimpl.h">
+      <Filter>Platform\Threads\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\Platform\AudioEndpoints\AudioDispatch.h">
+      <Filter>Platform\AudioEndpoints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\Platform\AudioEndpoints\AudioEndpoint.h">
+      <Filter>Platform\AudioEndpoints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\Platform\AudioEndpoints\AudioEndpointLocal.h">
+      <Filter>Platform\AudioEndpoints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\Platform\AudioEndpoints\AudioEndpointRemote.h">
+      <Filter>Platform\AudioEndpoints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\Platform\AudioEndpoints\AudioFifo.h">
+      <Filter>Platform\AudioEndpoints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\Platform\Utils\Utils.h">
+      <Filter>Platform\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\Logger\LoggerImpl.h">
+      <Filter>Logger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\Logger\applog.h">
+      <Filter>Logger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\Logger\Logger.h">
+      <Filter>Logger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\Logger\LogLevels.h">
+      <Filter>Logger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\MessageFactory\Message.h">
+      <Filter>MessageFactory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\MessageFactory\MessageDecoder.h">
+      <Filter>MessageFactory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\MessageFactory\MessageEncoder.h">
+      <Filter>MessageFactory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\MessageFactory\SocketReader.h">
+      <Filter>MessageFactory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\MessageFactory\SocketWriter.h">
+      <Filter>MessageFactory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\MessageFactory\TlvDefinitions.h">
+      <Filter>MessageFactory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\MessageFactory\Tlvs.h">
+      <Filter>MessageFactory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\SocketHandling\SocketPeer.h">
+      <Filter>SocketHandling</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\SocketHandling\SocketServer.h">
+      <Filter>SocketHandling</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\SocketHandling\Messenger.h">
+      <Filter>SocketHandling</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\SocketHandling\SocketClient.h">
+      <Filter>SocketHandling</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\MediaContainers\Album.h">
+      <Filter>MediaContainers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\MediaContainers\Artist.h">
+      <Filter>MediaContainers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\MediaContainers\Folder.h">
+      <Filter>MediaContainers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\MediaContainers\Playlist.h">
+      <Filter>MediaContainers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\MediaContainers\Track.h">
+      <Filter>MediaContainers</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\common\Platform\Socket\Windows\WindowsSocket.cpp">
+      <Filter>Platform\Socket\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\Platform\Threads\Windows\WindowsCondition.cpp">
+      <Filter>Platform\Threads\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\Platform\Threads\Windows\WindowsMessagebox.cpp">
+      <Filter>Platform\Threads\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\Platform\Threads\Windows\WindowsMutex.cpp">
+      <Filter>Platform\Threads\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\Platform\Threads\Windows\WindowsRunnable.cpp">
+      <Filter>Platform\Threads\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\Platform\AudioEndpoints\AudioDispatch.cpp">
+      <Filter>Platform\AudioEndpoints</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\Platform\AudioEndpoints\AudioEndpointRemote.cpp">
+      <Filter>Platform\AudioEndpoints</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\Platform\AudioEndpoints\AudioFifo.cpp">
+      <Filter>Platform\AudioEndpoints</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\Platform\AudioEndpoints\Endpoints\AudioEndpoint-OpenAL.cpp">
+      <Filter>Platform\AudioEndpoints\Endpoints</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\Platform\Utils\Windows\WindowsUtils.cpp">
+      <Filter>Platform\Utils\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\Logger\LoggerImpl.cpp">
+      <Filter>Logger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\Logger\Logger.cpp">
+      <Filter>Logger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\MessageFactory\Message.cpp">
+      <Filter>MessageFactory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\MessageFactory\MessageDecoder.cpp">
+      <Filter>MessageFactory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\MessageFactory\MessageEncoder.cpp">
+      <Filter>MessageFactory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\MessageFactory\SocketReader.cpp">
+      <Filter>MessageFactory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\MessageFactory\SocketWriter.cpp">
+      <Filter>MessageFactory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\MessageFactory\TlvDefinitions.cpp">
+      <Filter>MessageFactory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\MessageFactory\Tlvs.cpp">
+      <Filter>MessageFactory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\SocketHandling\SocketPeer.cpp">
+      <Filter>SocketHandling</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\SocketHandling\SocketServer.cpp">
+      <Filter>SocketHandling</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\SocketHandling\Messenger.cpp">
+      <Filter>SocketHandling</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\SocketHandling\SocketClient.cpp">
+      <Filter>SocketHandling</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\MediaContainers\Album.cpp">
+      <Filter>MediaContainers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\MediaContainers\Artist.cpp">
+      <Filter>MediaContainers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\MediaContainers\Folder.cpp">
+      <Filter>MediaContainers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\MediaContainers\Playlist.cpp">
+      <Filter>MediaContainers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\MediaContainers\Track.cpp">
+      <Filter>MediaContainers</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

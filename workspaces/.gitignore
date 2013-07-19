@@ -30,7 +30,6 @@ Release/
 ipch/
 spotifyserver.opensdf
 spotifyserver.sdf
-spotifyserver.sln
 spotifyserver.suo
 spotifyserver.v11.suo
-spotifyserver.vcxproj.user
+*.vcxproj.user

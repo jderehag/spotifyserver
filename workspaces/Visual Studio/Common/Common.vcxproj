@@ -1,0 +1,137 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{70A126F9-5D3B-4AE2-A16F-86965512F94B}</ProjectGuid>
+    <RootNamespace>Common</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\common;..\..\..\common\Logger;..\..\..\src\Utils;..\..\..\..\spotifyserver_deps\lib\OpenAL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\common;..\..\..\common\Logger;..\..\..\src\Utils;..\..\..\..\spotifyserver_deps\lib\OpenAL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\common\Logger\applog.h" />
+    <ClInclude Include="..\..\..\common\Logger\Logger.h" />
+    <ClInclude Include="..\..\..\common\Logger\LoggerImpl.h" />
+    <ClInclude Include="..\..\..\common\Logger\LogLevels.h" />
+    <ClInclude Include="..\..\..\common\MediaContainers\Album.h" />
+    <ClInclude Include="..\..\..\common\MediaContainers\Artist.h" />
+    <ClInclude Include="..\..\..\common\MediaContainers\Folder.h" />
+    <ClInclude Include="..\..\..\common\MediaContainers\Playlist.h" />
+    <ClInclude Include="..\..\..\common\MediaContainers\Track.h" />
+    <ClInclude Include="..\..\..\common\MessageFactory\Message.h" />
+    <ClInclude Include="..\..\..\common\MessageFactory\MessageDecoder.h" />
+    <ClInclude Include="..\..\..\common\MessageFactory\MessageEncoder.h" />
+    <ClInclude Include="..\..\..\common\MessageFactory\SocketReader.h" />
+    <ClInclude Include="..\..\..\common\MessageFactory\SocketWriter.h" />
+    <ClInclude Include="..\..\..\common\MessageFactory\TlvDefinitions.h" />
+    <ClInclude Include="..\..\..\common\MessageFactory\Tlvs.h" />
+    <ClInclude Include="..\..\..\common\Platform\AudioEndpoints\AudioDispatch.h" />
+    <ClInclude Include="..\..\..\common\Platform\AudioEndpoints\AudioEndpoint.h" />
+    <ClInclude Include="..\..\..\common\Platform\AudioEndpoints\AudioEndpointLocal.h" />
+    <ClInclude Include="..\..\..\common\Platform\AudioEndpoints\AudioEndpointRemote.h" />
+    <ClInclude Include="..\..\..\common\Platform\AudioEndpoints\AudioFifo.h" />
+    <ClInclude Include="..\..\..\common\Platform\Socket\Socket.h" />
+    <ClInclude Include="..\..\..\common\Platform\Threads\Condition.h" />
+    <ClInclude Include="..\..\..\common\Platform\Threads\Mutex.h" />
+    <ClInclude Include="..\..\..\common\Platform\Threads\Runnable.h" />
+    <ClInclude Include="..\..\..\common\Platform\Threads\Windows\WindowsMutexPimpl.h" />
+    <ClInclude Include="..\..\..\common\Platform\Utils\Utils.h" />
+    <ClInclude Include="..\..\..\common\SocketHandling\Messenger.h" />
+    <ClInclude Include="..\..\..\common\SocketHandling\SocketClient.h" />
+    <ClInclude Include="..\..\..\common\SocketHandling\SocketPeer.h" />
+    <ClInclude Include="..\..\..\common\SocketHandling\SocketServer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\common\Logger\Logger.cpp" />
+    <ClCompile Include="..\..\..\common\Logger\LoggerImpl.cpp" />
+    <ClCompile Include="..\..\..\common\MediaContainers\Album.cpp" />
+    <ClCompile Include="..\..\..\common\MediaContainers\Artist.cpp" />
+    <ClCompile Include="..\..\..\common\MediaContainers\Folder.cpp" />
+    <ClCompile Include="..\..\..\common\MediaContainers\Playlist.cpp" />
+    <ClCompile Include="..\..\..\common\MediaContainers\Track.cpp" />
+    <ClCompile Include="..\..\..\common\MessageFactory\Message.cpp" />
+    <ClCompile Include="..\..\..\common\MessageFactory\MessageDecoder.cpp" />
+    <ClCompile Include="..\..\..\common\MessageFactory\MessageEncoder.cpp" />
+    <ClCompile Include="..\..\..\common\MessageFactory\SocketReader.cpp" />
+    <ClCompile Include="..\..\..\common\MessageFactory\SocketWriter.cpp" />
+    <ClCompile Include="..\..\..\common\MessageFactory\TlvDefinitions.cpp" />
+    <ClCompile Include="..\..\..\common\MessageFactory\Tlvs.cpp" />
+    <ClCompile Include="..\..\..\common\Platform\AudioEndpoints\AudioDispatch.cpp" />
+    <ClCompile Include="..\..\..\common\Platform\AudioEndpoints\AudioEndpointRemote.cpp" />
+    <ClCompile Include="..\..\..\common\Platform\AudioEndpoints\AudioFifo.cpp" />
+    <ClCompile Include="..\..\..\common\Platform\AudioEndpoints\Endpoints\AudioEndpoint-OpenAL.cpp" />
+    <ClCompile Include="..\..\..\common\Platform\Socket\Windows\WindowsSocket.cpp" />
+    <ClCompile Include="..\..\..\common\Platform\Threads\Windows\WindowsCondition.cpp" />
+    <ClCompile Include="..\..\..\common\Platform\Threads\Windows\WindowsMessagebox.cpp" />
+    <ClCompile Include="..\..\..\common\Platform\Threads\Windows\WindowsMutex.cpp" />
+    <ClCompile Include="..\..\..\common\Platform\Threads\Windows\WindowsRunnable.cpp" />
+    <ClCompile Include="..\..\..\common\Platform\Utils\Windows\WindowsUtils.cpp" />
+    <ClCompile Include="..\..\..\common\SocketHandling\Messenger.cpp" />
+    <ClCompile Include="..\..\..\common\SocketHandling\SocketClient.cpp" />
+    <ClCompile Include="..\..\..\common\SocketHandling\SocketPeer.cpp" />
+    <ClCompile Include="..\..\..\common\SocketHandling\SocketServer.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

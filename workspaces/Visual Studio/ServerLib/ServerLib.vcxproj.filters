@@ -1,0 +1,119 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="AudioEndpointManager">
+      <UniqueIdentifier>{749b9983-eea9-4fd7-a4b2-af6ebd34ed45}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ClientHandler">
+      <UniqueIdentifier>{14d7f406-da0e-4aba-8c55-fe26db9c2e4a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ConfigHandling">
+      <UniqueIdentifier>{9e3d7ab0-5f06-480b-8a71-bf83419fae94}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ConfigHandling\Configs">
+      <UniqueIdentifier>{d5ab540d-ffdc-4825-83b9-5c72951a26bd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="LibSpotifyIf">
+      <UniqueIdentifier>{fc2406c4-f12a-4ced-b540-880d266b6e1c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MediaInterface">
+      <UniqueIdentifier>{65e9a27b-448e-4a7c-a43e-be9e040fa9e1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utils">
+      <UniqueIdentifier>{e5cfc25e-80ba-4e90-a2f5-5a8891394fab}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\common\AudioEndpointManager\AudioEndpointManager.cpp">
+      <Filter>AudioEndpointManager</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ClientHandler\Client.cpp">
+      <Filter>ClientHandler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ClientHandler\ClientHandler.cpp">
+      <Filter>ClientHandler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ConfigHandling\ConfigHandler.cpp">
+      <Filter>ConfigHandling</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ConfigHandling\ConfigParser.cpp">
+      <Filter>ConfigHandling</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ConfigHandling\Configs\AudioEndpointConfig.cpp">
+      <Filter>ConfigHandling\Configs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ConfigHandling\Configs\LoggerConfig.cpp">
+      <Filter>ConfigHandling\Configs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ConfigHandling\Configs\NetworkConfig.cpp">
+      <Filter>ConfigHandling\Configs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ConfigHandling\Configs\SpotifyConfig.cpp">
+      <Filter>ConfigHandling\Configs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\LibSpotifyIf\LibSpotifyIf.cpp">
+      <Filter>LibSpotifyIf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\LibSpotifyIf\LibSpotifyIfCallbackWrapper.cpp">
+      <Filter>LibSpotifyIf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\LibSpotifyIf\LibSpotifyIfHelpers.cpp">
+      <Filter>LibSpotifyIf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\LibSpotifyIf\LibSpotifyPlaybackHandler.cpp">
+      <Filter>LibSpotifyIf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\MediaInterface\MediaInterface.cpp">
+      <Filter>MediaInterface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\spotifyserver_deps\appkey.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\common\AudioEndpointManager\AudioEndpointManager.h">
+      <Filter>AudioEndpointManager</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\AudioEndpointManager\AudioEndpointManagerCtrlInterface.h">
+      <Filter>AudioEndpointManager</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ClientHandler\Client.h">
+      <Filter>ClientHandler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ClientHandler\ClientHandler.h">
+      <Filter>ClientHandler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ConfigHandling\ConfigHandler.h">
+      <Filter>ConfigHandling</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ConfigHandling\ConfigParser.h">
+      <Filter>ConfigHandling</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\LibSpotifyIf\ILibSpotifyIfCallbackSubscriber.h">
+      <Filter>LibSpotifyIf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\LibSpotifyIf\LibSpotifyIf.h">
+      <Filter>LibSpotifyIf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\LibSpotifyIf\LibSpotifyIfCallbackWrapper.h">
+      <Filter>LibSpotifyIf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\LibSpotifyIf\LibSpotifyIfHelpers.h">
+      <Filter>LibSpotifyIf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\LibSpotifyIf\LibSpotifyPlaybackHandler.h">
+      <Filter>LibSpotifyIf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\MediaInterface\MediaInterface.h">
+      <Filter>MediaInterface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Utils\CircularQueue.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Utils\FixedQueue.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
