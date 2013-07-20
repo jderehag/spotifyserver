@@ -2,20 +2,20 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="src">
-      <UniqueIdentifier>{376169ab-c85a-4e68-ba45-cc53b928a359}</UniqueIdentifier>
+      <UniqueIdentifier>{10d0061f-6705-4465-8384-1d1ade92769a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\clients\cpp\src\UIConsole.h">
+    <ClCompile Include="..\..\..\src\UIConsole.cpp">
       <Filter>src</Filter>
-    </ClInclude>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\spotifyclient.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\spotifyserver.cpp">
+    <ClInclude Include="..\..\..\src\UIConsole.h">
       <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\clients\cpp\src\UIConsole.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
+    </ClInclude>
   </ItemGroup>
 </Project>

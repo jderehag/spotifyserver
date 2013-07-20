@@ -1,11 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Express 2012 for Windows Desktop
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "spotifyserver", "spotifyserver.vcxproj", "{A318C349-D5B8-4D84-A741-EF9EF237AB63}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "spotifyserver", "SpotifyserverConsole\spotifyserver.vcxproj", "{A318C349-D5B8-4D84-A741-EF9EF237AB63}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Common", "Visual Studio\Common\Common.vcxproj", "{70A126F9-5D3B-4AE2-A16F-86965512F94B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Common", "Common\Common.vcxproj", "{70A126F9-5D3B-4AE2-A16F-86965512F94B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ServerLib", "Visual Studio\ServerLib\ServerLib.vcxproj", "{75A1813D-35EB-446A-981D-217C6F623922}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ServerLib", "ServerLib\ServerLib.vcxproj", "{75A1813D-35EB-446A-981D-217C6F623922}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

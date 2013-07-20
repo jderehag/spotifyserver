@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="AudioEndpointManager">
+      <UniqueIdentifier>{08947d1f-425d-4218-a421-c2ac16a68d7f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ConfigHandling">
+      <UniqueIdentifier>{f5d4b770-2bfc-4c11-acf5-a16f97f97c38}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ConfigHandling\Configs">
+      <UniqueIdentifier>{8b45fd09-1a28-4794-a66c-fd06f62120d1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MediaInterface">
+      <UniqueIdentifier>{26e64cb1-c3ce-45b7-b5cf-7670502c2144}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utils">
+      <UniqueIdentifier>{f12390a1-1e36-40ba-9787-c964a0c71449}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\..\..\common\AudioEndpointManager\RemoteAudioEndpointManager.cpp">
+      <Filter>AudioEndpointManager</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\src\ConfigHandling\ConfigHandler.cpp">
+      <Filter>ConfigHandling</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\src\ConfigHandling\ConfigParser.cpp">
+      <Filter>ConfigHandling</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\src\ConfigHandling\Configs\AudioEndpointConfig.cpp">
+      <Filter>ConfigHandling\Configs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\src\ConfigHandling\Configs\LoggerConfig.cpp">
+      <Filter>ConfigHandling\Configs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\src\ConfigHandling\Configs\NetworkConfig.cpp">
+      <Filter>ConfigHandling\Configs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\src\ConfigHandling\Configs\SpotifyConfig.cpp">
+      <Filter>ConfigHandling\Configs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\common\MediaInterface\MediaInterface.cpp">
+      <Filter>MediaInterface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\AudioEndpointRemoteSocketServer.cpp" />
+    <ClCompile Include="..\..\..\src\RemoteMediaInterface.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\..\common\AudioEndpointManager\AudioEndpointManagerCtrlInterface.h">
+      <Filter>AudioEndpointManager</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\common\AudioEndpointManager\RemoteAudioEndpointManager.h">
+      <Filter>AudioEndpointManager</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\src\ConfigHandling\ConfigHandler.h">
+      <Filter>ConfigHandling</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\src\ConfigHandling\ConfigParser.h">
+      <Filter>ConfigHandling</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\common\MediaInterface\MediaInterface.h">
+      <Filter>MediaInterface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\src\Utils\CircularQueue.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\src\Utils\FixedQueue.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\AudioEndpointRemoteSocketServer.h" />
+    <ClInclude Include="..\..\..\src\RemoteMediaInterface.h" />
+  </ItemGroup>
+</Project>

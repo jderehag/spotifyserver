@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Express 2012 for Windows Desktop
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "spotifyclient", "spotifyclient.vcxproj", "{C9047CAF-5D60-402E-A0BD-B4344B12B91B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SpotifyclientConsole", "SpotifyclientConsole\SpotifyclientConsole.vcxproj", "{C9047CAF-5D60-402E-A0BD-B4344B12B91B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Common", "..\..\..\workspaces\Visual Studio\Common\Common.vcxproj", "{70A126F9-5D3B-4AE2-A16F-86965512F94B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Common", "..\..\..\..\workspaces\Visual Studio\Common\Common.vcxproj", "{70A126F9-5D3B-4AE2-A16F-86965512F94B}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ClientLib", "ClientLib\ClientLib.vcxproj", "{EFBDE06E-56F6-4A02-AC2E-CF326E6CA015}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,6 +21,10 @@ Global
 		{70A126F9-5D3B-4AE2-A16F-86965512F94B}.Debug|Win32.Build.0 = Debug|Win32
 		{70A126F9-5D3B-4AE2-A16F-86965512F94B}.Release|Win32.ActiveCfg = Release|Win32
 		{70A126F9-5D3B-4AE2-A16F-86965512F94B}.Release|Win32.Build.0 = Release|Win32
+		{EFBDE06E-56F6-4A02-AC2E-CF326E6CA015}.Debug|Win32.ActiveCfg = Debug|Win32
+		{EFBDE06E-56F6-4A02-AC2E-CF326E6CA015}.Debug|Win32.Build.0 = Debug|Win32
+		{EFBDE06E-56F6-4A02-AC2E-CF326E6CA015}.Release|Win32.ActiveCfg = Release|Win32
+		{EFBDE06E-56F6-4A02-AC2E-CF326E6CA015}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

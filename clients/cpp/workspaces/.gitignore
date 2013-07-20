@@ -10,8 +10,8 @@
 Debug/
 Release/
 ipch/
-spotifyclient.opensdf
-spotifyclient.sdf
-spotifyclient.suo
-spotifyclient.v11.suo
-spotifyclient.vcxproj.user
+*.opensdf
+*.sdf
+*.suo
+*.v11.suo
+*.vcxproj.user
