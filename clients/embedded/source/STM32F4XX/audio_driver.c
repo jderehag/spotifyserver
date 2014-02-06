@@ -206,11 +206,25 @@ void ProvideAudioBuffer(void *samples, int numsamples) {
 }
 
 bool ProvideAudioBufferWithoutBlocking(void *samples, int numsamples) {
+    static unsigned int padCount = 0;
+
 	if (NextBufferSamples)
 		return false;
 
 	NVIC_DisableIRQ(DMA1_Stream7_IRQn);
 
+    /* due to clock frequencies and division numbers etc we're actually playing at 44108 Hz...
+     * Here's a dumbass hack to compensate...
+     */
+    padCount += (numsamples/2);
+    if ( padCount > 5513 )
+    {
+        uint16_t* buf = samples;
+        buf[numsamples] = buf[numsamples-2];
+        buf[numsamples+1] = buf[numsamples-1];
+        numsamples+=2;
+        padCount -= 5513;
+    }
 	NextBufferSamples = samples;
 	NextBufferLength = numsamples;
 

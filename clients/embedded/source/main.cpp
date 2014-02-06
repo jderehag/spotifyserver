@@ -47,10 +47,6 @@
 #endif
 
 #include "Platform/Threads/Runnable.h"
-#include "Platform/Threads/Condition.h"
-
-Platform::Condition cond;
-Platform::Mutex mtx;
 
 class LedFlasher : public Platform::Runnable
 {
@@ -74,7 +70,22 @@ void LedFlasher::destroy()
 {
 
 }
+#ifdef DEBUG_COUNTERS
+extern int lasttimetoplay;
+extern int lasttimestamp;
+extern int lastmissingsamples;
+extern int lastpacketsamples;
+extern int lastpacketms;
+extern int lastpadsamples;
+extern int totalsamples;
+extern int totaltimems;
+extern int totalpadsamples;
+extern int totalservertimems;
 
+extern int servertimeplay;
+extern int clienttimeplay;
+extern uint32_t totalrecsamples;
+#endif
 void LedFlasher::run()
 {
     portTickType delay = 500 / portTICK_RATE_MS;
@@ -85,6 +96,9 @@ void LedFlasher::run()
     {
 #ifdef WITH_LCD
         LCD_DisplayChar(0,0, (count & 1) ? '.' : ' ', White, Black, &Font8x8 );
+#ifdef DEBUG_COUNTERS
+        log(LOG_NOTICE) <<  missingsamples << " " << totalsamples << " " << totalpadsamples;
+#endif
 #else
         STM_EVAL_LEDToggle( LED5 );
 #endif
@@ -96,9 +110,9 @@ void LedFlasher::run()
 int main(void)
 {
     STM_EVAL_PBInit(BUTTON_USER, BUTTON_MODE_EXTI);
+    STM_EVAL_LEDInit(LED4);
 #ifndef WITH_LCD
     STM_EVAL_LEDInit(LED3);
-    STM_EVAL_LEDInit(LED4);
     STM_EVAL_LEDInit(LED5);
     STM_EVAL_LEDInit(LED6);
 #endif

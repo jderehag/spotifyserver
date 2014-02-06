@@ -96,5 +96,10 @@
 			<type>2</type>
 			<locationURI>PARENT-2-PROJECT_LOC/src/</locationURI>
 		</link>
+		<link>
+			<name>src</name>
+			<type>2</type>
+			<locationURI>PARENT-1-PROJECT_LOC/cpp/src</locationURI>
+		</link>
 	</linkedResources>
 </projectDescription>

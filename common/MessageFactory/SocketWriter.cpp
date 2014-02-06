@@ -52,7 +52,7 @@ int SocketWriter::doWrite()
         return 0;
 
     int toWrite = messageEncoder_->getLength() - sentLen;
-    const char *fromBuf = messageEncoder_->getBuffer() + sentLen;
+    const uint8_t *fromBuf = messageEncoder_->getBuffer() + sentLen;
 
     if (toWrite > WRITE_MAX_BYTES)
         toWrite = WRITE_MAX_BYTES;

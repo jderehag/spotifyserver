@@ -39,9 +39,11 @@
 class AudioFifoData
 {
 public:
+    unsigned int timestamp;
     unsigned short channels;
     unsigned int rate;
     unsigned int nsamples;
+    size_t bufferSize; // size (in bytes) of this buffer
     int16_t samples[0];
 };
 
@@ -58,16 +60,18 @@ private:
     unsigned int bufferNSecs_;
     const bool isDynamic_;
 
-    AudioFifoData* getFifoDataBuffer(size_t sampleLength);
+    AudioFifoData* getFifoDataBuffer(size_t length);
 public:
     AudioFifo(unsigned int bufferNSecs = 1, bool isDynamic = true);
     AudioFifo(bool isDynamic);
     virtual ~AudioFifo();
-    int addFifoDataBlocking(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples);
+    int addFifoDataBlocking( unsigned int timestamp, unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples );
     AudioFifoData* getFifoDataBlocking();
     AudioFifoData* getFifoDataTimedWait(unsigned int milliSeconds);
     void setFifoBuffer(unsigned int bufferNSecs);
     void flush();
+    unsigned int canAcceptSamples( unsigned int availableSamples, unsigned int rate );
+    unsigned int getNumberOfQueuedSamples();
 
     void returnFifoDataBuffer(AudioFifoData* afd);
 };

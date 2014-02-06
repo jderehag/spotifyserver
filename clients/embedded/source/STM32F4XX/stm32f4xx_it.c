@@ -70,7 +70,7 @@ void NMI_Handler(void)
  * @param  None
  * @retval None
  */
-#if 1
+#if 0
 void HardFault_Handler(void)
 {
 #ifndef WITH_LCD
@@ -82,7 +82,11 @@ void HardFault_Handler(void)
     }
 }
 #else
-
+#include "applog.h"
+// From Joseph Yiu, minor edits by FVH
+// hard fault handler in C,
+// with stack frame location as input parameter
+// called from HardFault_Handler
 void hard_fault_handler_c (unsigned int * hardfault_args)
 {
   unsigned int stacked_r0;
@@ -104,22 +108,22 @@ void hard_fault_handler_c (unsigned int * hardfault_args)
   stacked_pc = ((unsigned long) hardfault_args[6]);
   stacked_psr = ((unsigned long) hardfault_args[7]);
 
-/*  printf ("\n\n[Hard fault handler - all numbers in hex]\n");
-  printf ("R0 = %x\n", stacked_r0);
-  printf ("R1 = %x\n", stacked_r1);
-  printf ("R2 = %x\n", stacked_r2);
-  printf ("R3 = %x\n", stacked_r3);
-  printf ("R12 = %x\n", stacked_r12);
-  printf ("LR [R14] = %x  subroutine call return address\n", stacked_lr);
-  printf ("PC [R15] = %x  program counter\n", stacked_pc);
-  printf ("PSR = %x\n", stacked_psr);
-  printf ("BFAR = %x\n", (*((volatile unsigned long *)(0xE000ED38))));
-  printf ("CFSR = %x\n", (*((volatile unsigned long *)(0xE000ED28))));
-  printf ("HFSR = %x\n", (*((volatile unsigned long *)(0xE000ED2C))));
-  printf ("DFSR = %x\n", (*((volatile unsigned long *)(0xE000ED30))));
-  printf ("AFSR = %x\n", (*((volatile unsigned long *)(0xE000ED3C))));
-  printf ("SCB_SHCSR = %x\n", SCB->SHCSR);
- */
+  APP_LOG(LOG_NOTICE, "\n\n[Hard fault handler - all numbers in hex]\n", 0 );
+  APP_LOG(LOG_NOTICE, "R0 = %x\n", stacked_r0);
+  APP_LOG(LOG_NOTICE, "R1 = %x\n", stacked_r1);
+  APP_LOG(LOG_NOTICE, "R2 = %x\n", stacked_r2);
+  APP_LOG(LOG_NOTICE, "R3 = %x\n", stacked_r3);
+  APP_LOG(LOG_NOTICE, "R12 = %x\n", stacked_r12);
+  APP_LOG(LOG_NOTICE, "LR [R14] = %x  subroutine call return address\n", stacked_lr);
+  APP_LOG(LOG_NOTICE, "PC [R15] = %x  program counter\n", stacked_pc);
+  APP_LOG(LOG_NOTICE, "PSR = %x\n", stacked_psr);
+  APP_LOG(LOG_NOTICE, "BFAR = %x\n", (*((volatile unsigned long *)(0xE000ED38))));
+  APP_LOG(LOG_NOTICE, "CFSR = %x\n", (*((volatile unsigned long *)(0xE000ED28))));
+  APP_LOG(LOG_NOTICE, "HFSR = %x\n", (*((volatile unsigned long *)(0xE000ED2C))));
+  APP_LOG(LOG_NOTICE, "DFSR = %x\n", (*((volatile unsigned long *)(0xE000ED30))));
+  APP_LOG(LOG_NOTICE, "AFSR = %x\n", (*((volatile unsigned long *)(0xE000ED3C))));
+  APP_LOG(LOG_NOTICE, "SCB_SHCSR = %x\n", SCB->SHCSR);
+
   while (1);
 }
 #endif

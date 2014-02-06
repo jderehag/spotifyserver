@@ -43,6 +43,10 @@ private:
 
     Mutex mtx;
 
+    bool resetTimestamp_;
+    uint32_t timestampBase_;
+    uint32_t sampleCount_; /* total number of audio data samples since timestampBase_ was reset */
+
 public:
     AudioDispatch();
     virtual ~AudioDispatch();

@@ -34,6 +34,15 @@
 #include "applog.h"
 #include <stdint.h>
 
+// some debug counters...
+#ifdef DEBUG_COUNTERS
+int firstpacketclienttime = 0;
+int firstpacketservertime = 0;
+int servertimeplay = 0;
+int clienttimeplay = 0;
+uint32_t firstclockdiff = 0;
+uint32_t totalrecsamples = 0;
+#endif
 /*
 #include "Freertos.h"
 #include "task.h"
@@ -53,24 +62,15 @@ AudioEndpointRemoteSocketServer::AudioEndpointRemoteSocketServer(Platform::Audio
 AudioEndpointRemoteSocketServer::~AudioEndpointRemoteSocketServer()
 {
 }
-
 void AudioEndpointRemoteSocketServer::run()
 {
     int rc;
-    char buf[2000];
-    int n = 0;
-    /*while(1)
-    {
-        n += ep_.enqueueAudioData(2, 44100, 350, (int16_t*)&AUDIO_SAMPLE[n*2]);
-        if ( n*4 >= audio_sample_size - 1764 )
-            n=0;
-        vTaskDelay(5);
-    }*/
+    uint8_t buf[2000];
 
     while( !isCancellationPending() )
     {
-        Socket sock_(SOCKTYPE_DATAGRAM);
-        SocketReader reader(&sock_);
+        Socket sock_( SOCKTYPE_DATAGRAM );
+        SocketReader reader( &sock_ );
 
         if ( sock_.BindToAddr("ANY", "7789") < 0 )
         {
@@ -80,20 +80,20 @@ void AudioEndpointRemoteSocketServer::run()
         while( !isCancellationPending() )
         {
             std::set<Socket*> readsockets;
-            std::set<Socket*> writesockets;
             std::set<Socket*> errsockets;
 
             readsockets.insert(&sock_);
             errsockets.insert(&sock_);
 
-            rc = select(&readsockets, &writesockets, &errsockets, 1000);
+            rc = select(&readsockets, NULL, &errsockets, 1000);
 
             if ( !readsockets.empty() )
             {
                 header_t* hdr;
                 uint32_t len;
 
-                rc = sock_.Receive(buf, sizeof(buf));
+                /* todo here we assume we get the whole message in one read, should have better handling */
+                rc = sock_.Receive( buf, sizeof(buf) );
 
                 if ( rc < 0 )
                     break;
@@ -102,16 +102,19 @@ void AudioEndpointRemoteSocketServer::run()
                 len = Ntohl(hdr->len);
 
                 /* sanity check, actual received bytes must match message length */
-                if ( len != rc )
+                if ( len != (uint32_t)rc )
                     continue;
 
                 if ( Ntohl(hdr->type) == AUDIO_DATA_IND )
                 {
                     uint32_t n = sizeof(header_t);
+                    uint32_t* ptimestamp = NULL;
                     uint32_t* pchannels = NULL;
                     uint32_t* prate = NULL;
                     uint32_t* pnsamples = NULL;
                     int16_t* psamples = NULL;
+
+                    uint32_t* pserverclock = NULL;
 
                     while( n < len )
                     {
@@ -119,6 +122,18 @@ void AudioEndpointRemoteSocketServer::run()
 
                         switch( Ntohl(tlvhdr->type) )
                         {
+                            case TLV_CLOCK:
+                            {
+                                pserverclock = (uint32_t*)&buf[n+sizeof(tlvheader_t)];
+                                break;
+                            }
+
+                            case TLV_AUDIO_TIMESTAMP:
+                            {
+                                ptimestamp = (uint32_t*)&buf[n+sizeof(tlvheader_t)];
+                                break;
+                            }
+
                             case TLV_AUDIO_CHANNELS:
                             {
                                 pchannels = (uint32_t*)&buf[n+sizeof(tlvheader_t)];
@@ -150,15 +165,52 @@ void AudioEndpointRemoteSocketServer::run()
 
                     if ( pchannels && prate && pnsamples && psamples )
                     {
-                        uint32_t channels = Ntohl(*pchannels);
-                        uint32_t rate = Ntohl(*prate);
-                        uint32_t nsamples = Ntohl(*pnsamples);
+                        uint32_t channels = Ntohl( *pchannels );
+                        uint32_t rate = Ntohl( *prate );
+                        uint32_t nsamples = Ntohl( *pnsamples );
+                        uint32_t clienttimestamp = 0;
 
-                        for ( uint32_t i = 0; i < nsamples*2; i++ )
+                        for ( uint32_t i = 0; i < (nsamples*channels); i++ )
                             psamples[i] = Ntohs(psamples[i]);
 
-                        ep_.enqueueAudioData(channels, rate, nsamples, psamples);
-                        /*while( ep_.enqueueAudioData(channels, rate, nsamples, psamples) == 0 )
+                        /* only do clock sync and timestamp stuff if server sends it */
+                        if ( pserverclock && ptimestamp )
+                        {
+                            uint32_t serverclock = Ntohl( *pserverclock );
+                            uint32_t servertimestamp = Ntohl( *ptimestamp );
+                            uint32_t now;
+
+                            static uint32_t clockDiff = 0;
+
+                            now = getTick_ms();
+                            /* calculate difference between server clock and our clock and adjust timestamp*/
+#define NETWORK_LAG 1
+                            if ( clockDiff == 0 )
+                            {
+                                clockDiff = now - (serverclock + NETWORK_LAG);
+                            }
+                            else
+                            {
+                                int32_t drift = (now - (serverclock + NETWORK_LAG) - clockDiff);
+                                clockDiff += (drift/3);
+                            }
+                            clienttimestamp = servertimestamp + clockDiff;
+
+                            //debug counters
+#ifdef DEBUG_COUNTERS
+                            if ( firstpacketclienttime == 0 ) firstpacketclienttime = clienttimestamp;
+                            if ( firstpacketservertime == 0 ) firstpacketservertime = servertimestamp;
+                            servertimeplay = servertimestamp - firstpacketservertime;
+                            clienttimeplay = now - firstpacketclienttime;
+                        }
+                        totalrecsamples += nsamples;
+#else
+                        }
+#endif
+
+                        ep_.enqueueAudioData( clienttimestamp, channels, rate, nsamples, psamples);
+
+                        /*while( ep_.enqueueAudioData( clienttimestamp, channels, rate, nsamples, psamples) == 0 )
                             vTaskDelay(2);*/
                     }
                 }

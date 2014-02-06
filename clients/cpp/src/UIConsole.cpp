@@ -51,7 +51,7 @@ void UIConsole::destroy()
     joinThread();
 }
 
-
+bool simPacketDrop = false;
 void UIConsole::run()
 {
     char c;
@@ -107,6 +107,10 @@ void UIConsole::run()
         c = argv[0][0];
         switch(c)
         {
+        case 'd':
+            simPacketDrop = !simPacketDrop;
+            std::cout << "sim drops" << simPacketDrop << std::endl;
+            break;
         case 'i':
         {
             std::string uri;

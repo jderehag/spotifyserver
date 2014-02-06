@@ -50,16 +50,6 @@ void AudioEndpointLocal::destroy()
 }
 
 
-int AudioEndpointLocal::enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples)
-{
-    return fifo_.addFifoDataBlocking(channels, rate, nsamples, samples);
-}
-
-void AudioEndpointLocal::flushAudioData()
-{
-    fifo_.flush();
-}
-
 void AudioEndpointLocal::run()
 {
 	snd_pcm_t *devFd = NULL;

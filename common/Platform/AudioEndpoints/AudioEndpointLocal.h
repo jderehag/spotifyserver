@@ -36,14 +36,19 @@ namespace Platform {
 
 class AudioEndpointLocal : public AudioEndpoint, Runnable
 {
+private:
     ConfigHandling::AudioEndpointConfig config_;
+
+    unsigned int missingSamples_;
 
 public:
     AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config);
     virtual ~AudioEndpointLocal();
 
-    virtual int enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples);
+    virtual int enqueueAudioData( unsigned int timestamp, unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples );
     virtual void flushAudioData();
+
+    virtual unsigned int getNumberOfQueuedSamples();
 
     virtual std::string getId() const { return "local"; }
 

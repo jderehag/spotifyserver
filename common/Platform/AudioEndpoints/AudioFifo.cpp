@@ -46,7 +46,7 @@ AudioFifo::AudioFifo(bool isDynamic) : bufferPool(40),
 AudioFifo::~AudioFifo() {flush();}
 
 /* JESPER: Not very efficient at all!!! Fix someday... */
-int AudioFifo::addFifoDataBlocking(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples)
+int AudioFifo::addFifoDataBlocking( unsigned int timestamp, unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples )
 {
     size_t sampleLength = 0;
 
@@ -58,11 +58,11 @@ int AudioFifo::addFifoDataBlocking(unsigned short channels, unsigned int rate, u
      * investigate if we should have a const size queue instead */
     /* JENS, reinserted this throttle to avoid fifo growing really big*/
     fifoMtx_.lock();
-    if (queuedSamples_ > (rate * bufferNSecs_))
+   /* if (queuedSamples_ > (rate * bufferNSecs_))
     {
         fifoMtx_.unlock();
         return 0;
-    }
+    }*/
     //fifoMtx_.unlock();
 
     sampleLength = nsamples * sizeof(int16_t) * channels;
@@ -76,6 +76,7 @@ int AudioFifo::addFifoDataBlocking(unsigned short channels, unsigned int rate, u
 
     memcpy(data->samples, samples, sampleLength);
 
+    data->timestamp = timestamp;
     data->nsamples = nsamples;
     data->rate = rate;
     data->channels = channels;
@@ -88,6 +89,14 @@ int AudioFifo::addFifoDataBlocking(unsigned short channels, unsigned int rate, u
     fifoMtx_.unlock();
 
     return nsamples;
+}
+
+unsigned int AudioFifo::canAcceptSamples( unsigned int availableSamples, unsigned int rate )
+{
+    if (queuedSamples_ >= (rate * bufferNSecs_))
+        return 0;
+    else
+        return availableSamples;
 }
 
 AudioFifoData* AudioFifo::getFifoDataBlocking()
@@ -154,22 +163,39 @@ void AudioFifo::returnFifoDataBuffer(AudioFifoData* afd)
         bufferPool.push_back(afd);
 }
 
-AudioFifoData* AudioFifo::getFifoDataBuffer(size_t sampleLength)
+AudioFifoData* AudioFifo::getFifoDataBuffer(size_t length)
 {
     AudioFifoData* buffer = NULL;
     if ( isDynamic_ )
     {
-        buffer = static_cast<AudioFifoData*>(malloc(sizeof(AudioFifoData) + sampleLength));
+        length += 200; // extra headroom for padding.. should be configurable?
+        buffer = static_cast<AudioFifoData*>(malloc(sizeof(AudioFifoData) + length));
+        buffer->bufferSize = length;
     }
     else
     {
-        /* todo should keep track of buffer sizes and make sure sampleLength doesn't exceed */
         if ( !bufferPool.empty() )
+        {
             buffer = bufferPool.pop_front();
+
+            if ( buffer != NULL && length > buffer->bufferSize )
+            {
+                returnFifoDataBuffer(buffer);
+                buffer = NULL;
+            }
+        }
     }
     return buffer;
 }
 
+unsigned int AudioFifo::getNumberOfQueuedSamples()
+{
+    unsigned int n;
+    fifoMtx_.lock();
+    n = queuedSamples_;
+    fifoMtx_.unlock();
+    return n;
+}
 
 }
 

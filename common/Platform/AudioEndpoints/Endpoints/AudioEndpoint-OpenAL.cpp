@@ -26,6 +26,7 @@
  */
 
 #include "../AudioEndpointLocal.h"
+#include "Platform/Utils/Utils.h"
 #include "applog.h"
 #include <Windows.h>
 #include <iostream>
@@ -40,7 +41,9 @@ namespace Platform {
 
 #define NUM_BUFFERS 3
 
-AudioEndpointLocal::AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config) : Platform::Runnable(true, SIZE_SMALL, PRIO_HIGH), config_(config)
+AudioEndpointLocal::AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config) : Platform::Runnable(true, SIZE_SMALL, PRIO_HIGH), 
+                                                                                            config_(config), 
+                                                                                            missingSamples_(0)
 {
     startThread();
 }
@@ -56,16 +59,6 @@ void AudioEndpointLocal::destroy()
 }
 
 
-int AudioEndpointLocal::enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples)
-{
-    return fifo_.addFifoDataBlocking(channels, rate, nsamples, samples);
-}
-
-void AudioEndpointLocal::flushAudioData()
-{
-    fifo_.flush();
-}
-
 void AudioEndpointLocal::run()
 {
     AudioFifoData* afd = NULL;
@@ -80,8 +73,10 @@ void AudioEndpointLocal::run()
     ALenum error;
     ALint rate;
     ALint prevrate = -1;
-    ALint channels;
+//    ALint channels;
     ALint prevchannels = -1;
+    unsigned int bufferedSamples[NUM_BUFFERS] = {0};
+    int i;
 
     while(isCancellationPending() == false)
     {
@@ -108,7 +103,6 @@ void AudioEndpointLocal::run()
                 break;
             }
 
-            /* Wait for some audio to play */
             alGetSourcei(source, AL_BUFFERS_QUEUED, &curbuffers);
             alGetSourcei(source, AL_BUFFERS_PROCESSED, &processed); /*returns the number of buffer entries already processed*/
 
@@ -128,7 +122,7 @@ void AudioEndpointLocal::run()
                 }
 
                 /* Remove old audio from the queue.. */
-                alSourceUnqueueBuffers(source, 1, &buffers[frame % NUM_BUFFERS]);
+                alSourceUnqueueBuffers(source, 1, &buffers[frame]);
                 //log(LOG_DEBUG) << "processed " << processed;
             }
 
@@ -153,14 +147,72 @@ void AudioEndpointLocal::run()
             prevrate = afd->rate;
             prevchannels = afd->channels;
 
-            alBufferData(buffers[frame % NUM_BUFFERS],
+            bufferedSamples[frame] = 0;
+
+            if ( afd->timestamp != 0 )
+            {
+                unsigned int now = getTick_ms();
+                int timeToPlayThisPacket = afd->timestamp - now;
+                int totalBufferedSamples = 0;
+                for ( i=0; i<NUM_BUFFERS; i++ )
+                    totalBufferedSamples += bufferedSamples[i];
+                timeToPlayThisPacket -= totalBufferedSamples * 1000 / prevrate;
+
+                static int timetoplay = timeToPlayThisPacket;
+                timetoplay += (timeToPlayThisPacket - timetoplay)/3;
+
+                if ( timetoplay > 25 )
+                {
+                    sleep_ms( timetoplay-10 );
+                }
+                else if ( timetoplay < -25 )
+                {
+                    fifo_.returnFifoDataBuffer( afd );
+                    continue;
+                }
+                else if ( timetoplay < -5 )
+                {
+                    //we're late, drop a few samples off this packet
+                    if ( afd->nsamples > 10 ) afd->nsamples -= 4;
+
+                    //whatever we had here, no need to pad now
+                    missingSamples_ = 0;
+                }
+                else if ( timetoplay > 5 )
+                {
+                    //we're early, slow down by adding fake missing samples
+                    missingSamples_ = timetoplay * afd->rate / 1000;
+                }
+            }
+            if ( missingSamples_ )
+            {
+                uint32_t headroom = afd->bufferSize - (afd->nsamples*afd->channels*2); // in bytes
+                uint32_t padrate = (128 * (missingSamples_ + 2*afd->rate)) / (2*afd->rate); // approx percentage (or rather per-128-age for simpler calculation) that needs to be extended to catch up in 2 seconds
+                padrate -= 128;
+                uint32_t padsamples = padrate * afd->nsamples / 128; // number of samples this buffer should be padded with to keep up
+                //if ( padsamples > 5 ) padsamples = 5; //cap so we don't sacrifice too much on sound quality
+                if ( padsamples == 0 ) padsamples = 1;
+                if ( padsamples > missingSamples_ ) padsamples = missingSamples_;
+                if ( padsamples > headroom/4 ) padsamples = headroom/4;
+                for ( i=0; i<padsamples; i++ )
+                {
+                    afd->samples[afd->nsamples*2] = afd->samples[afd->nsamples*2-2];
+                    afd->samples[afd->nsamples*2+1] = afd->samples[afd->nsamples*2-1];
+                    afd->nsamples++;
+                    missingSamples_--;
+                }
+            }
+
+            alBufferData(buffers[frame],
                     afd->channels == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16,
                             afd->samples,
                             afd->nsamples * afd->channels * sizeof(short),
                             afd->rate);
 
-            alSourceQueueBuffers(source, 1, &buffers[frame % NUM_BUFFERS]);
+            alSourceQueueBuffers(source, 1, &buffers[frame]);
+            bufferedSamples[frame] = afd->nsamples;
             frame++;
+            frame = frame % NUM_BUFFERS;
 
             fifo_.returnFifoDataBuffer( afd );
             afd = NULL;

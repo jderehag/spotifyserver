@@ -117,6 +117,7 @@
     <ClCompile Include="..\..\..\common\MessageFactory\TlvDefinitions.cpp" />
     <ClCompile Include="..\..\..\common\MessageFactory\Tlvs.cpp" />
     <ClCompile Include="..\..\..\common\Platform\AudioEndpoints\AudioDispatch.cpp" />
+    <ClCompile Include="..\..\..\common\Platform\AudioEndpoints\AudioEndpointLocalShared.cpp" />
     <ClCompile Include="..\..\..\common\Platform\AudioEndpoints\AudioEndpointRemote.cpp" />
     <ClCompile Include="..\..\..\common\Platform\AudioEndpoints\AudioFifo.cpp" />
     <ClCompile Include="..\..\..\common\Platform\AudioEndpoints\Endpoints\AudioEndpoint-OpenAL.cpp" />

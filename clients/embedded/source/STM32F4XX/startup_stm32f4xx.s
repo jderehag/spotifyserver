@@ -248,11 +248,22 @@ NMI_Handler:
     B       .
     .size   NMI_Handler, . - NMI_Handler
 
+#if 0
     .weak   HardFault_Handler
     .type   HardFault_Handler, %function
 HardFault_Handler:
     B       .
     .size   HardFault_Handler, . - HardFault_Handler
+#else
+.extern hard_fault_handler_c
+
+HardFault_Handler:
+  TST LR, #4
+  ITE EQ
+  MRSEQ R0, MSP
+  MRSNE R0, PSP
+  B hard_fault_handler_c
+#endif
 
     .weak   MemManage_Handler
     .type   MemManage_Handler, %function

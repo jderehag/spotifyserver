@@ -40,16 +40,6 @@ void AudioEndpointLocal::destroy()
 {
 }
 
-
-int AudioEndpointLocal::enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples)
-{
-	return nsamples;
-}
-
-void AudioEndpointLocal::flushAudioData()
-{
-}
-
 void AudioEndpointLocal::run()
 {
 }

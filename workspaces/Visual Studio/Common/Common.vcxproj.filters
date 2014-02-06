@@ -225,5 +225,8 @@
     <ClCompile Include="..\..\..\common\MediaContainers\Track.cpp">
       <Filter>MediaContainers</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\common\Platform\AudioEndpoints\AudioEndpointLocalShared.cpp">
+      <Filter>Platform\AudioEndpoints</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

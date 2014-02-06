@@ -31,7 +31,7 @@
 #include <stdint.h>
 
 #define PROTOCOL_VERSION_MAJOR 1 /*increase when not backwards compatible*/
-#define PROTOCOL_VERSION_MINOR 3 /*increase when adding new messages and/or TLV's*/
+#define PROTOCOL_VERSION_MINOR 4 /*increase when adding new messages and/or TLV's*/
 
 /* Message header */
 typedef struct {
@@ -140,6 +140,7 @@ typedef enum
     TLV_NAME       = 0x702,
     TLV_IP_ADDRESS = 0x703,
     TLV_PORT       = 0x704,
+    TLV_CLOCK      = 0x705,
 
     /* Image TLV's */
     TLV_IMAGE_FORMAT = 0x801, /* ImageFormat_t */
@@ -173,6 +174,7 @@ typedef enum
     TLV_AUDIO_NOF_SAMPLES      = 0x2004,
 //    TLV_AUDIO_DESTINATION_PORT = 0x2005,
     TLV_AUDIO_PROTOCOL_TYPE    = 0x2006,
+    TLV_AUDIO_TIMESTAMP        = 0x2007,
 
     /* Audio endpoint TLV's */
     TLV_AUDIO_EP_PROTOCOL      = 0x2102, /*AudioEndpointProtocolType_t*/

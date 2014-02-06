@@ -27,13 +27,15 @@
 
 #include "AudioDispatch.h"
 #include "MessageFactory/Message.h"
+#include "Platform/Utils/Utils.h"
 #include "applog.h"
 #include <stdlib.h>
+#include <assert.h>
 
 
 namespace Platform {
 
-AudioDispatch::AudioDispatch()
+AudioDispatch::AudioDispatch() : resetTimestamp_(true), sampleCount_(0)
 {
 }
 
@@ -44,6 +46,12 @@ AudioDispatch::~AudioDispatch()
 void AudioDispatch::addEndpoint( AudioEndpoint& ep )
 {
     mtx.lock();
+    if ( audioEndpoints_.size() == 1 )
+    {
+        /* switching to timestamp stream */
+        resetTimestamp_ = true;
+    }
+
     audioEndpoints_.insert( &ep );
     /*for(AudioEndpointContainer::const_iterator it = audioEndpoints_.begin(); it != audioEndpoints_.end(); ++it)
     {
@@ -68,29 +76,56 @@ void AudioDispatch::removeEndpoint( AudioEndpoint& ep )
 int AudioDispatch::enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples)
 {
     int n = 0;
+    int canAccept = 0;
 
     mtx.lock();
-    /* TODO: This is really dangerous, we should sync all endpoints to the same rate
-     * letting the slowest one be the dictator */
-    for(AudioEndpointContainer::const_iterator it = audioEndpoints_.begin(); it != audioEndpoints_.end(); ++it)
+    if( !audioEndpoints_.empty() )
     {
-        /*
-        newN = (*it)->enqueueAudioData(format->channels, format->sample_rate, num_frames, static_cast<const int16_t*>(frames));
-        if((*it)->isLocal())
-            n = newN;*/
+        canAccept = nsamples;
+        for(AudioEndpointContainer::const_iterator it = audioEndpoints_.begin(); it != audioEndpoints_.end(); ++it)
+        {
+            canAccept = (*it)->canAcceptSamples( canAccept, rate );
+        }
+    }
 
-        /* For now automatically disable local endpoint if we have any remote endpoints.
-         * In the future it shall be possible for clients to disable local endpoints */
+    if ( canAccept > 0 )
+    {
+        uint32_t timestamp = 0;
+
+        if ( resetTimestamp_ )
+        {
+            unsigned int highestQueuedSamples = 0;
+            for(AudioEndpointContainer::const_iterator it = audioEndpoints_.begin(); it != audioEndpoints_.end(); ++it)
+            {
+                unsigned int queuedSamples = (*it)->getNumberOfQueuedSamples();
+                if ( queuedSamples > highestQueuedSamples ) 
+                    highestQueuedSamples = queuedSamples;
+            }
+            timestampBase_ = getTick_ms() + ( highestQueuedSamples * 1000 / rate ) + 10;
+            sampleCount_ = 0;
+            resetTimestamp_ = false;
+        }
+
         if(audioEndpoints_.size() > 1)
         {
-            if(!(*it)->isLocal())
-                n = (*it)->enqueueAudioData(channels, rate, nsamples, samples);
+            /* more than one stream, play by timestamp */
+            timestamp = timestampBase_ + ((uint64_t)sampleCount_ * 1000 / rate);
         }
         else
         {
-            n = (*it)->enqueueAudioData(channels, rate, nsamples, samples);
+            /* only one stream, play whenever */
+            timestamp = 0;
         }
+
+        for(AudioEndpointContainer::const_iterator it = audioEndpoints_.begin(); it != audioEndpoints_.end(); ++it)
+        {
+            n = (*it)->enqueueAudioData( timestamp, channels, rate, canAccept, samples );
+            assert( n == canAccept ); /* endpoint must accept all samples, since we asked it before what the maximum it can accept is */
+        }
+
+        sampleCount_ += n;
     }
+
     mtx.unlock();
 
     return n;
@@ -123,6 +158,7 @@ void AudioDispatch::resume()
     {
         (*it)->resume();
     }
+    resetTimestamp_ = true;
     mtx.unlock();
 }
 

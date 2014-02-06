@@ -38,31 +38,31 @@ typedef struct tlvgroup_s tlvgroup_t;
 
 class MessageEncoder {
 private:
-	char* msgbuf;
-	unsigned int cursize;
-	unsigned int wpos;
-	void init();
+    uint8_t* msgbuf;
+    unsigned int cursize;
+    unsigned int wpos;
+    void init();
 public:
-	MessageEncoder();
-	MessageEncoder(MessageType_t type);
-	MessageEncoder(const MessageEncoder& from);
-	virtual ~MessageEncoder();
+    MessageEncoder();
+    MessageEncoder( MessageType_t type );
+    MessageEncoder( const MessageEncoder& from );
+    virtual ~MessageEncoder();
 
-	const char* getBuffer() const;
-	unsigned int getLength() const;
+    const uint8_t* getBuffer() const;
+    unsigned int getLength() const;
 
-	void setId(unsigned int id);
-	header_t* getHeader();
+    void setId(unsigned int id);
+    header_t* getHeader();
 
-	char* getBufferForTlv(unsigned int size);
-	void encode(TlvType_t tlv, unsigned int val);
-	void encode(TlvType_t tlv, const std::string & str);
+    uint8_t* getBufferForTlv(unsigned int size);
+    void encode(TlvType_t tlv, unsigned int val);
+    void encode(TlvType_t tlv, const std::string & str);
     void encode(TlvType_t tlv, const uint8_t* data, uint32_t len);
-	tlvgroup_t* createNewGroup(TlvType_t tlv);
-	void finalizeGroup(tlvgroup_t* group);
-	void finalize();
+    tlvgroup_t* createNewGroup(TlvType_t tlv);
+    void finalizeGroup(tlvgroup_t* group);
+    void finalize();
 
-	void printHex();
+    void printHex();
 };
 
 void printHexMsg(const uint8_t* msgbuf, uint32_t len);

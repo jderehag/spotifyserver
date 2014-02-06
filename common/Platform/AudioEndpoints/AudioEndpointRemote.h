@@ -48,8 +48,10 @@ public:
     AudioEndpointRemote(const std::string& id, const std::string& serveraddr, const std::string& serverport, unsigned int bufferNSecs);
 
     /* AudioEndpoint implementation */
-    virtual int enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples);
+    virtual int enqueueAudioData( unsigned int timestamp, unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples );
     virtual void flushAudioData();
+
+    virtual unsigned int getNumberOfQueuedSamples();
 
     virtual std::string getId() const;
 

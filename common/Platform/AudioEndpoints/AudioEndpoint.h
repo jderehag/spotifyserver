@@ -44,8 +44,11 @@ protected:
 public:
     AudioEndpoint(bool dynamicFifo = true) : fifo_(dynamicFifo), paused_(false) {}
     virtual ~AudioEndpoint() {}
-    virtual int enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples) = 0;
+    virtual int enqueueAudioData( unsigned int timestamp, unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples ) = 0;
     virtual void flushAudioData() = 0;
+
+    virtual unsigned int canAcceptSamples( unsigned int availableSamples, unsigned int rate ) { return fifo_.canAcceptSamples( availableSamples, rate ); }
+    virtual unsigned int getNumberOfQueuedSamples() = 0;
 
     virtual std::string getId() const = 0;
 
