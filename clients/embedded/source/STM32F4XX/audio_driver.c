@@ -1,32 +1,40 @@
 /*
- *  Audio driver borrowed from peridiummmm (http://pouet.net/prod.php?which=59095)
+ *  Audio driver based on driver from peridiummmm (http://pouet.net/prod.php?which=59095)
  *  via Benjamin's robotics (http://vedder.se/2012/07/play-mp3-on-the-stm32f4-discovery/)
  */
 
 #include "audio_driver.h"
 #include "stm32f4xx_conf.h"
 #include "stm32f4xx.h"
+#include "applog.h"
 
 #include <stdlib.h>
 
 static void WriteRegister(uint8_t address, uint8_t value);
-static void StartAudioDMAAndRequestBuffers();
+static void StartAudioDMA( int16_t* data, int nsamples );
 static void StopAudioDMA();
 
 static AudioCallbackFunction *CallbackFunction;
+static AudioCallbackFunction *ISRCallbackFunction;
 static void *CallbackContext;
 static int16_t * volatile NextBufferSamples;
 static volatile int NextBufferLength;
 static volatile int BufferNumber;
 static volatile bool DMARunning;
+static uint8_t bufferUnderrun = 0;
+static int16_t dummy[50] = {0};
 
-void InitializeAudio(int plln, int pllr, int i2sdiv, int i2sodd) {
+
+void InitializeAudio(int plln, int pllr, int i2sdiv, int i2sodd, AudioCallbackFunction *callback, AudioCallbackFunction *isrcallback, void *context)
+{
 	GPIO_InitTypeDef  GPIO_InitStructure;
+	int i;
 
 	// Intitialize state.
-	CallbackFunction = NULL;
-	CallbackContext = NULL;
-	NextBufferSamples = NULL;
+    CallbackFunction = callback;
+    ISRCallbackFunction = isrcallback;
+    CallbackContext = context;
+    NextBufferSamples = NULL;
 	NextBufferLength = 0;
 	BufferNumber = 0;
 	DMARunning = false;
@@ -158,11 +166,16 @@ void AudioOn() {
 }
 
 void AudioOff() {
-	WriteRegister(0x02, 0x01);
+	WriteRegister(0x02, 0x9f);
 	SPI3 ->I2SCFGR = 0;
 }
 
-void SetAudioVolume(int volume) {
+void SetAudioVolume(int volume)
+{
+    /* For registers 0x20 and 0x21:
+     *   0x18 to 0x00 = +12 dB to 0 dB
+     *   0xFF to 0x35 = -0.5 dB to -102 dB
+     *   0x34 to 0x19 = -102 dB */
 	WriteRegister(0x20, (volume + 0x19) & 0xff);
 	WriteRegister(0x21, (volume + 0x19) & 0xff);
 }
@@ -177,27 +190,18 @@ void OutputAudioSampleWithoutBlocking(int16_t sample) {
 	SPI3 ->DR = sample;
 }
 
-void PlayAudioWithCallback(AudioCallbackFunction *callback, void *context) {
-	StopAudioDMA();
-
+void EnableAudio()
+{
 	NVIC_EnableIRQ(DMA1_Stream7_IRQn);
 	NVIC_SetPriority(DMA1_Stream7_IRQn, 4);
 
 	SPI3 ->CR2 |= SPI_CR2_TXDMAEN; // Enable I2S TX DMA request.
-
-	CallbackFunction = callback;
-	CallbackContext = context;
-	BufferNumber = 0;
-
-	/*if (CallbackFunction)
-		CallbackFunction(CallbackContext, BufferNumber);*/
 }
 
-void StopAudio() {
+void DisableAudio() {
 	StopAudioDMA();
 	SPI3 ->CR2 &= ~SPI_CR2_TXDMAEN; // Disable I2S TX DMA request.
 	NVIC_DisableIRQ(DMA1_Stream7_IRQn);
-	CallbackFunction = NULL;
 }
 
 void ProvideAudioBuffer(void *samples, int numsamples) {
@@ -225,11 +229,20 @@ bool ProvideAudioBufferWithoutBlocking(void *samples, int numsamples) {
         numsamples+=2;
         padCount -= 5513;
     }
-	NextBufferSamples = samples;
-	NextBufferLength = numsamples;
 
-	if (!DMARunning)
-		StartAudioDMAAndRequestBuffers();
+    BufferNumber ^= 1;
+
+	if ( DMARunning )
+	{
+	    NextBufferSamples = samples;
+	    NextBufferLength = numsamples;
+	}
+	else
+	{
+		StartAudioDMA( samples, numsamples );
+        if (CallbackFunction)
+            CallbackFunction(CallbackContext, BufferNumber);
+	}
 
 	NVIC_EnableIRQ(DMA1_Stream7_IRQn);
 
@@ -260,30 +273,24 @@ static void WriteRegister(uint8_t address, uint8_t value) {
 	I2C1 ->CR1 |= I2C_CR1_STOP; // End the transfer sequence.
 }
 
-static void StartAudioDMAAndRequestBuffers() {
-	// Configure DMA stream.
-	DMA1_Stream7 ->CR = (0 * DMA_SxCR_CHSEL_0 ) | // Channel 0
-			(1 * DMA_SxCR_PL_0 ) | // Priority 1
-			(1 * DMA_SxCR_PSIZE_0 ) | // PSIZE = 16 bit
-			(1 * DMA_SxCR_MSIZE_0 ) | // MSIZE = 16 bit
-			DMA_SxCR_MINC | // Increase memory address
-			(1 * DMA_SxCR_DIR_0 ) | // Memory to peripheral
-			DMA_SxCR_TCIE; // Transfer complete interrupt
-	DMA1_Stream7 ->NDTR = NextBufferLength;
-	DMA1_Stream7 ->PAR = (uint32_t) &SPI3 ->DR;
-	DMA1_Stream7 ->M0AR = (uint32_t) NextBufferSamples;
-	DMA1_Stream7 ->FCR = DMA_SxFCR_DMDIS;
-	DMA1_Stream7 ->CR |= DMA_SxCR_EN;
+static void StartAudioDMA( int16_t* data, int nsamples )
+{
+    DMA1_Stream7 ->CR = (0 * DMA_SxCR_CHSEL_0 ) | // Channel 0
+            (1 * DMA_SxCR_PL_0 ) | // Priority 1
+            (1 * DMA_SxCR_PSIZE_0 ) | // PSIZE = 16 bit
+            (1 * DMA_SxCR_MSIZE_0 ) | // MSIZE = 16 bit
+            DMA_SxCR_MINC | // Increase memory address
+            (1 * DMA_SxCR_DIR_0 ) | // Memory to peripheral
+            DMA_SxCR_TCIE; // Transfer complete interrupt
+    DMA1_Stream7 ->NDTR = nsamples;
+    DMA1_Stream7 ->PAR = (uint32_t) &SPI3 ->DR;
+    DMA1_Stream7 ->M0AR = (uint32_t) data;
+    DMA1_Stream7 ->FCR = DMA_SxFCR_DMDIS;
+    DMA1_Stream7 ->CR |= DMA_SxCR_EN;
 
-	// Update state.
-	NextBufferSamples = NULL;
-	BufferNumber ^= 1;
-	DMARunning = true;
-
-	// Invoke callback if it exists to queue up another buffer.
-	if (CallbackFunction)
-		CallbackFunction(CallbackContext, BufferNumber);
+    DMARunning = true;
 }
+
 
 static void StopAudioDMA() {
 	DMA1_Stream7 ->CR &= ~DMA_SxCR_EN; // Disable DMA stream.
@@ -292,13 +299,42 @@ static void StopAudioDMA() {
 
 	DMARunning = false;
 }
+void DMA1_Stream7_IRQHandler()
+{
+    DMA1 ->HIFCR |= DMA_HIFCR_CTCIF7; // Clear interrupt flag.
 
-void DMA1_Stream7_IRQHandler() {
-	DMA1 ->HIFCR |= DMA_HIFCR_CTCIF7; // Clear interrupt flag.
+    if ( NextBufferSamples )
+    {
 
-	if (NextBufferSamples) {
-		StartAudioDMAAndRequestBuffers();
-	} else {
-		DMARunning = false;
+        StartAudioDMA( NextBufferSamples, NextBufferLength );
+        NextBufferSamples = NULL;
+
+        /* Notify that it's now ok to load a new buffer */
+        if (ISRCallbackFunction)
+            ISRCallbackFunction(CallbackContext, BufferNumber);
+
+        if ( !bufferUnderrun )
+        {
+            bufferUnderrun = 0;
+            //WriteRegister(0x04, 0xaf);
+            //WriteRegister(0x02, 0x9e);
+            //AudioOn();
+        }
+    }
+    else
+    {
+        // buffer underrun, play silence (just muting doesn't help, seems like we have to
+        // continuously play something until audio has shut down properly)
+        StartAudioDMA( dummy, 50 );
+
+        if ( !bufferUnderrun )
+        {
+            //WriteRegister(0x04, 0xff);
+            //WriteRegister(0x02, 0x9f);
+            //AudioOff();
+            //DMARunning = false;
+
+            bufferUnderrun = 1;
+        }
 	}
 }

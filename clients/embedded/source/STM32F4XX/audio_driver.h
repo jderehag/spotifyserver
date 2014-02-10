@@ -22,7 +22,7 @@ typedef void AudioCallbackFunction(void *context,int buffer);
 
 // Initialize and power up audio hardware. Use the above defines for the parameters.
 // Can probably only be called once.
-void InitializeAudio(int plln,int pllr,int i2sdiv,int i2sodd);
+void InitializeAudio(int plln, int pllr, int i2sdiv, int i2sodd, AudioCallbackFunction *callback, AudioCallbackFunction *isrcallback, void *context);
 
 // Power up and down the audio hardware.
 void AudioOn();
@@ -36,9 +36,8 @@ void OutputAudioSample(int16_t sample);
 void OutputAudioSampleWithoutBlocking(int16_t sample);
 
 // Start and stop audio playback using DMA.
-// Callback is optional, and called whenever a new buffer is needed.
-void PlayAudioWithCallback(AudioCallbackFunction *callback,void *context);
-void StopAudio();
+void EnableAudio();
+void DisableAudio();
 
 // Provide a new buffer to the audio DMA. Output is double buffered, so
 // at least two buffers must be maintained by the program. It is not allowed

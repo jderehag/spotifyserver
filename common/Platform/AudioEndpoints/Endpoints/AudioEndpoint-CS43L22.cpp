@@ -70,6 +70,7 @@ static unsigned int bufferedSamples[2] = {0};
 xSemaphoreHandle xSem;
 
 static void AudioCallback(void *context,int buffer);
+static void AudioCallbackFromISR(void *context __attribute__((unused)),int buffer);
 
 AudioEndpointLocal::AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config) : AudioEndpoint(false),
                                                                                             Platform::Runnable(false, SIZE_SMALL, PRIO_HIGH),
@@ -102,9 +103,9 @@ void AudioEndpointLocal::run()
 //    xQueuedBuffers = xQueueCreate( 2, sizeof(AudioFifoData*) );
     xSem = xSemaphoreCreateCounting( 2, 1 );
 
-    InitializeAudio(Audio44100HzSettings);
+    InitializeAudio(Audio44100HzSettings, AudioCallback, AudioCallbackFromISR, NULL);
     SetAudioVolume(170);
-    PlayAudioWithCallback(AudioCallback, NULL);
+    EnableAudio();
 
     while(isCancellationPending() == false)
     {
@@ -227,16 +228,21 @@ void AudioEndpointLocal::run()
 }
 
 
-/* big TODO! this function isn't always called from interrupt! */
-
-static void AudioCallback(void *context __attribute__((unused)),int buffer)
+static void AudioCallbackFromISR(void *context __attribute__((unused)),int buffer)
 {
     portBASE_TYPE xHigherPriorityTaskWoken;
     bufferNumber = buffer;
     bufferedSamples[buffer] = 0;
-    xSemaphoreGiveFromISR(xSem, &xHigherPriorityTaskWoken );
+    xSemaphoreGiveFromISR( xSem, &xHigherPriorityTaskWoken );
 
     portEND_SWITCHING_ISR( xHigherPriorityTaskWoken );
+}
+
+static void AudioCallback(void *context __attribute__((unused)),int buffer)
+{
+    bufferNumber = buffer;
+    bufferedSamples[buffer] = 0;
+    xSemaphoreGive( xSem );
 }
 
 }
