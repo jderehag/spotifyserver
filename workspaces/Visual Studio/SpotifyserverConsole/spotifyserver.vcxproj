@@ -56,13 +56,11 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\..\..\..\spotifyserver_deps\lib\libspotify-10.1.16-win32-release\lib;..\..\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\..\..\spotifyserver_deps\lib\libspotify-12.1.51-win32-release\lib;..\..\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>libspotify.lib;Ws2_32.lib;OpenAL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y "$(ProjectDir)\..\..\..\..\spotifyserver_deps\lib\libspotify-10.1.16-win32-release\lib\libspotify.dll" "$(OutDir)"
-xcopy /y "$(ProjectDir)\..\..\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32\OpenAL32.dll" "$(OutDir)"
-xcopy /y "$(ProjectDir)\..\..\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32\wrap_oal.dll" "$(OutDir)"</Command>
+      <Command>xcopy /y "$(ProjectDir)\..\..\..\..\spotifyserver_deps\lib\libspotify-12.1.51-win32-release\lib\libspotify.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -79,12 +77,10 @@ xcopy /y "$(ProjectDir)\..\..\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32\wra
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>libspotify.lib;Ws2_32.lib;OpenAL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\..\..\spotifyserver_deps\lib\libspotify-10.1.16-win32-release\lib;..\..\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\..\..\spotifyserver_deps\lib\libspotify-12.1.51-win32-release\lib;..\..\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y $(ProjectDir)\..\..\..\..\spotifyserver_deps\lib\libspotify-10.1.16-win32-release\lib\libspotify.dll $(OutDir)
-xcopy /y $(ProjectDir)\..\..\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32\OpenAL32.dll $(OutDir)
-xcopy /y $(ProjectDir)\..\..\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32\wrap_oal.dll $(OutDir)</Command>
+      <Command>xcopy /y "$(ProjectDir)\..\..\..\..\spotifyserver_deps\lib\libspotify-12.1.51-win32-release\lib\libspotify.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

@@ -206,7 +206,7 @@ sp_error sp_session_create(const sp_session_config *config, sp_session **sess)
 	return SP_ERROR_OK;
 }
 
-void sp_session_login(sp_session *session, const char *username, const char *password, bool remember_me)
+void sp_session_login(sp_session *session, const char *username, const char *password, bool remember_me, const char *blob)
 {
 	/* session */
 	strcpy(session->username, username);
@@ -413,7 +413,7 @@ bool sp_album_is_loaded(sp_album* album)
     return 1;
 }
 
-const byte* sp_album_cover(sp_album *album)
+const byte* sp_album_cover(sp_album *album, sp_image_size size)
 {
     return (const byte*) "an image reference";
 }
@@ -608,15 +608,18 @@ sp_error sp_track_error(sp_track *track){ return SP_ERROR_OK; }
  * Search stubs
  * * *********************************/
 sp_search* sp_search_create(sp_session *session,
-							const char *query,
-							int track_offset,
-							int track_count,
-							int album_offset,
-							int album_count,
-							int artist_offset,
-							int artist_count,
-							search_complete_cb *callback,
-							void *userdata)
+                            const char *query,
+                            int track_offset,
+                            int track_count,
+                            int album_offset,
+                            int album_count,
+                            int artist_offset,
+                            int artist_count,
+                            int playlist_offset,
+                            int playlist_count,
+                            sp_search_type search_type,
+                            search_complete_cb *callback,
+                            void *userdata)
 {
 	callback(&result, userdata);
 	return &result;

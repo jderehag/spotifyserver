@@ -43,7 +43,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\..\..\spotifyserver_deps\lib\libspotify-10.1.16-win32-release\include;..\..\..\src;..\..\..\common;..\..\..\common\Logger;..\..\..\src\Utils;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\..\spotifyserver_deps\lib\libspotify-12.1.51-win32-release\include;..\..\..\src;..\..\..\common;..\..\..\common\Logger;..\..\..\src\Utils;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -55,7 +55,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>..\..\..\..\spotifyserver_deps\lib\libspotify-10.1.16-win32-release\include;..\..\..\src;..\..\..\common;..\..\..\common\Logger;..\..\..\src\Utils;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\..\spotifyserver_deps\lib\libspotify-12.1.51-win32-release\include;..\..\..\src;..\..\..\common;..\..\..\common\Logger;..\..\..\src\Utils;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>

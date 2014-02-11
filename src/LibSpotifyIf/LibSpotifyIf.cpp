@@ -336,32 +336,28 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
             break;
         }
 
-		case EVENT_GENERIC_SEARCH:
-		{
-		    QueryReqEventItem* reqEvent = static_cast<QueryReqEventItem*>( event );
-			/* search, but only interested in the first 100 results,
-			 * 0, = track_offset
-			 * 100, = track_count
-			 * 0, = album_offset
-			 * 100, = album_count
-			 * 0, = artist_offset
-			 * 100 = artist_count */
-			sp_search_create(spotifySession_,
-			                reqEvent->query_.c_str(),
-							0,
-							100,
-							0,
-							100,
-							0,
-							100,
-							&LibSpotifyIfCallbackWrapper::genericSearchCallback,
-							new QueryReqEventItem(*reqEvent));
+        case EVENT_GENERIC_SEARCH:
+        {
+            QueryReqEventItem* reqEvent = static_cast<QueryReqEventItem*>( event );
+            /* search, but only interested in the first 100 results,*/
+            sp_search_create(spotifySession_,
+                             reqEvent->query_.c_str(),
+                             0,   /* track_offset */
+                             100, /* track_count */
+                             0,   /* album_offset */
+                             100, /* album_count */
+                             0,   /* artist_offset */
+                             100, /* artist_count */
+                             0,   /* playlist_offset */
+                             100, /* playlist_count */
+                             SP_SEARCH_STANDARD,
+                             &LibSpotifyIfCallbackWrapper::genericSearchCallback,
+                             new QueryReqEventItem(*reqEvent));
+            break;
+        }
 
-			break;
-		}
-
-		case EVENT_GET_IMAGE:
-		{
+        case EVENT_GET_IMAGE:
+        {
             QueryReqEventItem* reqEvent = static_cast<QueryReqEventItem*>( event );
 
             std::string linkStr = reqEvent->query_.empty() ? currentTrack_.getAlbumLink() : reqEvent->query_;
@@ -378,7 +374,7 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
 
                         if ( sp_album_is_loaded(album) )
                         {
-                            imgRef = sp_album_cover(album);
+                            imgRef = sp_album_cover( album, SP_IMAGE_SIZE_NORMAL ); //todo image size should be in remote interface
                         }
                         else
                         {
@@ -611,7 +607,7 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
 		case EVENT_LOGGING_IN:
             state_ = STATE_LOGGING_IN;
             log(LOG_NOTICE) << "Logging in as " << config_.getUsername();
-            sp_session_login(spotifySession_, config_.getUsername().c_str(), config_.getPassword().c_str(), 0);
+            sp_session_login(spotifySession_, config_.getUsername().c_str(), config_.getPassword().c_str(), 0, NULL);
             break;
 
         case EVENT_LOGGED_IN:

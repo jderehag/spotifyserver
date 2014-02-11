@@ -1,5 +1,6 @@
-ARCH=$(shell uname)_$(shell uname -m)
+ARCH?=$(shell uname)_$(shell uname -m)
 
+$(info Building for $(ARCH) )
 
 ########################################
 # ARCH
@@ -27,6 +28,26 @@ else ifeq ($(ARCH),Linux_i686)
 	LIBSPOTIFY = $(DEPS_PATH)/lib/libspotify-Linux-i686-release
 	AUDIO_DRIVER=alsa
 
+else ifeq ($(ARCH),Linux_armv6l)
+#For Raspbian & Raspberry Pi
+	TCHAIN_PREFIX =
+	EXECUTABLE_EXT = elf
+	ARCH_SRC = 	$(addprefix Platform/Threads/Linux/, LinuxRunnable.cpp LinuxMutex.cpp LinuxCondition.cpp LinuxMessagebox.cpp) \
+				Platform/Socket/Linux/LinuxIPv4OnlySocket.cpp \
+				Platform/Utils/Linux/LinuxUtils.cpp
+	LIBSPOTIFY = $(DEPS_PATH)/lib/libspotify-12.1.103-Linux-armv6-bcm2708hardfp-release
+	AUDIO_DRIVER=alsa
+
+else ifeq ($(ARCH),RaspberryPi)
+#cross compiling for raspbian (doesn't really work though)
+	TCHAIN_PREFIX = arm-none-linux-gnueabi-
+	EXECUTABLE_EXT = elf
+	ARCH_SRC = 	$(addprefix Platform/Threads/Linux/, LinuxRunnable.cpp LinuxMutex.cpp LinuxCondition.cpp LinuxMessagebox.cpp) \
+				Platform/Socket/Linux/LinuxIPv4OnlySocket.cpp \
+				Platform/Utils/Linux/LinuxUtils.cpp
+	LIBSPOTIFY = $(DEPS_PATH)/lib/libspotify-12.1.103-Linux-armv6-bcm2708hardfp-release
+	AUDIO_DRIVER=stub
+
 else ifeq ($(ARCH),CYGWIN_NT-6.1_i686)
 
 ifdef NO_CYGWIN
@@ -39,7 +60,7 @@ else
 	ARCH_SRC = 	$(addprefix Platform/Threads/Linux/, LinuxRunnable.cpp LinuxMutex.cpp LinuxCondition.cpp LinuxMessagebox.cpp) \
 				Platform/Socket/Linux/LinuxSocket.cpp \
 				Platform/Utils/Linux/LinuxUtils.cpp
-	LIBSPOTIFY = $(DEPS_PATH)/lib/libspotify-10.1.16-win32-release
+	LIBSPOTIFY = $(DEPS_PATH)/lib/libspotify-12.1.51-win32-release
 endif
 	EXECUTABLE_EXT = exe
 	AUDIO_DRIVER=stub
@@ -50,13 +71,13 @@ else ifeq ($(ARCH),CYGWIN_NT-6.2-WOW64_i686)
 	ARCH_SRC = 	$(addprefix Platform/Threads/Linux/, LinuxRunnable.cpp LinuxMutex.cpp LinuxCondition.cpp LinuxMessagebox.cpp) \
 				Platform/Socket/Linux/LinuxSocket.cpp \
 				Platform/Utils/Linux/LinuxUtils.cpp
-	LIBSPOTIFY = $(DEPS_PATH)/lib/libspotify-10.1.16-win32-release
+	LIBSPOTIFY = $(DEPS_PATH)/lib/libspotify-12.1.51-win32-release
 	EXECUTABLE_EXT = exe
 	AUDIO_DRIVER=stub
 	CFLAGS += -maccumulate-outgoing-args -fomit-frame-pointer
 
 else
-	error = $(shell echo invalid arch $(ARCH))
+$(error invalid arch $(ARCH))
 endif
 
 ########################################

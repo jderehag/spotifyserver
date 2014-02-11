@@ -60,6 +60,11 @@ static sp_session_callbacks libSpotifySessioncallbacks =
 	NULL,														//.stop_playback
 	NULL,														//.get_audio_buffer_stats
 	NULL,														//.offline_status_updated
+    NULL,                                                       //.offline_error
+    NULL,                                                       //.credentials_blob_updated
+    NULL,                                                       //.connectionstate_updated
+    NULL,                                                       //.scrobble_error
+    NULL,                                                       //.private_session_mode_changed
 };
 
 /**
