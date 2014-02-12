@@ -26,6 +26,7 @@
  */
 
 #include "../AudioEndpointLocal.h"
+#include "Platform/Utils/Utils.h"
 #include "applog.h"
 #include <iostream>
 #include <asoundlib.h>
@@ -56,6 +57,7 @@ void AudioEndpointLocal::run()
 	int c;
 	unsigned int currentChannels = 0;
 	unsigned int currentRate = 0;
+	unsigned int bufferedSamples = 0;
 
 	AudioFifoData *afd;
 
@@ -87,6 +89,62 @@ void AudioEndpointLocal::run()
 
 				if (c == -EPIPE)
 					snd_pcm_prepare(devFd);
+
+                if ( afd->timestamp != 0 )
+                {
+                    unsigned int now = getTick_ms();
+                    int timeToPlayThisPacket = afd->timestamp - now;
+
+                    timeToPlayThisPacket -= bufferedSamples * 1000 / afd->rate;
+
+                    static int timetoplay = timeToPlayThisPacket;
+                    timetoplay += (timeToPlayThisPacket - timetoplay)/3;
+
+                    if ( timetoplay > 25 )
+                    {
+                        sleep_ms( timetoplay-10 );
+                    }
+                    else if ( timetoplay < -25 )
+                    {
+                        fifo_.returnFifoDataBuffer( afd );
+                        continue;
+                    }
+                    else if ( timetoplay < -5 )
+                    {
+                        //we're late, drop a few samples off this packet
+                        if ( afd->nsamples > 10 ) afd->nsamples -= 4;
+
+                        //whatever we had here, no need to pad now
+                        missingSamples_ = 0;
+                    }
+                    else if ( timetoplay > 5 )
+                    {
+                        //we're early, slow down by adding fake missing samples
+                        missingSamples_ = timetoplay * afd->rate / 1000;
+                    }
+                }
+                if ( missingSamples_ )
+                {
+                    uint8_t i;
+                    uint32_t headroom = afd->bufferSize - (afd->nsamples*afd->channels*2); // in bytes
+                    uint32_t padrate = (128 * (missingSamples_ + 2*afd->rate)) / (2*afd->rate); // approx percentage (or rather per-128-age for simpler calculation) that needs to be extended to catch up in 2 seconds
+                    padrate -= 128;
+                    uint32_t padsamples = padrate * afd->nsamples / 128; // number of samples this buffer should be padded with to keep up
+                    //if ( padsamples > 5 ) padsamples = 5; //cap so we don't sacrifice too much on sound quality
+                    if ( padsamples == 0 ) padsamples = 1;
+                    if ( padsamples > missingSamples_ ) padsamples = missingSamples_;
+                    if ( padsamples > headroom/4 ) padsamples = headroom/4;
+                    for ( i=0; i<padsamples; i++ )
+                    {
+                        /*todo this assumes stereo*/
+                        afd->samples[afd->nsamples*2] = afd->samples[afd->nsamples*2-2];
+                        afd->samples[afd->nsamples*2+1] = afd->samples[afd->nsamples*2-1];
+                        afd->nsamples++;
+                        missingSamples_--;
+                    }
+                }
+
+				bufferedSamples = afd->nsamples;
 
 				snd_pcm_writei(devFd, afd->samples, afd->nsamples);
 			}
