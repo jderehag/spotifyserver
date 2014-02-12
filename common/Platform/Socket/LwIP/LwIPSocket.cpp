@@ -230,6 +230,11 @@ int Socket::ReceiveFrom(void* buf, int bufLen, std::string& addr, std::string& p
     return n;
 }
 
+int Socket::EnableBroadcast()
+{
+    return 0;
+}
+
 void Socket::Close()
 {
     lwip_close(socket_->fd);

@@ -58,6 +58,7 @@ public:
     int SendTo(const void* msg, int msgLen, const std::string& addr, const std::string& port);
     int Receive(void* buf, int bufLen);
     int ReceiveFrom(void* buf, int bufLen, std::string& addr, std::string& port);
+    int EnableBroadcast();
     Socket* Accept();
     void Close();
     void Shutdown();

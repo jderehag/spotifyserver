@@ -54,6 +54,8 @@ void SocketClient::run()
         uint8_t msg[] = {'?'};
         Socket socket( SOCKTYPE_DATAGRAM );
 
+        socket.EnableBroadcast();
+
         if ( socket.SendTo( msg, sizeof(msg), "255.255.255.255", "7788") < 0 )
             continue;
 

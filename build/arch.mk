@@ -17,7 +17,7 @@ else ifeq ($(ARCH),Linux_x86_64)
 	ARCH_SRC = 	$(addprefix Platform/Threads/Linux/, LinuxRunnable.cpp LinuxMutex.cpp LinuxCondition.cpp LinuxMessagebox.cpp) \
 				Platform/Socket/Linux/LinuxSocket.cpp \
 				Platform/Utils/Linux/LinuxUtils.cpp
-	LIBSPOTIFY = $(DEPS_PATH)/lib/libspotify-Linux-x86_64-release
+	LIBSPOTIFY = $(DEPS_PATH)/lib/libspotify-12.1.51-Linux-x86_64-release
 	AUDIO_DRIVER=alsa
 
 else ifeq ($(ARCH),Linux_i686)
@@ -25,7 +25,7 @@ else ifeq ($(ARCH),Linux_i686)
 	ARCH_SRC = 	$(addprefix Platform/Threads/Linux/, LinuxRunnable.cpp LinuxMutex.cpp LinuxCondition.cpp LinuxMessagebox.cpp) \
 				Platform/Socket/Linux/LinuxSocket.cpp \
 				Platform/Utils/Linux/LinuxUtils.cpp
-	LIBSPOTIFY = $(DEPS_PATH)/lib/libspotify-Linux-i686-release
+	LIBSPOTIFY = $(DEPS_PATH)/lib/libspotify-12.1.51-Linux-i686-release
 	AUDIO_DRIVER=alsa
 
 else ifeq ($(ARCH),Linux_armv6l)

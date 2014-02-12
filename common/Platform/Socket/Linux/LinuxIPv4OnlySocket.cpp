@@ -279,6 +279,12 @@ int Socket::ReceiveFrom(void* buf, int bufLen, std::string& addr, std::string& p
     return n;
 }
 
+int Socket::EnableBroadcast()
+{
+    int on = 1;
+    return setsockopt(socket_->fd, SOL_SOCKET, SO_BROADCAST, (char*) &on, sizeof(on));
+}
+
 void Socket::Close()
 {
     close(socket_->fd);

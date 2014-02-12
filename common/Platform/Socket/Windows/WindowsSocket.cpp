@@ -345,6 +345,11 @@ int Socket::ReceiveFrom(void* buf, int bufLen, std::string& addr, std::string& p
     return n;
 }
 
+int Socket::EnableBroadcast()
+{
+    return 0;
+}
+
 void Socket::Close()
 {
     closesocket(socket_->handle);
