@@ -206,7 +206,7 @@ sp_error sp_session_create(const sp_session_config *config, sp_session **sess)
 	return SP_ERROR_OK;
 }
 
-void sp_session_login(sp_session *session, const char *username, const char *password, bool remember_me, const char *blob)
+sp_error sp_session_login(sp_session *session, const char *username, const char *password, bool remember_me, const char *blob)
 {
 	/* session */
 	strcpy(session->username, username);
@@ -226,6 +226,7 @@ void sp_session_login(sp_session *session, const char *username, const char *pas
 	session->connectionstate = SP_CONNECTION_STATE_LOGGED_IN;
 	g_config.callbacks->log_message(session, "Logged in!\n");
 	g_config.callbacks->logged_in(session, SP_ERROR_OK);
+	return SP_ERROR_OK;
 }
 
 sp_error sp_session_relogin(sp_session *session)
@@ -234,17 +235,18 @@ sp_error sp_session_relogin(sp_session *session)
 	return SP_ERROR_OK;
 }
 
-void sp_session_logout(sp_session *session)
+sp_error sp_session_logout(sp_session *session)
 {
 	session->connectionstate = SP_CONNECTION_STATE_LOGGED_OUT;
 	g_config.callbacks->log_message(session, "Logged out!\n");
 	g_config.callbacks->logged_out(session);
+	return SP_ERROR_OK;
 };
-void sp_session_release(sp_session *sess) { }
+sp_error sp_session_release(sp_session *sess) { return SP_ERROR_OK; }
 sp_user* sp_session_user(sp_session *session) { return &session->user; }
 int sp_session_user_country(sp_session *session) { return session->user_country; }
 sp_connectionstate sp_session_connectionstate(sp_session *session) { return session->connectionstate; }
-void sp_session_process_events(sp_session *session, int *next_timeout){ *next_timeout = 1;}
+sp_error sp_session_process_events(sp_session *session, int *next_timeout){ *next_timeout = 1; return SP_ERROR_OK; }
 
 
 
@@ -321,14 +323,16 @@ bool sp_playlist_is_collaborative(sp_playlist *playlist)
 	return playlist->is_collaborative;
 }
 
-void sp_playlist_add_ref(sp_playlist *playlist)
+sp_error sp_playlist_add_ref(sp_playlist *playlist)
 {
 	playlist->ref_count++;
+    return SP_ERROR_OK;
 }
 
-void sp_playlist_release(sp_playlist *playlist)
+sp_error sp_playlist_release(sp_playlist *playlist)
 {
 	playlist->ref_count--;
+    return SP_ERROR_OK;
 }
 
 bool sp_playlist_is_loaded(sp_playlist *playlist)
@@ -381,14 +385,16 @@ bool sp_track_is_autolinked(sp_session *session, sp_track *track)
 	return track->is_autolinked;
 }
 
-void sp_track_add_ref(sp_track *track)
+sp_error sp_track_add_ref(sp_track *track)
 {
 	track->ref_count++;
+    return SP_ERROR_OK;
 }
 
-void sp_track_release(sp_track *track)
+sp_error sp_track_release(sp_track *track)
 {
 	track->ref_count--;
+	return SP_ERROR_OK;
 }
 
 
@@ -438,9 +444,9 @@ sp_albumbrowse * sp_albumbrowse_create(sp_session *session, sp_album *album, alb
     return &albumbrowse_result;
 }
 
-void sp_albumbrowse_release(sp_albumbrowse *alb)
+sp_error sp_albumbrowse_release(sp_albumbrowse *alb)
 {
-    return;
+    return SP_ERROR_OK;
 }
 
 sp_album * sp_albumbrowse_album(sp_albumbrowse *alb)
@@ -493,14 +499,14 @@ const void* sp_image_data(sp_image *image, size_t *data_size)
     return image->data;
 }
 
-void sp_image_release(sp_image *image)
+sp_error sp_image_release(sp_image *image)
 {
-    return;
+    return SP_ERROR_OK;
 }
 
-void sp_image_add_load_callback(sp_image *image, image_loaded_cb *callback, void *userdata)
+sp_error sp_image_add_load_callback(sp_image *image, image_loaded_cb *callback, void *userdata)
 {
-
+    return SP_ERROR_OK;
 }
 
 /* ************************************
@@ -549,10 +555,11 @@ int sp_link_as_string(sp_link *link, char *buffer, int buffer_size)
 	return strlen(buffer);
 }
 
-void sp_link_release(sp_link *link)
+sp_error sp_link_release(sp_link *link)
 {
 	free(link);
 	link = 0;
+	return SP_ERROR_OK;
 }
 
 sp_track* sp_link_as_track(sp_link *link)
@@ -599,7 +606,11 @@ sp_error sp_session_player_load(sp_session *session, sp_track *track)
 	return SP_ERROR_OK;
 }
 /* playback not supported on stub */
-void sp_session_player_play(sp_session *session, bool play){ /*g_config.callbacks->end_of_track(session);*/}
+sp_error sp_session_player_play(sp_session *session, bool play)
+{
+    /*g_config.callbacks->end_of_track(session);*/
+    return SP_ERROR_OK;
+}
 
 sp_error sp_track_error(sp_track *track){ return SP_ERROR_OK; }
 
@@ -646,7 +657,7 @@ int sp_search_num_tracks(sp_search *search)
 	return search->number_of_tracks;
 }
 
-void sp_search_release(sp_search *search){ }
+sp_error sp_search_release(sp_search *search){ return SP_ERROR_OK; }
 /* ************************************
  * Util stubs
  * * *********************************/
