@@ -46,7 +46,7 @@ typedef struct SocketHandle_t
     int fd;
 }SocketHandle_t;
 
-static void* INETADDR_ADDRESS( const struct sockaddr* a)
+static void* INETADDR_ADDRESS( const struct sockaddr* a )
 {
     if (a->sa_family == AF_INET6)
     {
@@ -54,7 +54,18 @@ static void* INETADDR_ADDRESS( const struct sockaddr* a)
     }
     else
     {
+        assert(a->sa_family == AF_INET);
         return (void*)&((struct sockaddr_in*)a)->sin_addr;
+    }
+}
+
+uint16_t INETADDR_PORT( const struct sockaddr* a )
+{
+    if (a->sa_family == AF_INET6) {
+        return ((const struct sockaddr_in6*)a)->sin6_port;
+    } else {
+        assert(a->sa_family == AF_INET);
+        return ((const struct sockaddr_in*)a)->sin_port;
     }
 }
 
@@ -87,7 +98,7 @@ static void toIpv6( const struct addrinfo* in, struct sockaddr_in6* out)
     }
 }
 
-static struct addrinfo* toAddrinfo( const std::string& addr, const std::string& port, bool forBind )
+static struct addrinfo* toAddrinfo( const std::string& addr, const std::string& port, bool forBind, bool ipv4Only )
 {
     int SocketType = SOCK_STREAM;  // TCP
     int RetVal;
@@ -95,17 +106,17 @@ static struct addrinfo* toAddrinfo( const std::string& addr, const std::string& 
 
     memset(&Hints, 0, sizeof (Hints));
     Hints.ai_socktype = SocketType;
-    Hints.ai_flags = AI_ALL | AI_V4MAPPED;
+    if ( !ipv4Only) Hints.ai_flags = AI_ALL | AI_V4MAPPED;
     if ( forBind ) Hints.ai_flags |= AI_PASSIVE;
 
     if ( addr == "ANY" )
     {
-        Hints.ai_family = PF_INET6;     // Get the IPv6 "any" address
+        Hints.ai_family = ipv4Only ? PF_INET : PF_INET6;     // Get the IPv6 "any" address
         RetVal = getaddrinfo(NULL, port.c_str(), &Hints, &AddrInfo);
     }
     else
     {
-        Hints.ai_family = PF_INET6;    // Request IPv6, we'll get a IPv6 mapped address if addr is IPv4
+        Hints.ai_family = ipv4Only ? PF_INET : PF_INET6;    // Request IPv6, we'll get a IPv6 mapped address if addr is IPv4
         RetVal = getaddrinfo(addr.c_str(), port.c_str(), &Hints, &AddrInfo);
     }
 
@@ -128,28 +139,39 @@ Socket::Socket(SocketHandle_t* socket) : socket_(socket)
     fcntl( socket_->fd, F_SETFL, flags | O_NONBLOCK );
 }
 
-Socket::Socket(SockType_t type)
+static int createSocket( SockType_t type, int domain )
+{
+    switch(type)
+    {
+        case SOCKTYPE_STREAM:
+            return socket(domain, SOCK_STREAM, 0);
+            break;
+        case SOCKTYPE_DATAGRAM:
+            return socket(domain, SOCK_DGRAM, 0);
+            break;
+        default:
+            assert(false);
+            break;
+    }
+}
+Socket::Socket(SockType_t type) : ipv4Only_(false)
 {
     int on = 1;
     int flags;
 
     socket_ = new SocketHandle_t;
 
-    switch(type)
+    socket_->fd = createSocket( type, PF_INET6 );
+    if ( socket_->fd == -1 && errno == EAFNOSUPPORT )
     {
-        case SOCKTYPE_STREAM:
-            socket_->fd = socket(PF_INET6, SOCK_STREAM, 0);
-            break;
-        case SOCKTYPE_DATAGRAM:
-            socket_->fd = socket(PF_INET6, SOCK_DGRAM, 0);
-            break;
-        default:
-            assert(false);
-            break;
+        ipv4Only_ = true;
+        socket_->fd = createSocket( type, PF_INET );
     }
-
-    on = 0;
-    setsockopt(socket_->fd, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&on, sizeof(on) );
+    else
+    {
+        on = 0;
+        setsockopt(socket_->fd, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&on, sizeof(on) );
+    }
 
     on = 1;
     setsockopt(socket_->fd, SOL_SOCKET, SO_REUSEADDR, (char*) &on, sizeof(on));
@@ -166,22 +188,32 @@ int Socket::BindToAddr(const std::string& addr, const std::string& port)
 
     struct addrinfo *AddrInfo, *AI;
 
-    AddrInfo = toAddrinfo( addr, port, true );
+    AddrInfo = toAddrinfo( addr, port, true, ipv4Only_ );
 
     for ( AI = AddrInfo; AI != NULL; AI = AI->ai_next )
     {
         struct sockaddr_in6 bindAddr;
 
-        toIpv6( AI, &bindAddr );
-
-        if ( ( IN6_IS_ADDR_LINKLOCAL((struct in6_addr *) &bindAddr.sin6_addr) ) &&
-             ( bindAddr.sin6_scope_id == 0) )
+        if ( ipv4Only_ )
         {
-            log(LOG_WARN) << "IPv6 link local addresses should specify a scope ID!";
+            struct sockaddr_in* bindAddr4 = (struct sockaddr_in*) &bindAddr;
+            if ( AI->ai_family != AF_INET ) continue;
+            memcpy( bindAddr4, AI->ai_addr, sizeof(struct sockaddr_in) );
+            inet_ntop( AF_INET, &(bindAddr4->sin_addr), str, sizeof(str));
         }
+        else
+        {
+            toIpv6( AI, &bindAddr );
 
-        inet_ntop( AF_INET6, &bindAddr.sin6_addr, str, sizeof(str));
-        log(LOG_DEBUG) << "attempting bind to \"" << addr << "\" -> ip " << str << " port " << ntohs(bindAddr.sin6_port);
+            if ( ( IN6_IS_ADDR_LINKLOCAL((struct in6_addr *) &bindAddr.sin6_addr) ) &&
+                 ( bindAddr.sin6_scope_id == 0) )
+            {
+                log(LOG_WARN) << "IPv6 link local addresses should specify a scope ID!";
+            }
+
+            inet_ntop( AF_INET6, &bindAddr.sin6_addr, str, sizeof(str));
+        }
+        log(LOG_DEBUG) << "attempting bind to \"" << addr << "\" -> ip " << str << " port " << ntohs(INETADDR_PORT((struct sockaddr*)&bindAddr));
 
         if ( bind( socket_->fd, (struct sockaddr*) &bindAddr, sizeof(bindAddr) ) < 0 )
         {
@@ -225,24 +257,33 @@ int Socket::Connect(const std::string& addr, const std::string& port)
 
     struct addrinfo *AddrInfo, *AI;
 
-    AddrInfo = toAddrinfo( addr, port, false );
+    AddrInfo = toAddrinfo( addr, port, false, ipv4Only_ );
     remoteAddr_ = addr;
 
 
     for ( AI = AddrInfo; AI != NULL; AI = AI->ai_next )
     {
         struct sockaddr_in6 connectAddr;
-
-        toIpv6( AI, &connectAddr );
-
-        if ( ( IN6_IS_ADDR_LINKLOCAL((struct in6_addr *) &connectAddr.sin6_addr) ) &&
-             ( connectAddr.sin6_scope_id == 0) )
+        if ( ipv4Only_ )
         {
-            log(LOG_WARN) << "IPv6 link local addresses should specify a scope ID!";
+            struct sockaddr_in* connectAddr4 = (struct sockaddr_in*) &connectAddr;
+            if ( AI->ai_family != AF_INET ) continue;
+            memcpy( connectAddr4, AI->ai_addr, sizeof(struct sockaddr_in) );
+            inet_ntop( AF_INET, &(connectAddr4->sin_addr), str, sizeof(str));
         }
+        else
+        {
+            toIpv6( AI, &connectAddr );
 
-        inet_ntop( AF_INET6, &connectAddr.sin6_addr, str, sizeof(str));
-        log(LOG_DEBUG) << "attempting connect to \"" << addr << "\" -> ip " << str << " port " << ntohs(connectAddr.sin6_port);
+            if ( ( IN6_IS_ADDR_LINKLOCAL((struct in6_addr *) &connectAddr.sin6_addr) ) &&
+                 ( connectAddr.sin6_scope_id == 0) )
+            {
+                log(LOG_WARN) << "IPv6 link local addresses should specify a scope ID!";
+            }
+
+            inet_ntop( AF_INET6, &connectAddr.sin6_addr, str, sizeof(str));
+        }
+        log(LOG_DEBUG) << "attempting connect to \"" << addr << "\" -> ip " << str << " port " << ntohs(INETADDR_PORT((struct sockaddr*)&connectAddr));
 
         rc = connect( socket_->fd, (struct sockaddr*) &connectAddr, sizeof(connectAddr) );
 
@@ -305,14 +346,15 @@ Socket::~Socket()
 
 Socket* Socket::Accept()
 {
-    struct sockaddr_in6 sockaddr;
+    struct sockaddr_in6 sockaddr6;
+    struct sockaddr* sockaddr = (struct sockaddr*)&sockaddr6;
     socklen_t len = sizeof(struct sockaddr_in6);
-    int newSocket = accept(socket_->fd, (struct sockaddr*)&sockaddr, &len);
+    int newSocket = accept(socket_->fd, sockaddr, &len);
 
     if(newSocket >= 0)
     {
         char str[INET6_ADDRSTRLEN];
-        inet_ntop( AF_INET6, INETADDR_ADDRESS((struct sockaddr*)&sockaddr), str, sizeof(str));
+        inet_ntop( sockaddr->sa_family, INETADDR_ADDRESS(sockaddr), str, sizeof(str));
 
         log(LOG_DEBUG) << "accept! " << str << " fd " << newSocket;
         SocketHandle_t* handle = new SocketHandle_t;
@@ -339,11 +381,20 @@ int Socket::SendTo(const void* msg, int msgLen, const std::string& addr, const s
     struct sockaddr_in6 toAddr;
     int rc = -1;
 
-    AddrInfo = toAddrinfo( addr, port, false );
+    AddrInfo = toAddrinfo( addr, port, false, ipv4Only_ );
 
     if ( AddrInfo )
     {
-        toIpv6( AddrInfo, &toAddr );
+        if ( ipv4Only_ )
+        {
+            struct sockaddr_in* toAddr4 = (struct sockaddr_in*) &toAddr;
+            if ( AddrInfo->ai_family != AF_INET ) return -1;
+            memcpy( toAddr4, AddrInfo->ai_addr, sizeof(struct sockaddr_in) );
+        }
+        else
+        {
+            toIpv6( AddrInfo, &toAddr );
+        }
         rc = sendto(socket_->fd, msg, msgLen, 0, (struct sockaddr*) &toAddr, sizeof(toAddr) );
 
         freeaddrinfo( AddrInfo );
@@ -364,22 +415,24 @@ int Socket::Receive(void* buf, int bufLen)
 
 int Socket::ReceiveFrom(void* buf, int bufLen, std::string& addr, std::string& port)
 {
-    struct sockaddr_in6 sockaddr;
+    struct sockaddr_in6 sockaddr6;
+    struct sockaddr_in* sockaddr4 = (struct sockaddr_in*)&sockaddr6;
+    struct sockaddr* sockaddr = (struct sockaddr*)&sockaddr6;
     socklen_t len = sizeof(struct sockaddr_in6);
     char str[INET6_ADDRSTRLEN];
     int n;
 
-    n = recvfrom( socket_->fd, buf, bufLen, 0, (struct sockaddr*)&sockaddr, &len );
+    n = recvfrom( socket_->fd, buf, bufLen, 0, sockaddr, &len );
     if (n < 0 && errno == EWOULDBLOCK)
         return 0;
     else if (n == 0)
         return -1;
 
-    inet_ntop( AF_INET6, INETADDR_ADDRESS((struct sockaddr*)&sockaddr), str, sizeof(str));
+    inet_ntop( sockaddr->sa_family, INETADDR_ADDRESS(sockaddr), str, sizeof(str));
     addr = str;
 
     std::ostringstream portStr;
-    portStr << ntohs(sockaddr.sin6_port);
+    portStr << ntohs( INETADDR_PORT(sockaddr) );
     port = portStr.str();
 
     return n;

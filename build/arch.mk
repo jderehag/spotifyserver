@@ -33,7 +33,7 @@ else ifeq ($(ARCH),Linux_armv6l)
 	TCHAIN_PREFIX =
 	EXECUTABLE_EXT = elf
 	ARCH_SRC = 	$(addprefix Platform/Threads/Linux/, LinuxRunnable.cpp LinuxMutex.cpp LinuxCondition.cpp LinuxMessagebox.cpp) \
-				Platform/Socket/Linux/LinuxIPv4OnlySocket.cpp \
+				Platform/Socket/Linux/LinuxSocket.cpp \
 				Platform/Utils/Linux/LinuxUtils.cpp
 	LIBSPOTIFY = $(DEPS_PATH)/lib/libspotify-12.1.103-Linux-armv6-bcm2708hardfp-release
 	AUDIO_DRIVER=alsa

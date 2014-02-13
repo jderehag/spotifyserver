@@ -44,6 +44,7 @@ private:
     struct SocketHandle_t* socket_;
     std::string remoteAddr_;
     std::string localAddr_;
+    bool ipv4Only_;
 
     Socket(struct SocketHandle_t* socket);
 
