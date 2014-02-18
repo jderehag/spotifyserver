@@ -43,7 +43,7 @@ namespace Platform {
 
 AudioEndpointLocal::AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config) : Platform::Runnable(true, SIZE_SMALL, PRIO_HIGH), 
                                                                                             config_(config), 
-                                                                                            missingSamples_(0)
+                                                                                            adjustSamples_(0)
 {
     startThread();
 }
@@ -170,37 +170,19 @@ void AudioEndpointLocal::run()
                     fifo_.returnFifoDataBuffer( afd );
                     continue;
                 }
-                else if ( timetoplay < -5 )
+                else if ( timetoplay < -3 || timetoplay > 3 )
                 {
-                    //we're late, drop a few samples off this packet
-                    if ( afd->nsamples > 10 ) afd->nsamples -= 4;
-
-                    //whatever we had here, no need to pad now
-                    missingSamples_ = 0;
+                    //we're off, adjust playback
+                    adjustSamples_ = timetoplay * (int)afd->rate / 1000;
                 }
-                else if ( timetoplay > 5 )
+                else if ( timetoplay == 0 )
                 {
-                    //we're early, slow down by adding fake missing samples
-                    missingSamples_ = timetoplay * afd->rate / 1000;
+                    adjustSamples_ = 0;
                 }
             }
-            if ( missingSamples_ )
+            if ( adjustSamples_ != 0 )
             {
-                uint32_t headroom = afd->bufferSize - (afd->nsamples*afd->channels*2); // in bytes
-                uint32_t padrate = (128 * (missingSamples_ + 2*afd->rate)) / (2*afd->rate); // approx percentage (or rather per-128-age for simpler calculation) that needs to be extended to catch up in 2 seconds
-                padrate -= 128;
-                uint32_t padsamples = padrate * afd->nsamples / 128; // number of samples this buffer should be padded with to keep up
-                //if ( padsamples > 5 ) padsamples = 5; //cap so we don't sacrifice too much on sound quality
-                if ( padsamples == 0 ) padsamples = 1;
-                if ( padsamples > missingSamples_ ) padsamples = missingSamples_;
-                if ( padsamples > headroom/4 ) padsamples = headroom/4;
-                for ( i=0; i<padsamples; i++ )
-                {
-                    afd->samples[afd->nsamples*2] = afd->samples[afd->nsamples*2-2];
-                    afd->samples[afd->nsamples*2+1] = afd->samples[afd->nsamples*2-1];
-                    afd->nsamples++;
-                    missingSamples_--;
-                }
+                adjustSamples( afd );
             }
 
             alBufferData(buffers[frame],

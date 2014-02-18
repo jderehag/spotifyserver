@@ -39,7 +39,8 @@ class AudioEndpointLocal : public AudioEndpoint, Runnable
 private:
     ConfigHandling::AudioEndpointConfig config_;
 
-    unsigned int missingSamples_;
+    int adjustSamples_;
+    void adjustSamples( AudioFifoData* afd );
 
 public:
     AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config);

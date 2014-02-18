@@ -29,7 +29,7 @@
 #include "MessageFactory/Message.h"
 #include "MessageFactory/TlvDefinitions.h"
 
-RemoteAudioEndpointManager::RemoteAudioEndpointManager( Messenger& m ) : messenger_(m), server(NULL)
+RemoteAudioEndpointManager::RemoteAudioEndpointManager( Messenger& m ) : messenger_(m), server(NULL), connectionUp_(false)
 {
     messenger_.addSubscriber( this );
 }
@@ -41,11 +41,8 @@ RemoteAudioEndpointManager::~RemoteAudioEndpointManager()
     delete server;
 }
 
-void RemoteAudioEndpointManager::addEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData )
+void RemoteAudioEndpointManager::sendAddEndpointMessage()
 {
-    //todo: launch a udp listener thread and provide ep to it
-    server = new AudioEndpointRemoteSocketServer( ep );
-
     Message* msg = new Message( CREATE_AUDIO_ENDPOINT_REQ );
     TlvContainer* epTlv = new TlvContainer(TLV_CLIENT);
 
@@ -57,6 +54,16 @@ void RemoteAudioEndpointManager::addEndpoint( Platform::AudioEndpoint& ep, IAudi
     msg->addTlv(epTlv);
 
     messenger_.queueRequest( msg, this, NULL );
+}
+
+void RemoteAudioEndpointManager::addEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData )
+{
+    server = new AudioEndpointRemoteSocketServer( ep );
+
+    if ( connectionUp_ )
+    {
+        sendAddEndpointMessage();
+    }
 }
 
 void RemoteAudioEndpointManager::removeEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData )
@@ -74,7 +81,11 @@ void RemoteAudioEndpointManager::getEndpoints( IAudioEndpointCtrlCallbackSubscri
 
 void RemoteAudioEndpointManager::connectionState( bool up )
 {
-
+    if ( up )
+    {
+        sendAddEndpointMessage();
+    }
+    connectionUp_ = up;
 }
 void RemoteAudioEndpointManager::receivedMessage( const Message* msg )
 {

@@ -7,7 +7,7 @@ TARGET=spotifyserver
 #we need specific name for this since we still have dependencies between client and server
 OUTDIR = .spotifyserver.output
 
-DEPS_PATH = ../../spotifyserver_deps
+DEPS_PATH ?= ../../spotifyserver_deps
 
 # root directories to look for source files in
 VPATH += ./../common/ ./../clients/cpp/src $(DEPS_PATH)

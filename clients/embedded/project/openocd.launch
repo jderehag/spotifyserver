@@ -5,6 +5,6 @@
 </listAttribute>
 <stringAttribute key="org.eclipse.ui.externaltools.ATTR_LAUNCH_CONFIGURATION_BUILD_SCOPE" value="${none}"/>
 <stringAttribute key="org.eclipse.ui.externaltools.ATTR_LOCATION" value="${workspace_loc:/embedded}\tools\windows\openocd-0.7.0\bin\openocd-0.7.0.exe"/>
-<stringAttribute key="org.eclipse.ui.externaltools.ATTR_TOOL_ARGUMENTS" value="-f board/stm32f4discovery.cfg"/>
+<stringAttribute key="org.eclipse.ui.externaltools.ATTR_TOOL_ARGUMENTS" value="-f board/stm32f4discovery.cfg -c init -c &quot;reset halt&quot;"/>
 <stringAttribute key="org.eclipse.ui.externaltools.ATTR_WORKING_DIRECTORY" value="${workspace_loc:/embedded}"/>
 </launchConfiguration>

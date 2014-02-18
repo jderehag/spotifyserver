@@ -77,9 +77,11 @@ void Runnable::startThread()
     }
     switch(prio_)
     {
-        case PRIO_LOW:  prio = 1; break;
-        case PRIO_MID:  prio = 2; break;
-        case PRIO_HIGH: prio = 3; break;
+        case PRIO_VERY_LOW:  prio = 1; break;
+        case PRIO_LOW:       prio = 2; break;
+        case PRIO_MID:       prio = 3; break;
+        case PRIO_HIGH:      prio = 4; break;
+        case PRIO_VERY_HIGH: prio = 5; break;
     }
     xTaskCreate( runnableWrapper, ( signed char * ) "tsk", stackdepth, this, tskIDLE_PRIORITY + prio, &threadHandle_->handle );
 }

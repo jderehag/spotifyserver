@@ -192,8 +192,12 @@ void UIEmbedded::progressUpdateTick()
 {
     if ( playbackState == PLAYBACK_PLAYING )
     {
-        progress_++;
-        drawProgress();
+        /* avoid drawing outside box if we lose connection or miss transition to stopped */
+        if ( progress_ < currentTrackDuration_ )
+        {
+            progress_++;
+            drawProgress();
+        }
     }
 }
 

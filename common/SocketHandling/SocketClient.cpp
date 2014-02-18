@@ -32,6 +32,7 @@
 #include "MessageFactory/MessageEncoder.h"
 #include "MessageFactory/SocketReader.h"
 #include "MessageFactory/SocketWriter.h"
+#include "Platform/Utils/Utils.h"
 #include "applog.h"
 
 
@@ -226,6 +227,11 @@ void SocketClient::run()
                 (*it)->connectionState( false );
             }
             callbackSubscriberMtx_.unlock();
+        }
+        else
+        {
+            // connect failed, back off for a while
+            sleep_ms( 5000 );
         }
         socket.Close();
     }

@@ -586,6 +586,7 @@ void MessageDecoder::decodeTlvs(TlvContainer* parent, uint32_t len)
             case TLV_AUDIO_RATE:
             case TLV_AUDIO_NOF_SAMPLES:
             case TLV_AUDIO_PROTOCOL_TYPE:
+            case TLV_AUDIO_BUFFERED_SAMPLES:
             {
                 parent->addTlv(getCurrentTlv(), getTlvIntData());
                 nextTlv();

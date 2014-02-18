@@ -29,6 +29,7 @@
 #include "Platform/Utils/Utils.h"
 #include "stm32f4_discovery.h"
 #include "applog.h"
+#include <string.h>
 
 extern "C"
 {
@@ -73,9 +74,9 @@ static void AudioCallback(void *context,int buffer);
 static void AudioCallbackFromISR(void *context __attribute__((unused)),int buffer);
 
 AudioEndpointLocal::AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config) : AudioEndpoint(false),
-                                                                                            Platform::Runnable(false, SIZE_SMALL, PRIO_HIGH),
+                                                                                            Platform::Runnable(false, SIZE_SMALL, PRIO_VERY_HIGH),
                                                                                             config_(config),
-                                                                                            missingSamples_(0)
+                                                                                            adjustSamples_(0)
 {
     startThread();
 }
@@ -104,7 +105,7 @@ void AudioEndpointLocal::run()
     xSem = xSemaphoreCreateCounting( 2, 1 );
 
     InitializeAudio(Audio44100HzSettings, AudioCallback, AudioCallbackFromISR, NULL);
-    SetAudioVolume(170);
+    SetAudioVolume(165);
     EnableAudio();
 
     while(isCancellationPending() == false)
@@ -112,23 +113,15 @@ void AudioEndpointLocal::run()
         do
         {
             /* check if there's more audio available */
-            afd = fifo_.getFifoDataTimedWait(1);
+            afd = fifo_.getFifoDataBlocking();
         } while( afd == NULL && isCancellationPending() == false );
 
         if ( afd != NULL )
         {
             uint8_t thisBufferNum;
-            uint32_t nsamples;
 
             xSemaphoreTake( xSem, portMAX_DELAY );
             thisBufferNum = bufferNumber; /* bufferNumber is the last buffer that was requested by driver, it has to be unused */
-
-            /* Extra copy because DMA can't access the CCM RAM where fifobuffers are placed.
-             * TODO: Should probably place FreeRTOS stacks there instead */
-            for ( i = 0; i < (afd->nsamples * 2); i++ )
-                driverBuffers[thisBufferNum][i] = afd->samples[i];
-
-            nsamples = afd->nsamples * 2;
 
             if ( afd->timestamp != 0 )
             {
@@ -139,28 +132,26 @@ void AudioEndpointLocal::run()
                 /*static*/ int timetoplay = timeToPlayThisPacket;
                 //timetoplay += (timeToPlayThisPacket - timetoplay)/3;
 
-                if ( timetoplay > 25 )
+                if ( timetoplay < -25 || timetoplay > 500 /*this has to be some error*/ )
                 {
-                    vTaskDelay( timetoplay );
-                }
-                else if ( timetoplay < -25 )
-                {
+                    //log( LOG_NOTICE ) << "discarding packet " << timetoplay;
                     fifo_.returnFifoDataBuffer( afd );
                     xSemaphoreGive( xSem );
                     continue;
                 }
-                else if ( timetoplay < -3 )
+                else if ( timetoplay > 25 )
                 {
-                    //we're late, drop a few samples off this packet
-                    if ( nsamples > 10 ) nsamples -= 4;
-
-                    //whatever we had here, no need to pad now
-                    missingSamples_ = 0;
+                    //log( LOG_NOTICE ) << "Received packet way too early " << timetoplay;
+                    vTaskDelay( timetoplay );
                 }
-                else if ( timetoplay > 3 )
+                else if ( timetoplay < -3 || timetoplay > 3 )
                 {
-                    //we're early, slow down by adding fake missing samples
-                    missingSamples_ = timetoplay * afd->rate / 1000;
+                    //we're off, adjust playback
+                    adjustSamples_ = timetoplay * (int)afd->rate / 1000;
+                }
+                else if ( timetoplay == 0 )
+                {
+                    adjustSamples_ = 0;
                 }
 
 #ifdef DEBUG_COUNTERS
@@ -171,7 +162,7 @@ void AudioEndpointLocal::run()
                 lastpacketms = afd->timestamp - lasttimestamp;
                 lasttimetoplay = timetoplay;
                 lasttimestamp = afd->timestamp;
-                lastmissingsamples = missingSamples_;
+                lastmissingsamples = adjustSamples_;
 #endif
             }
             else /* not playing by timestamp */
@@ -181,48 +172,46 @@ void AudioEndpointLocal::run()
                  * but this is just to avoid buffer underrun during the track */
                 if ( fifo_.getNumberOfQueuedSamples() < afd->rate / 50 )
                 {
-                    missingSamples_ = 44;
+                    adjustSamples_ = 44;
                 }
             }
 
-            if ( missingSamples_ )
+            if ( adjustSamples_ != 0 )
             {
-                uint32_t headroom = afd->bufferSize - (afd->nsamples*afd->channels*sizeof(int16_t)); // in bytes
-                uint32_t padrate = (128 * (missingSamples_ + 2*afd->rate)) / (2*afd->rate); // approx percentage (or rather per-128-age for simpler calculation) that needs to be extended to catch up in 2 seconds
-                padrate -= 128;
-                uint32_t padsamples = padrate * afd->nsamples / 128; // number of samples this buffer should be padded with to keep up
-                //if ( padsamples > 5 ) padsamples = 5; //cap so we don't sacrifice too much on sound quality
-                if ( padsamples == 0 ) padsamples = 1;
-                if ( padsamples > missingSamples_ ) padsamples = missingSamples_;
-                if ( padsamples > headroom/4 ) padsamples = headroom/4;
                 STM_EVAL_LEDOn(LED4);
-                for ( i=0; i<padsamples; i++ )
-                {
-                    driverBuffers[thisBufferNum][nsamples] = driverBuffers[thisBufferNum][nsamples-2];
-                    nsamples++;
-                    driverBuffers[thisBufferNum][nsamples] = driverBuffers[thisBufferNum][nsamples-2];
-                    nsamples++;
-                    missingSamples_--;
-                }
-#ifdef DEBUG_COUNTERS
-                lastpadsamples = padsamples;
-                totalpadsamples += padsamples;
-#endif
+                adjustSamples( afd );
             }
             else
                 STM_EVAL_LEDOff(LED4);
 
-            bufferedSamples[thisBufferNum] = nsamples/2;
+            /* Extra copy because DMA can't access the CCM RAM where fifobuffers are placed.
+             * TODO: Should probably place FreeRTOS stacks there instead */
+            if ( afd->channels == 1 )
+            {
+                //todo, test this... don't know any mono tracks
+                for ( i = 0; i < (afd->nsamples); i++ )
+                {
+                    driverBuffers[thisBufferNum][i*2] = afd->samples[i];
+                    driverBuffers[thisBufferNum][i*2+1] = afd->samples[i];
+                }
+            }
+            else
+            {
+                if ( afd->channels != 2 )
+                    log( LOG_WARN ) << "Unsupported number of channels: " << afd->channels;
+                memcpy( driverBuffers[thisBufferNum], afd->samples, afd->nsamples*afd->channels*sizeof(int16_t) );
+            }
+
+            bufferedSamples[thisBufferNum] = afd->nsamples;
 #ifdef DEBUG_COUNTERS
             totalsamples += nsamples/2;
 #endif
 
-            if ( ProvideAudioBufferWithoutBlocking( driverBuffers[thisBufferNum], nsamples ) )
+            if ( !ProvideAudioBufferWithoutBlocking( driverBuffers[thisBufferNum], afd->nsamples * 2 ) )
             {
-                fifo_.returnFifoDataBuffer( afd );
+                log( LOG_EMERG ) << "failed to provide buffer to audio driver!";
             }
-            else
-                while(1); /* hang to catch error, we should not be able to take the semaphore if we're not allowed to provide data */
+            fifo_.returnFifoDataBuffer( afd );
         }
     }
 }

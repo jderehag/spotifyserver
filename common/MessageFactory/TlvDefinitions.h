@@ -72,12 +72,13 @@ typedef enum
     REQ( GET_STATUS,       0x401 )
     IND( STATUS,           0x401 )
 
-    /* Remote Audio - Experimental use only! */
+    /* Remote Audio */
     REQ( CREATE_AUDIO_ENDPOINT, 0x1001 )
     REQ( DELETE_AUDIO_ENDPOINT, 0x1002 )
     REQ( GET_AUDIO_ENDPOINTS,   0x1003 )
 
     IND( AUDIO_DATA,            0x1011 )
+    REQ( AUDIO_SYNC,            0x1012 )
 
     REQ( ADD_AUDIO_ENDPOINTS,    0x1021 )
     REQ( REM_AUDIO_ENDPOINTS,    0x1022 )
@@ -175,6 +176,8 @@ typedef enum
 //    TLV_AUDIO_DESTINATION_PORT = 0x2005,
     TLV_AUDIO_PROTOCOL_TYPE    = 0x2006,
     TLV_AUDIO_TIMESTAMP        = 0x2007,
+
+    TLV_AUDIO_BUFFERED_SAMPLES = 0x2021,
 
     /* Audio endpoint TLV's */
     TLV_AUDIO_EP_PROTOCOL      = 0x2102, /*AudioEndpointProtocolType_t*/

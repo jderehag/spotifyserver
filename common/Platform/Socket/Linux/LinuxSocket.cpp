@@ -416,7 +416,6 @@ int Socket::Receive(void* buf, int bufLen)
 int Socket::ReceiveFrom(void* buf, int bufLen, std::string& addr, std::string& port)
 {
     struct sockaddr_in6 sockaddr6;
-    struct sockaddr_in* sockaddr4 = (struct sockaddr_in*)&sockaddr6;
     struct sockaddr* sockaddr = (struct sockaddr*)&sockaddr6;
     socklen_t len = sizeof(struct sockaddr_in6);
     char str[INET6_ADDRSTRLEN];

@@ -43,9 +43,11 @@ public:
 
     typedef enum
     {
+        PRIO_VERY_LOW,
         PRIO_LOW,
         PRIO_MID,
         PRIO_HIGH,
+        PRIO_VERY_HIGH,
     }Prio;
 
 private:

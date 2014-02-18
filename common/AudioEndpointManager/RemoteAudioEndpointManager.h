@@ -37,6 +37,9 @@ class RemoteAudioEndpointManager : public AudioEndpointCtrlInterface, public IMe
 private:
     Messenger& messenger_;
     AudioEndpointRemoteSocketServer* server;
+
+    bool connectionUp_;
+    void sendAddEndpointMessage();
 public:
     RemoteAudioEndpointManager( Messenger& m );
     virtual ~RemoteAudioEndpointManager();

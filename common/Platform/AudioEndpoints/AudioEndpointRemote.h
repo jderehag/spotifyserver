@@ -41,6 +41,7 @@ class AudioEndpointRemote : public AudioEndpoint, public Platform::Runnable
 private:
     Socket sock_;
     std::string id_;
+    uint32_t remoteBufferSize;
 
     void sendAudioData();
 

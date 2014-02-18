@@ -44,6 +44,7 @@
 
 #ifdef WITH_LCD
 #include "stm32f4_discovery_lcd.h"
+#include <stdio.h>
 #endif
 
 #include "Platform/Threads/Runnable.h"
@@ -58,7 +59,7 @@ public:
     virtual void destroy();
 };
 
-LedFlasher::LedFlasher() : Platform::Runnable(false, SIZE_SMALL, PRIO_LOW)
+LedFlasher::LedFlasher() : Platform::Runnable(false, SIZE_SMALL, PRIO_VERY_LOW)
 {
     startThread();
 }
@@ -86,6 +87,7 @@ extern int servertimeplay;
 extern int clienttimeplay;
 extern uint32_t totalrecsamples;
 #endif
+extern int clockDrift;
 void LedFlasher::run()
 {
     portTickType delay = 500 / portTICK_RATE_MS;
@@ -95,7 +97,11 @@ void LedFlasher::run()
     while( isCancellationPending() == false )
     {
 #ifdef WITH_LCD
-        LCD_DisplayChar(0,0, (count & 1) ? '.' : ' ', White, Black, &Font8x8 );
+        sFONT* font = &Font8x8;
+        char clockdiff[10];
+        LCD_DisplayChar( 0,0, (count & 1) ? '.' : ' ', White, Black, font );
+        sprintf( clockdiff, "%5d", clockDrift );
+        LCD_DisplayStringLineCol( 0, 2*font->Width, clockdiff, White, Black, font );
 #ifdef DEBUG_COUNTERS
         log(LOG_NOTICE) <<  missingsamples << " " << totalsamples << " " << totalpadsamples;
 #endif
