@@ -38,7 +38,7 @@ namespace Platform {
 
 AudioEndpointLocal::AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config) : config_(config), adjustSamples_(0)
 {
-	startThread();
+    startThread();
 }
 AudioEndpointLocal::~AudioEndpointLocal()
 {
@@ -46,48 +46,48 @@ AudioEndpointLocal::~AudioEndpointLocal()
 
 void AudioEndpointLocal::destroy()
 {
-	cancelThread();
-	joinThread();
-	flushAudioData();
+    cancelThread();
+    joinThread();
+    flushAudioData();
 }
 
 
 void AudioEndpointLocal::run()
 {
-	snd_pcm_t *devFd = NULL;
-	int c;
-	unsigned int currentChannels = 0;
-	unsigned int currentRate = 0;
-	AudioFifoData *afd;
+    snd_pcm_t *devFd = NULL;
+    int c;
+    unsigned int currentChannels = 0;
+    unsigned int currentRate = 0;
+    AudioFifoData *afd;
 
-	while(isCancellationPending() == false)
-	{
-		if((afd = fifo_.getFifoDataTimedWait(1)) != 0)
-		{
-			/* First set up the alsa device with correct parameters (rate & channels) */
-			if (!devFd || currentRate != afd->rate || currentChannels != afd->channels)
-			{
-				if (devFd) snd_pcm_close(devFd);
+    while(isCancellationPending() == false)
+    {
+        if((afd = fifo_.getFifoDataTimedWait(1)) != 0)
+        {
+            /* First set up the alsa device with correct parameters (rate & channels) */
+            if (!devFd || currentRate != afd->rate || currentChannels != afd->channels)
+            {
+                if (devFd) snd_pcm_close(devFd);
 
-				currentRate = afd->rate;
-				currentChannels = afd->channels;
+                currentRate = afd->rate;
+                currentChannels = afd->channels;
 
-				if((devFd = alsa_open(config_.getDevice().c_str(), currentRate, currentChannels)) == NULL)
-				{
-					fprintf(stderr, "Unable to open ALSA device %s (%d channels, %d Hz)\n",
-					        config_.getDevice().c_str() , currentChannels, currentRate);
-				}
-			}
+                if((devFd = alsa_open(config_.getDevice().c_str(), currentRate, currentChannels)) == NULL)
+                {
+                    fprintf(stderr, "Unable to open ALSA device %s (%d channels, %d Hz)\n",
+                            config_.getDevice().c_str() , currentChannels, currentRate);
+                }
+            }
 
-			if(devFd)
-			{
-				c = snd_pcm_wait(devFd, 1000);
+            if(devFd)
+            {
+                c = snd_pcm_wait(devFd, 1000);
 
-				if (c >= 0)
-					c = snd_pcm_avail_update(devFd);
+                if (c >= 0)
+                    c = snd_pcm_avail_update(devFd);
 
-				if (c == -EPIPE)
-					snd_pcm_prepare(devFd);
+                if (c == -EPIPE)
+                    snd_pcm_prepare(devFd);
 
                 if ( afd->timestamp != 0 )
                 {
@@ -131,154 +131,154 @@ void AudioEndpointLocal::run()
                     adjustSamples( afd );
                 }
 
-				snd_pcm_writei(devFd, afd->samples, afd->nsamples);
-			}
-			fifo_.returnFifoDataBuffer( afd );
-			afd = 0;
-		}
-	}
+                snd_pcm_writei(devFd, afd->samples, afd->nsamples);
+            }
+            fifo_.returnFifoDataBuffer( afd );
+            afd = 0;
+        }
+    }
 
-	if (devFd) snd_pcm_close(devFd);
+    if (devFd) snd_pcm_close(devFd);
 
-	log(LOG_DEBUG) << "Exiting AudioEndpoint::run()";
+    log(LOG_DEBUG) << "Exiting AudioEndpoint::run()";
 }
 
 }
 
 static snd_pcm_t *alsa_open(const char *dev, int rate, int channels)
 {
-	snd_pcm_hw_params_t *hwp;
-	snd_pcm_sw_params_t *swp;
-	snd_pcm_t *h;
-	int r;
-	int dir;
-	snd_pcm_uframes_t period_size_min;
-	snd_pcm_uframes_t period_size_max;
-	snd_pcm_uframes_t buffer_size_min;
-	snd_pcm_uframes_t buffer_size_max;
-	snd_pcm_uframes_t period_size;
-	snd_pcm_uframes_t buffer_size;
+    snd_pcm_hw_params_t *hwp;
+    snd_pcm_sw_params_t *swp;
+    snd_pcm_t *h;
+    int r;
+    int dir;
+    snd_pcm_uframes_t period_size_min;
+    snd_pcm_uframes_t period_size_max;
+    snd_pcm_uframes_t buffer_size_min;
+    snd_pcm_uframes_t buffer_size_max;
+    snd_pcm_uframes_t period_size;
+    snd_pcm_uframes_t buffer_size;
 
-	if ((r = snd_pcm_open(&h, dev, SND_PCM_STREAM_PLAYBACK, 0) < 0))
-		return NULL;
+    if ((r = snd_pcm_open(&h, dev, SND_PCM_STREAM_PLAYBACK, 0) < 0))
+        return NULL;
 
-	hwp = static_cast<snd_pcm_hw_params_t *>(alloca(snd_pcm_hw_params_sizeof()));
-	memset(hwp, 0, snd_pcm_hw_params_sizeof());
-	snd_pcm_hw_params_any(h, hwp);
+    hwp = static_cast<snd_pcm_hw_params_t *>(alloca(snd_pcm_hw_params_sizeof()));
+    memset(hwp, 0, snd_pcm_hw_params_sizeof());
+    snd_pcm_hw_params_any(h, hwp);
 
-	snd_pcm_hw_params_set_access(h, hwp, SND_PCM_ACCESS_RW_INTERLEAVED);
-	snd_pcm_hw_params_set_format(h, hwp, SND_PCM_FORMAT_S16_LE);
-	snd_pcm_hw_params_set_rate(h, hwp, rate, 0);
-	snd_pcm_hw_params_set_channels(h, hwp, channels);
+    snd_pcm_hw_params_set_access(h, hwp, SND_PCM_ACCESS_RW_INTERLEAVED);
+    snd_pcm_hw_params_set_format(h, hwp, SND_PCM_FORMAT_S16_LE);
+    snd_pcm_hw_params_set_rate(h, hwp, rate, 0);
+    snd_pcm_hw_params_set_channels(h, hwp, channels);
 
-	/* Configurue period */
+    /* Configurue period */
 
-	dir = 0;
-	snd_pcm_hw_params_get_period_size_min(hwp, &period_size_min, &dir);
-	dir = 0;
-	snd_pcm_hw_params_get_period_size_max(hwp, &period_size_max, &dir);
+    dir = 0;
+    snd_pcm_hw_params_get_period_size_min(hwp, &period_size_min, &dir);
+    dir = 0;
+    snd_pcm_hw_params_get_period_size_max(hwp, &period_size_max, &dir);
 
-	period_size = 1024;
+    period_size = 1024;
 
-	dir = 0;
-	r = snd_pcm_hw_params_set_period_size_near(h, hwp, &period_size, &dir);
+    dir = 0;
+    r = snd_pcm_hw_params_set_period_size_near(h, hwp, &period_size, &dir);
 
-	if (r < 0) {
-		fprintf(stderr, "audio: Unable to set period size %lu (%s)\n",
-		        period_size, snd_strerror(r));
-		snd_pcm_close(h);
-		return NULL;
-	}
+    if (r < 0) {
+        fprintf(stderr, "audio: Unable to set period size %lu (%s)\n",
+                period_size, snd_strerror(r));
+        snd_pcm_close(h);
+        return NULL;
+    }
 
-	dir = 0;
-	r = snd_pcm_hw_params_get_period_size(hwp, &period_size, &dir);
+    dir = 0;
+    r = snd_pcm_hw_params_get_period_size(hwp, &period_size, &dir);
 
-	if (r < 0) {
-		fprintf(stderr, "audio: Unable to get period size (%s)\n",
-		        snd_strerror(r));
-		snd_pcm_close(h);
-		return NULL;
-	}
+    if (r < 0) {
+        fprintf(stderr, "audio: Unable to get period size (%s)\n",
+                snd_strerror(r));
+        snd_pcm_close(h);
+        return NULL;
+    }
 
-	/* Configurue buffer size */
+    /* Configurue buffer size */
 
-	snd_pcm_hw_params_get_buffer_size_min(hwp, &buffer_size_min);
-	snd_pcm_hw_params_get_buffer_size_max(hwp, &buffer_size_max);
-	buffer_size = period_size * 4;
+    snd_pcm_hw_params_get_buffer_size_min(hwp, &buffer_size_min);
+    snd_pcm_hw_params_get_buffer_size_max(hwp, &buffer_size_max);
+    buffer_size = period_size * 4;
 
-	dir = 0;
-	r = snd_pcm_hw_params_set_buffer_size_near(h, hwp, &buffer_size);
+    dir = 0;
+    r = snd_pcm_hw_params_set_buffer_size_near(h, hwp, &buffer_size);
 
-	if (r < 0) {
-		fprintf(stderr, "audio: Unable to set buffer size %lu (%s)\n",
-		        buffer_size, snd_strerror(r));
-		snd_pcm_close(h);
-		return NULL;
-	}
+    if (r < 0) {
+        fprintf(stderr, "audio: Unable to set buffer size %lu (%s)\n",
+                buffer_size, snd_strerror(r));
+        snd_pcm_close(h);
+        return NULL;
+    }
 
-	r = snd_pcm_hw_params_get_buffer_size(hwp, &buffer_size);
+    r = snd_pcm_hw_params_get_buffer_size(hwp, &buffer_size);
 
-	if (r < 0) {
-		fprintf(stderr, "audio: Unable to get buffer size (%s)\n",
-		        snd_strerror(r));
-		snd_pcm_close(h);
-		return NULL;
-	}
+    if (r < 0) {
+        fprintf(stderr, "audio: Unable to get buffer size (%s)\n",
+                snd_strerror(r));
+        snd_pcm_close(h);
+        return NULL;
+    }
 
-	/* write the hw params */
-	r = snd_pcm_hw_params(h, hwp);
+    /* write the hw params */
+    r = snd_pcm_hw_params(h, hwp);
 
-	if (r < 0) {
-		fprintf(stderr, "audio: Unable to configure hardware parameters (%s)\n",
-		        snd_strerror(r));
-		snd_pcm_close(h);
-		return NULL;
-	}
+    if (r < 0) {
+        fprintf(stderr, "audio: Unable to configure hardware parameters (%s)\n",
+                snd_strerror(r));
+        snd_pcm_close(h);
+        return NULL;
+    }
 
-	/*
-	 * Software parameters
-	 */
+    /*
+     * Software parameters
+     */
 
-	swp = static_cast<snd_pcm_sw_params_t *>(alloca(snd_pcm_sw_params_sizeof()));
-	memset(hwp, 0, snd_pcm_sw_params_sizeof());
-	snd_pcm_sw_params_current(h, swp);
+    swp = static_cast<snd_pcm_sw_params_t *>(alloca(snd_pcm_sw_params_sizeof()));
+    memset(hwp, 0, snd_pcm_sw_params_sizeof());
+    snd_pcm_sw_params_current(h, swp);
 
-	r = snd_pcm_sw_params_set_avail_min(h, swp, period_size);
+    r = snd_pcm_sw_params_set_avail_min(h, swp, period_size);
 
-	if (r < 0) {
-		fprintf(stderr, "audio: Unable to configure wakeup threshold (%s)\n",
-		        snd_strerror(r));
-		snd_pcm_close(h);
-		return NULL;
-	}
+    if (r < 0) {
+        fprintf(stderr, "audio: Unable to configure wakeup threshold (%s)\n",
+                snd_strerror(r));
+        snd_pcm_close(h);
+        return NULL;
+    }
 
-	snd_pcm_sw_params_set_start_threshold(h, swp, 0);
+    snd_pcm_sw_params_set_start_threshold(h, swp, 0);
 
-	if (r < 0) {
-		fprintf(stderr, "audio: Unable to configure start threshold (%s)\n",
-		        snd_strerror(r));
-		snd_pcm_close(h);
-		return NULL;
-	}
+    if (r < 0) {
+        fprintf(stderr, "audio: Unable to configure start threshold (%s)\n",
+                snd_strerror(r));
+        snd_pcm_close(h);
+        return NULL;
+    }
 
-	r = snd_pcm_sw_params(h, swp);
+    r = snd_pcm_sw_params(h, swp);
 
-	if (r < 0) {
-		fprintf(stderr, "audio: Cannot set soft parameters (%s)\n",
-		snd_strerror(r));
-		snd_pcm_close(h);
-		return NULL;
-	}
+    if (r < 0) {
+        fprintf(stderr, "audio: Cannot set soft parameters (%s)\n",
+        snd_strerror(r));
+        snd_pcm_close(h);
+        return NULL;
+    }
 
-	r = snd_pcm_prepare(h);
-	if (r < 0) {
-		fprintf(stderr, "audio: Cannot prepare audio for playback (%s)\n",
-		snd_strerror(r));
-		snd_pcm_close(h);
-		return NULL;
-	}
+    r = snd_pcm_prepare(h);
+    if (r < 0) {
+        fprintf(stderr, "audio: Cannot prepare audio for playback (%s)\n",
+        snd_strerror(r));
+        snd_pcm_close(h);
+        return NULL;
+    }
 
-	return h;
+    return h;
 }
 
 
