@@ -29,12 +29,13 @@
 #define APPLOG_H_
 #include "LogLevels.h"
 
-#define APP_LOG(loglevel, format, ...)                                              \
+#define APP_LOG(loglevel, ...)                                              \
                 if(getConfiguredLogLevelCBinder() >= loglevel)                      \
-                        LogAppendCBinder(loglevel, __func__, format, __VA_ARGS__)
+                        LogAppendCBinder(loglevel, __func__, __VA_ARGS__)
 
 
 void LogAppendCBinder(LogLevel level, const char* functionName, const char* format, ...);
+void LogAppendSimpleCBinder(const char* format, ...); //needed because of weird logging facility in lwip..
 LogLevel getConfiguredLogLevelCBinder();
 
 #ifdef __cplusplus

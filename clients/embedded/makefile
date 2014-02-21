@@ -67,12 +67,12 @@ CDEFS += -DWITH_LCD
 
 
 #lwIP		
-SRC +=	$(addprefix lwip_v1.4.0/src/core/, init.c tcp_out.c memp.c netif.c pbuf.c raw.c stats.c sys.c tcp.c tcp_in.c udp.c dhcp.c def.c timers.c ipv4/ip.c ipv4/ip_addr.c ipv4/icmp.c ipv4/ip_frag.c ipv4/inet.c ipv4/inet_chksum.c ipv4/autoip.c) \
-		$(addprefix lwip_v1.4.0/src/api/, tcpip.c api_msg.c err.c api_lib.c netbuf.c sockets.c ) \
-		$(addprefix lwip_v1.4.0/src/netif/, etharp.c ) \
-		$(addprefix lwip_v1.4.0/port/STM32F4x7/FreeRTOS/, sys_arch.c ethernetif.c)
+SRC +=	$(addprefix lwip-1.4.1/src/core/, init.c tcp_out.c memp.c netif.c pbuf.c raw.c stats.c sys.c tcp.c tcp_in.c udp.c dhcp.c def.c timers.c ipv4/ip.c ipv4/ip_addr.c ipv4/icmp.c ipv4/ip_frag.c ipv4/inet.c ipv4/inet_chksum.c ipv4/autoip.c) \
+		$(addprefix lwip-1.4.1/src/api/, tcpip.c api_msg.c err.c api_lib.c netbuf.c sockets.c ) \
+		$(addprefix lwip-1.4.1/src/netif/, etharp.c ) \
+		$(addprefix lwip-1.4.1/port/STM32F4x7/FreeRTOS/, sys_arch.c ethernetif.c)
 
-LWIP_MEM = $(addprefix lwip_v1.4.0/src/core/, mem.c)
+LWIP_MEM = $(addprefix lwip-1.4.1/src/core/, mem.c)
 SRC += $(LWIP_MEM)
 
 # List C++ source files here.
@@ -85,6 +85,7 @@ CPPSRC = main.cpp buttonHandler.cpp UIEmbedded.cpp heapWrap.cpp LoggerEmbedded.c
 		MediaInterface/MediaInterface.cpp \
 		Logger/Logger.cpp \
 		Platform/Socket/LwIP/LwIPSocket.cpp \
+		Platform/Socket/LwIP/Select.cpp \
 		Platform/Utils/FreeRTOS/FreeRTOSUtils.cpp \
 		$(addprefix Platform/Threads/FreeRTOS/, FreeRTOSMessagebox.cpp FreeRTOSMutex.cpp FreeRTOSCondition.cpp FreeRTOSRunnable.cpp)
 
@@ -121,10 +122,10 @@ EXTRAINCDIRS  += ./source/freertos/include \
 		  ./../../src \
 		  ./../../common \
 		  ./../../common/Logger \
-		  ./source/lwip_v1.4.0/src/include \
-		  ./source/lwip_v1.4.0/src/include/ipv4 \
-		  ./source/lwip_v1.4.0/port/STM32F4x7/FreeRTOS \
-		  ./source/lwip_v1.4.0/port/STM32F4x7
+		  ./source/lwip-1.4.1/src/include \
+		  ./source/lwip-1.4.1/src/include/ipv4 \
+		  ./source/lwip-1.4.1/port/STM32F4x7/FreeRTOS \
+		  ./source/lwip-1.4.1/port/STM32F4x7
 
 EXTRAINCDIRS += ./source/STM32F4XX/STM32F4DIS_LCD_Driver/inc
 

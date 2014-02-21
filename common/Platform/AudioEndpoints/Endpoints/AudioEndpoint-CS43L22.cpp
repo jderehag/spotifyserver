@@ -61,8 +61,8 @@ typedef struct
     AudioFifoData header;
     int16_t samples[SAMPLES_PER_BUFFER];
 } audioBuffer_t;
-
-static audioBuffer_t fifobuffers[40] __attribute__ ((section (".audio_buffers")));
+#define NOF_AUDIO_BUFFERS 35
+static audioBuffer_t fifobuffers[NOF_AUDIO_BUFFERS] __attribute__ ((section (".audio_buffers")));
 static int16_t driverBuffers [2][SAMPLES_PER_BUFFER+2]; // + 2 for possible padding in driver...
 static uint8_t bufferNumber = 0;
 static unsigned int bufferedSamples[2] = {0};
@@ -95,7 +95,7 @@ void AudioEndpointLocal::run()
     unsigned int currentrate = 0;
     unsigned int i;
 
-    for ( i = 0; i < 40; i++)
+    for ( i = 0; i < NOF_AUDIO_BUFFERS; i++)
     {
         fifobuffers[i].header.bufferSize = sizeof(fifobuffers[i].samples);
         fifo_.returnFifoDataBuffer((AudioFifoData*)(&fifobuffers[i]));
@@ -184,8 +184,7 @@ void AudioEndpointLocal::run()
             else
                 STM_EVAL_LEDOff(LED4);
 
-            /* Extra copy because DMA can't access the CCM RAM where fifobuffers are placed.
-             * TODO: Should probably place FreeRTOS stacks there instead */
+            /* Copy buffer to the driver buffer so we can free the afd */
             if ( afd->channels == 1 )
             {
                 //todo, test this... don't know any mono tracks

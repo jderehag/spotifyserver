@@ -26,18 +26,14 @@
  */
 
 #include "../Socket.h"
+#include "LwipSocketPimpl.h"
 
 #include "lwip/sockets.h"
+
 #include "applog.h"
 
 #include <string.h>
 #include <stdlib.h>     /* atoi */
-
-
-typedef struct SocketHandle_t
-{
-    int fd;
-}SocketHandle_t;
 
 Socket::Socket(SocketHandle_t* socket) : socket_(socket)
 {
@@ -62,7 +58,6 @@ Socket::Socket( SockType_t type )
             socket_->fd = lwip_socket(PF_INET, SOCK_DGRAM, 0);
             break;
         default:
-            LWIP_ASSERT("Bad socket type", false);
             break;
     }
 
@@ -122,19 +117,13 @@ int Socket::Connect(const std::string& addr, const std::string& port)
 
 int Socket::WaitForConnect()
 {
-    lwip_fd_set fds;
-    struct timeval tmo;
     int error;
     socklen_t len = sizeof(error);
-
-    LWIP_FD_ZERO(&fds);
-    LWIP_FD_SET(socket_->fd, &fds);
-    tmo.tv_sec = 5;
-    tmo.tv_usec = 0;
-
+    std::set<Socket*> s;
+    s.insert(this);
     //log(LOG_WARN) << "waiting";
 
-    if ( lwip_select(socket_->fd+1, NULL, &fds, NULL, &tmo) <= 0)
+    if ( select(NULL, &s, NULL, 5000) <= 0)
     {
         return -1;
     }
@@ -243,97 +232,6 @@ void Socket::Close()
 void Socket::Shutdown()
 {
     lwip_shutdown(socket_->fd, SHUT_RD);
-}
-
-
-
-int select(std::set<Socket*>* readsockets, std::set<Socket*>* writesockets, std::set<Socket*>* errsockets, int timeout)
-{
-    int maxfd = 0;
-    int rc;
-    lwip_fd_set readfds, writefds, errfds;
-    std::set<Socket*>::iterator it;
-    struct timeval tmo;
-
-    LWIP_FD_ZERO(&readfds);
-    LWIP_FD_ZERO(&writefds);
-    LWIP_FD_ZERO(&errfds);
-
-    if (readsockets)
-    {
-        for (it = readsockets->begin(); it != readsockets->end(); it++)
-        {
-            LWIP_FD_SET((*it)->socket_->fd, &readfds);
-            if ((*it)->socket_->fd > maxfd) maxfd = (*it)->socket_->fd;
-        }
-    }
-
-    if (writesockets)
-    {
-        for (it = writesockets->begin(); it != writesockets->end(); it++)
-        {
-            LWIP_FD_SET((*it)->socket_->fd, &writefds);
-            if ((*it)->socket_->fd > maxfd) maxfd = (*it)->socket_->fd;
-        }
-    }
-
-    if (errsockets)
-    {
-        for (it = errsockets->begin(); it != errsockets->end(); it++)
-        {
-            LWIP_FD_SET((*it)->socket_->fd, &errfds);
-            if ((*it)->socket_->fd > maxfd) maxfd = (*it)->socket_->fd;
-        }
-    }
-
-    tmo.tv_sec = timeout/1000;
-    tmo.tv_usec = (timeout % 1000) * 1000;
-
-    if ( (rc = lwip_select(maxfd+1, &readfds, &writefds, &errfds, &tmo) ) < 0 )
-    {
-        log(LOG_WARN) << "select() failed";
-        return rc;
-    }
-
-    if (readsockets)
-    {
-        it = readsockets->begin();
-        while (it != readsockets->end())
-        {
-            if (!LWIP_FD_ISSET((*it)->socket_->fd, &readfds))
-                readsockets->erase(it++);
-            else
-                it++;
-        }
-    }
-
-    if (writesockets)
-    {
-        it = writesockets->begin();
-        while (it != writesockets->end())
-        {
-            if (!LWIP_FD_ISSET((*it)->socket_->fd, &writefds))
-            {
-                writesockets->erase(it++);
-            }
-            else
-                it++;
-        }
-    }
-
-    if (errsockets)
-    {
-        it = errsockets->begin();
-        while (it != errsockets->end())
-        {
-            if (!LWIP_FD_ISSET((*it)->socket_->fd, &errfds))
-                errsockets->erase(it++);
-            else
-                it++;
-        }
-    }
-
-    return rc;
 }
 
 

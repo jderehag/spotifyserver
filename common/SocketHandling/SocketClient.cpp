@@ -54,11 +54,14 @@ void SocketClient::run()
     {
         uint8_t msg[] = {'?'};
         Socket socket( SOCKTYPE_DATAGRAM );
-
         socket.EnableBroadcast();
 
         if ( socket.SendTo( msg, sizeof(msg), "255.255.255.255", "7788") < 0 )
+        {
+            log(LOG_EMERG) << "Failed to send auto discovery message!";
+            sleep_ms(10000);
             continue;
+        }
 
         std::set<Socket*> readset;
 

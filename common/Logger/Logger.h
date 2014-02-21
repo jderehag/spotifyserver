@@ -87,6 +87,7 @@ std::string logprefix( LogLevel level, const char* functionName );
 extern "C"
 {
 void LogAppendCBinder(LogLevel level, const char* functionName, const char* format, ...);
+void LogAppendSimpleCBinder(const char* format, ...);
 LogLevel getConfiguredLogLevelCBinder();
 }
 
