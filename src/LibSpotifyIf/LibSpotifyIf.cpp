@@ -543,7 +543,38 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
                 }
                 callbackSubscriberMtx_.unlock();
             }
-			break;
+            break;
+
+        case EVENT_TRACK_ENDED:
+            {
+                if ( trackState_ != TRACK_STATE_NOT_LOADED )
+                {
+                    log(LOG_DEBUG) << "End of track notified, progress " << progress_;
+                    trackState_ = TRACK_STATE_NOT_LOADED; /*todo, this should happen when buffer is finished*/
+
+                    /* unload track, otherwise end of track callback will just be called repeatedly until a new track is loaded */
+                    sp_session_player_unload(spotifySession_);
+
+                    /* Tell all subscribers that the track has ended */
+                    callbackSubscriberMtx_.lock();
+                    for(std::set<IMediaInterfaceCallbackSubscriber*>::iterator it = callbackSubscriberList_.begin();
+                        it != callbackSubscriberList_.end(); it++)
+                    {
+                        (*it)->statusUpdateInd( PLAYBACK_IDLE,
+                            playbackHandler_.getRepeat(),
+                            playbackHandler_.getShuffle() );
+                    }
+                    callbackSubscriberMtx_.unlock();
+
+                    /* notify playbackhandler so it can load a new track */
+                    playbackHandler_.trackEndedInd();
+                }
+                else
+                {
+                    log(LOG_NOTICE) << "End of track called, but no track is playing!";
+                } 
+            }
+            break;
 
 		case EVENT_PLAY_TRACK:
 		    {
@@ -758,24 +789,8 @@ void LibSpotifyIf::metadataUpdatedCb(sp_session *session)
 
 void LibSpotifyIf::endOfTrackCb(sp_session *session)
 {
-    log(LOG_DEBUG) << "End of track";
-    log(LOG_WARN) << progress_;
-    trackState_ = TRACK_STATE_NOT_LOADED; /*todo, this should happen when buffer is finished*/
-
-	/* Tell all subscribers that the track has ended */
-	/* JESPER: perhaps this should be done from the main thread?*/
-	callbackSubscriberMtx_.lock();
-	for(std::set<IMediaInterfaceCallbackSubscriber*>::iterator it = callbackSubscriberList_.begin();
-		it != callbackSubscriberList_.end(); it++)
-	{
-        (*it)->statusUpdateInd( PLAYBACK_IDLE,
-                                playbackHandler_.getRepeat(),
-                                playbackHandler_.getShuffle() );
-	}
-	callbackSubscriberMtx_.unlock();
-
-	/* special handling for the playbackhandler */
-	playbackHandler_.trackEndedInd();
+    log(LOG_DEBUG) << "Track ended";
+    postToEventThread( new EventItem( EVENT_TRACK_ENDED ) );
 }
 
 void LibSpotifyIf::loggedOutCb(sp_session *session)
@@ -925,49 +940,50 @@ void LibSpotifyIf::albumLoadedCb(sp_albumbrowse* result, void *userdata)
  * *****************/
 const char* getEventName(LibSpotifyIf::EventItem* event)
 {
-	switch(event->event_)
-	{
-	    case LibSpotifyIf::EVENT_ITERATE_MAIN_LOOP:
+    switch(event->event_)
+    {
+        case LibSpotifyIf::EVENT_ITERATE_MAIN_LOOP:
             return "EVENT_ITERATE_MAIN_LOOP";
 
             /* Metadata */
-		case LibSpotifyIf::EVENT_METADATA_UPDATED:
-			return "EVENT_METADATA_UPDATED";
-		case LibSpotifyIf::EVENT_GENERIC_SEARCH:
+        case LibSpotifyIf::EVENT_METADATA_UPDATED:
+            return "EVENT_METADATA_UPDATED";
+        case LibSpotifyIf::EVENT_GENERIC_SEARCH:
             return "EVENT_GENERIC_SEARCH";
-		case LibSpotifyIf::EVENT_GET_TRACKS:
-		    return "EVENT_GET_TRACKS";
-		case LibSpotifyIf::EVENT_GET_IMAGE:
-		    return "EVENT_GET_IMAGE";
-		case LibSpotifyIf::EVENT_GET_ALBUM:
-		    return "EVENT_GET_ALBUM";
+        case LibSpotifyIf::EVENT_GET_TRACKS:
+            return "EVENT_GET_TRACKS";
+        case LibSpotifyIf::EVENT_GET_IMAGE:
+            return "EVENT_GET_IMAGE";
+        case LibSpotifyIf::EVENT_GET_ALBUM:
+            return "EVENT_GET_ALBUM";
 
-			/* Playback handling */
-		case LibSpotifyIf::EVENT_PLAY_REQ:
-		    return "EVENT_PLAY_REQ";
+            /* Playback handling */
+        case LibSpotifyIf::EVENT_PLAY_REQ:
+            return "EVENT_PLAY_REQ";
         case LibSpotifyIf::EVENT_STOP_REQ:
             return "EVENT_STOP_REQ";
-		case LibSpotifyIf::EVENT_ENQUEUE_TRACK_REQ:
-		    return "EVENT_ENQUEUE_TRACK_REQ";
-		case LibSpotifyIf::EVENT_PAUSE_PLAYBACK:
-		    return "EVENT_PAUSE_PLAYBACK";
-		case LibSpotifyIf::EVENT_RESUME_PLAYBACK:
-		    return "EVENT_RESUME_PLAYBACK";
-		case LibSpotifyIf::EVENT_PLAY_TRACK:
-		    return "EVENT_PLAY_TRACK";
+        case LibSpotifyIf::EVENT_ENQUEUE_TRACK_REQ:
+            return "EVENT_ENQUEUE_TRACK_REQ";
+        case LibSpotifyIf::EVENT_PAUSE_PLAYBACK:
+            return "EVENT_PAUSE_PLAYBACK";
+        case LibSpotifyIf::EVENT_RESUME_PLAYBACK:
+            return "EVENT_RESUME_PLAYBACK";
+        case LibSpotifyIf::EVENT_PLAY_TRACK:
+            return "EVENT_PLAY_TRACK";
+        case LibSpotifyIf::EVENT_TRACK_ENDED:
+            return "EVENT_TRACK_ENDED";
 
              /* Session handling */
-		case LibSpotifyIf::EVENT_LOGGING_IN:
+        case LibSpotifyIf::EVENT_LOGGING_IN:
             return "EVENT_LOGGING_IN";
         case LibSpotifyIf::EVENT_LOGGED_IN:
             return "EVENT_LOGGED_IN";
-		case LibSpotifyIf::EVENT_LOGGING_OUT:
+        case LibSpotifyIf::EVENT_LOGGING_OUT:
             return "EVENT_LOGGING_OUT";
         case LibSpotifyIf::EVENT_LOGGED_OUT:
             return "EVENT_LOGGED_OUT";
         case LibSpotifyIf::EVENT_CONNECTION_LOST:
             return "EVENT_CONNECTION_LOST";
-
 	}
     return "Unknown event type!";
 }
