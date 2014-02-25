@@ -41,6 +41,8 @@
 #include "task.h"
 #include "applog.h"
 #include "LoggerEmbedded.h"
+#include "NtpClient.h"
+#include "clock.h"
 
 #ifdef WITH_LCD
 #include "stm32f4_discovery_lcd.h"
@@ -97,11 +99,25 @@ void LedFlasher::run()
     while( isCancellationPending() == false )
     {
 #ifdef WITH_LCD
+        time_t rawtime;
+        struct tm timeinfo;
+        char tmp[10] = {0};
         sFONT* font = &Font8x8;
-        char clockdiff[10];
+
+        /* flashing dot */
         LCD_DisplayChar( 0,0, (count & 1) ? '.' : ' ', White, Black, font );
-        sprintf( clockdiff, "%5d", clockDrift );
-        LCD_DisplayStringLineCol( 0, 2*font->Width, clockdiff, White, Black, font );
+
+        /* debug counters and stuff */
+        sprintf( tmp, "%5d", clockDrift );
+        LCD_DisplayStringLineCol( 0, 2*font->Width, tmp, White, Black, font );
+
+        /* clock in top right corner */
+        time (&rawtime);
+        localtime_r (&rawtime, &timeinfo);
+        strftime( tmp, sizeof(tmp), "%H:%M:%S", &timeinfo );
+        LCD_DisplayStringLineCol( 0, 31*font->Width, tmp, White, Black, font );
+
+
 #ifdef DEBUG_COUNTERS
         log(LOG_NOTICE) <<  missingsamples << " " << totalsamples << " " << totalpadsamples;
 #endif
@@ -121,12 +137,15 @@ int main(void)
     STM_EVAL_LEDInit(LED3);
     STM_EVAL_LEDInit(LED5);
     STM_EVAL_LEDInit(LED6);
-#endif
-
-#ifdef WITH_LCD
+#else
     STM32f4_Discovery_LCD_Init();
 #endif
 
+    clockInit();
+#ifdef WITH_TIME
+    NtpClient* nc = new NtpClient();
+    putenv( "TZ=CET-1CEST-2,M3.5.0/2,M10.5.0/3" ); /* initialize current time zone to CET, with DST switch */
+#endif
     Logger::LoggerEmbedded* l = new Logger::LoggerEmbedded(LOG_NOTICE);
     LedFlasher* fl = new LedFlasher;
 

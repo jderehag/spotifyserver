@@ -57,8 +57,8 @@ std::string logprefix( LogLevel level, const char* functionName )
     std::stringstream str;
     char tmp[10] = {0};
 
-    time (&rawtime);
-    localtime_r (&rawtime, &timeinfo);
+    time( &rawtime );
+    localtime_r( &rawtime, &timeinfo );
     strftime( tmp, sizeof(tmp), "%H:%M:%S", &timeinfo );
 
     str << tmp << " [" << level_strings[level] << "] " << functionName << ": ";

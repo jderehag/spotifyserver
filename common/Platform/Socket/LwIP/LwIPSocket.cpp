@@ -29,13 +29,49 @@
 #include "LwipSocketPimpl.h"
 
 #include "lwip/sockets.h"
+#include "lwip/netdb.h"
 
 #include "applog.h"
 
 #include <string.h>
 #include <stdlib.h>     /* atoi */
 
-Socket::Socket(SocketHandle_t* socket) : socket_(socket)
+
+static struct addrinfo* toAddrinfo( const std::string& addr, const std::string& port, bool forBind, bool ipv4Only )
+{
+    int SocketType = SOCK_STREAM;  // TCP
+    int RetVal;
+    struct addrinfo Hints, *AddrInfo;
+
+    memset(&Hints, 0, sizeof (Hints));
+    Hints.ai_socktype = SocketType;
+
+    if ( !ipv4Only )
+        return NULL; // not implemented in lwip: Hints.ai_flags = AI_ALL | AI_V4MAPPED;
+    if ( forBind )
+        return NULL; // not implemented in lwip: Hints.ai_flags |= AI_PASSIVE;
+
+    Hints.ai_family = PF_INET;
+    if ( addr == "ANY" )
+    {
+        /* get the "any" address */
+        RetVal = lwip_getaddrinfo(NULL, port.c_str(), &Hints, &AddrInfo);
+    }
+    else
+    {
+        RetVal = lwip_getaddrinfo(addr.c_str(), port.c_str(), &Hints, &AddrInfo);
+    }
+
+    if (RetVal != 0)
+    {
+        log(LOG_WARN) << "getaddrinfo for addr=" << addr << " failed with error " << RetVal << " " /*<< gai_strerror(RetVal)*/;
+        return NULL;
+    }
+
+    return AddrInfo;
+}
+
+Socket::Socket(SocketHandle_t* socket) : socket_(socket), ipv4Only_(true)
 {
     /* Set socket non-blocking */
     int opt = 1;
@@ -43,7 +79,7 @@ Socket::Socket(SocketHandle_t* socket) : socket_(socket)
 
 }
 
-Socket::Socket( SockType_t type )
+Socket::Socket( SockType_t type ) : ipv4Only_(true)
 {
     int on = 1;
 
@@ -101,17 +137,40 @@ int Socket::BindToDevice(const std::string& device, const std::string& port)
 int Socket::Connect(const std::string& addr, const std::string& port)
 {
     int rc;
-    struct sockaddr_in serv_addr;
-    memset( &serv_addr, 0, sizeof(struct sockaddr_in) );
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = inet_addr( addr.c_str() );
-    serv_addr.sin_port = htons(atoi(port.c_str()));
-    rc = lwip_connect( socket_->fd, (struct sockaddr*)&serv_addr, sizeof(serv_addr) );
+    char str[20];
+    bool success = false;
 
-    if (rc < 0 && errno == EINPROGRESS)
-        rc = 0;
+    struct addrinfo *AddrInfo, *AI;
 
-    return WaitForConnect();
+    AddrInfo = toAddrinfo( addr, port, false, ipv4Only_ );
+    remoteAddr_ = addr;
+
+    for ( AI = AddrInfo; AI != NULL; AI = AI->ai_next )
+    {
+        struct sockaddr_in connectAddr;
+        if ( AI->ai_family != AF_INET ) continue;
+        memcpy( &connectAddr, AI->ai_addr, sizeof(struct sockaddr_in) );
+        inet_ntoa_r( connectAddr.sin_addr, str, sizeof(str) );
+
+        log(LOG_DEBUG) << "attempting connect to \"" << addr << "\" -> ip " << str << " port " << ntohs(connectAddr.sin_port);
+
+        rc = lwip_connect( socket_->fd, (struct sockaddr*) &connectAddr, sizeof(connectAddr) );
+
+        if (rc < 0 && errno != EINPROGRESS)
+        {
+            log(LOG_WARN) << "connect attempt failed with error " << strerror(errno);
+        }
+        else
+        {
+            success = true;
+            break;
+        }
+    }
+
+    if ( AddrInfo )
+        lwip_freeaddrinfo( AddrInfo );
+
+    return success ? WaitForConnect() : -1;
 }
 
 

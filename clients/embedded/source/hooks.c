@@ -1,9 +1,18 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "stm32f4xx.h"
+#include "clock.h"
 
 void vApplicationTickHook( void )
 {
+    static int count = 0;
+    count++;
+    if ( count == (1000/portTICK_RATE_MS) )
+    {
+        // tick clock every second
+        clockTick();
+        count = 0;
+    }
 }
 
 void vApplicationMallocFailedHook( void )

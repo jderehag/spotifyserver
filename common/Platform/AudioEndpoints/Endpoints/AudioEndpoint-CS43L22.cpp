@@ -61,7 +61,7 @@ typedef struct
     AudioFifoData header;
     int16_t samples[SAMPLES_PER_BUFFER];
 } audioBuffer_t;
-#define NOF_AUDIO_BUFFERS 35
+#define NOF_AUDIO_BUFFERS 34
 static audioBuffer_t fifobuffers[NOF_AUDIO_BUFFERS] __attribute__ ((section (".audio_buffers")));
 static int16_t driverBuffers [2][SAMPLES_PER_BUFFER+2]; // + 2 for possible padding in driver...
 static uint8_t bufferNumber = 0;

@@ -67,8 +67,8 @@ CDEFS += -DWITH_LCD
 
 
 #lwIP		
-SRC +=	$(addprefix lwip-1.4.1/src/core/, init.c tcp_out.c memp.c netif.c pbuf.c raw.c stats.c sys.c tcp.c tcp_in.c udp.c dhcp.c def.c timers.c ipv4/ip.c ipv4/ip_addr.c ipv4/icmp.c ipv4/ip_frag.c ipv4/inet.c ipv4/inet_chksum.c ipv4/autoip.c) \
-		$(addprefix lwip-1.4.1/src/api/, tcpip.c api_msg.c err.c api_lib.c netbuf.c sockets.c ) \
+SRC +=	$(addprefix lwip-1.4.1/src/core/, init.c tcp_out.c memp.c netif.c pbuf.c raw.c stats.c sys.c tcp.c tcp_in.c udp.c dhcp.c def.c timers.c dns.c ipv4/ip.c ipv4/ip_addr.c ipv4/icmp.c ipv4/ip_frag.c ipv4/inet.c ipv4/inet_chksum.c ipv4/autoip.c) \
+		$(addprefix lwip-1.4.1/src/api/, tcpip.c api_msg.c err.c api_lib.c netbuf.c sockets.c netdb.c ) \
 		$(addprefix lwip-1.4.1/src/netif/, etharp.c ) \
 		$(addprefix lwip-1.4.1/port/STM32F4x7/FreeRTOS/, sys_arch.c ethernetif.c)
 
@@ -77,7 +77,7 @@ SRC += $(LWIP_MEM)
 
 # List C++ source files here.
 # use file-extension .cpp for C++-files (not .C)
-CPPSRC = main.cpp buttonHandler.cpp UIEmbedded.cpp heapWrap.cpp LoggerEmbedded.cpp LcdLog.cpp \
+CPPSRC = main.cpp buttonHandler.cpp UIEmbedded.cpp heapWrap.cpp LoggerEmbedded.cpp LcdLog.cpp clock.cpp \
 		$(addprefix MediaContainers/, Album.cpp Artist.cpp Folder.cpp Playlist.cpp Track.cpp) \
 		$(addprefix MessageFactory/, Message.cpp MessageDecoder.cpp MessageEncoder.cpp TlvDefinitions.cpp Tlvs.cpp SocketReader.cpp SocketWriter.cpp) \
 		RemoteMediaInterface.cpp \
@@ -102,9 +102,16 @@ AUDIOSRCCPP =		ConfigHandling/Configs/AudioEndpointConfig.cpp \
 					AudioEndpointRemoteSocketServer.cpp \
 					AudioEndpointManager/RemoteAudioEndpointManager.cpp
 
-
 SRC += $(AUDIOSRC)
 CPPSRC += $(AUDIOSRCCPP)
+
+
+WITH_TIME?=0
+ifeq ($(WITH_TIME),1)
+CPPSRC += NtpClient.cpp 
+CDEFS += -DWITH_TIME
+endif
+
 
 #List assembler files
 ASRC = STM32F4XX/startup_stm32f4xx.s

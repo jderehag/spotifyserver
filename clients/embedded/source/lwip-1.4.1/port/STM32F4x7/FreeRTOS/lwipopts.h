@@ -67,15 +67,12 @@ a lot of data that needs to be copied, this should be set high. */
 #define MEMP_NUM_PBUF           5
 /* MEMP_NUM_UDP_PCB: the number of UDP protocol control blocks. One
    per active UDP "connection". */
-//#define MEMP_NUM_UDP_PCB        6
-#define MEMP_NUM_UDP_PCB        3 //dhcp + audio + auto discovery
+#define MEMP_NUM_UDP_PCB        5 //dhcp + audio + auto discovery + dns + ntp
 /* MEMP_NUM_TCP_PCB: the number of simulatenously active TCP
    connections. */
-//#define MEMP_NUM_TCP_PCB        10
 #define MEMP_NUM_TCP_PCB        1
 /* MEMP_NUM_TCP_PCB_LISTEN: the number of listening TCP
    connections. */
-//#define MEMP_NUM_TCP_PCB_LISTEN 5
 #define MEMP_NUM_TCP_PCB_LISTEN 0
 /* MEMP_NUM_TCP_SEG: the number of simultaneously queued TCP
    segments. */
@@ -201,6 +198,7 @@ The STM32F4x7 allows computing and verifying the IP, UDP, TCP and ICMP checksums
  */
 #define LWIP_SOCKET                     1
 #define LWIP_COMPAT_SOCKETS             0
+#define LWIP_DNS                        1
 
 /*
    -----------------------------------
@@ -209,8 +207,7 @@ The STM32F4x7 allows computing and verifying the IP, UDP, TCP and ICMP checksums
 */
 
 #define LWIP_DEBUG                      0
-#define TCP_DEBUG                       LWIP_DBG_OFF
-
+#define SOCKET_DEBUG                    LWIP_DBG_OFF
 /*
    ---------------------------------
    ---------- OS options ----------
