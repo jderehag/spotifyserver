@@ -51,7 +51,7 @@ FREERTOS = FreeRTOS-8.0.0
 SRC  =	syscalls.c powerHandler.c
 
 #FreeRTOS
-SRC +=	$(addprefix $(FREERTOS)/, list.c queue.c tasks.c timers.c ) \
+SRC +=	$(addprefix $(FREERTOS)/, list.c queue.c tasks.c timers.c event_groups.c ) \
 		$(addprefix $(FREERTOS)/portable/GCC/ARM_CM4F/, port.c) \
 		$(FREERTOS)/portable/MemMang/heap_3.c \
 		hooks.c

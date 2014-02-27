@@ -9,6 +9,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 typedef void AudioCallbackFunction(void *context,int buffer);
 
 #define Audio8000HzSettings 256,5,12,1
@@ -22,7 +27,7 @@ typedef void AudioCallbackFunction(void *context,int buffer);
 
 // Initialize and power up audio hardware. Use the above defines for the parameters.
 // Can probably only be called once.
-void InitializeAudio(int plln, int pllr, int i2sdiv, int i2sodd, AudioCallbackFunction *callback, AudioCallbackFunction *isrcallback, void *context);
+void InitializeAudio(int plln, int pllr, int i2sdiv, int i2sodd, AudioCallbackFunction *isrcallback, void *context);
 
 // Power up and down the audio hardware.
 void AudioOn();
@@ -48,4 +53,7 @@ void DisableAudio();
 void ProvideAudioBuffer(void *samples,int numsamples);
 bool ProvideAudioBufferWithoutBlocking(void *samples,int numsamples);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

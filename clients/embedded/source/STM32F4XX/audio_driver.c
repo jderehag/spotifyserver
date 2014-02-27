@@ -14,7 +14,6 @@ static void WriteRegister(uint8_t address, uint8_t value);
 static void StartAudioDMA( int16_t* data, int nsamples );
 static void StopAudioDMA();
 
-static AudioCallbackFunction *CallbackFunction;
 static AudioCallbackFunction *ISRCallbackFunction;
 static void *CallbackContext;
 static int16_t * volatile NextBufferSamples;
@@ -25,12 +24,11 @@ static uint8_t bufferUnderrun = 0;
 static int16_t dummy[50] = {0};
 
 
-void InitializeAudio(int plln, int pllr, int i2sdiv, int i2sodd, AudioCallbackFunction *callback, AudioCallbackFunction *isrcallback, void *context)
+void InitializeAudio(int plln, int pllr, int i2sdiv, int i2sodd, AudioCallbackFunction *isrcallback, void *context)
 {
 	GPIO_InitTypeDef  GPIO_InitStructure;
 
 	// Intitialize state.
-    CallbackFunction = callback;
     ISRCallbackFunction = isrcallback;
     CallbackContext = context;
     NextBufferSamples = NULL;
@@ -239,8 +237,6 @@ bool ProvideAudioBufferWithoutBlocking(void *samples, int numsamples) {
 	else
 	{
 		StartAudioDMA( samples, numsamples );
-        if (CallbackFunction)
-            CallbackFunction(CallbackContext, BufferNumber);
 	}
 
 	NVIC_EnableIRQ(DMA1_Stream7_IRQn);

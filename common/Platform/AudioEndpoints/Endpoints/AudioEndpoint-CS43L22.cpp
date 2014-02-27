@@ -30,14 +30,11 @@
 #include "stm32f4_discovery.h"
 #include <string.h>
 
-extern "C"
-{
 #include "audio_driver.h"
 #include "FreeRTOS.h"
-#include "queue.h"
-#include "semphr.h"
+#include "event_groups.h"
 #include "task.h"
-}
+
 #include "applog.h"
 
 #ifdef DEBUG_COUNTERS
@@ -64,13 +61,12 @@ typedef struct
 #define NOF_AUDIO_BUFFERS 34
 static audioBuffer_t fifobuffers[NOF_AUDIO_BUFFERS] __attribute__ ((section (".audio_buffers")));
 static int16_t driverBuffers [2][SAMPLES_PER_BUFFER+2]; // + 2 for possible padding in driver...
-static uint8_t bufferNumber = 0;
 static unsigned int bufferedSamples[2] = {0};
 
-//xQueueHandle xQueuedBuffers;
-xSemaphoreHandle xSem;
+#define BUFFER1 ( 1 << 0 )
+#define BUFFER2 ( 1 << 1 )
+EventGroupHandle_t xAvailableBuffers;
 
-static void AudioCallback(void *context,int buffer);
 static void AudioCallbackFromISR(void *context __attribute__((unused)),int buffer);
 
 AudioEndpointLocal::AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config) : AudioEndpoint(false),
@@ -101,10 +97,10 @@ void AudioEndpointLocal::run()
         fifo_.returnFifoDataBuffer((AudioFifoData*)(&fifobuffers[i]));
     }
 
-//    xQueuedBuffers = xQueueCreate( 2, sizeof(AudioFifoData*) );
-    xSem = xSemaphoreCreateCounting( 2, 1 );
+    xAvailableBuffers = xEventGroupCreate();
+    xEventGroupSetBits( xAvailableBuffers, BUFFER1 | BUFFER2 );
 
-    InitializeAudio(Audio44100HzSettings, AudioCallback, AudioCallbackFromISR, NULL);
+    InitializeAudio(Audio44100HzSettings, AudioCallbackFromISR, NULL);
     SetAudioVolume(165);
     EnableAudio();
 
@@ -119,9 +115,18 @@ void AudioEndpointLocal::run()
         if ( afd != NULL )
         {
             uint8_t thisBufferNum;
+            EventBits_t avail;
 
-            xSemaphoreTake( xSem, portMAX_DELAY );
-            thisBufferNum = bufferNumber; /* bufferNumber is the last buffer that was requested by driver, it has to be unused */
+            avail = xEventGroupWaitBits( xAvailableBuffers, BUFFER1 | BUFFER2, pdFALSE, pdFALSE, portMAX_DELAY );
+            if ( avail & BUFFER1 )
+            {
+                thisBufferNum = 0;
+            }
+            else
+            {
+                thisBufferNum = 1;
+            }
+            xEventGroupClearBits( xAvailableBuffers, ( 1 << (thisBufferNum) ) );
 
             if ( afd->timestamp != 0 )
             {
@@ -136,7 +141,7 @@ void AudioEndpointLocal::run()
                 {
                     //log( LOG_NOTICE ) << "discarding packet " << timetoplay;
                     fifo_.returnFifoDataBuffer( afd );
-                    xSemaphoreGive( xSem );
+                    xEventGroupSetBits( xAvailableBuffers, ( 1 << (thisBufferNum) ) );
                     continue;
                 }
                 else if ( timetoplay > 25 )
@@ -219,18 +224,10 @@ void AudioEndpointLocal::run()
 static void AudioCallbackFromISR(void *context __attribute__((unused)),int buffer)
 {
     portBASE_TYPE xHigherPriorityTaskWoken;
-    bufferNumber = buffer;
     bufferedSamples[buffer] = 0;
-    xSemaphoreGiveFromISR( xSem, &xHigherPriorityTaskWoken );
+    xEventGroupSetBitsFromISR( xAvailableBuffers, ( 1 << (buffer) ), &xHigherPriorityTaskWoken );
 
     portEND_SWITCHING_ISR( xHigherPriorityTaskWoken );
-}
-
-static void AudioCallback(void *context __attribute__((unused)),int buffer)
-{
-    bufferNumber = buffer;
-    bufferedSamples[buffer] = 0;
-    xSemaphoreGive( xSem );
 }
 
 }
