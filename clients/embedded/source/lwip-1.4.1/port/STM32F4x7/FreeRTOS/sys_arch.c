@@ -468,7 +468,7 @@ xTaskHandle xCreatedTask;
 portBASE_TYPE xResult;
 sys_thread_t xReturn;
 
-	xResult = xTaskCreate( pxThread, ( signed char * ) pcName, iStackSize, pvArg, iPriority, &xCreatedTask );
+	xResult = xTaskCreate( pxThread, pcName, iStackSize, pvArg, iPriority, &xCreatedTask );
 
 	if( xResult == pdPASS )
 	{
@@ -524,17 +524,6 @@ void sys_arch_unprotect( sys_prot_t xValue )
 	taskEXIT_CRITICAL();
 }
 
-/*
- * Prints an assertion messages and aborts execution.
- */
-void sys_assert( const char *pcMessage )
-{
-	(void) pcMessage;
-
-	for (;;)
-	{
-	}
-}
 /*-------------------------------------------------------------------------*
  * End of File:  sys_arch.c
  *-------------------------------------------------------------------------*/

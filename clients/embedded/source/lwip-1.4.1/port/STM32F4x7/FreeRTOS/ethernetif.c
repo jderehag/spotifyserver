@@ -167,7 +167,7 @@ static void low_level_init(struct netif *netif)
 #endif
   
   /* create the task that handles the ETH_MAC */
-  xTaskCreate(ethernetif_input, (signed char*) "Eth_if", netifINTERFACE_TASK_STACK_SIZE, NULL,
+  xTaskCreate(ethernetif_input, "Eth_if", netifINTERFACE_TASK_STACK_SIZE, NULL,
               netifINTERFACE_TASK_PRIORITY,NULL);
   
   /* Enable MAC and DMA transmission and reception */
@@ -319,7 +319,7 @@ void ethernetif_input( void * pvParameters )
     if (xSemaphoreTake( s_xSemaphore, emacBLOCK_TIME_WAITING_FOR_INPUT)==pdTRUE)
     {
       p = low_level_input( s_pxNetIf );
-      if (ERR_OK != s_pxNetIf->input( p, s_pxNetIf))
+      if (p && ERR_OK != s_pxNetIf->input( p, s_pxNetIf))
       {
         pbuf_free(p);
         p=NULL;

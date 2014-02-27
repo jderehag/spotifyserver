@@ -45,7 +45,7 @@ UIEmbedded::UIEmbedded( MediaInterface& m ) : m_(m), playbackState(PLAYBACK_IDLE
     m_.registerForCallbacks( *this );
     itPlaylists_ = playlists.begin();
 
-    progressTimer = xTimerCreate((const signed char*)"prgTmr", 1000/portTICK_RATE_MS, pdTRUE, this, progressTimerCb );
+    progressTimer = xTimerCreate("prgTmr", 1000/portTICK_RATE_MS, pdTRUE, this, progressTimerCb );
     drawDefault();
 }
 
@@ -109,7 +109,7 @@ void UIEmbedded::connectionState( bool up )
     {
         /*new connection, check status and get playlists*/
         m_.getStatus( this, NULL );
-        m_.getPlaylists( this, NULL);
+        //m_.getPlaylists( this, NULL);
 
         /*make sure we shuffle (should be controlled by button though..)*/
         m_.setShuffle(true);
@@ -160,7 +160,7 @@ static void printText( uint16_t ypos, uint16_t xpos, const char* text, sFONT* fo
 
 void UIEmbedded::drawProgress()
 {
-    uint16_t progbarfill = (PROGBAR_WIDTH * progress_) / currentTrackDuration_;
+    uint16_t progbarfill = currentTrackDuration_ ? (PROGBAR_WIDTH * progress_) / currentTrackDuration_ : 0;
     LCD_DrawFullRect( 4 + 5*8 + 4, PROGBAR_POS, PROGBAR_WIDTH , 10, PROGBAR_COL, ASSEMBLE_RGB(20,20,20));
     LCD_DrawFullRect( 4 + 5*8 + 4, PROGBAR_POS, progbarfill, 10, PROGBAR_COL, PROGBAR_COL );
     //LCD_DrawFullCircle( 4 + 5*8 + 4 + progbarfill, PROGBAR_POS + 5, 5, White );

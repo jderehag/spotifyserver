@@ -248,9 +248,9 @@ NMI_Handler:
     B       .
     .size   NMI_Handler, . - NMI_Handler
 
-#if 0
     .weak   HardFault_Handler
     .type   HardFault_Handler, %function
+#if 0
 HardFault_Handler:
     B       .
     .size   HardFault_Handler, . - HardFault_Handler
@@ -264,7 +264,6 @@ HardFault_Handler:
   MRSNE R0, PSP
   B hard_fault_handler_c
 #endif
-
     .weak   MemManage_Handler
     .type   MemManage_Handler, %function
 MemManage_Handler:

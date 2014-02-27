@@ -241,6 +241,12 @@ void SystemInit(void)
 #else
   SCB->VTOR = FLASH_BASE | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal FLASH */
 #endif
+
+  /* enable exeption on division by 0 (but not unaligned access?) */
+  SCB->CCR |= SCB_CCR_DIV_0_TRP_Msk /*| SCB_CCR_UNALIGN_TRP_Msk*/;
+
+  /* set interrupt priorities to all bits preemption, no sub-priorities (required by FreeRTOS) */
+  NVIC_PriorityGroupConfig( NVIC_PriorityGroup_4 );
 }
 
 /**

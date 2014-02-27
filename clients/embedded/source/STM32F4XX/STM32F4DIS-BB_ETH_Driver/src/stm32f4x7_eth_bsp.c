@@ -42,7 +42,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4x7_eth.h"
 #include "stm32f4x7_eth_bsp.h"
-#include "lwipopts.h" //for CHECKSUM_BY_HARDWARE
+#include "lwipopts.h" // for CHECKSUM_BY_HARDWARE
+#include "FreeRTOS.h" // for interrupt priority
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -242,15 +243,13 @@ void ETH_NVIC_Config(void)
 {
   NVIC_InitTypeDef   NVIC_InitStructure;
 
-  /* 2 bit for pre-emption priority, 2 bits for subpriority */
-  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2); 
-  
   /* Enable the Ethernet global Interrupt */
   NVIC_InitStructure.NVIC_IRQChannel = ETH_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
+  // set highest maskable priority, can't be higher than this since interrupt routine uses freertos facility
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY;
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-  NVIC_Init(&NVIC_InitStructure);    
+  NVIC_Init(&NVIC_InitStructure);
 }
 
 /*********** Portions COPYRIGHT 2012 Embest Tech. Co., Ltd.*****END OF FILE****/

@@ -28,7 +28,6 @@ static int16_t dummy[50] = {0};
 void InitializeAudio(int plln, int pllr, int i2sdiv, int i2sodd, AudioCallbackFunction *callback, AudioCallbackFunction *isrcallback, void *context)
 {
 	GPIO_InitTypeDef  GPIO_InitStructure;
-	int i;
 
 	// Intitialize state.
     CallbackFunction = callback;
@@ -193,7 +192,7 @@ void OutputAudioSampleWithoutBlocking(int16_t sample) {
 void EnableAudio()
 {
 	NVIC_EnableIRQ(DMA1_Stream7_IRQn);
-	NVIC_SetPriority(DMA1_Stream7_IRQn, 4);
+	NVIC_SetPriority(DMA1_Stream7_IRQn, 6);
 
 	SPI3 ->CR2 |= SPI_CR2_TXDMAEN; // Enable I2S TX DMA request.
 }

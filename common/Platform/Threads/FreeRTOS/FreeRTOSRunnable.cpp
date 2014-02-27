@@ -83,7 +83,7 @@ void Runnable::startThread()
         case PRIO_HIGH:      prio = 4; break;
         case PRIO_VERY_HIGH: prio = 5; break;
     }
-    xTaskCreate( runnableWrapper, ( signed char * ) "tsk", stackdepth, this, tskIDLE_PRIORITY + prio, &threadHandle_->handle );
+    xTaskCreate( runnableWrapper, "tsk", stackdepth, this, tskIDLE_PRIORITY + prio, &threadHandle_->handle );
 }
 
 void Runnable::joinThread()

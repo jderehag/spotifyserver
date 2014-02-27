@@ -83,10 +83,9 @@ void pwrInit()
     NVIC_Init(&NVIC_InitStructure);
 #endif
     powerLevel = PWR_ON;
-    tmr = xTimerCreate( (const signed char *)"sleep",10000/portTICK_RATE_MS,pdFALSE, NULL, timerCb );
+    tmr = xTimerCreate( "sleep",10000/portTICK_RATE_MS,pdFALSE, NULL, timerCb );
     xTimerStart( tmr, 0 );
 }
-
 void vApplicationIdleHook( void )
 {
     switch ( powerLevel )
@@ -94,7 +93,7 @@ void vApplicationIdleHook( void )
         case PWR_ON:
         case PWR_ON_LIGHTS_OUT:
             /* we're active but all tasks have done their stuff, sleep until next interrupt */
-            __WFI();
+            //__WFI();  // <-- this breaks debugging! enable with care...
 
             break;
         case PWR_STANDBY:

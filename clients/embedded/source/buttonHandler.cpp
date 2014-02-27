@@ -55,7 +55,7 @@ static void timerCb( xTimerHandle xTimer )
 void buttonHandler_action( uint8_t pressed )
 {
     portBASE_TYPE higherPrioTaskWoken = pdFALSE;
-    static xTimerHandle tmr = xTimerCreate( (const signed char *)"btn",1000/portTICK_RATE_MS,pdFALSE, NULL, timerCb );
+    static xTimerHandle tmr = xTimerCreate( (const char *)"btn",1000/portTICK_RATE_MS,pdFALSE, NULL, timerCb );
 
     pwrKeepAlive();
 

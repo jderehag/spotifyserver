@@ -37,6 +37,8 @@
 /* lwip includes */
 #include "lwip/sys.h"
 
+#include "applog.h"
+
 /** @addtogroup STM32F4_Discovery_Peripheral_Examples
  * @{
  */
@@ -75,6 +77,8 @@ void HardFault_Handler(void)
 {
 #ifndef WITH_LCD
     STM_EVAL_LEDOn(LED6);
+#else
+    //STM_EVAL_LEDOn(LED4);
 #endif
     /* Go to infinite loop when Hard Fault exception occurs */
     while (1)
@@ -82,7 +86,6 @@ void HardFault_Handler(void)
     }
 }
 #else
-#include "applog.h"
 // From Joseph Yiu, minor edits by FVH
 // hard fault handler in C,
 // with stack frame location as input parameter
@@ -108,21 +111,21 @@ void hard_fault_handler_c (unsigned int * hardfault_args)
   stacked_pc = ((unsigned long) hardfault_args[6]);
   stacked_psr = ((unsigned long) hardfault_args[7]);
 
-  APP_LOG(LOG_NOTICE, "\n\n[Hard fault handler - all numbers in hex]\n", 0 );
-  APP_LOG(LOG_NOTICE, "R0 = %x\n", stacked_r0);
-  APP_LOG(LOG_NOTICE, "R1 = %x\n", stacked_r1);
-  APP_LOG(LOG_NOTICE, "R2 = %x\n", stacked_r2);
-  APP_LOG(LOG_NOTICE, "R3 = %x\n", stacked_r3);
-  APP_LOG(LOG_NOTICE, "R12 = %x\n", stacked_r12);
-  APP_LOG(LOG_NOTICE, "LR [R14] = %x  subroutine call return address\n", stacked_lr);
-  APP_LOG(LOG_NOTICE, "PC [R15] = %x  program counter\n", stacked_pc);
-  APP_LOG(LOG_NOTICE, "PSR = %x\n", stacked_psr);
-  APP_LOG(LOG_NOTICE, "BFAR = %x\n", (*((volatile unsigned long *)(0xE000ED38))));
-  APP_LOG(LOG_NOTICE, "CFSR = %x\n", (*((volatile unsigned long *)(0xE000ED28))));
-  APP_LOG(LOG_NOTICE, "HFSR = %x\n", (*((volatile unsigned long *)(0xE000ED2C))));
-  APP_LOG(LOG_NOTICE, "DFSR = %x\n", (*((volatile unsigned long *)(0xE000ED30))));
-  APP_LOG(LOG_NOTICE, "AFSR = %x\n", (*((volatile unsigned long *)(0xE000ED3C))));
-  APP_LOG(LOG_NOTICE, "SCB_SHCSR = %x\n", SCB->SHCSR);
+  LogAppendSimpleCBinder( "\n\n[Hard fault handler - all numbers in hex]\n", 0 );
+  LogAppendSimpleCBinder( "R0 = %x\n", stacked_r0);
+  LogAppendSimpleCBinder( "R1 = %x\n", stacked_r1);
+  LogAppendSimpleCBinder( "R2 = %x\n", stacked_r2);
+  LogAppendSimpleCBinder( "R3 = %x\n", stacked_r3);
+  LogAppendSimpleCBinder( "R12 = %x\n", stacked_r12);
+  LogAppendSimpleCBinder( "LR [R14] = %x  subroutine call return address\n", stacked_lr);
+  LogAppendSimpleCBinder( "PC [R15] = %x  program counter\n", stacked_pc);
+  LogAppendSimpleCBinder( "PSR = %x\n", stacked_psr);
+  LogAppendSimpleCBinder( "BFAR = %x\n", (*((volatile unsigned long *)(0xE000ED38))));
+  LogAppendSimpleCBinder( "CFSR = %x\n", (*((volatile unsigned long *)(0xE000ED28))));
+  LogAppendSimpleCBinder( "HFSR = %x\n", (*((volatile unsigned long *)(0xE000ED2C))));
+  LogAppendSimpleCBinder( "DFSR = %x\n", (*((volatile unsigned long *)(0xE000ED30))));
+  LogAppendSimpleCBinder( "AFSR = %x\n", (*((volatile unsigned long *)(0xE000ED3C))));
+  LogAppendSimpleCBinder( "SCB_SHCSR = %x\n", SCB->SHCSR);
 
   while (1);
 }
@@ -134,6 +137,7 @@ void hard_fault_handler_c (unsigned int * hardfault_args)
  */
 void MemManage_Handler(void)
 {
+    APP_LOG(LOG_EMERG,"MemManage!");
     /* Go to infinite loop when Memory Manage exception occurs */
     while (1)
     {
@@ -147,6 +151,7 @@ void MemManage_Handler(void)
  */
 void BusFault_Handler(void)
 {
+    APP_LOG(LOG_EMERG,"BusFault!");
     /* Go to infinite loop when Bus Fault exception occurs */
     while (1)
     {
@@ -160,6 +165,7 @@ void BusFault_Handler(void)
  */
 void UsageFault_Handler(void)
 {
+    APP_LOG(LOG_EMERG,"UsageFault!");
     /* Go to infinite loop when Usage Fault exception occurs */
     while (1)
     {

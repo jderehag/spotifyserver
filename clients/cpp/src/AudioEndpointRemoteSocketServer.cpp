@@ -28,11 +28,10 @@
 #include "AudioEndpointRemoteSocketServer.h"
 #include "MessageFactory/Message.h"
 #include "MessageFactory/MessageDecoder.h"
-#include "MessageFactory/SocketReader.h"
 #include "Platform/Utils/Utils.h"
-#include <set>
 #include "applog.h"
 #include <stdint.h>
+#include <string.h>
 
 // some debug counters...
 #ifdef DEBUG_COUNTERS
@@ -74,8 +73,6 @@ void AudioEndpointRemoteSocketServer::run()
     while( !isCancellationPending() )
     {
         Socket sock_( SOCKTYPE_DATAGRAM );
-        SocketReader reader( &sock_ );
-
         if ( sock_.BindToAddr("ANY", "7789") < 0 )
         {
             continue;
@@ -89,7 +86,7 @@ void AudioEndpointRemoteSocketServer::run()
             readsockets.insert(&sock_);
             errsockets.insert(&sock_);
 
-            rc = select(&readsockets, NULL, &errsockets, 10000);
+            rc = select(&readsockets, NULL, &errsockets, 1000);
 
             if ( !readsockets.empty() )
             {
@@ -97,7 +94,6 @@ void AudioEndpointRemoteSocketServer::run()
                 uint32_t len;
                 std::string addr, port;
 
-                /* todo here we assume we get the whole message in one read, should have better handling */
                 rc = sock_.ReceiveFrom( buf, sizeof(buf), addr, port );
 
                 if ( rc < 0 )
@@ -117,7 +113,9 @@ void AudioEndpointRemoteSocketServer::run()
                     {
                         uint32_t now;
 
-                        uint32_t serverclock = Ntohl( *(uint32_t*)&buf[sizeof(header_t)+sizeof(tlvheader_t)] );
+                        uint32_t serverclock;
+                        memcpy( &serverclock, &buf[sizeof(header_t)+sizeof(tlvheader_t)], sizeof(uint32_t) );
+                        serverclock = Ntohl(serverclock);
 
                         now = getTick_ms();
                         /* calculate difference between server clock and our clock */
@@ -143,10 +141,14 @@ void AudioEndpointRemoteSocketServer::run()
                 else if ( Ntohl(hdr->type) == AUDIO_DATA_IND )
                 {
                     uint32_t n = sizeof(header_t);
-                    uint32_t* ptimestamp = NULL;
-                    uint32_t* pchannels = NULL;
-                    uint32_t* prate = NULL;
-                    uint32_t* pnsamples = NULL;
+                    uint32_t channels = 0;
+                    bool haschannels = false;
+                    uint32_t rate = 0;
+                    bool hasrate = false;
+                    uint32_t nsamples = 0;
+                    bool hasnsamples = false;
+                    uint32_t servertimestamp = 0;
+                    bool hasservertimestamp = false;
                     int16_t* psamples = NULL;
 
                     while( n < len )
@@ -157,25 +159,33 @@ void AudioEndpointRemoteSocketServer::run()
                         {
                             case TLV_AUDIO_TIMESTAMP:
                             {
-                                ptimestamp = (uint32_t*)&buf[n+sizeof(tlvheader_t)];
+                                memcpy( &servertimestamp, &buf[n+sizeof(tlvheader_t)], sizeof(uint32_t));
+                                servertimestamp = Ntohl(servertimestamp);
+                                hasservertimestamp = true;
                                 break;
                             }
 
                             case TLV_AUDIO_CHANNELS:
                             {
-                                pchannels = (uint32_t*)&buf[n+sizeof(tlvheader_t)];
+                                memcpy( &channels, &buf[n+sizeof(tlvheader_t)], sizeof(uint32_t));
+                                channels = Ntohl(channels);
+                                haschannels = true;
                                 break;
                             }
 
                             case TLV_AUDIO_RATE:
                             {
-                                prate = (uint32_t*)&buf[n+sizeof(tlvheader_t)];
+                                memcpy( &rate, &buf[n+sizeof(tlvheader_t)], sizeof(uint32_t));
+                                rate = Ntohl(rate);
+                                hasrate = true;
                                 break;
                             }
 
                             case TLV_AUDIO_NOF_SAMPLES:
                             {
-                                pnsamples = (uint32_t*)&buf[n+sizeof(tlvheader_t)];
+                                memcpy( &nsamples, &buf[n+sizeof(tlvheader_t)], sizeof(uint32_t));
+                                nsamples = Ntohl(nsamples);
+                                hasnsamples = true;
                                 break;
                             }
 
@@ -190,21 +200,18 @@ void AudioEndpointRemoteSocketServer::run()
 
                     }
 
-                    if ( pchannels && prate && pnsamples && psamples )
+                    if ( haschannels && hasrate && hasnsamples && psamples )
                     {
-                        uint32_t channels = Ntohl( *pchannels );
-                        uint32_t rate = Ntohl( *prate );
-                        uint32_t nsamples = Ntohl( *pnsamples );
                         uint32_t clienttimestamp = 0;
 
                         for ( uint32_t i = 0; i < (nsamples*channels); i++ )
                             psamples[i] = Ntohs(psamples[i]);
 
                         /* only do timestamp stuff if server sends it */
-                        if ( ptimestamp )
+                        if ( hasservertimestamp )
                         {
                             // todo we should make sure clock sync is up to date
-                            uint32_t servertimestamp = Ntohl( *ptimestamp );
+
                             clienttimestamp = servertimestamp + clockDiff;
 
                             //debug counters

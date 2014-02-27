@@ -46,13 +46,14 @@ VPATH += ../../src/ ../../common/ ./source/ ../cpp/src
 # use file-extension c for "c-only"-files
 
 ETHERNET_DRIVER = STM32F4DIS-BB_ETH_Driver
+FREERTOS = FreeRTOS-8.0.0
 
 SRC  =	syscalls.c powerHandler.c
 
 #FreeRTOS
-SRC +=	$(addprefix freeRTOS/, list.c queue.c tasks.c timers.c ) \
-		$(addprefix freeRTOS/portable/GCC/ARM_CM4F/, port.c) \
-		freeRTOS/portable/MemMang/heap_3.c \
+SRC +=	$(addprefix $(FREERTOS)/, list.c queue.c tasks.c timers.c ) \
+		$(addprefix $(FREERTOS)/portable/GCC/ARM_CM4F/, port.c) \
+		$(FREERTOS)/portable/MemMang/heap_3.c \
 		hooks.c
 
 #ST drivers and libraries
@@ -118,8 +119,8 @@ ASRC = STM32F4XX/startup_stm32f4xx.s
 
 # List any extra directories to look for include files here.
 #    Each directory must be seperated by a space.
-EXTRAINCDIRS  += ./source/freertos/include \
-		  ./source/freertos/portable/GCC/ARM_CM4F \
+EXTRAINCDIRS  += ./source/$(FREERTOS)/include \
+		  ./source/$(FREERTOS)/portable/GCC/ARM_CM4F \
 		  ./source \
 		  ./source/STM32F4XX \
 		  ./source/STM32F4XX/CMSIS \

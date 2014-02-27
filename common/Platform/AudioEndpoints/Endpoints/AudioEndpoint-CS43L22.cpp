@@ -28,7 +28,6 @@
 #include "../AudioEndpointLocal.h"
 #include "Platform/Utils/Utils.h"
 #include "stm32f4_discovery.h"
-#include "applog.h"
 #include <string.h>
 
 extern "C"
@@ -39,6 +38,7 @@ extern "C"
 #include "semphr.h"
 #include "task.h"
 }
+#include "applog.h"
 
 #ifdef DEBUG_COUNTERS
 int lasttimetoplay = 0;

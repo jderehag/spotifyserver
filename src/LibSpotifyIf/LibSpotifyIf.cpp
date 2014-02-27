@@ -929,7 +929,7 @@ void LibSpotifyIf::albumLoadedCb(sp_albumbrowse* result, void *userdata)
             break;
         }
         default:
-            assert(1);
+            assert(0);
     }
 
     sp_albumbrowse_release(result);

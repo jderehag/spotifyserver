@@ -78,7 +78,7 @@
 #define configMINIMAL_STACK_SIZE		( ( unsigned short ) 1000 )
 #define configTOTAL_HEAP_SIZE			( ( size_t ) ( 0x00000000 ) )
 #define configMAX_TASK_NAME_LEN			( 10 )
-#define configUSE_TRACE_FACILITY		1
+#define configUSE_TRACE_FACILITY		0
 #define configUSE_16_BIT_TICKS			0
 #define configIDLE_SHOULD_YIELD			1
 #define configUSE_MUTEXES				1
@@ -135,7 +135,7 @@ to all Cortex-M ports, and do not rely on any particular library functions. */
 	
 /* Normal assert() semantics without relying on the provision of an assert.h
 header file. */
-#define configASSERT( x ) if( ( x ) == 0 ) { taskDISABLE_INTERRUPTS(); for( ;; ); }	
+#define configASSERT( x ) if( ( x ) == 0 ) { taskDISABLE_INTERRUPTS(); for( ;; ); }
 	
 /* Definitions that map the FreeRTOS port interrupt handlers to their CMSIS
 standard names. */
