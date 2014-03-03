@@ -114,7 +114,7 @@
   * @{
   */
 
-#include "stm32f4xx.h"
+#include "stm32f4xx_hal.h"
 #include "stm32f4_discovery.h"
 
 /**
@@ -206,7 +206,7 @@ void SystemInit(void)
 {
 #ifndef WITH_LCD
     /* init led6 for hardfault */
-    STM_EVAL_LEDInit(LED6);
+    BSP_LED_Init(LED6);
 #endif
   /* Reset the RCC clock configuration to the default reset state ------------*/
   /* Set HSION bit */
@@ -246,7 +246,7 @@ void SystemInit(void)
   SCB->CCR |= SCB_CCR_DIV_0_TRP_Msk /*| SCB_CCR_UNALIGN_TRP_Msk*/;
 
   /* set interrupt priorities to all bits preemption, no sub-priorities (required by FreeRTOS) */
-  NVIC_PriorityGroupConfig( NVIC_PriorityGroup_4 );
+  HAL_NVIC_SetPriorityGrouping( NVIC_PRIORITYGROUP_4 );
 }
 
 /**

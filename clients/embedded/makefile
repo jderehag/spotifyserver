@@ -14,7 +14,7 @@ USE_THUMB_MODE = YES
 # - SUBMDL used for linker-script name (-T) and passed as define
 # - BOARD just passed as define (optional)
 MCU      = cortex-m4
-CHIP     = STM32F4XX
+CHIP     = STM32F407xx
 F_XTAL   = 8000000
 
 # *** This example only supports "flash" ***
@@ -45,7 +45,6 @@ VPATH += ../../src/ ../../common/ ./source/ ../cpp/src
 # List C source files here. (C dependencies are automatically generated.)
 # use file-extension c for "c-only"-files
 
-ETHERNET_DRIVER = STM32F4DIS-BB_ETH_Driver
 FREERTOS = FreeRTOS-8.0.0
 
 SRC  =	syscalls.c powerHandler.c
@@ -57,15 +56,19 @@ SRC +=	$(addprefix $(FREERTOS)/, list.c queue.c tasks.c timers.c event_groups.c 
 		hooks.c
 
 #ST drivers and libraries
-SRC +=	$(addprefix STM32F4XX/, stm32f4_discovery.c system_stm32f4xx.c stm32f4xx_it.c netconf.c) \
-		$(addprefix STM32F4XX/STM32F4xx_StdPeriph_Driver/src/, misc.c stm32f4xx_dma.c stm32f4xx_exti.c stm32f4xx_gpio.c stm32f4xx_syscfg.c stm32f4xx_rcc.c stm32f4xx_pwr.c stm32f4xx_rtc.c) \
-		$(addprefix STM32F4XX/$(ETHERNET_DRIVER)/src/, stm32f4x7_eth_bsp.c stm32f4x7_eth.c )
+SRC +=	BSP/STM32F4-Discovery/stm32f4_discovery.c \
+		$(addprefix STM32F4XX/, system_stm32f4xx.c stm32f4xx_it.c netconf.c) \
+		$(addprefix STM32F4XX/STM32F4xx_HAL_Driver/src/, stm32f4xx_hal.c stm32f4xx_hal_dma.c stm32f4xx_hal_gpio.c stm32f4xx_hal_rcc.c stm32f4xx_hal_pwr.c stm32f4xx_hal_rtc.c) \
+		$(addprefix STM32F4XX/STM32F4xx_HAL_Driver/src/, stm32f4xx_hal_cortex.c stm32f4xx_hal_eth.c  ) \
+		$(addprefix BSP/STM32F4-DIS-BB/, stm32f4_discovery_eth.c )
 
 #LCD display output
-SRC +=	$(addprefix STM32F4XX/STM32F4DIS_LCD_Driver/src/, stm32f4_discovery_lcd.c fonts.c ) \
-		$(addprefix STM32F4XX/STM32F4xx_StdPeriph_Driver/src/, stm32f4xx_fsmc.c )
+WITH_LCD?=1
+ifeq ($(WITH_LCD),1)
+SRC +=	$(addprefix BSP/STM32F4-DIS-LCD/, stm32f4_discovery_lcd.c fonts.c ) \
+		$(addprefix STM32F4XX/STM32F4xx_HAL_Driver/src/, stm32f4xx_ll_fsmc.c )
 CDEFS += -DWITH_LCD
-
+endif
 
 #lwIP		
 SRC +=	$(addprefix lwip-1.4.1/src/core/, init.c tcp_out.c memp.c netif.c pbuf.c raw.c stats.c sys.c tcp.c tcp_in.c udp.c dhcp.c def.c timers.c dns.c ipv4/ip.c ipv4/ip_addr.c ipv4/icmp.c ipv4/ip_frag.c ipv4/inet.c ipv4/inet_chksum.c ipv4/autoip.c) \
@@ -94,7 +97,7 @@ CPPSRC = main.cpp buttonHandler.cpp UIEmbedded.cpp heapWrap.cpp LoggerEmbedded.c
 AUDIOSRC =	STM32F4XX/audio_driver.c
 #AUDIOSRC +=	STM32F4XX/audio_sample.c
 
-AUDIOSRC +=	$(addprefix STM32F4XX/STM32F4xx_StdPeriph_Driver/src/, stm32f4xx_i2c.c stm32f4xx_dac.c stm32f4xx_spi.c)
+AUDIOSRC +=	$(addprefix STM32F4XX/STM32F4xx_HAL_Driver/src/, stm32f4xx_hal_i2c.c stm32f4xx_hal_dac.c stm32f4xx_hal_spi.c)
 		
 AUDIOSRCCPP =		ConfigHandling/Configs/AudioEndpointConfig.cpp \
 					Platform/AudioEndpoints/AudioFifo.cpp \
@@ -124,8 +127,11 @@ EXTRAINCDIRS  += ./source/$(FREERTOS)/include \
 		  ./source \
 		  ./source/STM32F4XX \
 		  ./source/STM32F4XX/CMSIS \
-		  ./source/STM32F4XX/STM32F4xx_StdPeriph_Driver/inc \
-		  ./source/STM32F4XX/$(ETHERNET_DRIVER)/inc \
+		  ./source/STM32F4XX/CMSIS/Device \
+		  ./source/STM32F4XX/STM32F4xx_HAL_Driver/inc \
+		  ./source/BSP/STM32F4-Discovery/ \
+		  ./source/BSP/STM32F4-DIS-BB/ \
+		  ./source/BSP/STM32F4-DIS-LCD/ \
 		  ./../cpp/src \
 		  ./../../src \
 		  ./../../common \
@@ -177,7 +183,7 @@ DEBUG = dwarf-2
 # Place project-specific -D (define) and/or 
 # -U options for C here.
 CDEFS += -DHSE_VALUE=$(F_XTAL)UL
-CDEFS += -DUSE_STDPERIPH_DRIVER
+CDEFS += -DUSE_HAL_DRIVER
 CDEFS += -DCORE_M4
 # enable parameter-checking in STM's library
 CDEFS += -DUSE_FULL_ASSERT

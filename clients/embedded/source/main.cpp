@@ -27,7 +27,6 @@
 
 
 #include "stm32f4_discovery.h"
-#include "stm32f4x7_eth_bsp.h"
 #include "netconf.h"
 #include "UIEmbedded.h"
 #include "RemoteMediaInterface.h"
@@ -71,7 +70,6 @@ LedFlasher::~LedFlasher()
 
 void LedFlasher::destroy()
 {
-
 }
 #ifdef DEBUG_COUNTERS
 extern int lasttimetoplay;
@@ -122,25 +120,30 @@ void LedFlasher::run()
         log(LOG_NOTICE) <<  missingsamples << " " << totalsamples << " " << totalpadsamples;
 #endif
 #else
-        STM_EVAL_LEDToggle( LED5 );
+        BSP_LED_Toggle( LED5 );
 #endif
         vTaskDelayUntil( &t, delay );
         count++;
     }
 }
 
-int main(void)
+class Main : public Platform::Runnable
 {
-    STM_EVAL_PBInit(BUTTON_USER, BUTTON_MODE_EXTI);
-    STM_EVAL_LEDInit(LED4);
-#ifndef WITH_LCD
-    STM_EVAL_LEDInit(LED3);
-    STM_EVAL_LEDInit(LED5);
-    STM_EVAL_LEDInit(LED6);
-#else
-    STM32f4_Discovery_LCD_Init();
-#endif
+public:
+    Main();
+    virtual ~Main();
 
+    virtual void run();
+    virtual void destroy();
+};
+
+Main::Main() : Platform::Runnable(false, SIZE_SMALL, PRIO_VERY_HIGH)
+{
+    startThread();
+}
+
+void Main::run()
+{
     clockInit();
 #ifdef WITH_TIME
     NtpClient* nc = new NtpClient();
@@ -148,6 +151,9 @@ int main(void)
 #endif
     Logger::LoggerEmbedded* l = new Logger::LoggerEmbedded(LOG_NOTICE);
     LedFlasher* fl = new LedFlasher;
+
+    /* Initialise the LwIP stack */
+    LwIP_Init();
 
 #if 0
     SocketClient* sc = new SocketClient("192.168.5.98", "7788");
@@ -166,14 +172,32 @@ int main(void)
     pwrInit();
     buttonHandler_setUI(ui);
 
-    /* configure ethernet (GPIOs, clocks, MAC, DMA) */
-    ETH_BSP_Config();
+    /* now die */
+}
 
-    /* Initialise the LwIP stack */
-    LwIP_Init();
+Main::~Main()
+{
+}
+
+void Main::destroy()
+{
+}
+extern "C" void InitializeAudio();
+int main(void)
+{
+    Main* m = new Main();
+    BSP_PB_Init(BUTTON_KEY, BUTTON_MODE_EXTI);
+    BSP_LED_Init(LED4);
+    InitializeAudio();
+
+#ifndef WITH_LCD
+    BSP_LED_Init(LED3);
+    BSP_LED_Init(LED5);
+    BSP_LED_Init(LED6);
+#else
+    BSP_LCD_Init();
+#endif
 
     vTaskStartScheduler();
-
-    while (1);
 }
 

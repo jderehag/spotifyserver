@@ -45,7 +45,7 @@ static void runnableWrapper( void* arg )
 {
     Runnable* runnable = reinterpret_cast<Runnable*> (arg);
     runnable->run();
-    /*vTaskDelete?*/
+    vTaskDelete( NULL );
     while(1); /*a freertos task must never return*/
 }
 

@@ -115,13 +115,6 @@ void UIEmbedded::connectionState( bool up )
         m_.setShuffle(true);
 
         //addAudio();
-#ifndef WITH_LCD
-        STM_EVAL_LEDOn( LED4 );
-    }
-    else
-    {
-        STM_EVAL_LEDOff( LED4 );
-#endif
     }
 }
 
@@ -155,11 +148,14 @@ void UIEmbedded::genericSearchCallback( const std::deque<Track>& listOfTracks, c
 
 static void printText( uint16_t ypos, uint16_t xpos, const char* text, sFONT* font )
 {
+#ifdef WITH_LCD
     LCD_DisplayStringLineCol( ypos, xpos, text, TEXT_COL, BACK_COL, font );
+#endif
 }
 
 void UIEmbedded::drawProgress()
 {
+#ifdef WITH_LCD
     uint16_t progbarfill = currentTrackDuration_ ? (PROGBAR_WIDTH * progress_) / currentTrackDuration_ : 0;
     LCD_DrawFullRect( 4 + 5*8 + 4, PROGBAR_POS, PROGBAR_WIDTH , 10, PROGBAR_COL, ASSEMBLE_RGB(20,20,20));
     LCD_DrawFullRect( 4 + 5*8 + 4, PROGBAR_POS, progbarfill, 10, PROGBAR_COL, PROGBAR_COL );
@@ -176,16 +172,19 @@ void UIEmbedded::drawProgress()
         out << currentTrackDuration_/60 <<":" << (currentTrackDuration_%60 < 10 ? "0" : "") << currentTrackDuration_%60;// << " "; // last space is just to clear any remaining character from screen
         printText(PROGBAR_POS, LCD_PIXEL_WIDTH - 4 - 5*8, out.str().c_str(), &FONT);
     }
+#endif
 }
 
 void UIEmbedded::drawDefault()
 {
+#ifdef WITH_LCD
     uint16_t ypos = 24*8;
     LCD_DrawLine( 0, ypos, LCD_PIXEL_WIDTH, LCD_DIR_HORIZONTAL, White );
     ypos++;
-    LCD_DrawFullRect( 0, ypos, LCD_PIXEL_WIDTH , LCD_PIXEL_HEIGHT - 24*8, BACK_COL, BACK_COL);
+    LCD_DrawFullRect( 0, ypos, LCD_PIXEL_WIDTH , LCD_PIXEL_HEIGHT - ypos, BACK_COL, BACK_COL);
 
     drawProgress();
+#endif
 }
 
 void UIEmbedded::progressUpdateTick()

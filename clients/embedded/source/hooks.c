@@ -7,9 +7,13 @@ void vApplicationTickHook( void )
 {
     static int count = 0;
     count++;
+
+    // tick ST HAL layer
+    HAL_IncTick();
+
     if ( count == (1000/portTICK_RATE_MS) )
     {
-        // tick clock every second
+        // tick wall clock every second
         clockTick();
         count = 0;
     }
@@ -59,8 +63,8 @@ void vApplicationStackOverflowHook( xTaskHandle pxTask, signed char *pcTaskName 
   */
 void assert_failed(uint8_t* file, uint32_t line)
 { 
-	/*taskDISABLE_INTERRUPTS();
-	for( ;; );*/
+	taskDISABLE_INTERRUPTS();
+	for( ;; );
 }
 
 

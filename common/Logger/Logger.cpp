@@ -92,19 +92,19 @@ void Logger::operator<<=(LoggerStreamBuffer& buff) { buff.flush(); }
 
 void LogAppendCBinder(LogLevel level, const char* functionName, const char* format, ...)
 {
-    char buffer[1000];
+    char buffer[100];
     va_list vl;
     va_start(vl,format);
-    vsprintf(buffer, format, vl);
+    vsnprintf(buffer, sizeof(buffer), format, vl);
     va_end(vl);
     logger->logAppend(level, functionName, buffer);
 }
 void LogAppendSimpleCBinder(const char* format, ...)
 {
-    char buffer[1000];
+    char buffer[100];
     va_list vl;
     va_start(vl,format);
-    vsprintf(buffer, format, vl);
+    vsnprintf(buffer, sizeof(buffer), format, vl);
     va_end(vl);
     logger->logAppend(LOG_NOTICE, "", buffer);
 }

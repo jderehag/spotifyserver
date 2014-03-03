@@ -90,6 +90,7 @@ void AudioEndpointLocal::run()
     AudioFifoData* afd = NULL;
     unsigned int currentrate = 0;
     unsigned int i;
+    bool isPlaying = false;
 
     for ( i = 0; i < NOF_AUDIO_BUFFERS; i++)
     {
@@ -99,10 +100,6 @@ void AudioEndpointLocal::run()
 
     xAvailableBuffers = xEventGroupCreate();
     xEventGroupSetBits( xAvailableBuffers, BUFFER1 | BUFFER2 );
-
-    InitializeAudio(Audio44100HzSettings, AudioCallbackFromISR, NULL);
-    SetAudioVolume(165);
-    EnableAudio();
 
     while(isCancellationPending() == false)
     {
@@ -116,6 +113,13 @@ void AudioEndpointLocal::run()
         {
             uint8_t thisBufferNum;
             EventBits_t avail;
+
+            if ( !isPlaying )
+            {
+                SetAudioVolume(165);
+                EnableAudio(Audio44100HzSettings, AudioCallbackFromISR, NULL);
+                isPlaying = true;
+            }
 
             avail = xEventGroupWaitBits( xAvailableBuffers, BUFFER1 | BUFFER2, pdFALSE, pdFALSE, portMAX_DELAY );
             if ( avail & BUFFER1 )
@@ -183,11 +187,11 @@ void AudioEndpointLocal::run()
 
             if ( adjustSamples_ != 0 )
             {
-                STM_EVAL_LEDOn(LED4);
+                BSP_LED_On(LED4);
                 adjustSamples( afd );
             }
             else
-                STM_EVAL_LEDOff(LED4);
+                BSP_LED_Off(LED4);
 
             /* Copy buffer to the driver buffer so we can free the afd */
             if ( afd->channels == 1 )

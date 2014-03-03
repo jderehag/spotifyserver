@@ -2,10 +2,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "timers.h"
-#include "stm32f4xx_pwr.h"
-#include "stm32f4xx_rcc.h"
-//#include "stm32f4xx_exti.h"
-//#include "stm32f4xx_rtc.h"
+#include "stm32f4xx_hal.h"
 
 #include "stm32f4_discovery.h"
 
@@ -97,14 +94,16 @@ void vApplicationIdleHook( void )
 
             break;
         case PWR_STANDBY:
+#if 0
             /* ok to go to cortex "stop mode" (more like standby to me) */
             /* todo turn off leds and stuff */
             /* todo disconnect socket? */
-            PWR_EnterSTOPMode(PWR_Regulator_LowPower, PWR_STOPEntry_WFI);
+            HAL_PWR_EnterSTOPMode(PWR_Regulator_LowPower, PWR_STOPEntry_WFI);
 
             /* Configures system clock after wake-up from STOP: enable HSE, PLL and select
                PLL as system clock source (HSE and PLL are disabled in STOP mode) */
             SYSCLKConfig_STOP();
+#endif
             break;
     }
 }
@@ -143,6 +142,7 @@ static void timerCb( xTimerHandle xTimer )
     powerLevel = canPowerOff != 0 ? PWR_ON_LIGHTS_OUT/*PWR_STANDBY*/ : PWR_ON_LIGHTS_OUT; /*no activity for a while, go to rest*/
 }
 
+#if 0
 /**
   * @brief  Configures system clock after wake-up from STOP: enable HSE, PLL
   *         and select PLL as system clock source.
@@ -173,3 +173,4 @@ static void SYSCLKConfig_STOP(void)
   while (RCC_GetSYSCLKSource() != 0x08)
   {}
 }
+#endif

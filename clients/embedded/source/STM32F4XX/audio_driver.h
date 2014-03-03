@@ -25,9 +25,9 @@ typedef void AudioCallbackFunction(void *context,int buffer);
 #define Audio44100HzSettings 271,2,6,0
 #define AudioVGAHSyncSettings 419,2,13,0 // 31475.3606. Actual VGA timer is 31472.4616.
 
-// Initialize and power up audio hardware. Use the above defines for the parameters.
+// Initialize and power up audio hardware.
 // Can probably only be called once.
-void InitializeAudio(int plln, int pllr, int i2sdiv, int i2sodd, AudioCallbackFunction *isrcallback, void *context);
+void InitializeAudio();
 
 // Power up and down the audio hardware.
 void AudioOn();
@@ -40,8 +40,8 @@ void SetAudioVolume(int volume);
 void OutputAudioSample(int16_t sample);
 void OutputAudioSampleWithoutBlocking(int16_t sample);
 
-// Start and stop audio playback using DMA.
-void EnableAudio();
+// Start and stop audio playback using DMA. Use the defines above for the parameters.
+void EnableAudio(int plln, int pllr, int i2sdiv, int i2sodd, AudioCallbackFunction *isrcallback, void *context);
 void DisableAudio();
 
 // Provide a new buffer to the audio DMA. Output is double buffered, so

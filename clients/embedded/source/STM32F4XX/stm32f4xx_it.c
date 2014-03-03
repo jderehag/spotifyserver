@@ -25,9 +25,9 @@
 #include "stm32f4xx_it.h"
 #include "stm32f4_discovery.h"
 #include "buttonHandler.h"
-#include "stm32f4x7_eth_bsp.h"
-
-#include "stm32f4x7_eth.h"
+#include "stm32f4_discovery_eth.h"
+#include "stm32f4xx_hal.h"
+//#include "stm32f4x7_eth.h"
 
 /* Scheduler includes */
 #include "FreeRTOS.h"
@@ -171,16 +171,7 @@ void UsageFault_Handler(void)
     {
     }
 }
-#if 0 /*handled by freertos*/
-/**
- * @brief  This function handles SVCall exception.
- * @param  None
- * @retval None
- */
-void SVC_Handler(void)
-{
-}
-#endif
+
 /**
  * @brief  This function handles Debug Monitor exception.
  * @param  None
@@ -190,25 +181,7 @@ void DebugMon_Handler(void)
 {
 }
 
-#if 0 /*handled by freertos*/
-/**
- * @brief  This function handles PendSVC exception.
- * @param  None
- * @retval None
- */
-void PendSV_Handler(void)
-{
-}
 
-/**
- * @brief  This function handles SysTick Handler.
- * @param  None
- * @retval None
- */
-void SysTick_Handler(void)
-{
-}
-#endif
 
 /******************************************************************************/
 /*                 STM32F4xx Peripherals Interrupt Handlers                   */
@@ -224,44 +197,25 @@ void SysTick_Handler(void)
  */
 void EXTI0_IRQHandler(void)
 {
-    if (EXTI_GetITStatus(EXTI_Line0) != RESET)
+    HAL_GPIO_EXTI_IRQHandler( GPIO_PIN_0 );
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+    if( GPIO_Pin == GPIO_PIN_0 )
     {
-        /* Clear the EXTI line 0 pending bit */
-        EXTI_ClearITPendingBit(EXTI_Line0);
-        buttonHandler_action( (STM_EVAL_PBGetState(BUTTON_USER) != 0) ? 1 : 0 );
+        buttonHandler_action( (BSP_PB_GetState(BUTTON_KEY) != 0) ? 1 : 0 );
     }
 }
 
 
-extern xSemaphoreHandle s_xSemaphore;
 
-/**
-  * @brief  This function handles ethernet DMA interrupt request.
-  * @param  None
-  * @retval None
-  */
 void ETH_IRQHandler(void)
 {
-  portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
-
-  /* Frame received */
-  if ( ETH_GetDMAFlagStatus(ETH_DMA_FLAG_R) == SET)
-  {
-    /* Give the semaphore to wakeup LwIP task */
-    xSemaphoreGiveFromISR( s_xSemaphore, &xHigherPriorityTaskWoken );
-  }
-
-  /* Clear the interrupt flags. */
-  /* Clear the Eth DMA Rx IT pending bits */
-  ETH_DMAClearITPendingBit(ETH_DMA_IT_R);
-  ETH_DMAClearITPendingBit(ETH_DMA_IT_NIS);
-
-  /* Switch tasks if necessary. */
-  if( xHigherPriorityTaskWoken != pdFALSE )
-  {
-    portEND_SWITCHING_ISR( xHigherPriorityTaskWoken );
-  }
+    BSP_ETH_IRQ_Handler();
 }
+
+
 /**
  * @}
  */
