@@ -605,6 +605,11 @@ sp_error sp_session_player_load(sp_session *session, sp_track *track)
 	/* callback!*/
 	return SP_ERROR_OK;
 }
+
+sp_error sp_session_player_unload(sp_session *session)
+{
+    return SP_ERROR_OK;
+}
 /* playback not supported on stub */
 sp_error sp_session_player_play(sp_session *session, bool play)
 {
