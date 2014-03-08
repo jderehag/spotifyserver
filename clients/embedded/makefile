@@ -110,7 +110,7 @@ SRC += $(AUDIOSRC)
 CPPSRC += $(AUDIOSRCCPP)
 
 
-WITH_TIME?=0
+WITH_TIME?=1
 ifeq ($(WITH_TIME),1)
 CPPSRC += NtpClient.cpp 
 CDEFS += -DWITH_TIME
@@ -340,7 +340,7 @@ ELFSIZE = $(SIZE) -A  $(OUTDIR)/$(TARGET).elf
 sizebefore:
 #	@if [ -f  $(OUTDIR)/$(TARGET).elf ]; then echo; echo $(MSG_SIZE_BEFORE); $(ELFSIZE); echo; fi
 
-sizeafter:
+sizeafter: elf
 #	@if [ -f  $(OUTDIR)/$(TARGET).elf ]; then echo; echo $(MSG_SIZE_AFTER); $(ELFSIZE); echo; fi
 	@echo $(MSG_SIZE_AFTER)
 	$(ELFSIZE)
