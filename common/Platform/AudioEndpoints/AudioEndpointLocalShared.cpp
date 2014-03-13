@@ -34,6 +34,7 @@ void AudioEndpointLocal::adjustSamples( AudioFifoData* afd )
         if ( thisBufferAdjustSamples == 0 )              thisBufferAdjustSamples = 1;
         if ( thisBufferAdjustSamples > totalPadSamples ) thisBufferAdjustSamples = totalPadSamples;
         if ( thisBufferAdjustSamples > headroom/4 )      thisBufferAdjustSamples = headroom/4;
+        if ( thisBufferAdjustSamples > 4 )               thisBufferAdjustSamples = 4;
 
         for ( i=0; i<thisBufferAdjustSamples; i++ )
         {

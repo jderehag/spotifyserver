@@ -1,30 +1,29 @@
 
 include ../build/arch.mk
 
-TARGET=spotifyserver
+TARGET=testplayer
 
 # Directory for output files (lst, obj, dep etc.)
 #we need specific name for this since we still have dependencies between client and server
-OUTDIR = .spotifyserver.output
+OUTDIR = .testplayer.output
 
 DEPS_PATH ?= ../../spotifyserver_deps
 
 # root directories to look for source files in
-VPATH += ./../common/ ./../clients/cpp/src $(DEPS_PATH)
+VPATH += ./../common/ ./../clients/cpp/src $(DEPS_PATH) ./../src
 
 
 # List C source files here. (C dependencies are automatically generated.)
 # use file-extension c for "c-only"-files
 
-SRC =	appkey.c
+SRC =	
 
 # List C++ source files here.
 # use file-extension .cpp for C++-files (not .C)
-CPPSRC =	spotifyserver.cpp \
+CPPSRC =	testplayer.cpp TestPlayerIf.cpp \
 			$(addprefix ClientHandler/, ClientHandler.cpp Client.cpp) \
 			$(addprefix ConfigHandling/, ConfigHandler.cpp ConfigParser.cpp) \
-			$(addprefix ConfigHandling/Configs/, SpotifyConfig.cpp NetworkConfig.cpp AudioEndpointConfig.cpp LoggerConfig.cpp) \
-			$(addprefix LibSpotifyIf/, LibSpotifyIf.cpp LibSpotifyIfCallbackWrapper.cpp LibSpotifyIfHelpers.cpp LibSpotifyPlaybackHandler.cpp) \
+			$(addprefix ConfigHandling/Configs/, SpotifyConfig.cpp NetworkConfig.cpp AudioEndpointConfig.cpp LoggerConfig.cpp)
 
 CPPSRC +=	$(addprefix MediaContainers/, Album.cpp Artist.cpp Folder.cpp Playlist.cpp Track.cpp) \
 			$(addprefix MessageFactory/, Message.cpp MessageDecoder.cpp MessageEncoder.cpp TlvDefinitions.cpp Tlvs.cpp SocketReader.cpp SocketWriter.cpp) \
@@ -38,14 +37,13 @@ CPPSRC +=	$(addprefix MediaContainers/, Album.cpp Artist.cpp Folder.cpp Playlist
 
 CPPSRC +=	$(ARCH_SRC) $(AUDIO_SRC)
 
-STUB_SRC = LibSpotifyIf/LibSpotifyStub/LibSpotifyStub.c
 
 # List Assembler source files here.
 ASRC = 
 
 # List any extra directories to look for include files here.
 #    Each directory must be seperated by a space.
-EXTRAINCDIRS += ../common/ ../common/Logger Utils $(LIBSPOTIFY)/include
+EXTRAINCDIRS += ../common/ ../src ../common/Logger Utils 
 
 EXTRAINCDIRS += ../clients/cpp/src
 
@@ -53,14 +51,14 @@ EXTRAINCDIRS += ../clients/cpp/src
 #    Each library-name must be seperated by a space.
 #    i.e. to link with libxyz.a, libabc.a and libefsl.a: 
 #    EXTRA_LIBS = xyz abc efsl
-EXTRA_LIBS += pthread rt spotify
+EXTRA_LIBS += pthread rt
 
 
 # List any extra directories to look for library files here.
 # Also add directories where the linker should search for
 # includes from linker-script to the list
 #     Each directory must be seperated by a space.
-EXTRA_LIBDIRS += $(LIBSPOTIFY)/lib
+EXTRA_LIBDIRS += 
 
 
 # Place project-specific -D (define) and/or 
@@ -92,24 +90,17 @@ DEBUG = 3
 
 # Default target.
 .DEFAULT_GOAL := all
-all: spotifyserver stub
+all: testplayer
 
 # General make rules
 include ../build/build.mk
 
 # Specific targets.
-spotifyserver: dirs gccversion spotifyserver.$(EXECUTABLE_EXT)
+testplayer: dirs gccversion testplayer.$(EXECUTABLE_EXT)
 
-STUB_OBJ = $(OUTDIR)/$(basename $(STUB_SRC)).o
-$(eval $(call COMPILE_C_TEMPLATE, $(STUB_SRC)))
-
-stub: SRC += $(STUB_SRC)
-stub: TARGET=spotifyserver_stub
-stub: dirs $(STUB_OBJ) spotifyserver_stub.$(EXECUTABLE_EXT)
-spotifyserver_stub: stub
 
 # Listing of phony targets.
-.PHONY : spotifyserver spotifyserver_stub stub
+.PHONY : testplayer
 
 # Include the dependency files.
 ifneq ($(MAKECMDGOALS),clean)

@@ -37,6 +37,7 @@ class AudioEndpointRemoteSocketServer : public Platform::Runnable
 private:
 
     Platform::AudioEndpoint& ep_;
+    bool isPlaying_;
 
 public:
     AudioEndpointRemoteSocketServer(Platform::AudioEndpoint& endpoint);

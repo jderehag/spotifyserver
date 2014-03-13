@@ -104,13 +104,14 @@ AUDIOSRCCPP =		ConfigHandling/Configs/AudioEndpointConfig.cpp \
 					Platform/AudioEndpoints/AudioEndpointLocalShared.cpp \
 					Platform/AudioEndpoints/Endpoints/AudioEndpoint-CS43L22.cpp \
 					AudioEndpointRemoteSocketServer.cpp \
-					AudioEndpointManager/RemoteAudioEndpointManager.cpp
+					AudioEndpointManager/RemoteAudioEndpointManager.cpp \
+					ClockSync/ClockSyncClient.cpp
 
 SRC += $(AUDIOSRC)
 CPPSRC += $(AUDIOSRCCPP)
 
 
-WITH_TIME?=1
+WITH_TIME?=0
 ifeq ($(WITH_TIME),1)
 CPPSRC += NtpClient.cpp 
 CDEFS += -DWITH_TIME

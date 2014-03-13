@@ -28,10 +28,19 @@
 #ifndef UTILS_H_
 #define UTILS_H_
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 void disableStdinEcho();
 void enableStdinEcho();
 
 void sleep_ms( unsigned int ms );
 unsigned int getTick_ms();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* UTILS_H_ */

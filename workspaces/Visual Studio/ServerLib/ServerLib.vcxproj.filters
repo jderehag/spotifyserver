@@ -26,6 +26,9 @@
     <Filter Include="Utils">
       <UniqueIdentifier>{e5cfc25e-80ba-4e90-a2f5-5a8891394fab}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ClockSync">
+      <UniqueIdentifier>{1e76688a-d77c-451b-a45b-808fb92015bd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\common\AudioEndpointManager\AudioEndpointManager.cpp">
@@ -71,6 +74,9 @@
       <Filter>MediaInterface</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\spotifyserver_deps\appkey.c" />
+    <ClCompile Include="..\..\..\common\ClockSync\ClockSyncServer.cpp">
+      <Filter>ClockSync</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\common\AudioEndpointManager\AudioEndpointManager.h">
@@ -114,6 +120,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\src\Utils\FixedQueue.h">
       <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\ClockSync\ClockSyncServer.h">
+      <Filter>ClockSync</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

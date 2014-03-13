@@ -85,10 +85,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\clients\cpp\src\UIConsole.h" />
+    <ClInclude Include="..\..\..\testplayer\TestPlayerIf.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\src\spotifyserver.cpp" />
     <ClCompile Include="..\..\..\clients\cpp\src\UIConsole.cpp" />
+    <ClCompile Include="..\..\..\testplayer\testplayer.cpp" />
+    <ClCompile Include="..\..\..\testplayer\TestPlayerIf.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.vcxproj">

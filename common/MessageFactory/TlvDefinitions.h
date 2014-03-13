@@ -141,7 +141,8 @@ typedef enum
     TLV_NAME       = 0x702,
     TLV_IP_ADDRESS = 0x703,
     TLV_PORT       = 0x704,
-    TLV_CLOCK      = 0x705,
+    TLV_SERVER_CLOCK = 0x705,
+    TLV_CLIENT_CLOCK = 0x706,
 
     /* Image TLV's */
     TLV_IMAGE_FORMAT = 0x801, /* ImageFormat_t */

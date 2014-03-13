@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Jens Nielsen
+ * Copyright (c) 2014, Jens Nielsen
  * All rights reserved.
 
  * Redistribution and use in source and binary forms, with or without
@@ -25,25 +25,34 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "../Utils.h"
-#include "FreeRTOS.h"
-#include "task.h"
+#ifndef CLOCKSYNCCLIENT_H_
+#define CLOCKSYNCCLIENT_H_
 
-void disableStdinEcho()
+#include "MessageFactory/Message.h"
+#include <stdint.h>
+
+class ClockSyncClient
 {
-}
+    bool hasValidSync_;
+    bool waitingForResponse_;
+    uint32_t lastSync_;
+    uint32_t lastResponse_;
+    uint32_t clockDiff_;
 
-void enableStdinEcho()
-{
-}
+#define SYNC_SHIFT 1
+    int64_t samples[SYNC_SHIFT];
+    uint8_t nsamples;
+    uint8_t nextpt;
+public:
+    ClockSyncClient();
+    virtual ~ClockSyncClient();
 
-void sleep_ms( unsigned int ms )
-{
-    vTaskDelay( ms / portTICK_RATE_MS );
-}
+    bool hasValidSync();
+    bool timeToSync();
+    Message* createRequest();
+    void handleResponse( Message* rsp );
 
-unsigned int getTick_ms()
-{
-    return xTaskGetTickCount() / portTICK_RATE_MS;
-}
+    uint32_t convertToLocalTime( uint32_t serverTime );
+};
 
+#endif /* CLOCKSYNCCLIENT_H_ */

@@ -145,15 +145,15 @@ Main::Main() : Platform::Runnable(false, SIZE_SMALL, PRIO_VERY_HIGH)
 void Main::run()
 {
     clockInit();
+    /* Initialise the LwIP stack */
+    LwIP_Init();
+
 #ifdef WITH_TIME
     NtpClient* nc = new NtpClient();
     putenv( "TZ=CET-1CEST-2,M3.5.0/2,M10.5.0/3" ); /* initialize current time zone to CET, with DST switch */
 #endif
     Logger::LoggerEmbedded* l = new Logger::LoggerEmbedded(LOG_NOTICE);
     LedFlasher* fl = new LedFlasher;
-
-    /* Initialise the LwIP stack */
-    LwIP_Init();
 
 #if 0
     SocketClient* sc = new SocketClient("192.168.5.98", "7788");

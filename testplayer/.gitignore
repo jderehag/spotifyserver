@@ -1,11 +1,12 @@
 ###################
 # Compiled sources
 ###################
-*.o
+*.output
 *.elf
 *.exe
 *.so*
 *.a
+*.stackdump
 
 ############################
 # Folder used by libspotify
@@ -15,21 +16,9 @@ tmp/
 ############################
 # Configfile
 ############################
-spotifyserver.conf
+/spotifyserver.conf
 
 ############################
 # tmp files
 ############################
-output.log
-
-############################
-# visual studio files
-############################
-Debug/
-Release/
-ipch/
-*.opensdf
-*.sdf
-*.suo
-*.v11.suo
-*.vcxproj.user
+/output.log

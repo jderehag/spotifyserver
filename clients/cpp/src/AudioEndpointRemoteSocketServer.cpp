@@ -29,6 +29,7 @@
 #include "MessageFactory/Message.h"
 #include "MessageFactory/MessageDecoder.h"
 #include "Platform/Utils/Utils.h"
+#include "ClockSync/ClockSyncClient.h"
 #include "applog.h"
 #include <stdint.h>
 #include <string.h>
@@ -55,7 +56,8 @@ extern const uint32_t audio_sample_size;
 }*/
 AudioEndpointRemoteSocketServer::AudioEndpointRemoteSocketServer(Platform::AudioEndpoint& endpoint) : Platform::Runnable(true, SIZE_MEDIUM, PRIO_HIGH),
                                                                                                       /*sock_(SOCKTYPE_DATAGRAM),*/
-                                                                                                      ep_(endpoint)
+                                                                                                      ep_(endpoint),
+                                                                                                      isPlaying_(false)
 {
     startThread();
 }
@@ -67,8 +69,9 @@ void AudioEndpointRemoteSocketServer::run()
 {
     int rc;
     uint8_t buf[2000];
-    uint32_t clockDiff = 0;
-    uint32_t firstClockDiff = 0;
+    ClockSyncClient cs;
+    std::string addr = "";
+    std::string port = "";
 
     while( !isCancellationPending() )
     {
@@ -86,13 +89,24 @@ void AudioEndpointRemoteSocketServer::run()
             readsockets.insert(&sock_);
             errsockets.insert(&sock_);
 
-            rc = select(&readsockets, NULL, &errsockets, 1000);
+            rc = select(&readsockets, NULL, &errsockets, 25);
+
+            if ( isPlaying_ && cs.timeToSync() )
+            {
+                Message* req = cs.createRequest();
+                req->addTlv( TLV_AUDIO_BUFFERED_SAMPLES, ep_.getNumberOfQueuedSamples() );
+
+                MessageEncoder* enc = req->encode();
+
+                sock_.SendTo( enc->getBuffer(), enc->getLength(), addr, port);
+                delete enc;
+                delete req;
+            }
 
             if ( !readsockets.empty() )
             {
                 header_t* hdr;
                 uint32_t len;
-                std::string addr, port;
 
                 rc = sock_.ReceiveFrom( buf, sizeof(buf), addr, port );
 
@@ -106,37 +120,12 @@ void AudioEndpointRemoteSocketServer::run()
                 if ( len != (uint32_t)rc )
                     continue;
 
-                if ( Ntohl(hdr->type) == AUDIO_SYNC_REQ )
+                if ( Ntohl(hdr->type) == AUDIO_SYNC_RSP )
                 {
-                    tlvheader_t* tlvhdr = (tlvheader_t*) &buf[sizeof(header_t)];
-                    if ( Ntohl(tlvhdr->type) == TLV_CLOCK )
-                    {
-                        uint32_t now;
-
-                        uint32_t serverclock;
-                        memcpy( &serverclock, &buf[sizeof(header_t)+sizeof(tlvheader_t)], sizeof(uint32_t) );
-                        serverclock = Ntohl(serverclock);
-
-                        now = getTick_ms();
-                        /* calculate difference between server clock and our clock */
-                        clockDiff = now - serverclock;
-
-                        if ( firstClockDiff == 0 )
-                            firstClockDiff = clockDiff;
-
-                        clockDrift = clockDiff - firstClockDiff;
-                    }
-
-                    {
-                        uint32_t* val = (uint32_t*)&buf[sizeof(header_t)+sizeof(tlvheader_t)];
-                        len = sizeof(header_t)+sizeof(tlvheader_t)+4;
-                        hdr->len = Htonl( len );
-                        hdr->type = Htonl( AUDIO_SYNC_RSP );
-                        tlvhdr->type = Htonl( TLV_AUDIO_BUFFERED_SAMPLES );
-                        tlvhdr->len = Htonl( 4 );
-                        *val = Htonl( ep_.getNumberOfQueuedSamples() );
-                        sock_.SendTo( &buf, len, addr, port );
-                    }
+                    MessageDecoder dec;
+                    Message* rsp = dec.decode( buf );
+                    cs.handleResponse( rsp );
+                    delete rsp;
                 }
                 else if ( Ntohl(hdr->type) == AUDIO_DATA_IND )
                 {
@@ -208,11 +197,11 @@ void AudioEndpointRemoteSocketServer::run()
                             psamples[i] = Ntohs(psamples[i]);
 
                         /* only do timestamp stuff if server sends it */
-                        if ( hasservertimestamp )
+                        if ( hasservertimestamp && cs.hasValidSync() )
                         {
                             // todo we should make sure clock sync is up to date
 
-                            clienttimestamp = servertimestamp + clockDiff;
+                            clienttimestamp = cs.convertToLocalTime( servertimestamp );
 
                             //debug counters
 #ifdef DEBUG_COUNTERS
@@ -228,6 +217,7 @@ void AudioEndpointRemoteSocketServer::run()
 
                         ep_.enqueueAudioData( clienttimestamp, channels, rate, nsamples, psamples);
 
+                        isPlaying_ = true;
                         /*while( ep_.enqueueAudioData( clienttimestamp, channels, rate, nsamples, psamples) == 0 )
                             vTaskDelay(2);*/
                     }

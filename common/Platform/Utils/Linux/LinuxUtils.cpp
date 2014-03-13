@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "../Utils.h"
 #include <termios.h>
 #include <unistd.h>
 #include <time.h>

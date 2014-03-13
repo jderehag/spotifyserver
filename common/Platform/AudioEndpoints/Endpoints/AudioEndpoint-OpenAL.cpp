@@ -58,7 +58,7 @@ void AudioEndpointLocal::destroy()
     flushAudioData();
 }
 
-
+#include <assert.h>
 void AudioEndpointLocal::run()
 {
     AudioFifoData* afd = NULL;
@@ -151,29 +151,58 @@ void AudioEndpointLocal::run()
 
             if ( afd->timestamp != 0 )
             {
+#define NSAMPLES 3
+                static double timetoplaysamples[NSAMPLES] = {0};
+                static uint8_t ntimetoplaysamples = 0;
+                static uint8_t j = 0;
                 unsigned int now = getTick_ms();
                 int timeToPlayThisPacket = afd->timestamp - now;
-                int totalBufferedSamples = 0;
+                ALint totalBufferedSamples = 0;
+                ALint offsetInCurrentBuffer;
                 for ( i=0; i<NUM_BUFFERS; i++ )
                     totalBufferedSamples += bufferedSamples[i];
-                timeToPlayThisPacket -= totalBufferedSamples * 1000 / prevrate;
+                alGetSourcei(source, AL_SAMPLE_OFFSET,  &offsetInCurrentBuffer);
+                assert( offsetInCurrentBuffer <= totalBufferedSamples );
+                totalBufferedSamples -= offsetInCurrentBuffer;
+                int timeToBufferUnderrun = (totalBufferedSamples * 1000 / prevrate);
+                int offset = timeToPlayThisPacket - timeToBufferUnderrun;
+                
+                timetoplaysamples[j] = offset;
+                j=(j+1)%NSAMPLES;
+                if(ntimetoplaysamples < NSAMPLES) ntimetoplaysamples++;
 
-                static int timetoplay = timeToPlayThisPacket;
-                timetoplay += (timeToPlayThisPacket - timetoplay)/3;
+                double timetoplay = 0;
+                for ( uint8_t i=0; i<ntimetoplaysamples; i++ )
+                {
+                    timetoplay += timetoplaysamples[i];
+                }
+                timetoplay /= ntimetoplaysamples;
+
+
+                /*static int timetoplay = timeToPlayThisPacket;
+                timetoplay += (timeToPlayThisPacket - timetoplay)/3;*/
 
                 if ( timetoplay > 25 )
                 {
                     sleep_ms( timetoplay-10 );
+                    ntimetoplaysamples = 0;
+                    j=0;
                 }
                 else if ( timetoplay < -25 )
                 {
                     fifo_.returnFifoDataBuffer( afd );
+                    ntimetoplaysamples = 0;
+                    j=0;
                     continue;
                 }
-                else if ( timetoplay < -3 || timetoplay > 3 )
+                else if ( timetoplay < -1 || timetoplay > 1 )
                 {
                     //we're off, adjust playback
                     adjustSamples_ = timetoplay * (int)afd->rate / 1000;
+                    for ( uint8_t i=0; i<ntimetoplaysamples; i++ )
+                    {
+                        timetoplaysamples[i] -= timetoplay;
+                    }
                 }
                 else if ( timetoplay == 0 )
                 {
@@ -215,7 +244,7 @@ void AudioEndpointLocal::run()
         }
     }
 
-	log(LOG_DEBUG) << "Exiting AudioEndpoint::run()";
+    log(LOG_DEBUG) << "Exiting AudioEndpoint::run()";
 }
 }
 

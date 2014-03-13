@@ -28,6 +28,7 @@
 #include "AudioEndpointRemote.h"
 #include "MessageFactory/Message.h"
 #include "MessageFactory/MessageDecoder.h"
+#include "ClockSync/ClockSyncServer.h"
 #include "Platform/Utils/Utils.h"
 #include "applog.h"
 #include <stdlib.h>
@@ -64,25 +65,56 @@ std::string AudioEndpointRemote::getId() const
 
 void AudioEndpointRemote::run()
 {
-    AudioFifoData* afd;
+    AudioFifoData* afd = NULL;
     static uint32_t reqId = 0;
     unsigned int bucket = BUCKET_INITIAL_VALUE;
     uint32_t currentTime;
     uint32_t lastTime = getTick_ms();
     uint32_t count = 0;
     uint32_t highestdiff = 0;
+    ClockSyncServer cs;
 
     while ( isCancellationPending() == false )
     {
-
         int rc = 0;
+        std::set<Socket*> readsockets;
+        readsockets.insert( &sock_ );
 
-        while ( ( afd = fifo_.getFifoDataTimedWait(10) ) == NULL && isCancellationPending() == false );
+        rc = select( &readsockets, NULL, NULL, 5 );
+
         if ( isCancellationPending() != false ) break;
 
-        while ( isCancellationPending() == false )
+        if ( rc > 0 && !readsockets.empty() )
         {
-            bool holdPacket = false;
+            uint8_t buf[100];
+            if ( sock_.Receive( buf, sizeof(buf) ) > 0 )
+            {
+                MessageDecoder dec;
+
+                Message* req = dec.decode( buf );
+
+                Message* rsp = cs.handleRequest( req );
+
+                MessageEncoder* enc = rsp->encode();
+
+                sock_.Send( enc->getBuffer(), enc->getLength() );
+
+                delete rsp;
+                delete req;
+                delete enc;
+            }
+        }
+
+        if ( afd == NULL )
+        {
+            afd = fifo_.getFifoDataTimedWait(0);
+            if ( afd == NULL )
+            {
+                continue;
+            }
+        }
+
+        {
             currentTime = getTick_ms();
 
             if ( afd->timestamp != 0 )
@@ -90,101 +122,36 @@ void AudioEndpointRemote::run()
                 if ( afd->timestamp > currentTime && 
                     (afd->timestamp - currentTime) > BUCKET_INITIAL_VALUE * 1000 / afd->rate )
                 {
-                    holdPacket = true;
+                    /* too early to send this packet, wait a while */
+                    continue;
                 }
             }
 
-            if ( !holdPacket )
             {
                 if ( currentTime > lastTime + BUCKET_REFILL_INTERVAL_MS )
                 {
                     if ( currentTime > lastTime + ((BUCKET_INITIAL_VALUE * BUCKET_REFILL_INTERVAL_MS ) / BUCKET_REFILL_TOKENS ) )
                     {
                         /* the delay since last update would more than refill the bucket, reset bucket instead of calculating and capping since it may have been a while */
-                        //log(LOG_DEBUG) << "Bucket reset at " << currentTime << " Last time = " << lastTime;
                         bucket = BUCKET_INITIAL_VALUE;
                         lastTime = currentTime;
                     }
                     else
                     {
-                        //log(LOG_DEBUG) << "Bucket refill at " << currentTime << " Last time = " << lastTime << " Bucket = " << bucket;
                         bucket += BUCKET_REFILL_TOKENS;
                         lastTime += BUCKET_REFILL_INTERVAL_MS;
                     }
                 }
 
-                if ( bucket >= afd->nsamples )
+                if ( bucket < afd->nsamples )
                 {
-                    //log(LOG_DEBUG) << "Samples " << afd->nsamples << " Bucket " << bucket << " Now = " << currentTime;
-                    break;
+                    /* not allowed to send this packet yet, wait a while */
+                    continue;
                 }
             }
-
-            sleep_ms( 5 );
-            if ( count > 50 )
-                count = 0; //output buffer should be empty now, force sync
         }
-
-        if ( isCancellationPending() != false ) break;
 
         bucket -= afd->nsamples;
-
-        if ( count % 100 == 0 )
-        {
-            uint32_t now;
-            std::set<Socket*> readsockets;
-            Message* msg = new Message( AUDIO_SYNC_REQ );
-
-            readsockets.insert( &sock_ );
-
-            msg->setId(reqId++);
-            now = getTick_ms();
-            msg->addTlv( TLV_CLOCK, now );
-
-            MessageEncoder* enc = msg->encode();
-
-            sock_.Send(enc->getBuffer(), enc->getLength());
-
-            if ( select( &readsockets, NULL, NULL, 10 ) > 0 )
-            {
-                uint8_t buf[100];
-                uint32_t diff = getTick_ms() - now;
-                if ( diff > highestdiff )
-                {
-                    highestdiff = diff;
-                }
-
-                //todo, do something with rtt, adjust clock for next sync? adjust timestamps?
-
-                sock_.Receive( buf, sizeof(buf) );
-
-                MessageDecoder dec;
-
-                Message* rsp = dec.decode( buf );
-
-                if ( rsp )
-                {
-                    if ( rsp->getType() == AUDIO_SYNC_RSP )
-                    {
-                        IntTlv* bufferSizeTlv = (IntTlv*) rsp->getTlv( TLV_AUDIO_BUFFERED_SAMPLES );
-                        remoteBufferSize = bufferSizeTlv->getVal();
-                        //todo adjust bucket?
-                        if ( bucket < BUCKET_INITIAL_VALUE/4 && remoteBufferSize < BUCKET_INITIAL_VALUE/4 )
-                            bucket = BUCKET_INITIAL_VALUE-remoteBufferSize;
-                    }
-                    delete rsp;
-                }
-            }
-            /*else
-                log(LOG_NOTICE) << "No response in time!";*/
-            delete msg;
-        }
-        else
-        {
-            uint8_t buf[100];
-            while( sock_.Receive( buf, sizeof(buf) ) > 0 )
-                /*log(LOG_NOTICE) << "Reading spurious message!"*/;
-        }
 
         count++;
 
@@ -217,9 +184,6 @@ void AudioEndpointRemote::run()
             std::cout << "JESPER: rc=" << rc << " perror=" << errno;
         }
 
-        /* back off a little before next packet to avoid packet storm on client.. */
-        sleep_ms(3);
-
         delete enc;
         fifo_.returnFifoDataBuffer( afd );
         afd = NULL;
@@ -234,17 +198,18 @@ int AudioEndpointRemote::enqueueAudioData( unsigned int timestamp, unsigned shor
     unsigned int n = 0;
     unsigned int taken = 0;
     unsigned int samplesleft = nsamples;
+    double offset = 0;
 
     if (nsamples == 0)
         return 0; // Audio discontinuity, do nothing
 
     do
     {
-        taken = fifo_.addFifoDataBlocking( timestamp, channels, rate, ( samplesleft > SAMPLE_BATCH_SIZE ? SAMPLE_BATCH_SIZE : samplesleft ), &samples[n*2] );
+        taken = fifo_.addFifoDataBlocking( timestamp + offset, channels, rate, ( samplesleft > SAMPLE_BATCH_SIZE ? SAMPLE_BATCH_SIZE : samplesleft ), &samples[n*2] );
         n += taken;
         samplesleft -= taken;
         if ( timestamp != 0 )
-            timestamp += taken * 1000 / rate;
+            offset += (double)taken * 1000 / rate;
     } while( taken > 0 && n < nsamples );
 
     return n;

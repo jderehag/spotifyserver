@@ -110,6 +110,13 @@ int AudioDispatch::enqueueAudioData(unsigned short channels, unsigned int rate, 
         {
             /* more than one stream, play by timestamp */
             timestamp = timestampBase_ + ((uint64_t)sampleCount_ * 1000 / rate);
+
+            if ( timestamp < getTick_ms() )
+            {
+                resetTimestamp_ = true;
+                mtx.unlock();
+                return 0;
+            }
         }
         else
         {

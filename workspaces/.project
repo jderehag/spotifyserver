@@ -121,6 +121,11 @@
 			<type>2</type>
 			<locationURI>PROJECT_SRCROOT/src</locationURI>
 		</link>
+		<link>
+			<name>testplayer</name>
+			<type>2</type>
+			<location>C:/code/spotifyserver/testplayer</location>
+		</link>
 	</linkedResources>
 	<filteredResources>
 		<filter>

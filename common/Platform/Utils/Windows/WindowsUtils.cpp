@@ -26,6 +26,7 @@
  */
 
 #include "Windows.h"
+#include "../Utils.h"
 
 void disableStdinEcho()
 {
@@ -50,5 +51,25 @@ void sleep_ms( unsigned int ms )
 
 unsigned int getTick_ms()
 {
-    return GetTickCount();
+    static bool init = false;
+
+    if ( !init )
+    {
+        init = true;
+        #define TARGET_RESOLUTION 1         // 1-millisecond target resolution
+
+        TIMECAPS tc;
+        UINT     wTimerRes;
+
+        if (timeGetDevCaps(&tc, sizeof(TIMECAPS)) != TIMERR_NOERROR) 
+        {
+            //Error; application can't continue.
+        }
+
+        wTimerRes = min(max(tc.wPeriodMin, TARGET_RESOLUTION), tc.wPeriodMax);
+        timeBeginPeriod(wTimerRes); 
+    }
+
+    //return GetTickCount();
+    return timeGetTime();
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Jens Nielsen
+ * Copyright (c) 2014, Jens Nielsen
  * All rights reserved.
 
  * Redistribution and use in source and binary forms, with or without
@@ -25,25 +25,18 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "../Utils.h"
-#include "FreeRTOS.h"
-#include "task.h"
+#ifndef CLOCKSYNCSERVER_H_
+#define CLOCKSYNCSERVER_H_
 
-void disableStdinEcho()
+#include "MessageFactory/Message.h"
+
+class ClockSyncServer
 {
-}
+public:
+    ClockSyncServer();
+    virtual ~ClockSyncServer();
 
-void enableStdinEcho()
-{
-}
+    Message* handleRequest( Message* req );
+};
 
-void sleep_ms( unsigned int ms )
-{
-    vTaskDelay( ms / portTICK_RATE_MS );
-}
-
-unsigned int getTick_ms()
-{
-    return xTaskGetTickCount() / portTICK_RATE_MS;
-}
-
+#endif /* CLOCKSYNCSERVER_H_ */

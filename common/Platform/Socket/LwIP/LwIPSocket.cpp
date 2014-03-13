@@ -285,7 +285,11 @@ int Socket::EnableBroadcast()
 
 void Socket::Close()
 {
-    lwip_close(socket_->fd);
+    if ( socket_->fd >= 0 )
+    {
+        lwip_close(socket_->fd);
+    }
+    socket_->fd = -1;
 }
 
 void Socket::Shutdown()
