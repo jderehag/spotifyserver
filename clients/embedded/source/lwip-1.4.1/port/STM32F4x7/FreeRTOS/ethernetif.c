@@ -54,7 +54,6 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-
 /* Global Ethernet handle*/
 static ETH_HandleTypeDef EthHandle;
 
@@ -140,7 +139,7 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
 
   DmaTxDesc = EthHandle.TxDesc;
   bufferoffset = 0;
-  
+
   /* copy frame from pbufs to driver buffers */
   for(q = p; q != NULL; q = q->next)
   {
@@ -225,7 +224,10 @@ static struct pbuf * low_level_input(struct netif *netif)
   uint32_t i=0;
   
   /* get received frame */
-  HAL_ETH_GetReceivedFrame_IT(&EthHandle);
+  if ( HAL_ETH_GetReceivedFrame_IT(&EthHandle) != HAL_OK )
+  {
+      return NULL;
+  }
   
   /* Obtain the size of the packet and put it into the "len" variable. */
   len = EthHandle.RxFrameInfos.length;
@@ -236,7 +238,7 @@ static struct pbuf * low_level_input(struct netif *netif)
     /* We allocate a pbuf chain of pbufs from the Lwip buffer pool */
     p = pbuf_alloc(PBUF_RAW, len, PBUF_POOL);
   }
-  
+
   if (p != NULL)
   {
     dmarxdesc = EthHandle.RxFrameInfos.FSRxDesc;
@@ -301,26 +303,28 @@ static struct pbuf * low_level_input(struct netif *netif)
   *
   * @param netif the lwip network interface structure for this ethernetif
   */
-void ethernetif_input( void const * argument )
+void ethernetif_input(void const * argument)
 {
-  struct pbuf *p;
-  struct netif *netif = (struct netif *) argument;
-  
-  for( ;; )
-  {
-    if ( BSP_ETH_WaitForRx( TIME_WAITING_FOR_INPUT ) )
+    struct pbuf *p;
+    struct netif *netif = (struct netif *) argument;
+
+    for (;;)
     {
-      p = low_level_input( netif );
-      if   (p != NULL)
-      {
-        if (netif->input( p, netif) != ERR_OK )
+        if (BSP_ETH_WaitForRx(TIME_WAITING_FOR_INPUT))
         {
-          pbuf_free(p);
-          p = NULL;
+            do
+            {
+                p = low_level_input(netif);
+                if (p != NULL)
+                {
+                    if (netif->input(p, netif) != ERR_OK)
+                    {
+                        pbuf_free(p);
+                    }
+                }
+            } while (p != NULL);
         }
-      }
     }
-  }
 }
 
 /**

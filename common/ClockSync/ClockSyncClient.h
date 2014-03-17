@@ -39,7 +39,7 @@ class ClockSyncClient
     uint32_t lastResponse_;
     uint32_t clockDiff_;
 
-#define SYNC_SHIFT 1
+#define SYNC_SHIFT 8
     int64_t samples[SYNC_SHIFT];
     uint8_t nsamples;
     uint8_t nextpt;
@@ -53,6 +53,7 @@ public:
     void handleResponse( Message* rsp );
 
     uint32_t convertToLocalTime( uint32_t serverTime );
+    uint32_t convertToServerTime( uint32_t localTime );
 };
 
 #endif /* CLOCKSYNCCLIENT_H_ */

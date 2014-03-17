@@ -225,7 +225,7 @@ void TestPlayerIf::stateMachineEventHandler(EventItem* event)
 		    playBufferSize = nsamples;
 		    playBufferPos = 0;
 
-		    memset( playBuffer, 0, sizeof(playBuffer) );
+		    memset( playBuffer, 0, nsamples*2*2 );
 		    int i;
 		    for( i=0; i<width/2; i++ )
 		    {

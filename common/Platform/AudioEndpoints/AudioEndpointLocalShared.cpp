@@ -1,5 +1,6 @@
 #include "AudioEndpointLocal.h"
 #include "applog.h"
+#include <string.h>
 
 namespace Platform
 {
@@ -34,15 +35,27 @@ void AudioEndpointLocal::adjustSamples( AudioFifoData* afd )
         if ( thisBufferAdjustSamples == 0 )              thisBufferAdjustSamples = 1;
         if ( thisBufferAdjustSamples > totalPadSamples ) thisBufferAdjustSamples = totalPadSamples;
         if ( thisBufferAdjustSamples > headroom/4 )      thisBufferAdjustSamples = headroom/4;
-        if ( thisBufferAdjustSamples > 4 )               thisBufferAdjustSamples = 4;
+        //if ( thisBufferAdjustSamples > 4 )               thisBufferAdjustSamples = 4;
 
-        for ( i=0; i<thisBufferAdjustSamples; i++ )
+        uint32_t chunksize = afd->nsamples / (thisBufferAdjustSamples+1);
+        uint32_t n = afd->nsamples;
+
+        for ( i=thisBufferAdjustSamples; i>0; i-- )
         {
-            afd->samples[afd->nsamples*2] = afd->samples[afd->nsamples*2-2];
-            afd->samples[afd->nsamples*2+1] = afd->samples[afd->nsamples*2-1];
-            afd->nsamples++;
-            adjustSamples_--;
+            int16_t* src = &afd->samples[(n-chunksize)*afd->channels];
+            int16_t* dst = &afd->samples[(n+i-chunksize)*afd->channels];
+            memmove( dst, src, chunksize * afd->channels * sizeof(int16_t) );
+            dst--;
+            *dst = (*(dst+2) + *(dst-i*2))/2;
+            dst--;
+            *dst = (*(dst+2) + *(dst-i*2))/2;
+
+            n -= chunksize;
         }
+
+        afd->nsamples += thisBufferAdjustSamples;
+        adjustSamples_ -= thisBufferAdjustSamples;
+
     }
     else if ( adjustSamples_ < 0 )
     {
@@ -50,6 +63,21 @@ void AudioEndpointLocal::adjustSamples( AudioFifoData* afd )
         uint32_t totalRemoveSamples = (0-adjustSamples_);
         if ( thisBufferAdjustSamples == 0 )                 thisBufferAdjustSamples = 1;
         if ( thisBufferAdjustSamples > totalRemoveSamples ) thisBufferAdjustSamples = totalRemoveSamples;
+
+        uint32_t chunksize = afd->nsamples / (thisBufferAdjustSamples+1);
+        uint32_t n = chunksize;
+
+        for ( i=1; i<thisBufferAdjustSamples; i++ )
+        {
+            int16_t* src = &afd->samples[(n)*afd->channels];
+            int16_t* dst = &afd->samples[(n-i)*afd->channels];
+
+            memmove( dst, src, (chunksize-1) * afd->channels * sizeof(int16_t) );
+
+            n += chunksize;
+
+        }
+        memmove( &afd->samples[(n-i)*afd->channels], &afd->samples[(n)*afd->channels], (afd->nsamples-n) * afd->channels * sizeof(int16_t) );
 
         afd->nsamples -= thisBufferAdjustSamples;
         adjustSamples_ += thisBufferAdjustSamples;

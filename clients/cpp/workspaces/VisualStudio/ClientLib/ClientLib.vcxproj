@@ -65,6 +65,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\..\common\AudioEndpointManager\RemoteAudioEndpointManager.cpp" />
+    <ClCompile Include="..\..\..\..\..\common\ClockSync\ClockSyncClient.cpp" />
     <ClCompile Include="..\..\..\..\..\common\MediaInterface\MediaInterface.cpp" />
     <ClCompile Include="..\..\..\..\..\src\ConfigHandling\ConfigHandler.cpp" />
     <ClCompile Include="..\..\..\..\..\src\ConfigHandling\ConfigParser.cpp" />
@@ -78,6 +79,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\..\..\common\AudioEndpointManager\AudioEndpointManagerCtrlInterface.h" />
     <ClInclude Include="..\..\..\..\..\common\AudioEndpointManager\RemoteAudioEndpointManager.h" />
+    <ClInclude Include="..\..\..\..\..\common\ClockSync\ClockSyncClient.h" />
     <ClInclude Include="..\..\..\..\..\common\MediaInterface\MediaInterface.h" />
     <ClInclude Include="..\..\..\..\..\src\ConfigHandling\ConfigHandler.h" />
     <ClInclude Include="..\..\..\..\..\src\ConfigHandling\ConfigParser.h" />

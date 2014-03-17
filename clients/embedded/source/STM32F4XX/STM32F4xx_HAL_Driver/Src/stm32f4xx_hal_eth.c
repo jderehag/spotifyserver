@@ -868,7 +868,7 @@ HAL_StatusTypeDef HAL_ETH_GetReceivedFrame_IT(ETH_HandleTypeDef *heth)
   __HAL_UNLOCK(heth);
   
   /* Return function status */
-  return HAL_OK;
+  return HAL_ERROR;
 }
 
 /**

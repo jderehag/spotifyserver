@@ -44,7 +44,6 @@ static xSemaphoreHandle s_xSemaphore = NULL;
 /* reference to global ethernet handle, needed in interrupt */
 static ETH_HandleTypeDef* handle = NULL;
 
-
 static void BSP_ETH_GPIO_Config(void);
 
 
@@ -78,7 +77,7 @@ uint8_t BSP_ETH_Init( ETH_HandleTypeDef* EthHandle )
     }
 
     /* create a binary semaphore used for synchronisation */
-    s_xSemaphore = xSemaphoreCreateBinary();
+    s_xSemaphore = xSemaphoreCreateCounting(5,0);
 
     return ret;
 }
