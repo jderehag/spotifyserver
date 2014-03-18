@@ -44,7 +44,6 @@ uint32_t firstclockdiff = 0;
 uint32_t totalrecsamples = 0;
 #endif
 
-int clockDrift = 0;
 /*
 #include "Freertos.h"
 #include "task.h"
@@ -93,14 +92,35 @@ void AudioEndpointRemoteSocketServer::run()
 
             if ( isPlaying_ && cs.timeToSync() )
             {
-                Message* req = cs.createRequest();
-                req->addTlv( TLV_AUDIO_BUFFERED_SAMPLES, ep_.getNumberOfQueuedSamples() );
+                uint32_t len = 0;
+                header_t* hdr = (header_t*)buf;
+                tlvheader_t* tlv;
+                uint32_t* val;
+                hdr->type = Htonl(AUDIO_SYNC_REQ);
+                hdr->id = 7;
+                len += sizeof(header_t);
 
-                MessageEncoder* enc = req->encode();
+                tlv = (tlvheader_t*)&buf[len];
+                tlv->type = Htonl( TLV_AUDIO_BUFFERED_SAMPLES );
+                tlv->len = Htonl( sizeof(uint32_t) );
+                len += sizeof(tlvheader_t);
 
-                sock_.SendTo( enc->getBuffer(), enc->getLength(), addr, port);
-                delete enc;
-                delete req;
+                val = (uint32_t*)&buf[len];
+                *val = Htonl( ep_.getNumberOfQueuedSamples() );
+                len += sizeof(uint32_t);
+
+                tlv = (tlvheader_t*)&buf[len];
+                tlv->type = Htonl( TLV_CLIENT_CLOCK );
+                tlv->len = Htonl( sizeof(uint32_t) );
+                len += sizeof(tlvheader_t);
+
+                val = (uint32_t*)&buf[len];
+                *val = Htonl( cs.convertToServerTime( getTick_ms() ) );
+                len += sizeof(uint32_t);
+
+                hdr->len = Htonl(len);
+
+                sock_.SendTo( buf, len, addr, port);
             }
 
             if ( !readsockets.empty() )

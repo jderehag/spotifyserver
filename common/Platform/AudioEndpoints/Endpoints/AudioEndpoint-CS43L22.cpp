@@ -136,9 +136,10 @@ void AudioEndpointLocal::run()
             {
                 unsigned int now = getTick_ms();
                 int timeToPlayThisPacket = afd->timestamp - now;
-                timeToPlayThisPacket -= bufferedSamples[thisBufferNum ^ 1] * 1000 / afd->rate;
+                int timeToBufferUnderrun = bufferedSamples[thisBufferNum ^ 1] * 1000 / afd->rate;
+                int offset = timeToPlayThisPacket - timeToBufferUnderrun;
 
-                /*static*/ int timetoplay = timeToPlayThisPacket;
+                /*static*/ int timetoplay = offset;
                 //timetoplay += (timeToPlayThisPacket - timetoplay)/3;
 
                 if ( timetoplay < -25 || timetoplay > 500 /*this has to be some error*/ )

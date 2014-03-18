@@ -30,7 +30,6 @@
 #include "Platform/Socket/Socket.h"
 #include "Platform/Utils/Utils.h"
 #include "applog.h"
-#include "clock.h"
 
 #include <string.h>
 //#include <tgmath.h>
@@ -62,6 +61,7 @@ bool ClockSyncClient::timeToSync()
     uint32_t now = getTick_ms();
     if ( now - lastResponse_ > 100 && now - lastSync_ > 50)
     {
+        lastSync_ = getTick_ms();
         return true;
     }
     return false;
@@ -76,6 +76,8 @@ Message* ClockSyncClient::createRequest()
     return req;
 }
 
+static uint32_t firstDiff = 0;
+int clockDrift = 0;
 void ClockSyncClient::handleResponse( Message* rsp )
 {
     if ( rsp->getType() == AUDIO_SYNC_RSP )
@@ -90,7 +92,7 @@ void ClockSyncClient::handleResponse( Message* rsp )
             uint32_t t1 = clientClockTlv->getVal();
             uint32_t t2 = serverClockTlv->getVal();
             uint32_t t3 = t2; // assume T2 and T3 are equal
-            uint32_t t4 = now - clockDiff_;
+            uint32_t t4 = convertToServerTime( now );
 
             int64_t t21 = (int64_t)t2 - t1;
             int64_t t34 = (int64_t)t3 - t4;
@@ -114,6 +116,9 @@ void ClockSyncClient::handleResponse( Message* rsp )
             /* adjust our clock */
             clockDiff_ -= adjust;
 
+            if ( firstDiff == 0 ) firstDiff = clockDiff_;
+            clockDrift = clockDiff_ - firstDiff;
+
             /* adjust the stored samples so they are relative to the new clockDiff_ and can be used again */
             for ( uint8_t i=0; i<nsamples; i++ )
             {
@@ -131,5 +136,10 @@ void ClockSyncClient::handleResponse( Message* rsp )
 uint32_t ClockSyncClient::convertToLocalTime( uint32_t serverTime )
 {
     return serverTime + clockDiff_;
+}
+
+uint32_t ClockSyncClient::convertToServerTime( uint32_t localTime )
+{
+    return localTime - clockDiff_;
 }
 

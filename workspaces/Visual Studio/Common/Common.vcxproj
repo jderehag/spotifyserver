@@ -120,7 +120,7 @@
     <ClCompile Include="..\..\..\common\Platform\AudioEndpoints\AudioEndpointLocalShared.cpp" />
     <ClCompile Include="..\..\..\common\Platform\AudioEndpoints\AudioEndpointRemote.cpp" />
     <ClCompile Include="..\..\..\common\Platform\AudioEndpoints\AudioFifo.cpp" />
-    <ClCompile Include="..\..\..\common\Platform\AudioEndpoints\Endpoints\AudioEndpoint-OpenAL.cpp" />
+    <ClCompile Include="..\..\..\common\Platform\AudioEndpoints\Endpoints\AudioEndpoint-Wasapi.cpp" />
     <ClCompile Include="..\..\..\common\Platform\Socket\Windows\WindowsSocket.cpp" />
     <ClCompile Include="..\..\..\common\Platform\Threads\Windows\WindowsCondition.cpp" />
     <ClCompile Include="..\..\..\common\Platform\Threads\Windows\WindowsMessagebox.cpp" />

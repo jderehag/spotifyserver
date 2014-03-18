@@ -165,9 +165,6 @@
     <ClCompile Include="..\..\..\common\Platform\AudioEndpoints\AudioFifo.cpp">
       <Filter>Platform\AudioEndpoints</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\common\Platform\AudioEndpoints\Endpoints\AudioEndpoint-OpenAL.cpp">
-      <Filter>Platform\AudioEndpoints\Endpoints</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\common\Platform\Utils\Windows\WindowsUtils.cpp">
       <Filter>Platform\Utils\Windows</Filter>
     </ClCompile>
@@ -227,6 +224,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\common\Platform\AudioEndpoints\AudioEndpointLocalShared.cpp">
       <Filter>Platform\AudioEndpoints</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\Platform\AudioEndpoints\Endpoints\AudioEndpoint-Wasapi.cpp">
+      <Filter>Platform\AudioEndpoints\Endpoints</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
