@@ -26,7 +26,6 @@
  */
 
 #include "ClockSyncClient.h"
-#include "Ntp.h"
 #include "Platform/Socket/Socket.h"
 #include "Platform/Utils/Utils.h"
 #include "applog.h"

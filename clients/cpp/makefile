@@ -33,6 +33,7 @@ CPPSRC +=	$(addprefix MediaContainers/, Album.cpp Artist.cpp Folder.cpp Playlist
 			$(addprefix SocketHandling/, Messenger.cpp SocketClient.cpp ) \
 			$(addprefix Platform/AudioEndpoints/, AudioFifo.cpp AudioEndpointLocalShared.cpp ) \
 			AudioEndpointManager/RemoteAudioEndpointManager.cpp \
+			ClockSync/ClockSyncClient.cpp \
 			MediaInterface/MediaInterface.cpp \
 			Logger/Logger.cpp Logger/LoggerImpl.cpp
 
