@@ -45,7 +45,7 @@ static const char* getEventName(TestPlayerIf::EventItem* event);
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
-TestPlayerIf::TestPlayerIf( AudioEndpointManager& audioMgr ) : audioMgr_(audioMgr), playBuffer(NULL), playBufferSize(0), playBufferPos(0)
+TestPlayerIf::TestPlayerIf( AudioEndpointManager& audioMgr ) : audioMgr_(audioMgr), playBuffer(NULL), playBufferSize(0), playBufferPos(0), isPlaying(false)
 {
     Platform::AudioEndpoint* ep = audioMgr_.getEndpoint( "local" );
     audioOut_.addEndpoint( *ep );
@@ -148,7 +148,7 @@ void TestPlayerIf::run()
             cond_.timedWait(eventQueueMtx_, 20);
         }
 
-        if ( playBuffer != NULL )
+        if ( isPlaying && playBuffer != NULL )
         {
             unsigned int nsamples = playBufferSize/8;//MIN(2205, playBufferSize - playBufferPos);
             playBufferPos += audioOut_.enqueueAudioData( 2, 44100, nsamples, &playBuffer[playBufferPos*2]);
@@ -225,7 +225,7 @@ void TestPlayerIf::stateMachineEventHandler(EventItem* event)
 		    playBufferSize = nsamples;
 		    playBufferPos = 0;
 
-		    memset( playBuffer, 0, sizeof(playBuffer) );
+		    memset( playBuffer, 0, nsamples*2*2 );
 		    int i;
 		    for( i=0; i<width/2; i++ )
 		    {
@@ -249,6 +249,9 @@ void TestPlayerIf::stateMachineEventHandler(EventItem* event)
                 playBuffer[width+i*2 + 1] = playBuffer[i*2];
             }
 
+
+            isPlaying = true;
+
 			break;
 		}
 
@@ -257,11 +260,13 @@ void TestPlayerIf::stateMachineEventHandler(EventItem* event)
             break;
 
         case EVENT_PAUSE_PLAYBACK:
+            isPlaying = false;
                 audioOut_.pause();
 
             break;
 
         case EVENT_RESUME_PLAYBACK:
+            isPlaying = true;
                 audioOut_.resume();
             break;
 

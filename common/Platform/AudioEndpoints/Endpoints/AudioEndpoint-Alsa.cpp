@@ -115,7 +115,7 @@ void AudioEndpointLocal::run()
                         fifo_.returnFifoDataBuffer( afd );
                         continue;
                     }
-                    else if ( timetoplay < -3 || timetoplay > 3 )
+                    else if ( timetoplay < -1 || timetoplay > 1 )
                     {
                         //we're off, adjust playback
                         adjustSamples_ = timetoplay * (int)afd->rate / 1000;

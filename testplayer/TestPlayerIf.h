@@ -146,7 +146,7 @@ private:
 	int16_t* playBuffer;
 	size_t playBufferSize;
 	size_t playBufferPos;
-
+        bool isPlaying;
 public:
 	TestPlayerIf(AudioEndpointManager& audioMgr );
 	virtual ~TestPlayerIf();
