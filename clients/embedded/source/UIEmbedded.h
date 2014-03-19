@@ -68,6 +68,8 @@ private:
     virtual void getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress, void* userData );
     virtual void getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, void* userData );
 
+    virtual void getCurrentAudioEndpointsResponse( const std::set<std::string> endpoints, void* userData );
+
 public:
     UIEmbedded(MediaInterface& m);
     virtual ~UIEmbedded();

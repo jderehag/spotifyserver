@@ -73,6 +73,9 @@ private:
     virtual void getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress, void* userData );
     virtual void getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, void* userData );
 
+    virtual void getCurrentAudioEndpointsResponse( const std::set<std::string> endpoints, void* userData );
+
+
     /* Message Handler functions*/
     void handleGetTracksReq(const Message* msg);
     void handleHelloReq(const Message* msg);
@@ -90,7 +93,7 @@ private:
     void handleGetCurrentAudioEpReq(const Message* msg);
 
 
-    virtual void getEndpointsResponse( std::set<std::string> endpoints, void* userData );
+    virtual void getEndpointsResponse( const std::set<std::string> endpoints, void* userData );
 
     void handleCreateAudioEpReq(const Message* msg);
     void handleDeleteAudioEpReq(const Message* msg);

@@ -219,6 +219,21 @@ void RemoteMediaInterface::receivedResponse( const Message* rsp, const Message* 
             }
             break;
 
+            case GET_CURRENT_AUDIO_ENDPOINTS_RSP:
+            {
+                std::set<std::string>endpoints;
+                for ( TlvContainer::const_iterator it = rsp->getTlvRoot()->begin();
+                        it != rsp->getTlvRoot()->end(); it++ )
+                {
+                    if ( (*it)->getType() == TLV_LINK )
+                    {
+                        endpoints.insert( ((const StringTlv*)(*it))->getString() );
+                    }
+                }
+                subscriber->getCurrentAudioEndpointsResponse( endpoints, subscriberData );
+            }
+            break;
+
             default:
                 break;
         }

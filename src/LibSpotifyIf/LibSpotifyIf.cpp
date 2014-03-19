@@ -954,7 +954,7 @@ void LibSpotifyIf::removeAudioEndpoint( const std::string& id, IMediaInterfaceCa
 
 void LibSpotifyIf::getCurrentAudioEndpoints( IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
-
+    subscriber->getCurrentAudioEndpointsResponse( audioOut_.getCurrentEndpoints(), userData );
 }
 
 /* *****************

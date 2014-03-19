@@ -138,6 +138,8 @@ void UIEmbedded::getAlbumResponse( const Album& album, void* userData )
 {}
 void UIEmbedded::genericSearchCallback( const std::deque<Track>& listOfTracks, const std::string& didYouMean, void* userData )
 {}
+void UIEmbedded::getCurrentAudioEndpointsResponse( const std::set<std::string> endpoints, void* userData )
+{}
 
 #define TEXT_COL White
 #define BACK_COL ASSEMBLE_RGB(55,55,55) //ASSEMBLE_RGB(71,71,71)

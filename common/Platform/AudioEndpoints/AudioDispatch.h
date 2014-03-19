@@ -31,6 +31,7 @@
 #include "AudioEndpoint.h"
 #include "Platform/Threads/Mutex.h"
 #include <set>
+#include <string>
 
 namespace Platform
 {
@@ -60,6 +61,8 @@ public:
 
     void pause();
     void resume();
+
+    std::set<std::string> getCurrentEndpoints();
 };
 }
 #endif /* AUDIODISPATCH_H_ */

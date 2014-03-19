@@ -443,9 +443,20 @@ void Client::handleGetCurrentAudioEpReq( const Message* msg )
 {
     Message* rsp = msg->createResponse();
     spotify_.getCurrentAudioEndpoints( this, rsp );
-    queueMessage( rsp );
 }
 
+void Client::getCurrentAudioEndpointsResponse( const std::set<std::string> endpoints, void* userData )
+{
+    Message* rsp = (Message*) userData;
+
+    for (std::set<std::string>::const_iterator it = endpoints.begin(); it != endpoints.end(); it++)
+    {
+        log(LOG_DEBUG) << (*it);
+        rsp->addTlv(TLV_LINK, (*it) );
+    }
+
+    queueMessage( rsp );
+}
 
 
 void Client::handleCreateAudioEpReq( const Message* msg )
@@ -501,7 +512,9 @@ void Client::handleDeleteAudioEpReq( const Message* msg )
     queueMessage( rsp );
 }
 
-void Client::getEndpointsResponse( std::set<std::string> endpoints, void* userData )
+
+
+void Client::getEndpointsResponse( const std::set<std::string> endpoints, void* userData )
 {
     Message* rsp = (Message*) userData;
 

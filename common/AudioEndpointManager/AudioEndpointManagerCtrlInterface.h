@@ -38,7 +38,7 @@ class IAudioEndpointCtrlCallbackSubscriber
 public:
     virtual void connectionState( bool up ) = 0;
 
-    virtual void getEndpointsResponse( std::set<std::string> endpoints, void* userData ) = 0;
+    virtual void getEndpointsResponse( const std::set<std::string> endpoints, void* userData ) = 0;
 };
 
 

@@ -102,6 +102,11 @@ void UIConsole::run()
             m_.removeAudioEndpoint(id, this, NULL);
             continue;
         }
+        if ( argv[0] == "curAudio")
+        {
+            m_.getCurrentAudioEndpoints( this, NULL );
+            continue;
+        }
 
         //handle the old commands the old way for now..
         c = argv[0][0];
@@ -285,6 +290,17 @@ void UIConsole::getStatusResponse( PlaybackState_t state, bool repeatStatus, boo
     statusUpdateInd( state, repeatStatus, shuffleStatus );
 }
 
+
+void UIConsole::getCurrentAudioEndpointsResponse( const std::set<std::string> endpoints, void* userData )
+{
+    std::cout << "Current endpoints:" << std::endl;
+
+    for (std::set<std::string>::const_iterator it = endpoints.begin(); it != endpoints.end(); it++)
+    {
+        std::cout << "  " << (*it) << std::endl;
+    }
+    std::cout << std::endl;
+}
 
 
 void printFolder( const Folder& f, int indent )

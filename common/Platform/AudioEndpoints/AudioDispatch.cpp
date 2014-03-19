@@ -169,5 +169,16 @@ void AudioDispatch::resume()
     mtx.unlock();
 }
 
+std::set<std::string> AudioDispatch::getCurrentEndpoints()
+{
+    std::set<std::string> endpoints;
+    mtx.lock();
+    for(AudioEndpointContainer::const_iterator it = audioEndpoints_.begin(); it != audioEndpoints_.end(); ++it)
+    {
+        endpoints.insert((*it)->getId());
+    }
+    mtx.unlock();
+    return endpoints;
+}
 
 }

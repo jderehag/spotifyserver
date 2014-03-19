@@ -55,6 +55,8 @@ public:
     virtual void getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress, void* userData ) = 0;
     virtual void getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, void* userData ) = 0;
 
+    virtual void getCurrentAudioEndpointsResponse( const std::set<std::string> endpoints, void* userData ) = 0;
+
 };
 
 
