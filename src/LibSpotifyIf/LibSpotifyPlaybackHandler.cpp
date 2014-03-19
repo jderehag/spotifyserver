@@ -76,6 +76,8 @@ void LibSpotifyPlaybackHandler::playPlaylist( const Playlist& playlist, int star
     loadPlaylist( playlist, startIndex );
     if( enquedQueue_.empty()  && ( playQueueIter_ != playQueue_.end() ) )
         libSpotifyIf_.playTrack(*playQueueIter_);
+    else
+        libSpotifyIf_.stop();
     mtx_.unlock();
 
 }
@@ -183,11 +185,14 @@ void LibSpotifyPlaybackHandler::trackEndedInd()
     /* 1. Move to history queue */
     if(enquedQueue_.empty())
     {
-        historyQueue_.push_back(*playQueueIter_);
-        playQueueIter_++;
+        if ( playQueueIter_ != playQueue_.end() ) // this is a glitch, playlist was unloaded
+        {
+            historyQueue_.push_back(*playQueueIter_);
+            playQueueIter_++;
 
-        if( isRepeat && playQueueIter_ == playQueue_.end())
-            playQueueIter_ = playQueue_.begin();
+            if( isRepeat && playQueueIter_ == playQueue_.end())
+                playQueueIter_ = playQueue_.begin();
+        }
     }
     else
     {

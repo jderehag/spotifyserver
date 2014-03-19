@@ -51,7 +51,7 @@ static sp_session_callbacks libSpotifySessioncallbacks =
 	NULL,														//.message_to_user
 	&LibSpotifyIfCallbackWrapper::notifyLibSpotifyMainThreadCb, //.notify_main_thread
 	&LibSpotifyIfCallbackWrapper::musicDeliveryCb,				//.music_delivery
-	NULL,														//.play_token_lost
+	&LibSpotifyIfCallbackWrapper::playTokenLostCb,              //.play_token_lost
 	&LibSpotifyIfCallbackWrapper::logMessageCb,					//.log_message
 	&LibSpotifyIfCallbackWrapper::endOfTrackCb,					//.end_of_track
 	NULL,														//.streaming_error
@@ -112,6 +112,11 @@ int SP_CALLCONV LibSpotifyIfCallbackWrapper::musicDeliveryCb(sp_session *session
 	                          const void *frames, int num_frames)
 {
 	return libSpotifyIfSingleton->musicDeliveryCb(session, format, frames, num_frames);
+}
+void SP_CALLCONV LibSpotifyIfCallbackWrapper::playTokenLostCb(sp_session *session)
+{
+    // todo: should also display something to user
+    libSpotifyIfSingleton->pause();
 }
 void SP_CALLCONV LibSpotifyIfCallbackWrapper::endOfTrackCb(sp_session *session)
 {

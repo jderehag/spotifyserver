@@ -269,44 +269,47 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
 
 			break;
 
-		case EVENT_GET_TRACKS:
-		{
-		    QueryReqEventItem* reqEvent = static_cast<QueryReqEventItem*>( event );
+        case EVENT_GET_TRACKS:
+            {
+                QueryReqEventItem* reqEvent = static_cast<QueryReqEventItem*>( event );
 
-			const char* playlist_uri = reqEvent->query_.c_str();
-		    if (state_ == STATE_LOGGED_IN)
-			{
-				sp_link* link = sp_link_create_from_string(playlist_uri);
-				if(link)
-				{
-					if(sp_link_type(link) == SP_LINKTYPE_PLAYLIST)
-					{
-						sp_playlist* playlist = sp_playlist_create(spotifySession_, link);
+                const char* playlist_uri = reqEvent->query_.c_str();
+                if ( state_ == STATE_LOGGED_IN )
+                {
+                    sp_link* link = sp_link_create_from_string( playlist_uri );
+                    if ( link )
+                    {
+                        if( sp_link_type( link ) == SP_LINKTYPE_PLAYLIST )
+                        {
+                            sp_playlist* playlist = sp_playlist_create(spotifySession_, link);
+                            if (sp_playlist_is_loaded(playlist))
+                            {
+                                PendingMediaRequestData reqData = reqEvent->reqData;
+                                log(LOG_DEBUG) << "Got playlist " << playlist_uri;
+                                Playlist playlistObj = spotifyGetPlaylist(playlist, spotifySession_);
 
-						if (sp_playlist_is_loaded(playlist))
-						{
-                            PendingMediaRequestData reqData = reqEvent->reqData;
-							log(LOG_DEBUG) << "Got playlist " << playlist_uri;
-                            Playlist playlistObj = spotifyGetPlaylist(playlist, spotifySession_);
-
-                            reqData.first->getTracksResponse( playlistObj.getTracks(), reqData.second );
-						}
-						else
-						{
-							/*not sure if we're waiting for metadata or playlist_state_changed here*/
-                            pendingMetadata.push(new QueryReqEventItem(*reqEvent) );
-							log(LOG_DEBUG) << "Waiting for metadata for playlist " << playlist_uri;
-						}
-					}
-					else log(LOG_WARN) << "Link is not a playlist: " << playlist_uri;
-
-					sp_link_release(link);
-				}
-				else log(LOG_WARN) << "Bad link: " << playlist_uri;
-
-			}
-			break;
-		}
+                                reqData.first->getTracksResponse( playlistObj.getTracks(), reqData.second );
+                            }
+                            else
+                            {
+                                /*not sure if we're waiting for metadata or playlist_state_changed here*/
+                                pendingMetadata.push(new QueryReqEventItem(*reqEvent) );
+                                log(LOG_DEBUG) << "Waiting for metadata for playlist " << playlist_uri;
+                            }
+                        }
+                        else
+                        {
+                            log(LOG_WARN) << "Link is not a playlist: " << playlist_uri;
+                        }
+                        sp_link_release(link);
+                    }
+                    else
+                    {
+                        log(LOG_WARN) << "Bad link: " << playlist_uri;
+                    }
+                }
+                break;
+            }
 
         case EVENT_GET_ALBUM:
         {
@@ -451,12 +454,21 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
                             break;
 
 
-				        case SP_LINKTYPE_PLAYLIST:
+                        case SP_LINKTYPE_PLAYLIST:
                             {
-                                sp_playlist* playlist = sp_playlist_create(spotifySession_, link);
-                                Playlist playlistObj(spotifyGetPlaylist(playlist, spotifySession_));
-                                playbackHandler_.playPlaylist(playlistObj, reqEvent->startIndex_);
-                                log(LOG_NOTICE) << "Adding " << reqEvent->query_ << " to playbackhandler";
+                                sp_playlist* playlist = sp_playlist_create( spotifySession_, link );
+                                if ( sp_playlist_is_loaded( playlist ) )
+                                {
+                                    Playlist playlistObj( spotifyGetPlaylist( playlist, spotifySession_ ) );
+                                    playbackHandler_.playPlaylist( playlistObj, reqEvent->startIndex_ );
+                                    log(LOG_NOTICE) << "Adding " << reqEvent->query_ << " to playbackhandler";
+                                }
+                                else
+                                {
+                                    pendingMetadata.push( new PlayReqEventItem( *reqEvent ) );
+                                    log(LOG_DEBUG) << "Waiting for metadata for playlist " << reqEvent->query_;
+                                }
+
                             }
                             break;
 
@@ -576,62 +588,77 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
             }
             break;
 
-		case EVENT_PLAY_TRACK:
-		    {
-
-		        TrackEventItem* trackEvent = static_cast<TrackEventItem*>(event);
-		        Track* trackObj = &trackEvent->track_;
-		        sp_link* link = sp_link_create_from_string(trackObj->getLink().c_str());
-                if(link)
+        case EVENT_PLAY_TRACK:
+            {
+                TrackEventItem* trackEvent = static_cast<TrackEventItem*>(event);
+                sp_track* track = trackEvent->spTrack_;
+                Track& trackObj = trackEvent->track_;
+                sp_error err;
+                if ( track == NULL )
                 {
-                    assert( sp_link_type(link) == SP_LINKTYPE_TRACK || sp_link_type(link) == SP_LINKTYPE_LOCALTRACK );
-
-                    sp_error err;
-                    sp_track* track = sp_link_as_track(link);
-                    if ((err = sp_track_error(track)) == SP_ERROR_OK)
+                    sp_link* link = sp_link_create_from_string(trackObj.getLink().c_str());
+                    if( link )
                     {
-                        if ((err = sp_session_player_load(spotifySession_, track)) == SP_ERROR_OK)
-                        {
-                            currentTrack_ = spotifyGetTrack(track, spotifySession_); //*trackObj; is not updated if we had to wait for metadata
-                            currentTrack_.setIndex(trackObj->getIndex()); /*kind of a hack.. but only trackObj know where it came from, and thus which index it has (if it has one) */
-                            trackState_ = TRACK_STATE_PLAYING;
-                            sp_session_player_play(spotifySession_, 1);
-                            audioOut_.resume();
-                            progress_ = 0;
+                        assert( sp_link_type(link) == SP_LINKTYPE_TRACK || sp_link_type(link) == SP_LINKTYPE_LOCALTRACK );
 
-                            callbackSubscriberMtx_.lock();
-                            /* Tell all subscribers that the track is playing */
-                            for(std::set<IMediaInterfaceCallbackSubscriber*>::iterator it = callbackSubscriberList_.begin();
-                                it != callbackSubscriberList_.end(); it++)
-                            {
-                                (*it)->statusUpdateInd( PLAYBACK_PLAYING,
-                                                        playbackHandler_.getRepeat(),
-                                                        playbackHandler_.getShuffle(),
-                                                        currentTrack_,
-                                                        progress_/10 );
-                            }
-                            callbackSubscriberMtx_.unlock();
-                        }
-                        else
-                        {
-                            log(LOG_WARN) << "Player load error for " << trackObj->getLink().c_str() << " (" << sp_error_message(err) << ")";
-                            playbackHandler_.trackEndedInd(); /*todo: some proper handling here, this will put track on the history list */
-                        }
-                    }
-                    else if (err == SP_ERROR_IS_LOADING)
-                    {
-                        pendingMetadata.push(new TrackEventItem( *trackEvent ));
-                        log(LOG_DEBUG) << "Waiting for metadata for track " << trackObj->getLink().c_str();
+                        track = sp_link_as_track(link);
+                        sp_track_add_ref( track );
                     }
                     else
                     {
-                        log(LOG_WARN) << "Track error for " << trackObj->getLink().c_str() << " (" << sp_error_message(err) << ")";
-                        /* return some sort of error to client? */
+                        log(LOG_WARN) << "invalid link: " << trackObj.getLink();
+                        break;
                     }
+                    sp_link_release(link);
                 }
-                sp_link_release(link);
-	        }
-		    break;
+
+                if ((err = sp_track_error(track)) == SP_ERROR_OK)
+                {
+                    if ((err = sp_session_player_load(spotifySession_, track)) == SP_ERROR_OK)
+                    {
+                        currentTrack_ = spotifyGetTrack(track, spotifySession_); //*trackObj; is not updated if we had to wait for metadata
+                        currentTrack_.setIndex(trackObj.getIndex()); /*kind of a hack.. but only trackObj know where it came from, and thus which index it has (if it has one) */
+                        trackState_ = TRACK_STATE_PLAYING;
+                        sp_session_player_play(spotifySession_, 1);
+                        audioOut_.resume();
+                        progress_ = 0;
+
+                        callbackSubscriberMtx_.lock();
+                        /* Tell all subscribers that the track is playing */
+                        for(std::set<IMediaInterfaceCallbackSubscriber*>::iterator it = callbackSubscriberList_.begin();
+                            it != callbackSubscriberList_.end(); it++)
+                        {
+                            (*it)->statusUpdateInd( PLAYBACK_PLAYING,
+                                                    playbackHandler_.getRepeat(),
+                                                    playbackHandler_.getShuffle(),
+                                                    currentTrack_,
+                                                    progress_/10 );
+                        }
+                        callbackSubscriberMtx_.unlock();
+                    }
+                    else
+                    {
+                        log(LOG_WARN) << "Player load error for " << trackObj.getLink().c_str() << " (" << sp_error_message(err) << ")";
+                        playbackHandler_.trackEndedInd(); /*todo: some proper handling here, this will put track on the history list */
+                    }
+                    sp_track_release( track );
+                }
+                else if (err == SP_ERROR_IS_LOADING)
+                {
+                    sp_track_add_ref( track );
+                    trackEvent->spTrack_ = track;
+                    pendingMetadata.push(new TrackEventItem( *trackEvent ));
+                    log(LOG_DEBUG) << "Waiting for metadata for track " << trackObj.getLink();
+                }
+                else
+                {
+                    sp_track_release( track );
+                    log(LOG_WARN) << "Track error for " << trackObj.getLink() << " (" << sp_error_message(err) << ")";
+                    /* return some sort of error to client? */
+                }
+            }
+                
+            break;
 
 		/* Session Handling*/
 
@@ -643,6 +670,7 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
 
         case EVENT_LOGGED_IN:
             state_ = STATE_LOGGED_IN;
+            sp_session_preferred_bitrate( spotifySession_, SP_BITRATE_320k );
             updateRootFolder(sp_session_playlistcontainer(spotifySession_));
             break;
 
@@ -775,16 +803,6 @@ void LibSpotifyIf::loggedInCb(sp_session *session, sp_error error)
 void LibSpotifyIf::metadataUpdatedCb(sp_session *session)
 {
     postToEventThread( new EventItem ( EVENT_METADATA_UPDATED ) );
-	/* Should perhaps use its own event?
-	 * metadataCb is (if I have understood it correctly)
-	 * only used for when additional track & playlist info has loaded into
-	 * memory (inside libspotify)
-	 *
-	if (sp_track_error(track_) == SP_ERROR_OK)
-	{
-		postToEventThread(EVENT_START_REQUESTED_TRACK, NULL);
-	}
-	*/
 }
 
 void LibSpotifyIf::endOfTrackCb(sp_session *session)
@@ -826,41 +844,6 @@ int LibSpotifyIf::musicDeliveryCb(sp_session *sess, const sp_audioformat *format
 
     progress_ += (n*10000)/format->sample_rate;
     return n;
-}
-
-void LibSpotifyIf::addAudioEndpoint( const std::string& id, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
-{
-    Platform::AudioEndpoint* ep;
-    if ( id == "" )
-        ep = audioMgr_.getEndpoint( "local" );
-    else
-        ep = audioMgr_.getEndpoint( id );
-
-    if ( ep )
-    {
-        audioOut_.addEndpoint( *ep );
-    }
-    //todo: subscriber->
-}
-
-void LibSpotifyIf::removeAudioEndpoint( const std::string& id, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
-{
-    Platform::AudioEndpoint* ep;
-    if ( id == "" )
-        ep = audioMgr_.getEndpoint( "local" );
-    else
-        ep = audioMgr_.getEndpoint( id );
-
-    if ( ep )
-    {
-        audioOut_.removeEndpoint( *ep );
-    }
-    //todo: subscriber->
-}
-
-void LibSpotifyIf::getCurrentAudioEndpoints( IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
-{
-
 }
 
 void LibSpotifyIf::genericSearchCb(sp_search *search, void *userdata)
@@ -933,6 +916,45 @@ void LibSpotifyIf::albumLoadedCb(sp_albumbrowse* result, void *userdata)
     }
 
     sp_albumbrowse_release(result);
+}
+
+/* *****************
+ * Audio endpoints
+ * *****************/
+
+void LibSpotifyIf::addAudioEndpoint( const std::string& id, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
+{
+    Platform::AudioEndpoint* ep;
+    if ( id == "" )
+        ep = audioMgr_.getEndpoint( "local" );
+    else
+        ep = audioMgr_.getEndpoint( id );
+
+    if ( ep )
+    {
+        audioOut_.addEndpoint( *ep );
+    }
+    //todo: subscriber->
+}
+
+void LibSpotifyIf::removeAudioEndpoint( const std::string& id, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
+{
+    Platform::AudioEndpoint* ep;
+    if ( id == "" )
+        ep = audioMgr_.getEndpoint( "local" );
+    else
+        ep = audioMgr_.getEndpoint( id );
+
+    if ( ep )
+    {
+        audioOut_.removeEndpoint( *ep );
+    }
+    //todo: subscriber->
+}
+
+void LibSpotifyIf::getCurrentAudioEndpoints( IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
+{
+
 }
 
 /* *****************

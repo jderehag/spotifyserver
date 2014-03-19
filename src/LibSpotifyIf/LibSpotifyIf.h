@@ -97,7 +97,8 @@ public:
     {
     public:
         Track track_;
-        TrackEventItem(Event event, const Track& track) : EventItem(event), track_(track) {}
+        sp_track* spTrack_;
+        TrackEventItem(Event event, const Track& track) : EventItem(event), track_(track), spTrack_(NULL) {}
     };
 
     class ReqEventItem : public EventItem

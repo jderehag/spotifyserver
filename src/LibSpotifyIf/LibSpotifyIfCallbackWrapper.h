@@ -53,6 +53,7 @@ public:
 	static void SP_CALLCONV metadataUpdatedCb(sp_session *sess);
 	static int SP_CALLCONV musicDeliveryCb(sp_session *session, const sp_audioformat *format,
 	                          const void *frames, int num_frames);
+    static void SP_CALLCONV playTokenLostCb(sp_session *session);
 	static void SP_CALLCONV endOfTrackCb(sp_session *session);
 
 	/* Playlist callbacks */
