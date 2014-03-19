@@ -44,7 +44,7 @@
 
 namespace Platform {
 
-#define HRC(x) do{ HRESULT h = x; assert( h == S_OK ); } while(0)
+#define HRC(x) do{ hr = x; assert( hr == S_OK ); } while(0)
 
 AudioEndpointLocal::AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config) : Platform::Runnable(true, SIZE_SMALL, PRIO_HIGH), 
                                                                                             config_(config), 
@@ -349,6 +349,8 @@ HRC( spResamplerProps->SetHalfFilterLength(60); //< best conversion quality
                 hr = pResampler->ProcessOutput(0, 1, &outputDataBuffer, &dwStatus);
                 if ( hr == MF_E_TRANSFORM_NEED_MORE_INPUT) {
                     // conversion end
+                    pBuffer->Release();
+                    pOutSample->Release();
                     break;
                 }
 
@@ -388,6 +390,8 @@ HRC( spResamplerProps->SetHalfFilterLength(60); //< best conversion quality
                 HRC( pRenderClient->ReleaseBuffer( outsamples, flags ) );
 
                 HRC( spBuffer->Unlock() );
+
+                spBuffer->Release();
 
                 pOutSample->Release();
                 pBuffer->Release();
