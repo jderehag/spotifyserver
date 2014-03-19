@@ -247,7 +247,7 @@ sp_user* sp_session_user(sp_session *session) { return &session->user; }
 int sp_session_user_country(sp_session *session) { return session->user_country; }
 sp_connectionstate sp_session_connectionstate(sp_session *session) { return session->connectionstate; }
 sp_error sp_session_process_events(sp_session *session, int *next_timeout){ *next_timeout = 1; return SP_ERROR_OK; }
-
+sp_error sp_session_preferred_bitrate (sp_session *session, sp_bitrate bitrate){ return SP_ERROR_OK; }
 
 
 /* ************************************
