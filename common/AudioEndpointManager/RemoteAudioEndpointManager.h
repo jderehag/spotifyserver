@@ -39,13 +39,15 @@ private:
     AudioEndpointRemoteSocketServer* server;
 
     bool connectionUp_;
-    void sendAddEndpointMessage();
+    void sendCreateEndpointMessage();
 public:
     RemoteAudioEndpointManager( Messenger& m );
     virtual ~RemoteAudioEndpointManager();
 
-    virtual void addEndpoint( Platform::AudioEndpoint& ep ,IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData );
-    virtual void removeEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData );
+    virtual void createEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData );
+    virtual void deleteEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData );
+    virtual void addEndpoint( std::string id, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData );
+    virtual void removeEndpoint( std::string id, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData );
     virtual void getEndpoints( IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData );
 
     virtual void connectionState( bool up );

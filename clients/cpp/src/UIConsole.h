@@ -30,24 +30,27 @@
 
 #include "Platform/Threads/Runnable.h"
 #include "MediaInterface/MediaInterface.h"
+#include "AudioEndpointManager/AudioEndpointManagerCtrlInterface.h"
 
 
-class UIConsole : public Platform::Runnable, public IMediaInterfaceCallbackSubscriber
+class UIConsole : public Platform::Runnable, public IMediaInterfaceCallbackSubscriber, public IAudioEndpointCtrlCallbackSubscriber
 {
 private:
     MediaInterface& m_;
+    AudioEndpointCtrlInterface& audioMgr_;
 
     LibSpotify::PlaylistContainer playlists;
     LibSpotify::PlaylistContainer::iterator itPlaylists_;
     bool isShuffle;
     bool isRepeat;
 public:
-    UIConsole(MediaInterface& m);
+    UIConsole(MediaInterface& m, AudioEndpointCtrlInterface& audioMgr);
     ~UIConsole();
 
     void run();
     void destroy();
 
+    /* Implements IMediaInterfaceCallbackSubscriber */
     virtual void connectionState( bool up );
     virtual void rootFolderUpdatedInd();
     virtual void statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress );
@@ -62,6 +65,10 @@ public:
     virtual void getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, void* userData );
 
     virtual void getCurrentAudioEndpointsResponse( const std::set<std::string> endpoints, void* userData );
+
+    /* Implements IAudioEndpointCtrlCallbackSubscriber */
+    virtual void getEndpointsResponse( const std::map<std::string, bool> endpoints, void* userData );
+    virtual void endpointsUpdatedNtf();
 };
 
 #endif /* UICONSOLE_H_ */

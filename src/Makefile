@@ -31,7 +31,7 @@ CPPSRC +=	$(addprefix MediaContainers/, Album.cpp Artist.cpp Folder.cpp Playlist
 			$(addprefix SocketHandling/, Messenger.cpp SocketServer.cpp SocketPeer.cpp ) \
 			$(addprefix Platform/AudioEndpoints/, AudioEndpointLocalShared.cpp AudioEndpointRemote.cpp AudioDispatch.cpp AudioFifo.cpp ) \
 			ClockSync/ClockSyncServer.cpp \
-			AudioEndpointManager/AudioEndpointManager.cpp \
+			$(addprefix AudioEndpointManager/, AudioEndpointManager.cpp AudioEndpointManagerCtrlInterface.cpp) \
 			Logger/Logger.cpp Logger/LoggerImpl.cpp \
 			MediaInterface/MediaInterface.cpp \
 			UIConsole.cpp

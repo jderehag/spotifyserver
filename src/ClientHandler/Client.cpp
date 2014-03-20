@@ -47,6 +47,7 @@ Client::Client(Socket* socket, MediaInterface& spotifyif, AudioEndpointCtrlInter
     std::cout << "Client " << id << " connected from " << getSocket()->getRemoteAddr() << std::endl;
 
     spotify_.registerForCallbacks(*this);
+    audioCtrl_.registerForCallbacks(*this);
 }
 
 Client::~Client()
@@ -56,8 +57,7 @@ Client::~Client()
 
     if ( audioEp )
     {
-        spotify_.removeAudioEndpoint( id, NULL, NULL );
-        audioCtrl_.removeEndpoint( *audioEp, NULL, NULL );
+        audioCtrl_.deleteEndpoint( *audioEp, NULL, NULL );
         audioEp->destroy();
         delete audioEp;
         audioEp = NULL;
@@ -424,7 +424,7 @@ void Client::handleAddAudioEpReq( const Message* msg )
     std::string endpointId = idTlv ? idTlv->getString() : id; /* no id specified means this client*/
 
     //todo handle multiple tlvs
-    spotify_.addAudioEndpoint( endpointId, this, rsp );
+    audioCtrl_.addEndpoint( endpointId, this, rsp );
     queueMessage( rsp );
 }
 
@@ -435,7 +435,7 @@ void Client::handleRemAudioEpReq( const Message* msg )
     std::string endpointId = idTlv ? idTlv->getString() : id; /* no id specified means this client*/
 
     //todo handle multiple tlvs
-    spotify_.removeAudioEndpoint( endpointId, this, rsp );
+    audioCtrl_.removeEndpoint( endpointId, this, rsp );
     queueMessage( rsp );
 }
 
@@ -479,14 +479,13 @@ void Client::handleCreateAudioEpReq( const Message* msg )
 
             if ( audioEp )
             {
-                spotify_.removeAudioEndpoint( id, NULL, NULL );
-                audioCtrl_.removeEndpoint( *audioEp, NULL, NULL );
+                audioCtrl_.deleteEndpoint( *audioEp, NULL, NULL );
                 audioEp->destroy();
                 delete audioEp;
             }
 
             audioEp = new Platform::AudioEndpointRemote( id, ip, portStr.str(), 1);
-            audioCtrl_.addEndpoint(*audioEp, NULL, NULL);
+            audioCtrl_.createEndpoint(*audioEp, NULL, NULL);
         }
         else
         {
@@ -502,8 +501,7 @@ void Client::handleDeleteAudioEpReq( const Message* msg )
     Message* rsp = msg->createResponse();
     if ( audioEp )
     {
-        spotify_.removeAudioEndpoint( id, NULL, NULL );
-        audioCtrl_.removeEndpoint( *audioEp, NULL, NULL );
+        audioCtrl_.deleteEndpoint( *audioEp, NULL, NULL );
         audioEp->destroy();
         delete audioEp;
     }
@@ -512,16 +510,22 @@ void Client::handleDeleteAudioEpReq( const Message* msg )
     queueMessage( rsp );
 }
 
+void Client::endpointsUpdatedNtf()
+{
+    Message* ind = new Message( AUDIO_ENDPOINTS_UPDATED_IND );
+    queueMessage( ind );
+}
 
-
-void Client::getEndpointsResponse( const std::set<std::string> endpoints, void* userData )
+void Client::getEndpointsResponse( const std::map<std::string, bool> endpoints, void* userData ) 
 {
     Message* rsp = (Message*) userData;
 
-    for (std::set<std::string>::const_iterator it = endpoints.begin(); it != endpoints.end(); it++)
+    for (std::map<std::string, bool>::const_iterator it = endpoints.begin(); it != endpoints.end(); it++)
     {
-        log(LOG_DEBUG) << (*it);
-        rsp->addTlv(TLV_LINK, (*it) );
+        TlvContainer* epTlv = new TlvContainer( TLV_CLIENT );
+        epTlv->addTlv( TLV_LINK, (*it).first );
+        epTlv->addTlv( TLV_STATE, (*it).second ? 1 : 0 );
+        rsp->addTlv( epTlv );
     }
 
     queueMessage( rsp );

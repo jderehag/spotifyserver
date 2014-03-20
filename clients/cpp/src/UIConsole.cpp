@@ -32,14 +32,16 @@ static void printFolder( const Folder& f, int indent );
 static void printTracks( const std::deque<Track>& tracks );
 
 
-UIConsole::UIConsole( MediaInterface& m ) : m_(m),
+UIConsole::UIConsole( MediaInterface& m, AudioEndpointCtrlInterface& audioMgr ) : m_(m), audioMgr_(audioMgr),
                                             itPlaylists_(playlists.begin()),
                                             isShuffle(false),
                                             isRepeat(false)
 {
     m_.registerForCallbacks( *this );
+    audioMgr_.registerForCallbacks( *this );
     startThread();
 }
+
 UIConsole::~UIConsole()
 {
 }
@@ -91,7 +93,7 @@ void UIConsole::run()
             std::string id = "";
             if ( argc > 1 )
                 id = argv[1];
-            m_.addAudioEndpoint(id, this, NULL);
+            audioMgr_.addEndpoint(id, this, NULL);
             continue;
         }
         if ( argv[0] == "remAudio")
@@ -99,12 +101,17 @@ void UIConsole::run()
             std::string id = "";
             if ( argc > 1 )
                 id = argv[1];
-            m_.removeAudioEndpoint(id, this, NULL);
+            audioMgr_.removeEndpoint(id, this, NULL);
             continue;
         }
         if ( argv[0] == "curAudio")
         {
             m_.getCurrentAudioEndpoints( this, NULL );
+            continue;
+        }
+        if ( argv[0] == "getAudio")
+        {
+            audioMgr_.getEndpoints( this, NULL );
             continue;
         }
 
@@ -302,6 +309,20 @@ void UIConsole::getCurrentAudioEndpointsResponse( const std::set<std::string> en
     std::cout << std::endl;
 }
 
+void UIConsole::getEndpointsResponse( const std::map<std::string, bool> endpoints, void* userData )
+{
+    std::cout << "Endpoints:" << std::endl;
+
+    for (std::map<std::string, bool>::const_iterator it = endpoints.begin(); it != endpoints.end(); it++)
+    {
+        std::cout << "  " << (*it).first << ": " << ((*it).second ? "active" : "inactive") << std::endl;
+    }
+    std::cout << std::endl;
+}
+
+void UIConsole::endpointsUpdatedNtf()
+{
+}
 
 void printFolder( const Folder& f, int indent )
 {

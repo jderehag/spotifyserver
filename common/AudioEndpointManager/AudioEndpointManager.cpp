@@ -28,7 +28,7 @@
 #include "AudioEndpointManager.h"
 #include "applog.h"
 
-AudioEndpointManager::AudioEndpointManager()
+AudioEndpointManager::AudioEndpointManager( AudioProvider& m ) : m_(m)
 {
 }
 
@@ -36,30 +36,65 @@ AudioEndpointManager::~AudioEndpointManager()
 {
 }
 
-void AudioEndpointManager::addEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData )
+void AudioEndpointManager::createEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData )
 {
-    audioEndpoints.insert( &ep );
+    audioEndpoints.insert( AudioEndpointItem(&ep, NULL) );
 
-    log(LOG_DEBUG) << "Adding audio endpoint " << ep.getId();
+    //todo: subscriber->createEndpointResponse();
 
-    //todo: subscriber->addEndpointResponse();
+    doEndpointsUpdatedNotification(); //todo only if didn't exist already?
 }
 
-void AudioEndpointManager::removeEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData )
+void AudioEndpointManager::deleteEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData )
 {
-    audioEndpoints.erase( &ep );
+    if ( audioEndpoints.find(&ep) != audioEndpoints.end() )
+    {
+        if ( audioEndpoints[&ep] != NULL )
+        {
+            audioEndpoints[&ep]->removeAudioEndpoint(ep);
+        }
+        audioEndpoints.erase( &ep );
+
+        doEndpointsUpdatedNotification();
+    }
+
+    //todo: subscriber->deleteEndpointResponse();
+}
+
+void AudioEndpointManager::addEndpoint( std::string id, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData )
+{
+    Platform::AudioEndpoint* ep = getEndpoint( id );
+    if ( ep )
+    {
+        m_.addAudioEndpoint( *ep );
+        audioEndpoints[ep] = &m_;
+
+        doEndpointsUpdatedNotification();
+    }
+    //todo: subscriber->addEndpointResponse();
+}
+void AudioEndpointManager::removeEndpoint( std::string id, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData )
+{
+    Platform::AudioEndpoint* ep = getEndpoint( id );
+    if ( ep )
+    {
+        m_.removeAudioEndpoint( *ep );
+        audioEndpoints[ep] = NULL;
+
+        doEndpointsUpdatedNotification();
+    }
     //todo: subscriber->removeEndpointResponse();
 }
 
 void AudioEndpointManager::getEndpoints( IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData )
 {
-    std::set<std::string> result;
+    std::map<std::string, bool> result;
 
-    std::set<Platform::AudioEndpoint*>::const_iterator it = audioEndpoints.begin();
+    AudioEndpointMap::const_iterator it = audioEndpoints.begin();
     for( ; it != audioEndpoints.end(); it++ )
     {
-        log(LOG_DEBUG) << (*it)->getId();
-        result.insert( (*it)->getId() );
+        log(LOG_DEBUG) << (*it).first->getId();
+        result.insert( std::pair<std::string, bool>((*it).first->getId(), (*it).second != NULL ) );
     }
 
     subscriber->getEndpointsResponse( result, userData );
@@ -68,13 +103,14 @@ void AudioEndpointManager::getEndpoints( IAudioEndpointCtrlCallbackSubscriber* s
 
 Platform::AudioEndpoint* AudioEndpointManager::getEndpoint( std::string id )
 {
-    std::set<Platform::AudioEndpoint*>::const_iterator it = audioEndpoints.begin();
+    AudioEndpointMap::const_iterator it = audioEndpoints.begin();
     for( ; it != audioEndpoints.end(); it++ )
     {
-        if ( (*it)->getId() == id )
+        if ( (*it).first->getId() == id )
         {
-            return (*it);
+            return (*it).first;
         }
     }
     return NULL;
 }
+

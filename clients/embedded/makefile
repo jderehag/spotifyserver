@@ -104,7 +104,7 @@ AUDIOSRCCPP =		ConfigHandling/Configs/AudioEndpointConfig.cpp \
 					Platform/AudioEndpoints/AudioEndpointLocalShared.cpp \
 					Platform/AudioEndpoints/Endpoints/AudioEndpoint-CS43L22.cpp \
 					AudioEndpointRemoteSocketServer.cpp \
-					AudioEndpointManager/RemoteAudioEndpointManager.cpp \
+					$(addprefix AudioEndpointManager/, RemoteAudioEndpointManager.cpp AudioEndpointManagerCtrlInterface.cpp) \
 					ClockSync/ClockSyncClient.cpp
 
 SRC += $(AUDIOSRC)

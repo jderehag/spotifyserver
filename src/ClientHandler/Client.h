@@ -88,15 +88,16 @@ private:
     void handleGetImageReq(const Message* msg);
     void handleGenericSearchReq(const Message* msg);
     void handleGetAlbumReq(const Message* msg);
-    void handleAddAudioEpReq(const Message* msg);
-    void handleRemAudioEpReq(const Message* msg);
     void handleGetCurrentAudioEpReq(const Message* msg);
 
 
-    virtual void getEndpointsResponse( const std::set<std::string> endpoints, void* userData );
+    virtual void getEndpointsResponse( const std::map<std::string, bool> endpoints, void* userData );
+    virtual void endpointsUpdatedNtf();
 
     void handleCreateAudioEpReq(const Message* msg);
     void handleDeleteAudioEpReq(const Message* msg);
+    void handleAddAudioEpReq(const Message* msg);
+    void handleRemAudioEpReq(const Message* msg);
     void handleGetAudioEpReq(const Message* msg);
 
 public:

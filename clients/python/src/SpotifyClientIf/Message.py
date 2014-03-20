@@ -129,7 +129,8 @@ class Tlv(object):
             self._TlvType == TlvDefinitions.TlvType.TLV_TRACK or 
             self._TlvType == TlvDefinitions.TlvType.TLV_ALBUM or
             self._TlvType == TlvDefinitions.TlvType.TLV_ARTIST or
-            self._TlvType == TlvDefinitions.TlvType.TLV_IMAGE):
+            self._TlvType == TlvDefinitions.TlvType.TLV_IMAGE or
+            self._TlvType == TlvDefinitions.TlvType.TLV_CLIENT):
             return True
         else:
             return False
@@ -426,16 +427,20 @@ class CreateAudioEndpointRspMsg(Message):
         Message.__init__(self, TlvDefinitions.TlvMessageType.CREATE_AUDIO_ENDPOINT_RSP, msgId)
 
 class AddAudioEndpointReqMsg(Message):
-    def __init__(self, msgId):
+    def __init__(self, msgId, name=""):
         Message.__init__(self, TlvDefinitions.TlvMessageType.ADD_AUDIO_ENDPOINTS_REQ, msgId)
+        if(id != ""):
+            self.addTlv(Tlv.Create(TlvDefinitions.TlvType.TLV_LINK, len(name), name))
 
 class AddAudioEndpointRspMsg(Message):
     def __init__(self, msgId):
         Message.__init__(self, TlvDefinitions.TlvMessageType.ADD_AUDIO_ENDPOINTS_RSP, msgId)
 
 class RemAudioEndpointReqMsg(Message):
-    def __init__(self, msgId):
+    def __init__(self, msgId, name=""):
         Message.__init__(self, TlvDefinitions.TlvMessageType.REM_AUDIO_ENDPOINTS_REQ, msgId)
+        if(id != ""):
+            self.addTlv(Tlv.Create(TlvDefinitions.TlvType.TLV_LINK, len(name), name))
 
 class RemAudioEndpointRspMsg(Message):
     def __init__(self, msgId):
@@ -448,6 +453,24 @@ class DelAudioEndpointReqMsg(Message):
 class DelAudioEndpointRspMsg(Message):
     def __init__(self, msgId):
         Message.__init__(self, TlvDefinitions.TlvMessageType.DELETE_AUDIO_ENDPOINT_RSP, msgId)
+
+class GetAudioEndpointsReqMsg(Message):
+    def __init__(self, msgId):
+        Message.__init__(self, TlvDefinitions.TlvMessageType.GET_AUDIO_ENDPOINTS_REQ, msgId)
+
+class GetAudioEndpointsRspMsg(Message):
+    def __init__(self, msgId):
+        Message.__init__(self, TlvDefinitions.TlvMessageType.GET_AUDIO_ENDPOINTS_RSP, msgId)
+
+    def getAllEndpoints(self):
+        endpoints = dict()
+
+        for endpointTlv in self._TlvSet:
+            if(endpointTlv._TlvType == TlvDefinitions.TlvType.TLV_CLIENT):
+                name = endpointTlv.getSubTlv(TlvDefinitions.TlvType.TLV_LINK)._TlvValue.rstrip(' \t\r\n\0')
+                active = struct.unpack('!I', endpointTlv.getSubTlv(TlvDefinitions.TlvType.TLV_STATE)._TlvValue)
+                endpoints[name] = active[0]
+        return endpoints
 
 class AudioDataIndMsg(Message):
     def __init__(self, msgId):

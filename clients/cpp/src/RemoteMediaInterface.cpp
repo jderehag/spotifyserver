@@ -340,23 +340,6 @@ void RemoteMediaInterface::search( std::string query, IMediaInterfaceCallbackSub
     messenger_.queueRequest( msg, this, new PendingMediaRequestData(subscriber, userData) );
 }
 
-void RemoteMediaInterface::addAudioEndpoint( const std::string& id, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
-{
-    Message* msg = new Message( ADD_AUDIO_ENDPOINTS_REQ );
-    /*todo: should allow multiple endpoints*/
-    if ( id != "" )
-        msg->addTlv( TLV_LINK, id );
-    messenger_.queueRequest( msg, this, new PendingMediaRequestData(subscriber, userData) );
-}
-
-void RemoteMediaInterface::removeAudioEndpoint( const std::string& id, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
-{
-    Message* msg = new Message( REM_AUDIO_ENDPOINTS_REQ );
-    /*todo: should allow multiple endpoints*/
-    if ( id != "" )
-        msg->addTlv( TLV_LINK, id );
-    messenger_.queueRequest( msg, this, new PendingMediaRequestData(subscriber, userData) );
-}
 void RemoteMediaInterface::getCurrentAudioEndpoints( IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
     Message* msg = new Message( GET_CURRENT_AUDIO_ENDPOINTS_REQ );

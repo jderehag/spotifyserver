@@ -30,22 +30,28 @@
 
 #include "AudioEndpointManagerCtrlInterface.h"
 #include "Platform/AudioEndpoints/AudioEndpoint.h"
-#include <set>
+#include "MediaInterface/AudioProvider.h"
+#include <map>
 
 class AudioEndpointManager : public AudioEndpointCtrlInterface
 {
 private:
-    std::set<Platform::AudioEndpoint*> audioEndpoints;
-
-public:
-    AudioEndpointManager();
-    virtual ~AudioEndpointManager();
-
-    virtual void addEndpoint( Platform::AudioEndpoint& ep ,IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData );
-    virtual void removeEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData );
-    virtual void getEndpoints( IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData );
+    typedef std::pair<Platform::AudioEndpoint*, AudioProvider*> AudioEndpointItem;
+    typedef std::map<Platform::AudioEndpoint*, AudioProvider*> AudioEndpointMap;
+    AudioEndpointMap audioEndpoints;
+    AudioProvider& m_;
 
     Platform::AudioEndpoint* getEndpoint( std::string id );
+
+public:
+    AudioEndpointManager( AudioProvider& m );
+    virtual ~AudioEndpointManager();
+
+    virtual void createEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData );
+    virtual void deleteEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData );
+    virtual void addEndpoint( std::string ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData );
+    virtual void removeEndpoint( std::string ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData );
+    virtual void getEndpoints( IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData );
 };
 
 #endif /* AUDIOENDPOINTMANAGER_H_ */

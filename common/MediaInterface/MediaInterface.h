@@ -56,7 +56,6 @@ public:
     virtual void getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, void* userData ) = 0;
 
     virtual void getCurrentAudioEndpointsResponse( const std::set<std::string> endpoints, void* userData ) = 0;
-
 };
 
 
@@ -102,8 +101,7 @@ public:
     virtual void getAlbum( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData ) = 0;
     virtual void search( std::string query, IMediaInterfaceCallbackSubscriber* subscriber, void* userData ) = 0;
 
-    virtual void addAudioEndpoint( const std::string& id, IMediaInterfaceCallbackSubscriber* subscriber, void* userData ) = 0;
-    virtual void removeAudioEndpoint( const std::string& id, IMediaInterfaceCallbackSubscriber* subscriber, void* userData ) = 0;
+    /* todo move to AudioEndpointManager? */
     virtual void getCurrentAudioEndpoints( IMediaInterfaceCallbackSubscriber* subscriber, void* userData ) = 0;
 
 };

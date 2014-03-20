@@ -49,6 +49,9 @@
     <ClCompile Include="..\..\..\src\AudioEndpointRemoteSocketServer.cpp" />
     <ClCompile Include="..\..\..\src\RemoteMediaInterface.cpp" />
     <ClCompile Include="..\..\..\..\..\common\ClockSync\ClockSyncClient.cpp" />
+    <ClCompile Include="..\..\..\..\..\common\AudioEndpointManager\AudioEndpointManagerCtrlInterface.cpp">
+      <Filter>AudioEndpointManager</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\..\common\AudioEndpointManager\AudioEndpointManagerCtrlInterface.h">

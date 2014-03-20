@@ -31,6 +31,7 @@
 #include "Platform/Threads/Mutex.h"
 #include "Platform/AudioEndpoints/AudioEndpoint.h"
 #include <set>
+#include <map>
 #include <string>
 
 class IAudioEndpointCtrlCallbackSubscriber
@@ -38,7 +39,8 @@ class IAudioEndpointCtrlCallbackSubscriber
 public:
     virtual void connectionState( bool up ) = 0;
 
-    virtual void getEndpointsResponse( const std::set<std::string> endpoints, void* userData ) = 0;
+    virtual void getEndpointsResponse( const std::map<std::string, bool> endpoints, void* userData ) = 0;
+    virtual void endpointsUpdatedNtf() = 0;
 };
 
 
@@ -54,13 +56,21 @@ protected:
     typedef std::set<IAudioEndpointCtrlCallbackSubscriber*> AudioEndpointCtrlCallbackSubscriberSet;
     AudioEndpointCtrlCallbackSubscriberSet callbackSubscriberList_;
 
+    /*typical data related to a request that will be needed when it's time for a response
+      i.e. the subscriber the request originated from and the user data allocated with the request*/
+    typedef std::pair<IAudioEndpointCtrlCallbackSubscriber*, void*> PendingAudioCtrlRequestData;
+
+    void doEndpointsUpdatedNotification();
+
 public:
 
     void registerForCallbacks(IAudioEndpointCtrlCallbackSubscriber& subscriber);
     void unRegisterForCallbacks(IAudioEndpointCtrlCallbackSubscriber& subscriber);
 
-    virtual void addEndpoint( Platform::AudioEndpoint& ep ,IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
-    virtual void removeEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
+    virtual void createEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
+    virtual void deleteEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
+    virtual void addEndpoint( std::string id, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
+    virtual void removeEndpoint( std::string id, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
     virtual void getEndpoints( IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
 
 };

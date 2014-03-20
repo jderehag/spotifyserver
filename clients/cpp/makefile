@@ -7,8 +7,6 @@ TARGET=spotifyclient
 #we need specific name for this since we still have dependencies between client and server
 OUTDIR = .spotifyclient.output
 
-DEPS_PATH = ../../../spotifyserver_deps
-
 # root directories to look for source files in
 VPATH +=  ./src ./../../common/ 
 
@@ -32,7 +30,7 @@ CPPSRC +=	$(addprefix MediaContainers/, Album.cpp Artist.cpp Folder.cpp Playlist
 			$(addprefix MessageFactory/, Message.cpp MessageDecoder.cpp MessageEncoder.cpp TlvDefinitions.cpp Tlvs.cpp SocketReader.cpp SocketWriter.cpp) \
 			$(addprefix SocketHandling/, Messenger.cpp SocketClient.cpp ) \
 			$(addprefix Platform/AudioEndpoints/, AudioFifo.cpp AudioEndpointLocalShared.cpp ) \
-			AudioEndpointManager/RemoteAudioEndpointManager.cpp \
+			$(addprefix AudioEndpointManager/, RemoteAudioEndpointManager.cpp AudioEndpointManagerCtrlInterface.cpp) \
 			ClockSync/ClockSyncClient.cpp \
 			MediaInterface/MediaInterface.cpp \
 			Logger/Logger.cpp Logger/LoggerImpl.cpp

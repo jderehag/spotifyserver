@@ -53,10 +53,6 @@ void AudioDispatch::addEndpoint( AudioEndpoint& ep )
     }
 
     audioEndpoints_.insert( &ep );
-    /*for(AudioEndpointContainer::const_iterator it = audioEndpoints_.begin(); it != audioEndpoints_.end(); ++it)
-    {
-        log(LOG_DEBUG) << (*it)->getId();
-    }*/
     mtx.unlock();
 }
 
@@ -64,11 +60,6 @@ void AudioDispatch::removeEndpoint( AudioEndpoint& ep )
 {
     mtx.lock();
     audioEndpoints_.erase( &ep );
-
-/*    for(AudioEndpointContainer::const_iterator it = audioEndpoints_.begin(); it != audioEndpoints_.end(); ++it)
-    {
-        log(LOG_DEBUG) << (*it)->getId();
-    }*/
     mtx.unlock();
 }
 

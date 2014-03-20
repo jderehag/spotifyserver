@@ -31,7 +31,7 @@
 #include <stdint.h>
 
 #define PROTOCOL_VERSION_MAJOR 1 /*increase when not backwards compatible*/
-#define PROTOCOL_VERSION_MINOR 4 /*increase when adding new messages and/or TLV's*/
+#define PROTOCOL_VERSION_MINOR 5 /*increase when adding new messages and/or TLV's*/
 
 /* Message header */
 typedef struct {
@@ -73,9 +73,10 @@ typedef enum
     IND( STATUS,           0x401 )
 
     /* Remote Audio */
-    REQ( CREATE_AUDIO_ENDPOINT, 0x1001 )
-    REQ( DELETE_AUDIO_ENDPOINT, 0x1002 )
-    REQ( GET_AUDIO_ENDPOINTS,   0x1003 )
+    REQ( CREATE_AUDIO_ENDPOINT,   0x1001 )
+    REQ( DELETE_AUDIO_ENDPOINT,   0x1002 )
+    REQ( GET_AUDIO_ENDPOINTS,     0x1003 )
+    IND( AUDIO_ENDPOINTS_UPDATED, 0x1004 )
 
     IND( AUDIO_DATA,            0x1011 )
     REQ( AUDIO_SYNC,            0x1012 )

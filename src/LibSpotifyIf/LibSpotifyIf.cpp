@@ -50,9 +50,7 @@ static const char* getEventName(LibSpotifyIf::EventItem* event);
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
-LibSpotifyIf::LibSpotifyIf(const ConfigHandling::SpotifyConfig& config, AudioEndpointManager& audioMgr ) :
-                                                                         config_(config),
-                                                                         audioMgr_(audioMgr),
+LibSpotifyIf::LibSpotifyIf(const ConfigHandling::SpotifyConfig& config) :config_(config),
                                                                          rootFolder_("root", 0, 0),
                                                                          state_(STATE_INVALID),
                                                                          nextTimeoutForLibSpotify(0),
@@ -61,8 +59,6 @@ LibSpotifyIf::LibSpotifyIf(const ConfigHandling::SpotifyConfig& config, AudioEnd
                                                                          trackState_(TRACK_STATE_NOT_LOADED),
                                                                          currentTrack_("","")
 {
-    Platform::AudioEndpoint* ep = audioMgr_.getEndpoint( "local" );
-    audioOut_.addEndpoint( *ep );
     libSpotifySessionCreate();
     startThread();
 }
@@ -921,36 +917,6 @@ void LibSpotifyIf::albumLoadedCb(sp_albumbrowse* result, void *userdata)
 /* *****************
  * Audio endpoints
  * *****************/
-
-void LibSpotifyIf::addAudioEndpoint( const std::string& id, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
-{
-    Platform::AudioEndpoint* ep;
-    if ( id == "" )
-        ep = audioMgr_.getEndpoint( "local" );
-    else
-        ep = audioMgr_.getEndpoint( id );
-
-    if ( ep )
-    {
-        audioOut_.addEndpoint( *ep );
-    }
-    //todo: subscriber->
-}
-
-void LibSpotifyIf::removeAudioEndpoint( const std::string& id, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
-{
-    Platform::AudioEndpoint* ep;
-    if ( id == "" )
-        ep = audioMgr_.getEndpoint( "local" );
-    else
-        ep = audioMgr_.getEndpoint( id );
-
-    if ( ep )
-    {
-        audioOut_.removeEndpoint( *ep );
-    }
-    //todo: subscriber->
-}
 
 void LibSpotifyIf::getCurrentAudioEndpoints( IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {

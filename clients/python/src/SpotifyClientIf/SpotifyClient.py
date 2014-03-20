@@ -69,7 +69,10 @@ class SpotifyClient(Thread):
         
         self.__getAudioDataObserverLock = Lock() 
         self.__getAudioDataObserver = None
-        
+
+        self.__audioEndpointsObserversLock = Lock()
+        self.__audioEndpointsObservers = []
+
         self.fd = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.audioEndpointfd = None
         
@@ -238,7 +241,24 @@ class SpotifyClient(Thread):
                     except KeyError:
                         print "Unknown msgId " + str(msgId)
                     self.__getRspMsgObserversLock.release()
+
+                elif(msgType == TlvDefinitions.TlvMessageType.GET_AUDIO_ENDPOINTS_RSP):
+                    print "Received msg GET_AUDIO_ENDPOINTS_RSP"
+                    msgObj = Message.GetAudioEndpointsRspMsg(msgId)
+                    msgObj.Decode(msg)
                     
+                    self.__audioEndpointsObserversLock.acquire()
+                    for obs in self.__audioEndpointsObservers:
+                        obs.getAudioEndpointsRsp(msgObj.getAllEndpoints())
+                    self.__audioEndpointsObserversLock.release()
+
+                elif(msgType == TlvDefinitions.TlvMessageType.AUDIO_ENDPOINTS_UPDATED_IND):
+                    print "Received msg AUDIO_ENDPOINTS_UPDATED_IND"
+                    self.__audioEndpointsObserversLock.acquire()
+                    for obs in self.__audioEndpointsObservers:
+                        obs.audioEndpointsUpdatedNtf()
+                    self.__audioEndpointsObserversLock.release()
+
                 elif(msgType == TlvDefinitions.TlvMessageType.AUDIO_DATA_IND):
                     #print "Received msg AUDIO_DATA_IND"
                     msgObj = Message.AudioDataIndMsg(msgId)
@@ -352,7 +372,19 @@ class SpotifyClient(Thread):
         print "Closing local AudioEndpoint"
         self.fd.sendall(Message.RemAudioEndpointReqMsg(self.getNextMsgId()).toByteStream())
         self.fd.sendall(Message.DelAudioEndpointReqMsg(self.getNextMsgId()).toByteStream())
-        
+
+    def sendAddAudioEndpoint(self, name):
+        if self.__isConnected.is_set():
+            self.fd.sendall(Message.AddAudioEndpointReqMsg(self.getNextMsgId(), name).toByteStream())
+
+    def sendRemoveAudioEndpoint(self, name):
+        if self.__isConnected.is_set():
+            self.fd.sendall(Message.RemAudioEndpointReqMsg(self.getNextMsgId(), name).toByteStream())
+
+    def sendGetEndpointsReq(self):
+        if self.__isConnected.is_set():
+            self.fd.sendall(Message.GetAudioEndpointsReqMsg(self.getNextMsgId()).toByteStream())
+
     def recvMsg(self, fd):
         try:
             inputStr = fd.recv(1500)
@@ -386,4 +418,9 @@ class SpotifyClient(Thread):
         self.__connectionObserverLock.acquire()
         self.__connectionObservers.append(observer)
         self.__connectionObserverLock.release()
+        
+    def registerAudioEndpointsObserver(self, observer):
+        self.__audioEndpointsObserversLock.acquire()
+        self.__audioEndpointsObservers.append(observer)
+        self.__audioEndpointsObserversLock.release()
         

@@ -71,6 +71,10 @@ class SpotifyClientMainGui(Tk):
         self.leftFrame = LeftFrame(self, width=200)
         self.leftFrame.pack_propagate(0)
         self.leftFrame.pack(side=LEFT, anchor=W, fill=Y)
+
+        self.rightFrame = RightFrame(self, width=100)
+        self.rightFrame.pack_propagate(0)
+        self.rightFrame.pack(side=RIGHT, anchor=E, fill=Y)
         
         self.__tracks = []
         self.multiListboxTracks = MultiListbox.MultiListbox(self, (('Title', 30), ('Artist', 20), ('Album', 10)))
@@ -88,6 +92,7 @@ class SpotifyClientMainGui(Tk):
         self.spotify = SpotifyClient.SpotifyClient(self.configHandler.getIpAddr(), 
                                                    self.configHandler.getPort())
         self.leftFrame.setSpotifyClient(self.spotify)
+        self.rightFrame.setSpotifyClient(self.spotify)
         self.playbackBar.setSpotifyClient(self.spotify)
         self.spotify.registerConnectionObserver(self)
         
@@ -143,6 +148,74 @@ class SpotifyClientMainGui(Tk):
     def getPendingTrackListParent(self):
         return self.__pendingTrackListParent
 
+
+class RightFrame(Frame):
+    def __init__(self, parentFrame,  **kwargs):
+        Frame.__init__(self, parentFrame, **kwargs)
+        self.parent = parentFrame
+
+        epLabel = Label(self, justify=LEFT, text="Audio endpoints:")
+        epLabel.pack(side=TOP, anchor=W)
+
+        self.endpoints = dict()
+        self.endpointcheckboxes = dict()
+        self.endpointcheckboxvalues = dict()
+
+    def __del__(self):
+        return
+
+    def setSpotifyClient(self,spotify):
+        self.spotify = spotify
+        self.spotify.registerAudioEndpointsObserver(self)
+        self.spotify.registerConnectionObserver(self)
+
+    def audioEndpointsUpdatedNtf(self):
+        # oh something happened, yes I am indeed interested, please tell me more
+        self.spotify.sendGetEndpointsReq()
+
+    def getAudioEndpointsRsp(self, endpoints):
+        self.endpoints.clear()
+        self.endpoints = endpoints
+        # redraw checkboxes in tkinter context, tkinter will freak out if done here
+        self.after_idle(self.redrawCbs)
+
+    def redrawCbs(self):
+        #remove all old boxes
+        for child in self.endpointcheckboxes.values():
+            child.destroy()
+        self.endpointcheckboxes.clear()
+        self.endpointcheckboxvalues.clear()
+
+        #and add the new ones
+        for name, active in self.endpoints.iteritems():
+            var = IntVar()
+            var.set(active)
+            box = Checkbutton(self, 
+                              text=name,
+                              variable=var,
+                              command=self.cb)
+            if(active == 1):
+                box.select()
+            box.pack(side=TOP, anchor=W)
+
+            self.endpointcheckboxes[name] = box
+            self.endpointcheckboxvalues[name] = var
+
+    def cb(self):
+        for ep, val in self.endpoints.iteritems():
+            checked = self.endpointcheckboxvalues[ep].get()
+            if( val != checked):
+                if(checked!=0):
+                    self.spotify.sendAddAudioEndpoint(ep)
+                else:
+                    self.spotify.sendRemoveAudioEndpoint(ep)
+        self.spotify.sendGetEndpointsReq()
+
+    def connectedIndCb(self):
+        self.spotify.sendGetEndpointsReq()
+
+    def disconnectedIndCb(self):
+        return
 
 class LeftFrame(Frame):
     def __init__(self, parentFrame,  **kwargs):

@@ -82,10 +82,6 @@ int main(int argc, char *argv[])
 
     Logger::LoggerImpl l(ch.getLoggerConfig());
 
-    Platform::AudioEndpointLocal audioEndpoint(ch.getAudioEndpointConfig());
-    AudioEndpointManager audioMgr;
-    audioMgr.addEndpoint( audioEndpoint, NULL, NULL );
-
     ConfigHandling::SpotifyConfig spConfig = ch.getSpotifyConfig();
     if (spConfig.getUsername().empty())
     {
@@ -111,12 +107,17 @@ int main(int argc, char *argv[])
     }
 
 
-    LibSpotify::LibSpotifyIf libspotifyif(spConfig, audioMgr);
+    LibSpotify::LibSpotifyIf libspotifyif(spConfig);
     libspotifyif.logIn();
+
+    Platform::AudioEndpointLocal audioEndpoint(ch.getAudioEndpointConfig());
+    AudioEndpointManager audioMgr( libspotifyif );
+    audioMgr.createEndpoint( audioEndpoint, NULL, NULL );
+    audioMgr.addEndpoint( audioEndpoint.getId(), NULL, NULL );
 
     ClientHandler clienthandler(ch.getNetworkConfig(), libspotifyif, audioMgr);
 
-    UIConsole ui( libspotifyif );
+    UIConsole ui( libspotifyif, audioMgr );
     ui.joinThread();
 
     libspotifyif.logOut();

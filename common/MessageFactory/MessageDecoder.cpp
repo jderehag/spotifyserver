@@ -115,6 +115,7 @@ TlvContainer* MessageDecoder::decodeGroupTlv()
 
             case TLV_PORT:
             case TLV_AUDIO_EP_PROTOCOL:
+            case TLV_STATE:
             {
                 groupTlv->addTlv(getCurrentTlv(), getTlvIntData());
                 nextTlv();

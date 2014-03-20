@@ -164,7 +164,7 @@ void Main::run()
     ConfigHandling::AudioEndpointConfig* audiocfg = new ConfigHandling::AudioEndpointConfig;
     Platform::AudioEndpointLocal* audioEndpoint = new Platform::AudioEndpointLocal( *audiocfg );
     RemoteAudioEndpointManager* audioMgr = new RemoteAudioEndpointManager( *sc );
-    audioMgr->addEndpoint( *audioEndpoint, NULL, NULL );
+    audioMgr->createEndpoint( *audioEndpoint, NULL, NULL );
 
     RemoteMediaInterface* m = new RemoteMediaInterface( *sc );
     UIEmbedded* ui = new UIEmbedded(*m);

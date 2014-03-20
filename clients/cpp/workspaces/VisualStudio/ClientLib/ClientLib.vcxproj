@@ -64,6 +64,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\..\common\AudioEndpointManager\AudioEndpointManagerCtrlInterface.cpp" />
     <ClCompile Include="..\..\..\..\..\common\AudioEndpointManager\RemoteAudioEndpointManager.cpp" />
     <ClCompile Include="..\..\..\..\..\common\ClockSync\ClockSyncClient.cpp" />
     <ClCompile Include="..\..\..\..\..\common\MediaInterface\MediaInterface.cpp" />

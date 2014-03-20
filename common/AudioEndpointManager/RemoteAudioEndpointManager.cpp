@@ -28,6 +28,7 @@
 #include "RemoteAudioEndpointManager.h"
 #include "MessageFactory/Message.h"
 #include "MessageFactory/TlvDefinitions.h"
+#include "applog.h"
 
 RemoteAudioEndpointManager::RemoteAudioEndpointManager( Messenger& m ) : messenger_(m), server(NULL), connectionUp_(false)
 {
@@ -41,7 +42,7 @@ RemoteAudioEndpointManager::~RemoteAudioEndpointManager()
     delete server;
 }
 
-void RemoteAudioEndpointManager::sendAddEndpointMessage()
+void RemoteAudioEndpointManager::sendCreateEndpointMessage()
 {
     Message* msg = new Message( CREATE_AUDIO_ENDPOINT_REQ );
     TlvContainer* epTlv = new TlvContainer(TLV_CLIENT);
@@ -56,17 +57,17 @@ void RemoteAudioEndpointManager::sendAddEndpointMessage()
     messenger_.queueRequest( msg, this, NULL );
 }
 
-void RemoteAudioEndpointManager::addEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData )
+void RemoteAudioEndpointManager::createEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData )
 {
     server = new AudioEndpointRemoteSocketServer( ep );
 
     if ( connectionUp_ )
     {
-        sendAddEndpointMessage();
+        sendCreateEndpointMessage();
     }
 }
 
-void RemoteAudioEndpointManager::removeEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData )
+void RemoteAudioEndpointManager::deleteEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData )
 {
     Message* msg = new Message( DELETE_AUDIO_ENDPOINT_REQ );
     messenger_.queueRequest( msg, this, NULL );
@@ -74,29 +75,79 @@ void RemoteAudioEndpointManager::removeEndpoint( Platform::AudioEndpoint& ep, IA
 void RemoteAudioEndpointManager::getEndpoints( IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData )
 {
     Message* msg = new Message( GET_AUDIO_ENDPOINTS_REQ );
-    messenger_.queueRequest( msg, this, NULL );
+    messenger_.queueRequest( msg, this, new PendingAudioCtrlRequestData(subscriber, userData) );
 }
 
-
+void RemoteAudioEndpointManager::addEndpoint( std::string id, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData )
+{
+    Message* msg = new Message( ADD_AUDIO_ENDPOINTS_REQ );
+    /*todo: should allow multiple endpoints*/
+    if ( id != "" )
+        msg->addTlv( TLV_LINK, id );
+    messenger_.queueRequest( msg, this, new PendingAudioCtrlRequestData(subscriber, userData) );
+}
+void RemoteAudioEndpointManager::removeEndpoint( std::string id, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData )
+{
+    Message* msg = new Message( REM_AUDIO_ENDPOINTS_REQ );
+    /*todo: should allow multiple endpoints*/
+    if ( id != "" )
+        msg->addTlv( TLV_LINK, id );
+    messenger_.queueRequest( msg, this, new PendingAudioCtrlRequestData(subscriber, userData) );
+}
 
 void RemoteAudioEndpointManager::connectionState( bool up )
 {
     if ( up )
     {
-        sendAddEndpointMessage();
+        sendCreateEndpointMessage();
     }
     connectionUp_ = up;
 }
 void RemoteAudioEndpointManager::receivedMessage( const Message* msg )
 {
-
+    switch( msg->getType() )
+    {
+        case AUDIO_ENDPOINTS_UPDATED_IND:
+            doEndpointsUpdatedNotification();
+            break;
+        default:
+            break;
+    }
 }
 void RemoteAudioEndpointManager::receivedResponse( const Message* rsp, const Message* req, void* userData )
 {
+    PendingAudioCtrlRequestData* reqData = (PendingAudioCtrlRequestData*) userData;
+    if( reqData == NULL )
+        return;
+
+    IAudioEndpointCtrlCallbackSubscriber* subscriber = reqData->first;
+    void* subscriberData = reqData->second;
+
+    delete reqData;
+
+    log(LOG_DEBUG) << *rsp;
+
     switch ( rsp->getType() )
     {
     case GET_AUDIO_ENDPOINTS_RSP:
+        {
+            std::map<std::string, bool> endpoints;
 
+            for ( TlvContainer::const_iterator it = rsp->getTlvRoot()->begin();
+                it != rsp->getTlvRoot()->end(); it++ )
+            {
+                if ( (*it)->getType() == TLV_CLIENT )
+                {
+                    TlvContainer* tlv = (TlvContainer*)(*it);
+                    StringTlv* name = (StringTlv*)tlv->getTlv( TLV_LINK );
+                    IntTlv* active = (IntTlv*)tlv->getTlv( TLV_STATE );
+                    if ( name && active )
+                        endpoints.insert(std::pair<std::string, bool>(name->getString(), active->getVal() != 0 ));
+                }
+            }
+
+            subscriber->getEndpointsResponse( endpoints, userData );
+        }
         break;
 
     default:
