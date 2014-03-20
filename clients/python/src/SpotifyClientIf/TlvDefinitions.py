@@ -126,13 +126,16 @@ class TlvType:
     # Error handling TLV's
     TLV_FAILURE                = int('0x1101', 16)
     
-    #Audio endpoint TLV:s
+    #Audio data TLV's
     TLV_AUDIO_DATA             = int('0x2001', 16)
     TLV_AUDIO_CHANNELS         = int('0x2002', 16)
     TLV_AUDIO_RATE             = int('0x2003', 16)
     TLV_AUDIO_NOF_SAMPLES      = int('0x2004', 16)
     #TLV_AUDIO_DESTINATION_PORT = int('0x2005', 16)
-    TLV_AUDIO_PROTOCOL_TYPE    = int('0x2006', 16)
+    #TLV_AUDIO_PROTOCOL_TYPE    = int('0x2006', 16)
+    
+    #Audio endpoint TLV's
+    TLV_AUDIO_EP_PROTOCOL      = int('0x2102', 16)
 
 
 class TlvFailureCause:

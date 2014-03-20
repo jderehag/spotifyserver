@@ -49,6 +49,7 @@ UIConsole::~UIConsole()
 void UIConsole::destroy()
 {
     m_.unRegisterForCallbacks( *this );
+    audioMgr_.unRegisterForCallbacks( *this );
     cancelThread();
     joinThread();
 }

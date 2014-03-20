@@ -54,6 +54,7 @@ Client::~Client()
 {
     log(LOG_DEBUG) << "~Client";
     spotify_.unRegisterForCallbacks(*this);
+    audioCtrl_.unRegisterForCallbacks(*this);
 
     if ( audioEp )
     {
@@ -421,7 +422,9 @@ void Client::handleAddAudioEpReq( const Message* msg )
 {
     Message* rsp = msg->createResponse();
     const StringTlv* idTlv = (const StringTlv*) msg->getTlv( TLV_LINK );
-    std::string endpointId = idTlv ? idTlv->getString() : id; /* no id specified means this client*/
+    std::string endpointId = idTlv ? idTlv->getString() : "";
+    if (endpointId == "")
+        endpointId = id; /* no id specified means this client*/
 
     //todo handle multiple tlvs
     audioCtrl_.addEndpoint( endpointId, this, rsp );

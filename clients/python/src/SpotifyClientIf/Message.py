@@ -419,7 +419,7 @@ class CreateAudioEndpointReqMsg(Message):
         Message.__init__(self, TlvDefinitions.TlvMessageType.CREATE_AUDIO_ENDPOINT_REQ, msgId)
         epTlv = Tlv.CreateContainer(TlvDefinitions.TlvType.TLV_CLIENT)
         epTlv.addTlv(Tlv.Create(TlvDefinitions.TlvType.TLV_PORT, 4, src_port))
-        epTlv.addTlv(Tlv.Create(TlvDefinitions.TlvType.TLV_AUDIO_PROTOCOL_TYPE, 4, protocol_type))
+        epTlv.addTlv(Tlv.Create(TlvDefinitions.TlvType.TLV_AUDIO_EP_PROTOCOL, 4, protocol_type))
         self.addTlv(epTlv)
 
 class CreateAudioEndpointRspMsg(Message):
@@ -429,7 +429,7 @@ class CreateAudioEndpointRspMsg(Message):
 class AddAudioEndpointReqMsg(Message):
     def __init__(self, msgId, name=""):
         Message.__init__(self, TlvDefinitions.TlvMessageType.ADD_AUDIO_ENDPOINTS_REQ, msgId)
-        if(id != ""):
+        if(name != ""):
             self.addTlv(Tlv.Create(TlvDefinitions.TlvType.TLV_LINK, len(name), name))
 
 class AddAudioEndpointRspMsg(Message):
@@ -439,7 +439,7 @@ class AddAudioEndpointRspMsg(Message):
 class RemAudioEndpointReqMsg(Message):
     def __init__(self, msgId, name=""):
         Message.__init__(self, TlvDefinitions.TlvMessageType.REM_AUDIO_ENDPOINTS_REQ, msgId)
-        if(id != ""):
+        if(name != ""):
             self.addTlv(Tlv.Create(TlvDefinitions.TlvType.TLV_LINK, len(name), name))
 
 class RemAudioEndpointRspMsg(Message):
