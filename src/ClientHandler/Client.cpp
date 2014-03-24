@@ -86,6 +86,7 @@ void Client::processMessage(const Message* msg)
         case PLAY_REQ:           handlePlayReq(msg);          break;
         case PLAY_TRACK_REQ:     handlePlayTrackReq(msg);     break;
         case PLAY_CONTROL_REQ:   handlePlayControlReq(msg);   break;
+        case SET_VOLUME_REQ:     handleSetVolumeReq(msg);     break;
         case GENERIC_SEARCH_REQ: handleGenericSearchReq(msg); break;
         case GET_STATUS_REQ:     handleGetStatusReq(msg);     break;
         case GET_IMAGE_REQ:      handleGetImageReq(msg);      break;
@@ -114,11 +115,12 @@ void Client::rootFolderUpdatedInd()
 {
     log(LOG_DEBUG) << "Client::rootFolderUpdatedInd()";
 }
-static void addStatusMsgMandatoryParameters( Message* msg, PlaybackState_t state, bool repeatStatus, bool shuffleStatus )
+static void addStatusMsgMandatoryParameters( Message* msg, PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume )
 {
     msg->addTlv( TLV_STATE, state );
     msg->addTlv( TLV_PLAY_MODE_REPEAT, repeatStatus );
     msg->addTlv( TLV_PLAY_MODE_SHUFFLE, shuffleStatus );
+    msg->addTlv( TLV_VOLUME, volume );
 }
 static void addStatusMsgOptionalParameters( Message* msg, const Track& currentTrack, unsigned int progress )
 {
@@ -126,39 +128,39 @@ static void addStatusMsgOptionalParameters( Message* msg, const Track& currentTr
     msg->addTlv( TLV_PROGRESS, progress );
 }
 
-void Client::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress )
+void Client::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume, const Track& currentTrack, unsigned int progress )
 {
     Message* msg = new Message(STATUS_IND);
 
-    addStatusMsgMandatoryParameters( msg, state, repeatStatus, shuffleStatus );
+    addStatusMsgMandatoryParameters( msg, state, repeatStatus, shuffleStatus, volume );
     addStatusMsgOptionalParameters( msg, currentTrack, progress );
 
     queueMessage( msg );
 }
 
-void Client::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus )
+void Client::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume )
 {
     Message* msg = new Message(STATUS_IND);
 
-    addStatusMsgMandatoryParameters( msg, state, repeatStatus, shuffleStatus );
+    addStatusMsgMandatoryParameters( msg, state, repeatStatus, shuffleStatus, volume );
 
     queueMessage( msg );
 }
 
-void Client::getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress, void* userData )
+void Client::getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume, const Track& currentTrack, unsigned int progress, void* userData )
 {
     Message* rsp = (Message*) userData;
 
-    addStatusMsgMandatoryParameters( rsp, state, repeatStatus, shuffleStatus );
+    addStatusMsgMandatoryParameters( rsp, state, repeatStatus, shuffleStatus, volume );
     addStatusMsgOptionalParameters( rsp, currentTrack, progress );
 
     queueMessage( rsp );
 }
-void Client::getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, void* userData )
+void Client::getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume, void* userData )
 {
     Message* rsp = (Message*) userData;
 
-    addStatusMsgMandatoryParameters( rsp, state, repeatStatus, shuffleStatus );
+    addStatusMsgMandatoryParameters( rsp, state, repeatStatus, shuffleStatus, volume );
 
     queueMessage( rsp );
 }
@@ -387,17 +389,16 @@ void Client::handlePlayControlReq(const Message* msg)
     queueMessage( rsp );
 }
 
-
 void Client::handleGetImageReq(const Message* msg)
 {
-    const StringTlv* link = (const StringTlv*) msg->getTlvRoot()->getTlv(TLV_LINK);
+    const StringTlv* link = (const StringTlv*) msg->getTlv(TLV_LINK);
     Message* rsp = msg->createResponse();
     spotify_.getImage( link ? link->getString() : std::string(""), this, rsp );
 }
 
 void Client::handleGenericSearchReq(const Message* msg)
 {
-    const StringTlv* query = (const StringTlv*) msg->getTlvRoot()->getTlv(TLV_SEARCH_QUERY);
+    const StringTlv* query = (const StringTlv*) msg->getTlv(TLV_SEARCH_QUERY);
 
     if (query && query->getString() != "")
     {
@@ -476,6 +477,8 @@ void Client::handleCreateAudioEpReq( const Message* msg )
         {
             const std::string& ip = getSocket()->getRemoteAddr();
             const uint32_t port = portTlv->getVal();
+            const IntTlv* volumeTlv = (const IntTlv*) epTlv->getTlv( TLV_VOLUME );
+            uint8_t relativeVolume = volumeTlv ? volumeTlv->getVal() : 0;
 
             std::ostringstream portStr;
             portStr << port;
@@ -487,7 +490,7 @@ void Client::handleCreateAudioEpReq( const Message* msg )
                 delete audioEp;
             }
 
-            audioEp = new Platform::AudioEndpointRemote( id, ip, portStr.str(), 1);
+            audioEp = new Platform::AudioEndpointRemote( this, id, ip, portStr.str(), relativeVolume, 1);
             audioCtrl_.createEndpoint(*audioEp, NULL, NULL);
         }
         else
@@ -519,15 +522,16 @@ void Client::endpointsUpdatedNtf()
     queueMessage( ind );
 }
 
-void Client::getEndpointsResponse( const std::map<std::string, bool> endpoints, void* userData ) 
+void Client::getEndpointsResponse( const AudioEndpointInfoList endpoints, void* userData )
 {
     Message* rsp = (Message*) userData;
 
-    for (std::map<std::string, bool>::const_iterator it = endpoints.begin(); it != endpoints.end(); it++)
+    for ( AudioEndpointInfoList::const_iterator it = endpoints.begin(); it != endpoints.end(); it++ )
     {
         TlvContainer* epTlv = new TlvContainer( TLV_CLIENT );
-        epTlv->addTlv( TLV_LINK, (*it).first );
-        epTlv->addTlv( TLV_STATE, (*it).second ? 1 : 0 );
+        epTlv->addTlv( TLV_LINK, (*it).id );
+        epTlv->addTlv( TLV_STATE, (*it).active ? 1 : 0 );
+        epTlv->addTlv( TLV_VOLUME, (*it).relativeVolume );
         rsp->addTlv( epTlv );
     }
 
@@ -537,5 +541,51 @@ void Client::handleGetAudioEpReq( const Message* msg )
 {
     Message* rsp = msg->createResponse();
     audioCtrl_.getEndpoints( this, rsp );
+}
+
+void Client::handleSetVolumeReq(const Message* msg)
+{
+    for (TlvContainer::const_iterator it = msg->getTlvRoot()->begin() ; it != msg->getTlvRoot()->end() ; it++)
+    {
+        Tlv* tlv = (*it);
+        log(LOG_DEBUG) << *tlv;
+
+        switch(tlv->getType())
+        {
+            case TLV_VOLUME:
+                spotify_.setVolume( ((IntTlv*)tlv)->getVal() );
+                break;
+            case TLV_CLIENT:
+            {
+                TlvContainer* epTlv = (TlvContainer*)tlv;
+                StringTlv* id  = (StringTlv*)epTlv->getTlv( TLV_LINK );
+                IntTlv* volume = (IntTlv*)epTlv->getTlv( TLV_VOLUME );
+                if ( id && volume )
+                    audioCtrl_.setRelativeVolume( id->getString(), volume->getVal() );
+                break;
+            }
+            default:
+                break;
+        }
+    }
+
+    Message* rsp = msg->createResponse();
+    queueMessage( rsp );
+}
+
+void Client::setMasterVolume( uint8_t volume )
+{
+    Message* msg = new Message( SET_VOLUME_REQ );
+    msg->addTlv( TLV_VOLUME, volume );
+    queueRequest( msg, NULL, NULL );
+}
+
+void Client::setRelativeVolume( uint8_t volume )
+{
+    Message* msg = new Message( SET_VOLUME_REQ );
+    TlvContainer* tlv = new TlvContainer( TLV_CLIENT );
+    tlv->addTlv( TLV_VOLUME, volume );
+    msg->addTlv( tlv );
+    queueRequest( msg, NULL, NULL );
 }
 

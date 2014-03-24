@@ -30,16 +30,27 @@
 
 #include "Platform/Threads/Mutex.h"
 #include "Platform/AudioEndpoints/AudioEndpoint.h"
+#include <list>
 #include <set>
-#include <map>
 #include <string>
+
+class AudioEndpointInfo
+{
+public:
+    AudioEndpointInfo( std::string id_, bool active_, uint8_t vol_ ) : id(id_), active(active_), relativeVolume(vol_) {}
+    std::string id;
+    bool active;
+    uint8_t relativeVolume;
+};
+
+typedef std::list<AudioEndpointInfo> AudioEndpointInfoList;
 
 class IAudioEndpointCtrlCallbackSubscriber
 {
 public:
     virtual void connectionState( bool up ) = 0;
 
-    virtual void getEndpointsResponse( const std::map<std::string, bool> endpoints, void* userData ) = 0;
+    virtual void getEndpointsResponse( const AudioEndpointInfoList endpoints, void* userData ) = 0;
     virtual void endpointsUpdatedNtf() = 0;
 };
 
@@ -72,6 +83,8 @@ public:
     virtual void addEndpoint( std::string id, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
     virtual void removeEndpoint( std::string id, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
     virtual void getEndpoints( IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
+
+    virtual void setRelativeVolume( std::string id, uint8_t volume ) = 0;
 
 };
 

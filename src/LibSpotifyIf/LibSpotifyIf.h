@@ -114,6 +114,13 @@ public:
         QueryReqEventItem(Event event, IMediaInterfaceCallbackSubscriber* callbackSubscriber, void* subscriberData, std::string query) : ReqEventItem(event, callbackSubscriber, subscriberData), query_(query) {}
     };
 
+    class ParamReqEventItem : public ReqEventItem
+    {
+    public:
+        uint32_t param_;
+        ParamReqEventItem(Event event, IMediaInterfaceCallbackSubscriber* callbackSubscriber, void* subscriberData, uint32_t param) : ReqEventItem(event, callbackSubscriber, subscriberData), param_(param) {}
+    };
+
     class PlayReqEventItem : public QueryReqEventItem
     {
     public:
@@ -148,7 +155,6 @@ private:
 private:
     const ConfigHandling::SpotifyConfig& config_;
 
-private:
 	Folder rootFolder_;
 
 	/*********************
@@ -214,6 +220,8 @@ private:
 	/* Util callbacks */
 	void logMessageCb(sp_session *session, const char *data);
 
+
+    void doStatusNtf();
 public:
 	LibSpotifyIf(const ConfigHandling::SpotifyConfig& config );
 	virtual ~LibSpotifyIf();
@@ -229,6 +237,7 @@ public:
     virtual void pause();
     virtual void setShuffle( bool shuffleOn );
     virtual void setRepeat( bool repeatOn );
+    virtual void setVolume( uint8_t volume );
     virtual void getStatus( IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
     virtual void getPlaylists( IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
     virtual void getTracks( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );

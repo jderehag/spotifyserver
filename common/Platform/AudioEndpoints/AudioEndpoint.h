@@ -41,8 +41,11 @@ protected:
 
     bool paused_;
 
+    uint8_t masterVolume_;
+    uint8_t relativeVolume_;
+
 public:
-    AudioEndpoint(bool dynamicFifo = true) : fifo_(dynamicFifo), paused_(false) {}
+    AudioEndpoint(uint8_t volume = 255, bool dynamicFifo = true) : fifo_(dynamicFifo), paused_(false), relativeVolume_(volume) {}
     virtual ~AudioEndpoint() {}
     virtual int enqueueAudioData( unsigned int timestamp, unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples ) = 0;
     virtual void flushAudioData() = 0;
@@ -50,6 +53,9 @@ public:
     virtual unsigned int canAcceptSamples( unsigned int availableSamples, unsigned int rate ) { return fifo_.canAcceptSamples( availableSamples, rate ); }
     virtual unsigned int getNumberOfQueuedSamples() = 0;
 
+    virtual void setMasterVolume( uint8_t volume ) = 0;
+    virtual void setRelativeVolume( uint8_t volume ) = 0;
+    uint8_t getRelativeVolume() { return relativeVolume_; }
     virtual std::string getId() const = 0;
 
     /*todo do something proper with these...*/

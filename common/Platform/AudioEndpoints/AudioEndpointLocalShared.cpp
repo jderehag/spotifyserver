@@ -84,4 +84,19 @@ void AudioEndpointLocal::adjustSamples( AudioFifoData* afd )
     }
 }
 
+void AudioEndpointLocal::setMasterVolume( uint8_t volume )
+{
+    uint16_t newVolume;
+    masterVolume_ = volume;
+    newVolume = (uint16_t) relativeVolume_*volume/255;
+    actualVolume_ = (uint8_t) newVolume;
+}
+void AudioEndpointLocal::setRelativeVolume( uint8_t volume )
+{
+    uint16_t newVolume;
+    relativeVolume_ = volume;
+    newVolume = (uint16_t) masterVolume_*volume/255;
+    actualVolume_ = (uint8_t) newVolume;
+}
+
 }

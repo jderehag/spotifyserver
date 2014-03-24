@@ -33,6 +33,14 @@
 #include "Platform/Socket/Socket.h"
 #include <string>
 
+class IAudioEndpointRemoteCtrlInterface
+{
+public:
+//    virtual ~IAudioEndpointRemoteCtrlInterface();
+    virtual void setMasterVolume( uint8_t volume ) = 0;
+    virtual void setRelativeVolume( uint8_t volume ) = 0;
+};
+
 namespace Platform
 {
 
@@ -42,17 +50,19 @@ private:
     Socket sock_;
     std::string id_;
     uint32_t remoteBufferSize;
-
-    void sendAudioData();
+    IAudioEndpointRemoteCtrlInterface* ctrlIf_;
 
 public:
-    AudioEndpointRemote(const std::string& id, const std::string& serveraddr, const std::string& serverport, unsigned int bufferNSecs);
+    AudioEndpointRemote(IAudioEndpointRemoteCtrlInterface* ctrlIf, const std::string& id, const std::string& serveraddr, const std::string& serverport, uint8_t volume, unsigned int bufferNSecs);
 
     /* AudioEndpoint implementation */
     virtual int enqueueAudioData( unsigned int timestamp, unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples );
     virtual void flushAudioData();
 
     virtual unsigned int getNumberOfQueuedSamples();
+
+    virtual void setMasterVolume( uint8_t volume );
+    virtual void setRelativeVolume( uint8_t volume );
 
     virtual std::string getId() const;
 

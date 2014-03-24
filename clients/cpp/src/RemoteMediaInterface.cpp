@@ -73,12 +73,15 @@ void RemoteMediaInterface::receivedMessage( const Message* msg )
             PlaybackState_t playbackState = PLAYBACK_IDLE;
             bool shuffleState = false;
             bool repeatState = false;
+            uint8_t volume = 0;
             const IntTlv* tlv = (const IntTlv*) msg->getTlv(TLV_STATE);
             if ( tlv ) playbackState = (PlaybackState_t)tlv->getVal();
             tlv = (const IntTlv*) msg->getTlv(TLV_PLAY_MODE_REPEAT);
             if ( tlv ) repeatState = (tlv->getVal() != 0);
             tlv = (const IntTlv*) msg->getTlv(TLV_PLAY_MODE_SHUFFLE);
             if ( tlv ) shuffleState = (tlv->getVal() != 0);
+            tlv = (const IntTlv*) msg->getTlv(TLV_VOLUME);
+            if ( tlv ) volume = (uint8_t)tlv->getVal();
 
             const TlvContainer* trackTlv = (const TlvContainer*) msg->getTlv(TLV_TRACK);
 
@@ -92,7 +95,7 @@ void RemoteMediaInterface::receivedMessage( const Message* msg )
                 for( std::set<IMediaInterfaceCallbackSubscriber*>::iterator it = callbackSubscriberList_.begin();
                      it != callbackSubscriberList_.end(); it++)
                 {
-                    (*it)->statusUpdateInd( playbackState, repeatState, shuffleState, Track( trackTlv ), progress );
+                    (*it)->statusUpdateInd( playbackState, repeatState, shuffleState, volume, Track( trackTlv ), progress );
                 }
             }
             else
@@ -100,7 +103,7 @@ void RemoteMediaInterface::receivedMessage( const Message* msg )
                 for( std::set<IMediaInterfaceCallbackSubscriber*>::iterator it = callbackSubscriberList_.begin();
                      it != callbackSubscriberList_.end(); it++)
                 {
-                    (*it)->statusUpdateInd( playbackState, repeatState, shuffleState );
+                    (*it)->statusUpdateInd( playbackState, repeatState, shuffleState, volume );
                 }
             }
             callbackSubscriberMtx_.unlock();
@@ -159,12 +162,15 @@ void RemoteMediaInterface::receivedResponse( const Message* rsp, const Message* 
                 PlaybackState_t playbackState = PLAYBACK_IDLE;
                 bool shuffleState = false;
                 bool repeatState = false;
+                uint8_t volume = 0;
                 const IntTlv* tlv = (const IntTlv*) rsp->getTlv(TLV_STATE);
                 if ( tlv ) playbackState = (PlaybackState_t)tlv->getVal();
                 tlv = (const IntTlv*) rsp->getTlv(TLV_PLAY_MODE_REPEAT);
                 if ( tlv ) repeatState = (tlv->getVal() != 0);
                 tlv = (const IntTlv*) rsp->getTlv(TLV_PLAY_MODE_SHUFFLE);
                 if ( tlv ) shuffleState = (tlv->getVal() != 0);
+                tlv = (const IntTlv*) rsp->getTlv(TLV_VOLUME);
+                if ( tlv ) volume = (uint8_t)tlv->getVal();
 
                 const TlvContainer* trackTlv = (const TlvContainer*) rsp->getTlv(TLV_TRACK);
 
@@ -174,11 +180,11 @@ void RemoteMediaInterface::receivedResponse( const Message* rsp, const Message* 
                     tlv = (const IntTlv*) rsp->getTlv(TLV_PROGRESS);
                     if ( tlv ) progress = tlv->getVal();
 
-                    subscriber->getStatusResponse( playbackState, repeatState, shuffleState, Track( trackTlv ), progress, subscriberData );
+                    subscriber->getStatusResponse( playbackState, repeatState, shuffleState, volume, Track( trackTlv ), progress, subscriberData );
                 }
                 else
                 {
-                    subscriber->getStatusResponse( playbackState, repeatState, shuffleState, subscriberData );
+                    subscriber->getStatusResponse( playbackState, repeatState, shuffleState, volume, subscriberData );
                 }
             }
             break;
@@ -289,6 +295,14 @@ void RemoteMediaInterface::setRepeat( bool repeatOn )
     msg->addTlv( TLV_PLAY_MODE_REPEAT, repeatOn ? 1 : 0 );
     messenger_.queueRequest( msg, this, NULL );
 }
+
+void RemoteMediaInterface::setVolume( uint8_t volume )
+{
+    Message* msg = new Message( SET_VOLUME_REQ );
+    msg->addTlv( TLV_VOLUME, volume );
+    messenger_.queueRequest( msg, this, NULL );
+}
+
 
 void RemoteMediaInterface::getStatus( IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {

@@ -58,6 +58,7 @@ public:
     virtual void pause();
     virtual void setShuffle( bool shuffleOn );
     virtual void setRepeat( bool repeatOn );
+    virtual void setVolume( uint8_t volume );
     virtual void getStatus( IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
     virtual void getPlaylists( IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
     virtual void getTracks( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );

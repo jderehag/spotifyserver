@@ -53,21 +53,21 @@ public:
     /* Implements IMediaInterfaceCallbackSubscriber */
     virtual void connectionState( bool up );
     virtual void rootFolderUpdatedInd();
-    virtual void statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress );
-    virtual void statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus );
+    virtual void statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume, const Track& currentTrack, unsigned int progress );
+    virtual void statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume );
 
     virtual void getPlaylistsResponse( const Folder& rootfolder, void* userData );
     virtual void getTracksResponse( const std::deque<Track>& tracks, void* userData );
     virtual void getImageResponse( const void* data, size_t dataSize, void* userData );
     virtual void getAlbumResponse( const Album& album, void* userData );
     virtual void genericSearchCallback( const std::deque<Track>& listOfTracks, const std::string& didYouMean, void* userData );
-    virtual void getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress, void* userData );
-    virtual void getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, void* userData );
+    virtual void getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume, const Track& currentTrack, unsigned int progress, void* userData );
+    virtual void getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume, void* userData );
 
     virtual void getCurrentAudioEndpointsResponse( const std::set<std::string> endpoints, void* userData );
 
     /* Implements IAudioEndpointCtrlCallbackSubscriber */
-    virtual void getEndpointsResponse( const std::map<std::string, bool> endpoints, void* userData );
+    virtual void getEndpointsResponse( const AudioEndpointInfoList endpoints, void* userData );
     virtual void endpointsUpdatedNtf();
 };
 

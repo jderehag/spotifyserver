@@ -120,12 +120,14 @@ void LibSpotifyIf::getStatus( IMediaInterfaceCallbackSubscriber* subscriber, voi
             subscriber->getStatusResponse( PLAYBACK_IDLE,
                                            playbackHandler_.getRepeat(),
                                            playbackHandler_.getShuffle(),
+                                           audioOut_.getVolume(),
                                            userData );
             break;
         case TRACK_STATE_PAUSED:
             subscriber->getStatusResponse( PLAYBACK_PAUSED,
                                            playbackHandler_.getRepeat(),
                                            playbackHandler_.getShuffle(),
+                                           audioOut_.getVolume(),
                                            currentTrack_,
                                            progress_/10,
                                            userData );
@@ -134,13 +136,54 @@ void LibSpotifyIf::getStatus( IMediaInterfaceCallbackSubscriber* subscriber, voi
             subscriber->getStatusResponse( PLAYBACK_PLAYING,
                                            playbackHandler_.getRepeat(),
                                            playbackHandler_.getShuffle(),
+                                           audioOut_.getVolume(),
                                            currentTrack_,
                                            progress_/10,
                                            userData );
             break;
     }
 }
+void LibSpotifyIf::doStatusNtf()
+{
+    callbackSubscriberMtx_.lock();
+    std::set<IMediaInterfaceCallbackSubscriber*>::iterator it = callbackSubscriberList_.begin();
 
+    switch ( trackState_ )
+    {
+        case TRACK_STATE_NOT_LOADED:
+            for( ; it != callbackSubscriberList_.end(); it++)
+            {
+                (*it)->statusUpdateInd( PLAYBACK_IDLE,
+                                        playbackHandler_.getRepeat(),
+                                        playbackHandler_.getShuffle(),
+                                        audioOut_.getVolume() );
+            }
+            break;
+        case TRACK_STATE_PAUSED:
+            for( ; it != callbackSubscriberList_.end(); it++)
+            {
+                (*it)->statusUpdateInd( PLAYBACK_PAUSED,
+                                        playbackHandler_.getRepeat(),
+                                        playbackHandler_.getShuffle(),
+                                        audioOut_.getVolume(),
+                                        currentTrack_,
+                                        progress_/10 );
+            }
+            break;
+        case TRACK_STATE_PLAYING:
+            for( ; it != callbackSubscriberList_.end(); it++)
+            {
+                (*it)->statusUpdateInd( PLAYBACK_PLAYING,
+                                        playbackHandler_.getRepeat(),
+                                        playbackHandler_.getShuffle(),
+                                        audioOut_.getVolume(),
+                                        currentTrack_,
+                                        progress_/10 );
+            }
+            break;
+    }
+    callbackSubscriberMtx_.unlock();
+}
 
 /* called from playbackHandler, used when a track is ACTUALLY to be played,
  * All others should just enqueue to the PlayBackHandler */
@@ -205,8 +248,24 @@ void LibSpotifyIf::previous()
     }
 }
 
-void LibSpotifyIf::setShuffle( bool shuffleOn ) { playbackHandler_.setShuffle( shuffleOn ); }
-void LibSpotifyIf::setRepeat( bool repeatOn )   { playbackHandler_.setRepeat( repeatOn ); }
+void LibSpotifyIf::setShuffle( bool shuffleOn )
+{
+    playbackHandler_.setShuffle( shuffleOn );
+}
+
+void LibSpotifyIf::setRepeat( bool repeatOn )
+{
+    playbackHandler_.setRepeat( repeatOn );
+}
+
+void LibSpotifyIf::setVolume( uint8_t volume )
+{
+    if ( volume != audioOut_.getVolume() )
+    {
+        audioOut_.setVolume(volume);
+        doStatusNtf();
+    }
+}
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * *
  * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -249,12 +308,12 @@ void LibSpotifyIf::run()
 
 void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
 {
-	if(event->event_ != EVENT_ITERATE_MAIN_LOOP)
-	    log(LOG_DEBUG) << "Event received:" << getEventName(event);
-	switch(event->event_)
-	{
-		case EVENT_METADATA_UPDATED:
-			updateRootFolder(sp_session_playlistcontainer(spotifySession_));
+    if(event->event_ != EVENT_ITERATE_MAIN_LOOP)
+        log(LOG_DEBUG) << "Event received:" << getEventName(event);
+    switch(event->event_)
+    {
+        case EVENT_METADATA_UPDATED:
+            updateRootFolder(sp_session_playlistcontainer(spotifySession_));
 
             while(!pendingMetadata.empty())
             {
@@ -262,8 +321,7 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
                 postToEventThread(item);
                 pendingMetadata.pop();
             }
-
-			break;
+            break;
 
         case EVENT_GET_TRACKS:
             {
@@ -304,8 +362,8 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
                         log(LOG_WARN) << "Bad link: " << playlist_uri;
                     }
                 }
-                break;
             }
+            break;
 
         case EVENT_GET_ALBUM:
         {
@@ -492,21 +550,13 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
         case EVENT_STOP_REQ:
             if (trackState_ != TRACK_STATE_NOT_LOADED)
             {
-                callbackSubscriberMtx_.lock();
-                for( std::set<IMediaInterfaceCallbackSubscriber*>::iterator it = callbackSubscriberList_.begin();
-                        it != callbackSubscriberList_.end(); it++)
-                {
-                    (*it)->statusUpdateInd( PLAYBACK_IDLE,
-                                            playbackHandler_.getRepeat(),
-                                            playbackHandler_.getShuffle() );
-                }
-                callbackSubscriberMtx_.unlock();
-
                 sp_session_player_play(spotifySession_, 0);
                 audioOut_.flushAudioData();
 
                 trackState_ = TRACK_STATE_NOT_LOADED;
                 progress_ = 0;
+
+                doStatusNtf();
             }
             break;
 
@@ -517,17 +567,7 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
                 audioOut_.pause();
                 trackState_ = TRACK_STATE_PAUSED;
 
-                callbackSubscriberMtx_.lock();
-                for(std::set<IMediaInterfaceCallbackSubscriber*>::iterator it = callbackSubscriberList_.begin();
-                        it != callbackSubscriberList_.end(); it++)
-                {
-                    (*it)->statusUpdateInd( PLAYBACK_PAUSED,
-                                            playbackHandler_.getRepeat(),
-                                            playbackHandler_.getShuffle(),
-                                            currentTrack_,
-                                            progress_/10 );
-                }
-                callbackSubscriberMtx_.unlock();
+                doStatusNtf();
             }
             break;
 
@@ -539,17 +579,7 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
 
                 trackState_ = TRACK_STATE_PLAYING;
 
-                callbackSubscriberMtx_.lock();
-                for(std::set<IMediaInterfaceCallbackSubscriber*>::iterator it = callbackSubscriberList_.begin();
-                        it != callbackSubscriberList_.end(); it++)
-                {
-                    (*it)->statusUpdateInd( PLAYBACK_PLAYING,
-                                            playbackHandler_.getRepeat(),
-                                            playbackHandler_.getShuffle(),
-                                            currentTrack_,
-                                            progress_/10 );
-                }
-                callbackSubscriberMtx_.unlock();
+                doStatusNtf();
             }
             break;
 
@@ -564,15 +594,7 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
                     sp_session_player_unload(spotifySession_);
 
                     /* Tell all subscribers that the track has ended */
-                    callbackSubscriberMtx_.lock();
-                    for(std::set<IMediaInterfaceCallbackSubscriber*>::iterator it = callbackSubscriberList_.begin();
-                        it != callbackSubscriberList_.end(); it++)
-                    {
-                        (*it)->statusUpdateInd( PLAYBACK_IDLE,
-                            playbackHandler_.getRepeat(),
-                            playbackHandler_.getShuffle() );
-                    }
-                    callbackSubscriberMtx_.unlock();
+                    doStatusNtf();
 
                     /* notify playbackhandler so it can load a new track */
                     playbackHandler_.trackEndedInd();
@@ -619,18 +641,8 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
                         audioOut_.resume();
                         progress_ = 0;
 
-                        callbackSubscriberMtx_.lock();
                         /* Tell all subscribers that the track is playing */
-                        for(std::set<IMediaInterfaceCallbackSubscriber*>::iterator it = callbackSubscriberList_.begin();
-                            it != callbackSubscriberList_.end(); it++)
-                        {
-                            (*it)->statusUpdateInd( PLAYBACK_PLAYING,
-                                                    playbackHandler_.getRepeat(),
-                                                    playbackHandler_.getShuffle(),
-                                                    currentTrack_,
-                                                    progress_/10 );
-                        }
-                        callbackSubscriberMtx_.unlock();
+                        doStatusNtf();
                     }
                     else
                     {

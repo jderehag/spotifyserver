@@ -42,6 +42,8 @@ private:
     int adjustSamples_;
     void adjustSamples( AudioFifoData* afd );
 
+    uint8_t actualVolume_;
+
 public:
     AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config);
     virtual ~AudioEndpointLocal();
@@ -50,6 +52,9 @@ public:
     virtual void flushAudioData();
 
     virtual unsigned int getNumberOfQueuedSamples();
+
+    virtual void setMasterVolume( uint8_t volume );
+    virtual void setRelativeVolume( uint8_t volume );
 
     virtual std::string getId() const { return "local"; }
 

@@ -47,6 +47,7 @@ private:
     bool resetTimestamp_;
     uint32_t timestampBase_;
     uint32_t sampleCount_; /* total number of audio data samples since timestampBase_ was reset */
+    uint8_t masterVolume_;
 
 public:
     AudioDispatch();
@@ -54,6 +55,8 @@ public:
 
     void addEndpoint( AudioEndpoint& ep );
     void removeEndpoint( AudioEndpoint& ep );
+    void setVolume( uint8_t volume );
+    uint8_t getVolume();
 
     /* AudioEndpoint interface */
     int enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples);

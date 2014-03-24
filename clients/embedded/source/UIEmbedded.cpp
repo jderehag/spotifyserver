@@ -145,13 +145,15 @@ void UIEmbedded::getCurrentAudioEndpointsResponse( const std::set<std::string> e
 #define BACK_COL ASSEMBLE_RGB(55,55,55) //ASSEMBLE_RGB(71,71,71)
 #define PROGBAR_COL White
 #define FONT Font8x8
-#define PROGBAR_WIDTH (LCD_PIXEL_WIDTH - (2 * ( 4 + 5*8 + 4 )))
+#define PROGBAR_WIDTH (LCD_PIXEL_WIDTH - (2 * ( 4 + PROGRESS_WIDTH + 4 )) - VOLBAR_WIDTH)
 #define PROGBAR_POS (LCD_PIXEL_HEIGHT - 12)
-
-static void printText( uint16_t ypos, uint16_t xpos, const char* text, sFONT* font )
+#define PROGRESS_WIDTH 6*8 //xyz:xy
+#define VOLBAR_WIDTH 8
+#define WITH_LCD
+static void printText( uint16_t ypos, uint16_t xpos, uint16_t width, const char* text, sFONT* font )
 {
 #ifdef WITH_LCD
-    LCD_DisplayStringLineCol( ypos, xpos, text, TEXT_COL, BACK_COL, font );
+    LCD_DisplayStringLineCol( ypos, xpos, width, text, TEXT_COL, BACK_COL, font );
 #endif
 }
 
@@ -159,22 +161,32 @@ void UIEmbedded::drawProgress()
 {
 #ifdef WITH_LCD
     uint16_t progbarfill = currentTrackDuration_ ? (PROGBAR_WIDTH * progress_) / currentTrackDuration_ : 0;
-    LCD_DrawFullRect( 4 + 5*8 + 4, PROGBAR_POS, PROGBAR_WIDTH , 10, PROGBAR_COL, ASSEMBLE_RGB(20,20,20));
-    LCD_DrawFullRect( 4 + 5*8 + 4, PROGBAR_POS, progbarfill, 10, PROGBAR_COL, PROGBAR_COL );
+    LCD_DrawFullRect( 4 + PROGRESS_WIDTH + 4, PROGBAR_POS, PROGBAR_WIDTH , 10, PROGBAR_COL, ASSEMBLE_RGB(20,20,20));
+    LCD_DrawFullRect( 4 + PROGRESS_WIDTH + 4, PROGBAR_POS, progbarfill, 10, PROGBAR_COL, PROGBAR_COL );
     //LCD_DrawFullCircle( 4 + 5*8 + 4 + progbarfill, PROGBAR_POS + 5, 5, White );
 
     {
         std::stringstream out;
         out << (progress_/60 < 10 ? " " : "") << progress_/60 <<":" << (progress_%60 < 10 ? "0" : "") << progress_%60;
-        printText(PROGBAR_POS, 4, out.str().c_str(), &FONT);
+        printText(PROGBAR_POS, 4, PROGRESS_WIDTH, out.str().c_str(), &FONT);
     }
 
     {
         std::stringstream out;
         out << currentTrackDuration_/60 <<":" << (currentTrackDuration_%60 < 10 ? "0" : "") << currentTrackDuration_%60;// << " "; // last space is just to clear any remaining character from screen
-        printText(PROGBAR_POS, LCD_PIXEL_WIDTH - 4 - 5*8, out.str().c_str(), &FONT);
+        printText(PROGBAR_POS, LCD_PIXEL_WIDTH - 4 - VOLBAR_WIDTH - PROGRESS_WIDTH, PROGRESS_WIDTH, out.str().c_str(), &FONT);
     }
 #endif
+}
+
+#define VOLBAR_YPOS ( 24*8 + 2 )
+#define VOLBAR_HEIGHT ( LCD_PIXEL_HEIGHT - VOLBAR_YPOS - 2 )
+
+void UIEmbedded::drawVolumebar( uint8_t volume )
+{
+    uint16_t volbarfill = (VOLBAR_HEIGHT * volume) / 255;
+    LCD_DrawFullRect( LCD_PIXEL_WIDTH - VOLBAR_WIDTH, VOLBAR_YPOS, VOLBAR_WIDTH-2 , VOLBAR_HEIGHT, PROGBAR_COL, ASSEMBLE_RGB(20,20,20));
+    LCD_DrawFullRect( LCD_PIXEL_WIDTH - VOLBAR_WIDTH, VOLBAR_YPOS + VOLBAR_HEIGHT - volbarfill, VOLBAR_WIDTH-2, volbarfill, PROGBAR_COL, PROGBAR_COL );
 }
 
 void UIEmbedded::drawDefault()
@@ -186,6 +198,7 @@ void UIEmbedded::drawDefault()
     LCD_DrawFullRect( 0, ypos, LCD_PIXEL_WIDTH , LCD_PIXEL_HEIGHT - ypos, BACK_COL, BACK_COL);
 
     drawProgress();
+    drawVolumebar(0);
 #endif
 }
 
@@ -202,7 +215,7 @@ void UIEmbedded::progressUpdateTick()
     }
 }
 
-void UIEmbedded::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress )
+void UIEmbedded::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume, const Track& currentTrack, unsigned int progress )
 {
     playbackState = state;
     progress_ = progress/1000;
@@ -225,7 +238,7 @@ void UIEmbedded::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool
     unsigned int ypos = 24*8;
     ypos += 3;
 
-    printText( ypos, 4, currentTrack.getName().c_str(), &Font12x12 );
+    printText( ypos, 4, LCD_PIXEL_WIDTH - VOLBAR_WIDTH, currentTrack.getName().c_str(), &Font12x12 );
     ypos += 13;
 
     std::stringstream out;
@@ -237,21 +250,24 @@ void UIEmbedded::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool
             out << ", ";
     }
 
-    printText(ypos, 4, out.str().c_str(), &FONT);
+    printText( ypos, 4, LCD_PIXEL_WIDTH - VOLBAR_WIDTH, out.str().c_str(), &FONT);
     ypos += 9;
 
-    printText( ypos, 4, currentTrack.getAlbum().c_str(), &FONT );
+    printText( ypos, 4, LCD_PIXEL_WIDTH - VOLBAR_WIDTH, currentTrack.getAlbum().c_str(), &FONT );
+
+    drawVolumebar( volume );
 #endif
 
 }
 
-void UIEmbedded::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus )
+void UIEmbedded::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume )
 {
     playbackState = state;
     progress_ = 0;
     currentTrackDuration_ = 0;
 #ifdef WITH_LCD
     drawDefault();
+    drawVolumebar( volume );
 #endif
     if ( playbackState == PLAYBACK_PLAYING )
     {
@@ -263,13 +279,13 @@ void UIEmbedded::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool
     }
 }
 
-void UIEmbedded::getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress, void* userData )
+void UIEmbedded::getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume, const Track& currentTrack, unsigned int progress, void* userData )
 {
-    statusUpdateInd( state, repeatStatus, shuffleStatus, currentTrack, progress );
+    statusUpdateInd( state, repeatStatus, shuffleStatus, volume, currentTrack, progress );
 }
-void UIEmbedded::getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, void* userData )
+void UIEmbedded::getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume, void* userData )
 {
-    statusUpdateInd( state, repeatStatus, shuffleStatus );
+    statusUpdateInd( state, repeatStatus, shuffleStatus, volume );
 }
 
 

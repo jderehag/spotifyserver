@@ -104,12 +104,9 @@ void LcdLog::updateDisplay()
     unsigned int i = firstLine_;
     bufferMtx_.lock();
 
-    //for( Util::CircularQueue<std::string>::const_iterator it = buffer_.begin(); it != buffer_.end() ; it++, i++ )
     for( unsigned int j = (nLines_ - lines); j < nLines_; j++, i++ )
     {
-        //LCD_ClearLine( LINE(i) );
-        //LCD_DisplayStringLine( LINE(i), (*it).c_str() );
-        LCD_DisplayStringLine( i*Font8x8.Height, buffer[(head+j)%nLines_], TEXT_COL, BACK_COL, &Font8x8 );
+        LCD_DisplayStringLine( i*Font8x8.Height, LCD_PIXEL_WIDTH, buffer[(head+j)%nLines_], TEXT_COL, BACK_COL, &Font8x8 );
     }
     bufferMtx_.unlock();
 }

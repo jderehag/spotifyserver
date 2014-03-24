@@ -35,7 +35,7 @@
 
 namespace Platform {
 
-AudioDispatch::AudioDispatch() : resetTimestamp_(true), sampleCount_(0)
+AudioDispatch::AudioDispatch() : resetTimestamp_(true), sampleCount_(0), masterVolume_(255)
 {
 }
 
@@ -53,6 +53,7 @@ void AudioDispatch::addEndpoint( AudioEndpoint& ep )
     }
 
     audioEndpoints_.insert( &ep );
+    ep.setMasterVolume( masterVolume_ );
     mtx.unlock();
 }
 
@@ -63,6 +64,22 @@ void AudioDispatch::removeEndpoint( AudioEndpoint& ep )
     mtx.unlock();
 }
 
+void AudioDispatch::setVolume( uint8_t volume )
+{
+    masterVolume_ = volume;
+
+    mtx.lock();
+    for(AudioEndpointContainer::const_iterator it = audioEndpoints_.begin(); it != audioEndpoints_.end(); ++it)
+    {
+        (*it)->setMasterVolume( volume );
+    }
+    mtx.unlock();
+}
+
+uint8_t AudioDispatch::getVolume()
+{
+    return masterVolume_;
+}
 
 int AudioDispatch::enqueueAudioData(unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples)
 {

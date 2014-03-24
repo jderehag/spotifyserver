@@ -35,7 +35,7 @@
 
 using namespace LibSpotify;
 
-class Client : IMediaInterfaceCallbackSubscriber, IAudioEndpointCtrlCallbackSubscriber, public SocketPeer
+class Client : IMediaInterfaceCallbackSubscriber, IAudioEndpointCtrlCallbackSubscriber, IAudioEndpointRemoteCtrlInterface, public SocketPeer
 {
 private:
 
@@ -60,18 +60,19 @@ private:
     void pausedInd(Track& currentTrack);
     void trackEndedInd();
 
+    /* implements IMediaInterfaceCallbackSubscriber */
     virtual void connectionState( bool up );
     virtual void rootFolderUpdatedInd();
-    virtual void statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress );
-    virtual void statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus );
+    virtual void statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume, const Track& currentTrack, unsigned int progress );
+    virtual void statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume );
 
     virtual void getPlaylistsResponse( const Folder& rootfolder, void* userData );
     virtual void getTracksResponse( const std::deque<Track>& tracks, void* userData );
     virtual void getImageResponse( const void* data, size_t dataSize, void* userData );
     virtual void getAlbumResponse( const Album& album, void* userData );
     virtual void genericSearchCallback( const std::deque<Track>& listOfTracks, const std::string& didYouMean, void* userData );
-    virtual void getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress, void* userData );
-    virtual void getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, void* userData );
+    virtual void getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume, const Track& currentTrack, unsigned int progress, void* userData );
+    virtual void getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume, void* userData );
 
     virtual void getCurrentAudioEndpointsResponse( const std::set<std::string> endpoints, void* userData );
 
@@ -85,13 +86,15 @@ private:
     void handlePlayReq(const Message* msg);
     void handlePlayTrackReq(const Message* msg);
     void handlePlayControlReq(const Message* msg);
+    void handleSetVolumeReq(const Message* msg);
     void handleGetImageReq(const Message* msg);
     void handleGenericSearchReq(const Message* msg);
     void handleGetAlbumReq(const Message* msg);
     void handleGetCurrentAudioEpReq(const Message* msg);
 
 
-    virtual void getEndpointsResponse( const std::map<std::string, bool> endpoints, void* userData );
+    /* implements IAudioEndpointCtrlCallbackSubscriber */
+    virtual void getEndpointsResponse( const AudioEndpointInfoList endpoints, void* userData );
     virtual void endpointsUpdatedNtf();
 
     void handleCreateAudioEpReq(const Message* msg);
@@ -100,6 +103,9 @@ private:
     void handleRemAudioEpReq(const Message* msg);
     void handleGetAudioEpReq(const Message* msg);
 
+    /* implements IAudioEndpointRemoteCtrlInterface */
+    virtual void setMasterVolume( uint8_t volume );
+    virtual void setRelativeVolume( uint8_t volume );
 public:
 
     Client(Socket* socket, MediaInterface& spotifyif, AudioEndpointCtrlInterface& audioCtrl);

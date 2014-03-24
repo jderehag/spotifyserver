@@ -88,13 +88,12 @@ void AudioEndpointManager::removeEndpoint( std::string id, IAudioEndpointCtrlCal
 
 void AudioEndpointManager::getEndpoints( IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData )
 {
-    std::map<std::string, bool> result;
+    AudioEndpointInfoList result;
 
     AudioEndpointMap::const_iterator it = audioEndpoints.begin();
     for( ; it != audioEndpoints.end(); it++ )
     {
-        log(LOG_DEBUG) << (*it).first->getId();
-        result.insert( std::pair<std::string, bool>((*it).first->getId(), (*it).second != NULL ) );
+        result.push_back( AudioEndpointInfo((*it).first->getId(), (*it).second != NULL, (*it).first->getRelativeVolume()) );
     }
 
     subscriber->getEndpointsResponse( result, userData );
@@ -113,4 +112,16 @@ Platform::AudioEndpoint* AudioEndpointManager::getEndpoint( std::string id )
     }
     return NULL;
 }
+
+void AudioEndpointManager::setRelativeVolume( std::string id, uint8_t volume )
+{
+    Platform::AudioEndpoint* ep = getEndpoint( id );
+    if ( ep && volume != ep->getRelativeVolume() )
+    {
+        ep->setRelativeVolume( volume );
+
+        doEndpointsUpdatedNotification();
+    }
+}
+
 

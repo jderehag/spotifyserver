@@ -32,6 +32,7 @@
 #include <Wmcodecdsp.h>
 #include <Mmdeviceapi.h>
 #include <Audioclient.h>
+#include <Audiopolicy.h>
 #include <Mfapi.h>
 #include <Mftransform.h>
 #include <Mferror.h>
@@ -71,6 +72,8 @@ const CLSID CLSID_CResamplerMediaObject = __uuidof(CResamplerMediaObject);
 const IID IID_IMMDeviceEnumerator = __uuidof(IMMDeviceEnumerator);
 const IID IID_IAudioClient = __uuidof(IAudioClient);
 const IID IID_IAudioRenderClient = __uuidof(IAudioRenderClient);
+const IID IID_ISimpleAudioVolume = __uuidof(ISimpleAudioVolume);
+const IID IID_IAudioSessionControl = __uuidof(IAudioSessionControl);
 
 void AudioEndpointLocal::run()
 {
@@ -82,7 +85,14 @@ void AudioEndpointLocal::run()
     IMMDevice *pDevice = NULL;
     IAudioClient *pAudioClient = NULL;
     IAudioRenderClient *pRenderClient = NULL;
+    ISimpleAudioVolume * pStreamVolume = NULL;
+    IAudioSessionControl* pSessionControl = NULL;
+
+    IMFMediaType* pInputType = NULL;
+    IMFMediaType* pOutputType = NULL;
+    IMFTransform* pResampler = NULL;
     WAVEFORMATEX *pwfxOut = NULL;
+
     UINT32 bufferFrameCount;
     UINT32 numFramesAvailable;
     UINT32 numFramesPadding;
@@ -94,6 +104,7 @@ void AudioEndpointLocal::run()
     bool playing = false;
     int msInResampler = 0;
     int msOutResampler = 0;
+    uint8_t lastVolume = 0;
 
     while(isCancellationPending() == false)
     {
@@ -112,18 +123,6 @@ void AudioEndpointLocal::run()
                         NULL, (void**)&pAudioClient) );
 
         HRC( pAudioClient->GetMixFormat(&pwfxOut) );
-        /*WAVEFORMATEXTENSIBLE tmp;
-        WAVEFORMATEX* pwfxt = (WAVEFORMATEX*)&tmp;
-        pwfxt->wFormatTag = WAVE_FORMAT_EXTENSIBLE;
-        pwfxt->nChannels = afd->channels;
-        pwfxt->nSamplesPerSec = afd->rate;
-        pwfxt->wBitsPerSample = afd->channels*sizeof(int16_t)*8;
-        pwfxt->nAvgBytesPerSec = pwfxt->wBitsPerSample*pwfxt->nSamplesPerSec/8;
-        pwfxt->nBlockAlign = 8;
-        pwfxt->cbSize = 22;
-        tmp.SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
-
-        HRC( pAudioClient->IsFormatSupported( AUDCLNT_SHAREMODE_SHARED, pwfxt, &pwfx );*/
 
         HRC( pAudioClient->Initialize(
                                 AUDCLNT_SHAREMODE_SHARED,
@@ -139,77 +138,32 @@ void AudioEndpointLocal::run()
                 IID_IAudioRenderClient,
                 (void**)&pRenderClient) );
 
+        HRC( pAudioClient->GetService(
+                IID_IAudioSessionControl,
+                (void**)&pSessionControl) );
+
+        HRC( pAudioClient->GetService(
+                IID_ISimpleAudioVolume,
+                (void**)&pStreamVolume) );
 
         HRC( MFStartup(MF_VERSION, MFSTARTUP_NOSOCKET) );
-// check if SUCCEEDED(hr)
 
-//2. Create Resampler MFT Object
-/*
-CComPtr<IUnknown> spTransformUnk;
-IMFTransform *pTransform = NULL; //< this is Resampler MFT
-
-HRC( CoCreateInstance(CLSID_CResamplerMediaObject, NULL, CLSCTX_INPROC_SERVER,
-        IID_IUnknown, (void**)&spTransformUnk);
-
-HRC( spTransformUnk->QueryInterface(IID_PPV_ARGS(&pTransform));
-
-CComPtr<IWMResamplerProps> spResamplerProps;
-HRC( spTransformUnk->QueryInterface(IID_PPV_ARGS(&spResamplerProps);
-HRC( spResamplerProps->SetHalfFilterLength(60); //< best conversion quality
-*/
-   IMFMediaType* pInputType = NULL;
-   IMFMediaType* pOutputType = NULL;
-   IMFTransform* pResampler = NULL;
-
-   HRC( CoCreateInstance(CLSID_CResamplerMediaObject, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pResampler)) );
-
-   DWORD instreamid;
-   DWORD outstreamid;
-
-   hr = pResampler->GetStreamIDs(1, &instreamid, 1, &outstreamid );
-
-   if ( hr == E_NOTIMPL )
-   {
-       instreamid = outstreamid = 0;
-   }
-
-//3. Specify input/output PCM format to Resampler MFT
-// set input PCM format parameters to fmt
-
-
-
-//4. Send stream start message to Resampler MFT
-
-
-
-
-        /*if (!device)
-        {
-            log(LOG_EMERG) << "failed to open device";
-            Sleep(1000);
-            continue;
-        }
-
-        context = alcCreateContext(device, NULL);
-        alcMakeContextCurrent(context);
-        alListenerf(AL_GAIN, 1.0f);
-        alDistanceModel(AL_NONE);
-        alGenBuffers((ALsizei)NUM_BUFFERS, buffers);
-        alGenSources(1, &source);*/
+        HRC( CoCreateInstance(CLSID_CResamplerMediaObject, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pResampler)) );
 
         while(isCancellationPending() == false)
         {
             Sleep(1);
-            /*if ((error = alcGetError(device)) != AL_NO_ERROR) 
+
+            if ( lastVolume != actualVolume_ )
             {
-                log(LOG_EMERG) << "openal al error: " << error;
-                break;
-            }*/
+                float vol = (float)actualVolume_ / 255;
+                pStreamVolume->SetMasterVolume( vol, NULL );
+                lastVolume = actualVolume_;
+            }
 
             /* check if there's more audio available */
             if ( afd == NULL && ( afd = fifo_.getFifoDataTimedWait(10) ) == NULL )
                 continue;
-
 
             if ( afd->rate != prevrate || afd->channels != prevchannels )
             {
@@ -255,7 +209,7 @@ HRC( spResamplerProps->SetHalfFilterLength(60); //< best conversion quality
                 REFERENCE_TIME outputLatency = 0;
                 pAudioClient->GetCurrentPadding( &totalBufferedSamples );
                 pAudioClient->GetStreamLatency( &outputLatency );
-                int timeToBufferUnderrun = (totalBufferedSamples * 1000 / pwfxOut->nSamplesPerSec) + outputLatency/REFTIMES_PER_MILLISEC;
+                int timeToBufferUnderrun = (totalBufferedSamples * 1000 / pwfxOut->nSamplesPerSec) + 30/*outputLatency/REFTIMES_PER_MILLISEC*/;
                 int offset = timeToPlayThisPacket - timeToBufferUnderrun;
                 
                 timetoplaysamples[j] = offset;
@@ -325,7 +279,7 @@ HRC( spResamplerProps->SetHalfFilterLength(60); //< best conversion quality
             HRC( pSample->AddBuffer(pBuffer) );
 
             msInResampler += afd->nsamples;
-            HRC( pResampler->ProcessInput(instreamid, pSample, 0) );
+            HRC( pResampler->ProcessInput(0, pSample, 0) );
 
             pBuffer->Release();
             pBuffer = NULL;

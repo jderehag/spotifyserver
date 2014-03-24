@@ -40,11 +40,17 @@ extern bool simPacketDrop;
 
 namespace Platform {
 
-AudioEndpointRemote::AudioEndpointRemote( const std::string& id, const std::string& serveraddr, 
-                                          const std::string& serverport, unsigned int bufferNSecs) : Platform::Runnable( true, SIZE_SMALL, PRIO_HIGH ),
-                                                                                                     sock_(SOCKTYPE_DATAGRAM),
-                                                                                                     id_(id),
-                                                                                                     remoteBufferSize(0)
+AudioEndpointRemote::AudioEndpointRemote( IAudioEndpointRemoteCtrlInterface* ctrlIf,
+                                          const std::string& id,
+                                          const std::string& serveraddr,
+                                          const std::string& serverport,
+                                          uint8_t volume,
+                                          unsigned int bufferNSecs) : AudioEndpoint(volume),
+                                                                      Platform::Runnable( true, SIZE_SMALL, PRIO_HIGH ),
+                                                                      sock_(SOCKTYPE_DATAGRAM),
+                                                                      id_(id),
+                                                                      remoteBufferSize(0),
+                                                                      ctrlIf_(ctrlIf)
 {
     fifo_.setFifoBuffer(bufferNSecs);
     sock_.Connect(serveraddr, serverport);
@@ -234,5 +240,14 @@ void AudioEndpointRemote::destroy()
     joinThread();
 }
 
-
+void AudioEndpointRemote::setMasterVolume( uint8_t volume )
+{
+    masterVolume_ = volume;
+    ctrlIf_->setMasterVolume(volume);
+}
+void AudioEndpointRemote::setRelativeVolume( uint8_t volume )
+{
+    relativeVolume_ = volume;
+    ctrlIf_->setRelativeVolume(volume);
+}
 }

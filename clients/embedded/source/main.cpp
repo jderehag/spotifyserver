@@ -46,6 +46,7 @@
 #ifdef WITH_LCD
 #include "stm32f4_discovery_lcd.h"
 #include <stdio.h>
+#include <string.h>
 #endif
 
 #include "Platform/Threads/Runnable.h"
@@ -107,13 +108,13 @@ void LedFlasher::run()
 
         /* debug counters and stuff */
         sprintf( tmp, "%5d", clockDrift );
-        LCD_DisplayStringLineCol( 0, 2*font->Width, tmp, White, Black, font );
+        LCD_DisplayStringLineCol( 0, 2*font->Width, strlen(tmp)*font->Width, tmp, White, Black, font );
 
         /* clock in top right corner */
         time (&rawtime);
         localtime_r (&rawtime, &timeinfo);
         strftime( tmp, sizeof(tmp), "%H:%M:%S", &timeinfo );
-        LCD_DisplayStringLineCol( 0, 31*font->Width, tmp, White, Black, font );
+        LCD_DisplayStringLineCol( 0, 31*font->Width, 8*font->Width, tmp, White, Black, font );
 
 
 #ifdef DEBUG_COUNTERS

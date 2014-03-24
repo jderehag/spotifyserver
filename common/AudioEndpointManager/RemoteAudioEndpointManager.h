@@ -37,9 +37,11 @@ class RemoteAudioEndpointManager : public AudioEndpointCtrlInterface, public IMe
 private:
     Messenger& messenger_;
     AudioEndpointRemoteSocketServer* server;
+    Platform::AudioEndpoint* ep_;
 
     bool connectionUp_;
     void sendCreateEndpointMessage();
+    void handleSetVolumeReq( const Message* msg );
 public:
     RemoteAudioEndpointManager( Messenger& m );
     virtual ~RemoteAudioEndpointManager();
@@ -49,6 +51,8 @@ public:
     virtual void addEndpoint( std::string id, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData );
     virtual void removeEndpoint( std::string id, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData );
     virtual void getEndpoints( IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData );
+
+    virtual void setRelativeVolume( std::string id, uint8_t volume );
 
     virtual void connectionState( bool up );
     virtual void receivedMessage( const Message* msg );

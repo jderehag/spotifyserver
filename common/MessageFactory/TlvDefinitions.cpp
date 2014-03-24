@@ -26,6 +26,7 @@
  */
 
 #include "TlvDefinitions.h"
+#include <iostream>
 
 #define STR(n) case n: return #n
 
@@ -58,6 +59,8 @@ const char* messageTypeToString(const MessageType_t type)
         STR(PLAY_RSP);
         STR(PLAY_CONTROL_REQ);
         STR(PLAY_CONTROL_RSP);
+        STR(SET_VOLUME_REQ);
+        STR(SET_VOLUME_RSP);
 
         STR(ADD_AUDIO_ENDPOINTS_REQ);
         STR(ADD_AUDIO_ENDPOINTS_RSP);
@@ -72,10 +75,12 @@ const char* messageTypeToString(const MessageType_t type)
         STR(DELETE_AUDIO_ENDPOINT_RSP);
         STR(GET_AUDIO_ENDPOINTS_REQ);
         STR(GET_AUDIO_ENDPOINTS_RSP);
+        STR(AUDIO_ENDPOINTS_UPDATED_IND);
 
         STR(AUDIO_DATA_IND);
 
         default:
+            std::cout << "JENS FIX THIS " << type << std::endl;
             return "Unknown MessageType";
     }
 
@@ -132,6 +137,7 @@ const char* tlvTypeToString(const TlvType_t type)
         STR(TLV_AUDIO_EP_PROTOCOL);
 
         default:
+            std::cout << "JENS FIX THIS " << type << std::endl;
             return "Unknown TlvType";
     }
 

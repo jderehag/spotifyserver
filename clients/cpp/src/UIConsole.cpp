@@ -116,6 +116,15 @@ void UIConsole::run()
             continue;
         }
 
+        if ( argv[0] == "setVol")
+        {
+            if ( argc == 2 )
+                m_.setVolume( atoi( argv[1].c_str() ) );
+            else if ( argc == 3 )
+                audioMgr_.setRelativeVolume( argv[1], atoi( argv[2].c_str() ) );
+            continue;
+        }
+
         //handle the old commands the old way for now..
         c = argv[0][0];
         switch(c)
@@ -265,9 +274,9 @@ void UIConsole::genericSearchCallback( const std::deque<Track>& listOfTracks, co
     printTracks( listOfTracks );
 }
 
-void UIConsole::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress )
+void UIConsole::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume, const Track& currentTrack, unsigned int progress )
 {
-    statusUpdateInd( state, repeatStatus, shuffleStatus );
+    statusUpdateInd( state, repeatStatus, shuffleStatus, volume );
 
     std::cout << "  Current track: " << currentTrack.getName() << "  -  "  << currentTrack.getLink() << std::endl;
     std::cout << "    " << currentTrack.getAlbum() << "  -  "  << currentTrack.getAlbumLink() << std::endl;
@@ -279,7 +288,7 @@ void UIConsole::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool 
     std::cout << "  Duration " << currentTrack.getDurationMillisecs() << std::endl;
     std::cout << "  Progress " << progress << std::endl << std::endl;
 }
-void UIConsole::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus )
+void UIConsole::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume )
 {
     switch( state )
     {
@@ -287,15 +296,15 @@ void UIConsole::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool 
         case PLAYBACK_PLAYING: std::cout << "  Playback playing "; break;
         case PLAYBACK_PAUSED:  std::cout << "  Playback paused  "; break;
     }
-    std::cout << " - Repeat " << (repeatStatus ? "on" : "off") << ", Shuffle " << (shuffleStatus ? "on" : "off") << std::endl << std::endl;
+    std::cout << " - Repeat " << (repeatStatus ? "on" : "off") << ", Shuffle " << (shuffleStatus ? "on" : "off") << ", Volume " << (uint32_t)volume << std::endl << std::endl;
 }
-void UIConsole::getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, const Track& currentTrack, unsigned int progress, void* userData )
+void UIConsole::getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume, const Track& currentTrack, unsigned int progress, void* userData )
 {
-    statusUpdateInd( state, repeatStatus, shuffleStatus, currentTrack, progress );
+    statusUpdateInd( state, repeatStatus, shuffleStatus, volume, currentTrack, progress );
 }
-void UIConsole::getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, void* userData )
+void UIConsole::getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume, void* userData )
 {
-    statusUpdateInd( state, repeatStatus, shuffleStatus );
+    statusUpdateInd( state, repeatStatus, shuffleStatus, volume );
 }
 
 
@@ -310,13 +319,13 @@ void UIConsole::getCurrentAudioEndpointsResponse( const std::set<std::string> en
     std::cout << std::endl;
 }
 
-void UIConsole::getEndpointsResponse( const std::map<std::string, bool> endpoints, void* userData )
+void UIConsole::getEndpointsResponse( const AudioEndpointInfoList endpoints, void* userData )
 {
     std::cout << "Endpoints:" << std::endl;
 
-    for (std::map<std::string, bool>::const_iterator it = endpoints.begin(); it != endpoints.end(); it++)
+    for (AudioEndpointInfoList::const_iterator it = endpoints.begin(); it != endpoints.end(); it++)
     {
-        std::cout << "  " << (*it).first << ": " << ((*it).second ? "active" : "inactive") << std::endl;
+        std::cout << "  " << (*it).id << ": " << ((*it).active ? "active" : "inactive") << ", vol " << (uint32_t)(*it).relativeVolume << std::endl;
     }
     std::cout << std::endl;
 }

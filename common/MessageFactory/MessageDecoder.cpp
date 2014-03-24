@@ -116,6 +116,7 @@ TlvContainer* MessageDecoder::decodeGroupTlv()
             case TLV_PORT:
             case TLV_AUDIO_EP_PROTOCOL:
             case TLV_STATE:
+            case TLV_VOLUME:
             {
                 groupTlv->addTlv(getCurrentTlv(), getTlvIntData());
                 nextTlv();
@@ -579,6 +580,7 @@ void MessageDecoder::decodeTlvs(TlvContainer* parent, uint32_t len)
             case TLV_PLAY_OPERATION:
             case TLV_PLAY_MODE_SHUFFLE:
             case TLV_PLAY_MODE_REPEAT:
+            case TLV_VOLUME:
             case TLV_PROTOCOL_VERSION_MAJOR:
             case TLV_PROTOCOL_VERSION_MINOR:
             case TLV_FAILURE:

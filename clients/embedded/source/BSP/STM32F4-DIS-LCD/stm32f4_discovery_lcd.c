@@ -647,17 +647,18 @@ void LCD_DisplayChar(uint16_t Line, uint16_t Column, uint8_t Ascii, uint16_t Col
   * @param  *ptr: pointer to string to display on LCD.
   * @retval None
   */
-void LCD_DisplayStringLine(uint16_t Line, const char *ptr, uint16_t Colour, uint16_t BackColour, sFONT* Font )
+void LCD_DisplayStringLine(uint16_t Line, uint16_t Width, const char *ptr, uint16_t Colour, uint16_t BackColour, sFONT* Font )
 {
-    LCD_DisplayStringLineCol( Line, 0, ptr, Colour, BackColour, Font );
+    LCD_DisplayStringLineCol( Line, 0, Width, ptr, Colour, BackColour, Font );
 }
-void LCD_DisplayStringLineCol(uint16_t Line, uint16_t Column, const char *ptr, uint16_t Colour, uint16_t BackColour, sFONT* Font)
+void LCD_DisplayStringLineCol(uint16_t Line, uint16_t Column, uint16_t Width, const char *ptr, uint16_t Colour, uint16_t BackColour, sFONT* Font)
 {
 
   uint16_t refcolumn = Column;
+  uint8_t nchars = Width/Font->Width;
 
   /* Send the string character by character on lCD */
-  while (*ptr != 0)
+  while (*ptr != 0 && nchars > 0)
   {
     /* Display one character on LCD */
     LCD_DisplayChar(Line, refcolumn, (uint8_t)*ptr, Colour, BackColour, Font);
@@ -668,6 +669,7 @@ void LCD_DisplayStringLineCol(uint16_t Line, uint16_t Column, const char *ptr, u
 	}
     /* Point on the next character */
     ptr++;
+    nchars--;
   }
 }
 

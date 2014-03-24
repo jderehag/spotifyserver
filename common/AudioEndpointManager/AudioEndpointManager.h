@@ -52,6 +52,9 @@ public:
     virtual void addEndpoint( std::string ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData );
     virtual void removeEndpoint( std::string ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData );
     virtual void getEndpoints( IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData );
+
+    virtual void setRelativeVolume( std::string id, uint8_t volume );
+
 };
 
 #endif /* AUDIOENDPOINTMANAGER_H_ */

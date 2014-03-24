@@ -30,7 +30,7 @@
 #include "MessageFactory/TlvDefinitions.h"
 #include "applog.h"
 
-RemoteAudioEndpointManager::RemoteAudioEndpointManager( Messenger& m ) : messenger_(m), server(NULL), connectionUp_(false)
+RemoteAudioEndpointManager::RemoteAudioEndpointManager( Messenger& m ) : messenger_(m), server(NULL), ep_(NULL), connectionUp_(false)
 {
     messenger_.addSubscriber( this );
 }
@@ -50,6 +50,7 @@ void RemoteAudioEndpointManager::sendCreateEndpointMessage()
     //todo: get necessary info from udp listener thread and ep and put in tlv's
     epTlv->addTlv( TLV_PORT, 7789 );
     epTlv->addTlv( TLV_AUDIO_EP_PROTOCOL, LIGHTWEIGHT_UDP );
+    epTlv->addTlv( TLV_VOLUME, ep_->getRelativeVolume() );
 
     /* and a bunch of others... */
     msg->addTlv(epTlv);
@@ -60,7 +61,7 @@ void RemoteAudioEndpointManager::sendCreateEndpointMessage()
 void RemoteAudioEndpointManager::createEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData )
 {
     server = new AudioEndpointRemoteSocketServer( ep );
-
+    ep_ = &ep;
     if ( connectionUp_ )
     {
         sendCreateEndpointMessage();
@@ -69,6 +70,7 @@ void RemoteAudioEndpointManager::createEndpoint( Platform::AudioEndpoint& ep, IA
 
 void RemoteAudioEndpointManager::deleteEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData )
 {
+    ep_ = NULL;
     Message* msg = new Message( DELETE_AUDIO_ENDPOINT_REQ );
     messenger_.queueRequest( msg, this, NULL );
 }
@@ -95,6 +97,17 @@ void RemoteAudioEndpointManager::removeEndpoint( std::string id, IAudioEndpointC
     messenger_.queueRequest( msg, this, new PendingAudioCtrlRequestData(subscriber, userData) );
 }
 
+void RemoteAudioEndpointManager::setRelativeVolume( std::string id, uint8_t volume )
+{
+    Message* msg = new Message( SET_VOLUME_REQ );
+    TlvContainer* tlv = new TlvContainer( TLV_CLIENT );
+    if ( id != "" )
+        tlv->addTlv( TLV_LINK, id );
+    tlv->addTlv( TLV_VOLUME, volume );
+    msg->addTlv( tlv );
+    messenger_.queueRequest( msg, this, NULL );
+}
+
 void RemoteAudioEndpointManager::connectionState( bool up )
 {
     if ( up )
@@ -110,10 +123,45 @@ void RemoteAudioEndpointManager::receivedMessage( const Message* msg )
         case AUDIO_ENDPOINTS_UPDATED_IND:
             doEndpointsUpdatedNotification();
             break;
+        case SET_VOLUME_REQ:
+            handleSetVolumeReq( msg );
+            break;
         default:
             break;
     }
 }
+
+void RemoteAudioEndpointManager::handleSetVolumeReq( const Message* msg )
+{
+    if ( ep_ )
+    {
+        for (TlvContainer::const_iterator it = msg->getTlvRoot()->begin() ; it != msg->getTlvRoot()->end() ; it++)
+        {
+            Tlv* tlv = (*it);
+            log(LOG_DEBUG) << *tlv;
+
+            switch(tlv->getType())
+            {
+                case TLV_VOLUME:
+                    ep_->setMasterVolume( ((IntTlv*)tlv)->getVal() );
+                    break;
+                case TLV_CLIENT:
+                {
+                    IntTlv* volume = (IntTlv*)((TlvContainer*)tlv)->getTlv( TLV_VOLUME );
+                    if ( volume )
+                        ep_->setRelativeVolume( volume->getVal() );
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+    }
+
+    Message* rsp = msg->createResponse();
+    messenger_.queueMessage( rsp );
+}
+
 void RemoteAudioEndpointManager::receivedResponse( const Message* rsp, const Message* req, void* userData )
 {
     PendingAudioCtrlRequestData* reqData = (PendingAudioCtrlRequestData*) userData;
@@ -131,7 +179,7 @@ void RemoteAudioEndpointManager::receivedResponse( const Message* rsp, const Mes
     {
     case GET_AUDIO_ENDPOINTS_RSP:
         {
-            std::map<std::string, bool> endpoints;
+            AudioEndpointInfoList endpoints;
 
             for ( TlvContainer::const_iterator it = rsp->getTlvRoot()->begin();
                 it != rsp->getTlvRoot()->end(); it++ )
@@ -141,8 +189,9 @@ void RemoteAudioEndpointManager::receivedResponse( const Message* rsp, const Mes
                     TlvContainer* tlv = (TlvContainer*)(*it);
                     StringTlv* name = (StringTlv*)tlv->getTlv( TLV_LINK );
                     IntTlv* active = (IntTlv*)tlv->getTlv( TLV_STATE );
+                    IntTlv* volume = (IntTlv*)tlv->getTlv( TLV_VOLUME );
                     if ( name && active )
-                        endpoints.insert(std::pair<std::string, bool>(name->getString(), active->getVal() != 0 ));
+                        endpoints.push_back( AudioEndpointInfo( name->getString(), (active->getVal()!=0), volume->getVal() ) );
                 }
             }
 

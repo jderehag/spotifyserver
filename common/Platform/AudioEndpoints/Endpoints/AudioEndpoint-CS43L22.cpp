@@ -69,10 +69,11 @@ EventGroupHandle_t xAvailableBuffers;
 
 static void AudioCallbackFromISR(void *context __attribute__((unused)),int buffer);
 
-AudioEndpointLocal::AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config) : AudioEndpoint(false),
+AudioEndpointLocal::AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config) : AudioEndpoint(165, false),
                                                                                             Platform::Runnable(false, SIZE_SMALL, PRIO_VERY_HIGH),
                                                                                             config_(config),
-                                                                                            adjustSamples_(0)
+                                                                                            adjustSamples_(0),
+                                                                                            actualVolume_(0)
 {
     startThread();
 }
@@ -91,6 +92,7 @@ void AudioEndpointLocal::run()
     unsigned int currentrate = 0;
     unsigned int i;
     bool isPlaying = false;
+    uint8_t lastVolume = 0;
 
     for ( i = 0; i < NOF_AUDIO_BUFFERS; i++)
     {
@@ -100,6 +102,8 @@ void AudioEndpointLocal::run()
 
     xAvailableBuffers = xEventGroupCreate();
     xEventGroupSetBits( xAvailableBuffers, BUFFER1 | BUFFER2 );
+
+    SetAudioVolume(0);
 
     while(isCancellationPending() == false)
     {
@@ -114,9 +118,14 @@ void AudioEndpointLocal::run()
             uint8_t thisBufferNum;
             EventBits_t avail;
 
+            if ( actualVolume_ != lastVolume )
+            {
+                SetAudioVolume(actualVolume_);
+                lastVolume = actualVolume_;
+            }
+
             if ( !isPlaying )
             {
-                SetAudioVolume(165);
                 EnableAudio(Audio44100HzSettings, AudioCallbackFromISR, NULL);
                 isPlaying = true;
             }
