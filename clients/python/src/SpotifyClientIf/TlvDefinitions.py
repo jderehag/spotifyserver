@@ -54,6 +54,8 @@ class TlvMessageType:
     PLAY_RSP            = int('0x302', 16) | RSP_BIT
     PLAY_CONTROL_REQ    = int('0x303', 16) | REQ_BIT
     PLAY_CONTROL_RSP    = int('0x303', 16) | RSP_BIT
+    SET_VOLUME_REQ      = int('0x304', 16) | REQ_BIT
+    SET_VOLUME_RSP      = int('0x304', 16) | RSP_BIT
     
     # Status
     GET_STATUS_REQ      = int('0x401', 16) | REQ_BIT

@@ -177,19 +177,19 @@ class SpotifyClient(Thread):
                     if(state == TlvDefinitions.TlvPlaybackState.PLAYBACK_IDLE):
                         self.__statusIndObserversLock.acquire()
                         for obs in self.__statusIndObservers:
-                            obs.statusIndCb(self.PLAYBACK_IDLE, None, msgObj.getProgress())
+                            obs.statusIndCb(self.PLAYBACK_IDLE, None, msgObj.getProgress(), msgObj.getVolume())
                         self.__statusIndObserversLock.release()
                     
                     elif(state == TlvDefinitions.TlvPlaybackState.PLAYBACK_PLAYING):
                         self.__statusIndObserversLock.acquire()
                         for obs in self.__statusIndObservers:
-                            obs.statusIndCb(self.PLAYBACK_PLAYING, msgObj.getPlayingTrack(), msgObj.getProgress())
+                            obs.statusIndCb(self.PLAYBACK_PLAYING, msgObj.getPlayingTrack(), msgObj.getProgress(), msgObj.getVolume())
                         self.__statusIndObserversLock.release()
                         
                     elif(state == TlvDefinitions.TlvPlaybackState.PLAYBACK_PAUSED):
                         self.__statusIndObserversLock.acquire()
                         for obs in self.__statusIndObservers:
-                            obs.statusIndCb(self.PLAYBACK_PAUSED, msgObj.getPlayingTrack(), msgObj.getProgress())
+                            obs.statusIndCb(self.PLAYBACK_PAUSED, msgObj.getPlayingTrack(), msgObj.getProgress(), msgObj.getVolume())
                         self.__statusIndObserversLock.release()
                     else:
                         print "Unknown state=" + str(state)
@@ -212,19 +212,19 @@ class SpotifyClient(Thread):
                     if(state == TlvDefinitions.TlvPlaybackState.PLAYBACK_IDLE):
                         self.__statusIndObserversLock.acquire()
                         for obs in self.__statusIndObservers:
-                            obs.statusIndCb(self.PLAYBACK_IDLE, None, msgObj.getProgress())
+                            obs.statusIndCb(self.PLAYBACK_IDLE, None, msgObj.getProgress(), msgObj.getVolume)
                         self.__statusIndObserversLock.release()
                     
                     elif(state == TlvDefinitions.TlvPlaybackState.PLAYBACK_PLAYING):
                         self.__statusIndObserversLock.acquire()
                         for obs in self.__statusIndObservers:
-                            obs.statusIndCb(self.PLAYBACK_PLAYING, msgObj.getPlayingTrack(), msgObj.getProgress())
+                            obs.statusIndCb(self.PLAYBACK_PLAYING, msgObj.getPlayingTrack(), msgObj.getProgress(), msgObj.getVolume())
                         self.__statusIndObserversLock.release()
                         
                     elif(state == TlvDefinitions.TlvPlaybackState.PLAYBACK_PAUSED):
                         self.__statusIndObserversLock.acquire()
                         for obs in self.__statusIndObservers:
-                            obs.statusIndCb(self.PLAYBACK_PAUSED, msgObj.getPlayingTrack(), msgObj.getProgress())
+                            obs.statusIndCb(self.PLAYBACK_PAUSED, msgObj.getPlayingTrack(), msgObj.getProgress(), msgObj.getVolume)
                         self.__statusIndObserversLock.release()
                     else:
                         print "Unknown state=" + str(state)
@@ -348,6 +348,14 @@ class SpotifyClient(Thread):
         if self.__isConnected.is_set():
             self.fd.sendall(Message.GetStatusReqMsg(self.getNextMsgId()).toByteStream())
             
+    def sendSetRelativeVolume(self, endpoint, volume):
+        if self.__isConnected.is_set():
+            self.fd.sendall(Message.SetVolumeReqMsg(self.getNextMsgId(), endpoint, volume).toByteStream())
+
+    def sendSetMasterVolume(self, volume):
+        if self.__isConnected.is_set():
+            self.fd.sendall(Message.SetVolumeReqMsg(self.getNextMsgId(), None, volume).toByteStream())
+
     def sendCreateAudioEndpoint(self, audioDataCb):
         if self.__isConnected.is_set():
             self.audioEndpointfd = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -423,4 +431,6 @@ class SpotifyClient(Thread):
         self.__audioEndpointsObserversLock.acquire()
         self.__audioEndpointsObservers.append(observer)
         self.__audioEndpointsObserversLock.release()
+        
+
         

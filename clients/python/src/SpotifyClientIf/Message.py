@@ -322,6 +322,13 @@ class StatusIndMsg(Message):
                 return progress
         return None
 
+    def getVolume(self):
+        for tlv in self._TlvSet:
+            if(tlv._TlvType == TlvDefinitions.TlvType.TLV_VOLUME):
+                volume, = struct.unpack('!I', tlv._TlvValue)
+                return volume
+        return None
+
         
 class PlayReqMsg(Message):
     def __init__(self, msgId, uri, startAtIndex):
@@ -346,7 +353,18 @@ class PlayOperationRspMsg(Message):
 class GetStatusReqMsg(Message):
     def __init__(self, msgId):
         Message.__init__(self, TlvDefinitions.TlvMessageType.GET_STATUS_REQ, msgId)
-    
+
+class SetVolumeReqMsg(Message):
+    def __init__(self, msgId, name, volume):
+        Message.__init__(self, TlvDefinitions.TlvMessageType.SET_VOLUME_REQ, msgId)
+        if name != None:
+            epTlv = Tlv.CreateContainer(TlvDefinitions.TlvType.TLV_CLIENT)
+            epTlv.addTlv(Tlv.Create(TlvDefinitions.TlvType.TLV_LINK, len(name), name))
+            epTlv.addTlv(Tlv.Create(TlvDefinitions.TlvType.TLV_VOLUME, 4, volume))
+            self.addTlv(epTlv)
+        else:
+            self.addTlv(Tlv.Create(TlvDefinitions.TlvType.TLV_VOLUME, 4, volume))
+
 class GetStatusRspMsg(Message):
     def __init__(self, msgId):
         Message.__init__(self, TlvDefinitions.TlvMessageType.GET_STATUS_RSP, msgId)
@@ -389,7 +407,14 @@ class GetStatusRspMsg(Message):
                 progress, = struct.unpack('!I', tlv._TlvValue)
                 return progress
         return None
-    
+
+    def getVolume(self):
+        for tlv in self._TlvSet:
+            if(tlv._TlvType == TlvDefinitions.TlvType.TLV_VOLUME):
+                volume, = struct.unpack('!I', tlv._TlvValue)
+                return volume
+        return None
+
     
 class GetImageReqMsg(Message):
     def __init__(self, msgId, uri):
@@ -463,13 +488,16 @@ class GetAudioEndpointsRspMsg(Message):
         Message.__init__(self, TlvDefinitions.TlvMessageType.GET_AUDIO_ENDPOINTS_RSP, msgId)
 
     def getAllEndpoints(self):
-        endpoints = dict()
+        endpoints = set()
 
         for endpointTlv in self._TlvSet:
             if(endpointTlv._TlvType == TlvDefinitions.TlvType.TLV_CLIENT):
                 name = endpointTlv.getSubTlv(TlvDefinitions.TlvType.TLV_LINK)._TlvValue.rstrip(' \t\r\n\0')
-                active = struct.unpack('!I', endpointTlv.getSubTlv(TlvDefinitions.TlvType.TLV_STATE)._TlvValue)
-                endpoints[name] = active[0]
+                active, = struct.unpack('!I', endpointTlv.getSubTlv(TlvDefinitions.TlvType.TLV_STATE)._TlvValue)
+                volume, = struct.unpack('!I', endpointTlv.getSubTlv(TlvDefinitions.TlvType.TLV_VOLUME)._TlvValue)
+                #endpoints[name] = active[0]
+                ep = AudioEndpointInfo(name,active,volume)
+                endpoints.add( ep )
         return endpoints
 
 class AudioDataIndMsg(Message):

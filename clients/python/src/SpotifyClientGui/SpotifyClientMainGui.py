@@ -133,7 +133,7 @@ class SpotifyClientMainGui(Tk):
     def searchRspCb(self, listOfTracks):
         self.__tracks = listOfTracks
         self.updateListboxTracks()
-    
+
     def updateListboxTracks(self):
         self.multiListboxTracks.delete(0, END)
         for track in self.__tracks:
@@ -141,7 +141,7 @@ class SpotifyClientMainGui(Tk):
             for artist in track.getArtistList():
                 artistStr += artist.getName() + " "
             self.multiListboxTracks.insert(END, (track.getName(), artistStr, track.getAlbum().getName()))
-            
+
     def setPendingTrackListParent(self, parent):
         self.__pendingTrackListParent = parent
         
@@ -157,9 +157,24 @@ class RightFrame(Frame):
         epLabel = Label(self, justify=LEFT, text="Audio endpoints:")
         epLabel.pack(side=TOP, anchor=W)
 
-        self.endpoints = dict()
-        self.endpointcheckboxes = dict()
-        self.endpointcheckboxvalues = dict()
+        self.endpoints = list()
+        self.epActiveBoxes = dict()
+        self.epActiveBoxValues = dict()
+        self.epVolumeSliders = dict()
+
+        self.epVolumeUpdateInProgress = 0
+
+        self.masterVolVal = IntVar()
+        self.masterVol = Scale(self, from_=0, to=255, orient=HORIZONTAL, showvalue=0,
+                        variable=self.masterVolVal, command=self.mainvolchangecb, resolution=5)
+
+        self.masterVol.pack(side=BOTTOM)
+
+        masterVolLabel = Label(self, justify=LEFT, text="Master volume:")
+        masterVolLabel.pack(side=BOTTOM, anchor=W)
+
+        self.lastMasterVolUpdate = 0
+        self.masterVolUpdateInProgress = 0
 
     def __del__(self):
         return
@@ -167,55 +182,115 @@ class RightFrame(Frame):
     def setSpotifyClient(self,spotify):
         self.spotify = spotify
         self.spotify.registerAudioEndpointsObserver(self)
+        self.spotify.registerStatusIndObserver(self)
         self.spotify.registerConnectionObserver(self)
 
     def audioEndpointsUpdatedNtf(self):
-        # oh something happened, yes I am indeed interested, please tell me more
-        self.spotify.sendGetEndpointsReq()
+        # oh something happened, unless I did it myself I am indeed interested, please tell me more
+        if self.epVolumeUpdateInProgress == 0:
+            self.spotify.sendGetEndpointsReq()
 
     def getAudioEndpointsRsp(self, endpoints):
-        self.endpoints.clear()
-        self.endpoints = endpoints
+        self.endpoints = sorted(endpoints, key=lambda x: x.getName())
         # redraw checkboxes in tkinter context, tkinter will freak out if done here
-        self.after_idle(self.redrawCbs)
+        self.after_idle(self.redrawEpGui)
 
-    def redrawCbs(self):
+    def redrawEpGui(self):
         #remove all old boxes
-        for child in self.endpointcheckboxes.values():
+        for child in self.epActiveBoxes.values():
             child.destroy()
-        self.endpointcheckboxes.clear()
-        self.endpointcheckboxvalues.clear()
+        for child in self.epVolumeSliders.values():
+            child.destroy()
+        self.epActiveBoxes.clear()
+        self.epActiveBoxValues.clear()
+        self.epVolumeSliders.clear()
 
         #and add the new ones
-        for name, active in self.endpoints.iteritems():
+        for ep in self.endpoints:
+            name = ep.getName()
+            active = ep.isActive()
+            volume = ep.getVolume()
             var = IntVar()
             var.set(active)
             box = Checkbutton(self, 
                               text=name,
                               variable=var,
-                              command=self.cb)
+                              command=self.epActiveBoxCb)
             if(active == 1):
                 box.select()
             box.pack(side=TOP, anchor=W)
 
-            self.endpointcheckboxes[name] = box
-            self.endpointcheckboxvalues[name] = var
+            self.epActiveBoxes[name] = box
+            self.epActiveBoxValues[name] = var
 
-    def cb(self):
-        for ep, val in self.endpoints.iteritems():
-            checked = self.endpointcheckboxvalues[ep].get()
-            if( val != checked):
+            volVar = IntVar()
+            vol = Scale(self, from_=0, to=255, orient=HORIZONTAL, showvalue=0,
+                        variable=volVar, command=self.epVolumeScaleCb, resolution=5)
+            vol.set(volume)
+            vol.pack(side=TOP, anchor=W)
+
+            self.epVolumeSliders[name] = vol
+
+    def epActiveBoxCb(self):
+        for ep in self.endpoints:
+            name = ep.getName()
+            prevchecked = ep.isActive()
+            checked = self.epActiveBoxValues[name].get()
+            if( prevchecked != checked):
                 if(checked!=0):
-                    self.spotify.sendAddAudioEndpoint(ep)
+                    self.spotify.sendAddAudioEndpoint(name)
                 else:
-                    self.spotify.sendRemoveAudioEndpoint(ep)
-        self.spotify.sendGetEndpointsReq()
+                    self.spotify.sendRemoveAudioEndpoint(name)
 
+    def epVolumeScaleCb(self, val):
+        if self.epVolumeUpdateInProgress != 0:
+            return
+        self.checkEpVolumeSliders()
+
+    def checkEpVolumeSliders(self):
+        updated = 0
+        for ep in self.endpoints:
+            name = ep.getName()
+            prevvolume = ep.getVolume()
+            volume = self.epVolumeSliders[name].get()
+            if( prevvolume != volume):
+                self.spotify.sendSetRelativeVolume(name, volume)
+                ep.setVolume(volume)
+                updated = 1
+        if updated != 0:
+            self.epVolumeUpdateInProgress = 1
+            self.after(100, self.checkEpVolumeSlidersAgain)
+        return updated
+
+    def checkEpVolumeSlidersAgain(self):
+        self.epVolumeUpdateInProgress = 0
+        if self.checkEpVolumeSliders() == 0:
+            self.spotify.sendGetEndpointsReq()
+        
     def connectedIndCb(self):
         self.spotify.sendGetEndpointsReq()
 
     def disconnectedIndCb(self):
         return
+
+    def mainvolchangecb(self, val):
+        if self.masterVolUpdateInProgress == 0:
+            self.masterVolUpdateInProgress = 1
+            self.spotify.sendSetMasterVolume(self.masterVol.get())
+            self.lastMasterVolUpdate = self.masterVol.get()
+            self.after(100, self.checkMasterVolAgain)
+            
+    def checkMasterVolAgain(self):
+        self.masterVolUpdateInProgress = 0
+        if self.lastMasterVolUpdate != self.masterVol.get():
+            self.masterVolUpdateInProgress = 1
+            self.spotify.sendSetMasterVolume(self.masterVol.get())
+            self.lastMasterVolUpdate = self.masterVol.get()
+            self.after(100, self.checkMasterVolAgain)
+
+    def statusIndCb(self, playStatus, track, progress, volume):
+        if self.masterVolUpdateInProgress == 0 and volume != self.masterVol.get():
+            self.masterVol.set(volume)
 
 class LeftFrame(Frame):
     def __init__(self, parentFrame,  **kwargs):
@@ -264,7 +339,7 @@ class LeftFrame(Frame):
         self.labelArtist.config(text="Artist:")
         
         
-    def statusIndCb(self, playStatus, track, progress):
+    def statusIndCb(self, playStatus, track, progress, volume):
         if(track != None):
             self.labelTrack.config(text="Track: " + track.getName())
             artistString = ""
@@ -397,7 +472,7 @@ class PlaybackBar(Frame):
         self.__trackbarPollTimer.pause()
         
         
-    def statusIndCb(self, playStatus, track, progress):
+    def statusIndCb(self, playStatus, track, progress, volume):
         if(playStatus == self.spotify.PLAYBACK_IDLE):
             self.__playbackState = self.STATE_STOPPED
             self.__buttonPlay.config(text="Play")

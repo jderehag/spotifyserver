@@ -120,3 +120,17 @@ class Album(object):
         return self.__name
     def getUri(self):
         return self.__uri
+
+class AudioEndpointInfo:
+    def __init__(self, name, active, volume):
+        self.__name = name
+        self.__active = active
+        self.__volume = volume
+    def getName(self):
+        return self.__name
+    def isActive(self):
+        return self.__active
+    def getVolume(self):
+        return self.__volume
+    def setVolume(self, vol):
+        self.__volume = vol
