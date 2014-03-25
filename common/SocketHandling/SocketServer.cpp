@@ -156,6 +156,7 @@ void SocketServer::run()
         }
     }
 
+    delete socket_;
 
     log(LOG_DEBUG) << "Exit SocketServer::run()";
 }

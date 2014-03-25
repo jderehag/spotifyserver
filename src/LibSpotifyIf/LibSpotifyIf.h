@@ -229,6 +229,7 @@ private:
 
 
     void doStatusNtf();
+    void sendGetImageRsp( sp_image* img, QueryReqEventItem* reqEvent );
 public:
 	LibSpotifyIf(const ConfigHandling::SpotifyConfig& config );
 	virtual ~LibSpotifyIf();

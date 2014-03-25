@@ -461,11 +461,7 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
 
                             if ( sp_image_is_loaded(img) )
                             {
-                                PendingMediaRequestData reqData = reqEvent->reqData;
-                                size_t dataSize;
-                                const void* data = sp_image_data(img, &dataSize);
-                                reqData.first->getImageResponse( data, dataSize, reqData.second );
-                                sp_image_release(img);
+                                sendGetImageRsp(img, reqEvent);
                             }
                             else if ( error == SP_ERROR_IS_LOADING )
                             {
@@ -546,6 +542,7 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
 				            assert(false);
 				            break;
 				    }
+				    sp_link_release(link);
 				}
 			}
 
@@ -789,6 +786,14 @@ void LibSpotifyIf::updateRootFolder(sp_playlistcontainer* plContainer)
 	}
 }
 
+void LibSpotifyIf::sendGetImageRsp( sp_image* img, QueryReqEventItem* reqEvent )
+{
+    PendingMediaRequestData reqData = reqEvent->reqData;
+    size_t dataSize;
+    const void* data = sp_image_data(img, &dataSize);
+    reqData.first->getImageResponse( data, dataSize, reqData.second );
+    sp_image_release(img);
+}
 /* * * * * * * * * * * * * * * * * * * * * * * * * * *
  * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
@@ -901,7 +906,8 @@ void LibSpotifyIf::genericSearchCb(sp_search *search, void *userdata)
 void LibSpotifyIf::imageLoadedCb(sp_image* image, void *userdata)
 {
     QueryReqEventItem* msg = static_cast<QueryReqEventItem*>(userdata);
-    postToEventThread( msg );
+    sendGetImageRsp( image, msg );
+    delete msg;
 }
 
 void LibSpotifyIf::albumLoadedCb(sp_albumbrowse* result, void *userdata)
