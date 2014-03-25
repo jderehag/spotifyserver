@@ -37,6 +37,8 @@
 
 #include "applog.h"
 
+#include <tgmath.h>
+
 #ifdef DEBUG_COUNTERS
 int lasttimetoplay = 0;
 int lasttimestamp = 0;
@@ -69,7 +71,7 @@ EventGroupHandle_t xAvailableBuffers;
 
 static void AudioCallbackFromISR(void *context __attribute__((unused)),int buffer);
 
-AudioEndpointLocal::AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config) : AudioEndpoint(165, false),
+AudioEndpointLocal::AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config) : AudioEndpoint(64, false),
                                                                                             Platform::Runnable(false, SIZE_SMALL, PRIO_VERY_HIGH),
                                                                                             config_(config),
                                                                                             adjustSamples_(0),
@@ -120,7 +122,7 @@ void AudioEndpointLocal::run()
 
             if ( actualVolume_ != lastVolume )
             {
-                SetAudioVolume(actualVolume_);
+                SetAudioVolumeDb( 20*log10((double)actualVolume_/255) );
                 lastVolume = actualVolume_;
             }
 

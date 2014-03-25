@@ -35,6 +35,7 @@ void AudioOff();
 
 // Set audio volume in steps of 0.5 dB. 0xff is +12 dB.
 void SetAudioVolume(int volume);
+void SetAudioVolumeDb(int volume);
 
 // Output one audio sample directly to the hardware without using DMA.
 void OutputAudioSample(int16_t sample);

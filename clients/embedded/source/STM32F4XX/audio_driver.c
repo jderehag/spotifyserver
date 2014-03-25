@@ -133,10 +133,27 @@ void SetAudioVolume(int volume)
      *   0x18 to 0x00 = +12 dB to 0 dB
      *   0xFF to 0x35 = -0.5 dB to -102 dB
      *   0x34 to 0x19 = -102 dB */
-	WriteRegister(0x20, (volume + 0x19) & 0xff);
-	WriteRegister(0x21, (volume + 0x19) & 0xff);
+    //first scale down to range 0 to 0xe3 since 0x19 to 0x35 means the same value
+    volume = (uint16_t)volume * ( 0xff - ( 0x35 - 0x19 ) ) / 0xff;
+    //then add 0x35 to get range 0x35 to (via wrap) 0x18
+    volume = ( volume + 0x35 ) & 0xff;
+    WriteRegister( 0x20, volume );
+    WriteRegister( 0x21, volume );
 }
 
+void SetAudioVolumeDb(int volume)
+{
+    uint8_t regValue;
+    /* For registers 0x20 and 0x21:
+     *   0x18 to 0x00 = +12 dB to 0 dB
+     *   0xFF to 0x35 = -0.5 dB to -102 dB
+     *   0x34 to 0x19 = -102 dB */
+    if ( volume > 12 ) volume = 12;
+    if ( volume < -102 ) volume = -102;
+    regValue = (uint16_t)255 + (volume * 2);
+    WriteRegister( 0x20, regValue );
+    WriteRegister( 0x21, regValue );
+}
 void OutputAudioSample(int16_t sample) {
 	while (!(SPI3 ->SR & SPI_SR_TXE ))
 		;
