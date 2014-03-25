@@ -56,30 +56,31 @@ class LibSpotifyIf : Platform::Runnable, public MediaInterface, public AudioProv
  ***********************/
 public:
 
-	enum Event
-	{
-		/* Session handling */
-	    EVENT_LOGGING_IN = 0,
-		EVENT_LOGGED_IN,
-		EVENT_LOGGING_OUT,
+    enum Event
+    {
+        /* Session handling */
+        EVENT_LOGGING_IN = 0,
+        EVENT_LOGGED_IN,
+        EVENT_LOGGING_OUT,
         EVENT_LOGGED_OUT,
         EVENT_CONNECTION_LOST,
 
-		/* Metadata */
-		EVENT_METADATA_UPDATED,
-		EVENT_GET_TRACKS,
-		EVENT_GENERIC_SEARCH,
-		EVENT_GET_IMAGE,
-		EVENT_GET_ALBUM,
+        /* Metadata */
+        EVENT_METADATA_UPDATED,
+        EVENT_GET_TRACKS,
+        EVENT_GENERIC_SEARCH,
+        EVENT_GET_IMAGE,
+        EVENT_GET_ALBUM,
 
-		/* Playback Handling */
-		EVENT_PLAY_REQ,
-		EVENT_STOP_REQ,
-		EVENT_ENQUEUE_TRACK_REQ,
-		EVENT_PLAY_TRACK,
+        /* Playback Handling */
+        EVENT_PLAY_REQ,
+        EVENT_STOP_REQ,
+        EVENT_ENQUEUE_TRACK_REQ,
+        EVENT_PLAY_TRACK,
         EVENT_TRACK_ENDED,
         EVENT_PAUSE_PLAYBACK,
         EVENT_RESUME_PLAYBACK,
+        EVENT_SEEK,
 
         /* Others */
         EVENT_ITERATE_MAIN_LOOP
@@ -100,6 +101,13 @@ public:
         TrackEventItem(Event event, const Track& track) : EventItem(event), track_(track), spTrack_(NULL) {}
     };
 
+    class ParamEventItem : public EventItem
+    {
+    public:
+        uint32_t param_;
+        ParamEventItem(Event event, uint32_t param) : EventItem(event), param_(param) {}
+    };
+
     class ReqEventItem : public EventItem
     {
     public:
@@ -114,11 +122,10 @@ public:
         QueryReqEventItem(Event event, IMediaInterfaceCallbackSubscriber* callbackSubscriber, void* subscriberData, std::string query) : ReqEventItem(event, callbackSubscriber, subscriberData), query_(query) {}
     };
 
-    class ParamReqEventItem : public ReqEventItem
+    class ParamReqEventItem : public ReqEventItem, ParamEventItem
     {
     public:
-        uint32_t param_;
-        ParamReqEventItem(Event event, IMediaInterfaceCallbackSubscriber* callbackSubscriber, void* subscriberData, uint32_t param) : ReqEventItem(event, callbackSubscriber, subscriberData), param_(param) {}
+        ParamReqEventItem(Event event, IMediaInterfaceCallbackSubscriber* callbackSubscriber, void* subscriberData, uint32_t param) : ReqEventItem(event, callbackSubscriber, subscriberData), ParamEventItem(event, param) {}
     };
 
     class PlayReqEventItem : public QueryReqEventItem
@@ -235,6 +242,7 @@ public:
     virtual void next();
     virtual void resume();
     virtual void pause();
+    virtual void seek( uint32_t sec );
     virtual void setShuffle( bool shuffleOn );
     virtual void setRepeat( bool repeatOn );
     virtual void setVolume( uint8_t volume );

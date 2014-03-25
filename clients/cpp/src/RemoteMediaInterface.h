@@ -56,6 +56,7 @@ public:
     virtual void next();
     virtual void resume();
     virtual void pause();
+    virtual void seek( uint32_t sec );
     virtual void setShuffle( bool shuffleOn );
     virtual void setRepeat( bool repeatOn );
     virtual void setVolume( uint8_t volume );

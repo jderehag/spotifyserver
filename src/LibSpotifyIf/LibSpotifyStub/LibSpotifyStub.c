@@ -617,6 +617,11 @@ sp_error sp_session_player_play(sp_session *session, bool play)
     return SP_ERROR_OK;
 }
 
+sp_error sp_session_player_seek(sp_session *session, int offset)
+{
+    return SP_ERROR_OK;
+}
+
 sp_error sp_track_error(sp_track *track){ return SP_ERROR_OK; }
 
 

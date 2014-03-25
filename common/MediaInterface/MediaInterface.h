@@ -91,6 +91,7 @@ public:
     virtual void next() = 0;
     virtual void resume() = 0;
     virtual void pause() = 0;
+    virtual void seek( uint32_t sec ) = 0;
     virtual void setShuffle( bool shuffleOn ) = 0;
     virtual void setRepeat( bool repeatOn ) = 0;
     virtual void setVolume( uint8_t volume ) = 0;

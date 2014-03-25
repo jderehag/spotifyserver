@@ -248,6 +248,11 @@ void LibSpotifyIf::previous()
     }
 }
 
+void LibSpotifyIf::seek( uint32_t sec )
+{
+    postToEventThread( new ParamEventItem( EVENT_SEEK, sec ) );
+}
+
 void LibSpotifyIf::setShuffle( bool shuffleOn )
 {
     playbackHandler_.setShuffle( shuffleOn );
@@ -579,6 +584,16 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
 
                 trackState_ = TRACK_STATE_PLAYING;
 
+                doStatusNtf();
+            }
+            break;
+
+        case EVENT_SEEK:
+            if ( trackState_ != TRACK_STATE_NOT_LOADED )
+            {
+                ParamEventItem* seekEvent = static_cast<ParamEventItem*>(event);
+                sp_session_player_seek( spotifySession_, seekEvent->param_ * 1000 );
+                progress_ = seekEvent->param_ * 10000;
                 doStatusNtf();
             }
             break;
@@ -968,6 +983,8 @@ const char* getEventName(LibSpotifyIf::EventItem* event)
             return "EVENT_PAUSE_PLAYBACK";
         case LibSpotifyIf::EVENT_RESUME_PLAYBACK:
             return "EVENT_RESUME_PLAYBACK";
+        case LibSpotifyIf::EVENT_SEEK:
+            return "EVENT_SEEK";
         case LibSpotifyIf::EVENT_PLAY_TRACK:
             return "EVENT_PLAY_TRACK";
         case LibSpotifyIf::EVENT_TRACK_ENDED:

@@ -346,6 +346,11 @@ class PlayOperationReqMsg(Message):
         Message.__init__(self,TlvDefinitions.TlvMessageType.PLAY_CONTROL_REQ, msgId)
         self._TlvSet.append(Tlv.Create(TlvDefinitions.TlvType.TLV_PLAY_OPERATION, 4, operation))
 
+class SeekReqMsg(Message):
+    def __init__(self, msgId, sec):
+        Message.__init__(self,TlvDefinitions.TlvMessageType.PLAY_CONTROL_REQ, msgId)
+        self._TlvSet.append(Tlv.Create(TlvDefinitions.TlvType.TLV_PROGRESS, 4, sec))
+
 class PlayOperationRspMsg(Message):
     def __init__(self, msgId):
         Message.__init__(self, TlvDefinitions.TlvMessageType.PLAY_CONTROL_RSP, msgId)

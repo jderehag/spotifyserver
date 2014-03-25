@@ -125,6 +125,13 @@ void UIConsole::run()
             continue;
         }
 
+        if ( argv[0] == "seek")
+        {
+            if ( argc == 2 )
+                m_.seek( atoi( argv[1].c_str() ) );
+            continue;
+        }
+
         //handle the old commands the old way for now..
         c = argv[0][0];
         switch(c)

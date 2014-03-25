@@ -166,7 +166,7 @@ class RightFrame(Frame):
 
         self.masterVolVal = IntVar()
         self.masterVol = Scale(self, from_=0, to=255, orient=HORIZONTAL, showvalue=0,
-                        variable=self.masterVolVal, command=self.mainvolchangecb, resolution=5)
+                        variable=self.masterVolVal, command=self.mainvolchangecb, resolution=5, state=DISABLED)
 
         self.masterVol.pack(side=BOTTOM)
 
@@ -274,7 +274,9 @@ class RightFrame(Frame):
         return
 
     def mainvolchangecb(self, val):
-        if self.masterVolUpdateInProgress == 0:
+        # don't act unless enabled yet, this is to suppress cb triggered by init
+        state = self.masterVol.cget("state")
+        if state != DISABLED and self.masterVolUpdateInProgress == 0:
             self.masterVolUpdateInProgress = 1
             self.spotify.sendSetMasterVolume(self.masterVol.get())
             self.lastMasterVolUpdate = self.masterVol.get()
@@ -291,6 +293,7 @@ class RightFrame(Frame):
     def statusIndCb(self, playStatus, track, progress, volume):
         if self.masterVolUpdateInProgress == 0 and volume != self.masterVol.get():
             self.masterVol.set(volume)
+        self.masterVol.config(state = NORMAL)
 
 class LeftFrame(Frame):
     def __init__(self, parentFrame,  **kwargs):
@@ -413,6 +416,7 @@ class PlaybackBar(Frame):
         
         
         #Trackbar
+        self.__suppressSeek = 1 #don't seek on initial callback
         self.__progressTimeIntVar = IntVar(value=0)
         self.__progressTimeStrVar = StringVar(value="0:00")
         self.__totalTimeStrVar = StringVar(value="0:00")
@@ -421,10 +425,18 @@ class PlaybackBar(Frame):
         self.__labelTotalTime = Label(self, justify=RIGHT, textvariable=self.__totalTimeStrVar)
         self.__labelTotalTime.pack(side=RIGHT, anchor=E)
         self.__trackbarPlay = Scale(self, from_=0, to=100, orient=HORIZONTAL, showvalue=0,
-                                                        variable=self.__progressTimeIntVar)
+                                                        variable=self.__progressTimeIntVar,
+                                                        command=self.trackbarCb)
         self.__trackbarPlay.pack(side=BOTTOM, fill=X)
         self.__trackbarPollTimer = RepeatTimer(1.0, self.updateTrackbarTimerTick)
 
+    def trackbarCb(self, val):
+        if self.__suppressSeek != 0:
+            self.__suppressSeek = 0
+            return
+        
+        self.spotify.sendSeek(self.__progressTimeIntVar.get())
+        
     def stop(self):
         self.__trackbarPollTimer.stop()
         
@@ -459,6 +471,7 @@ class PlaybackBar(Frame):
         print "Buffer:", self._audioDev.getBufferInSeconds(),"sec", self._audioDev.getBufferInBytes(), "bytes" 
     
     def updateTrackbarTimerTick(self):
+        self.__suppressSeek = 1
         self.__progressTimeIntVar.set(self.__progressTimeIntVar.get() + 1)
         self.__progressTimeStrVar.set(self.getTimeAsString(self.__progressTimeIntVar.get()))
     
@@ -491,6 +504,7 @@ class PlaybackBar(Frame):
             self.__totalTimeStrVar.set(self.getTimeAsString(track.getDurationMillisecs()/1000))
         
         if(progress != None):
+            self.__suppressSeek = 1
             self.__progressTimeIntVar.set(progress/1000)
             self.__progressTimeStrVar.set(self.getTimeAsString(self.__progressTimeIntVar.get()))
         else:

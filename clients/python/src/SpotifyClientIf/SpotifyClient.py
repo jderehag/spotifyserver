@@ -327,6 +327,11 @@ class SpotifyClient(Thread):
                                                             TlvDefinitions.TlvPlayOperation.PLAY_OP_PREV).toByteStream())
             else:
                 print "sendPlayOperation, unknown playOp=" + str(playOp)
+
+    def sendSeek(self, sec):
+        if self.__isConnected.is_set():
+            msgId = self.getNextMsgId()
+            self.fd.sendall(Message.SeekReqMsg(msgId, sec).toByteStream())
         
     def sendSearchReq(self, requester, searchReq):
         if self.__isConnected.is_set():

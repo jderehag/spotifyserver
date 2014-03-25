@@ -381,6 +381,12 @@ void Client::handlePlayControlReq(const Message* msg)
             }
             break;
 
+            case TLV_PROGRESS:
+            {
+                spotify_.seek(((IntTlv*)tlv)->getVal());
+            }
+            break;
+
             default:
                 break;
         }

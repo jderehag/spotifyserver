@@ -282,6 +282,13 @@ void RemoteMediaInterface::pause()
     messenger_.queueRequest( msg, this, NULL );
 }
 
+void RemoteMediaInterface::seek( uint32_t sec )
+{
+    Message* msg = new Message( PLAY_CONTROL_REQ );
+    msg->addTlv( TLV_PROGRESS, sec );
+    messenger_.queueRequest( msg, this, NULL );
+}
+
 void RemoteMediaInterface::setShuffle( bool shuffleOn )
 {
     Message* msg = new Message( PLAY_CONTROL_REQ );
