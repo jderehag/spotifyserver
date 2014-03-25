@@ -33,6 +33,7 @@
 #include <assert.h>
 
 static snd_pcm_t *alsa_open(const char *dev, int rate, int channels);
+static void alsaSetVolume(uint8_t volume);
 
 namespace Platform {
 
@@ -59,9 +60,15 @@ void AudioEndpointLocal::run()
     unsigned int currentChannels = 0;
     unsigned int currentRate = 0;
     AudioFifoData *afd;
+    uint8_t lastVolume = 0;
 
     while(isCancellationPending() == false)
     {
+        if ( lastVolume != actualVolume_ )
+        {
+            //alsaSetVolume( actualVolume_ );
+            lastVolume = actualVolume_;
+        }
         if((afd = fifo_.getFifoDataTimedWait(1)) != 0)
         {
             /* First set up the alsa device with correct parameters (rate & channels) */
@@ -143,6 +150,43 @@ void AudioEndpointLocal::run()
     log(LOG_DEBUG) << "Exiting AudioEndpoint::run()";
 }
 
+}
+
+void alsaSetVolume(uint8_t volume)
+{
+    long min, max;
+    snd_mixer_t *handle;
+    snd_mixer_selem_id_t *sid;
+    const char *card = "default";
+    const char *selem_name = "Master";
+    snd_mixer_elem_t* elem;
+    int i = 1;
+
+    snd_mixer_open(&handle, 0);
+    snd_mixer_attach(handle, card);
+    snd_mixer_selem_register(handle, NULL, NULL);
+    snd_mixer_load(handle);
+
+    elem = snd_mixer_first_elem(handle);
+    do
+    {
+        //std::cout << i << ": " << snd_mixer_selem_get_name (elem) << std::endl;
+        i++;
+        elem = snd_mixer_elem_next(elem);
+    } while ( elem != snd_mixer_last_elem(handle) );
+
+    snd_mixer_selem_id_alloca(&sid);
+    snd_mixer_selem_id_set_index(sid, 0);
+    snd_mixer_selem_id_set_name(sid, selem_name);
+    elem = snd_mixer_find_selem(handle, sid);
+
+    if ( elem != NULL )
+    {
+        snd_mixer_selem_get_playback_volume_range(elem, &min, &max);
+        snd_mixer_selem_set_playback_volume_all(elem, min + volume * (max-min) / 255);
+    }
+
+    snd_mixer_close(handle);
 }
 
 static snd_pcm_t *alsa_open(const char *dev, int rate, int channels)
