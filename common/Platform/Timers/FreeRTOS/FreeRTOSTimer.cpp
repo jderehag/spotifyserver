@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Jens Nielsen
+ * Copyright (c) 2014, Jens Nielsen
  * All rights reserved.
 
  * Redistribution and use in source and binary forms, with or without
@@ -25,54 +25,67 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "SocketHandling/SocketClient.h"
-#include "RemoteMediaInterface.h"
-#include "UIConsole.h"
-#include "Platform/Utils/Utils.h"
-#include "Platform/AudioEndpoints/AudioEndpointLocal.h"
-#include "AudioEndpointManager/RemoteAudioEndpointManager.h"
-#include "Platform/Timers/TimerFramework.h"
-#include "applog.h"
-#include "LoggerImpl.h"
+#include "../Timer.h"
+#include "FreeRTOS.h"
+#include "timers.h"
 
-int main(int argc, char *argv[])
+namespace Platform
 {
-    Platform::initTimers();
 
-    std::string servaddr("");
-    ConfigHandling::LoggerConfig cfg;
-    cfg.setLogTo(ConfigHandling::LoggerConfig::STDOUT);
-    Logger::LoggerImpl l(cfg);
+struct Timer_t
+{
+    TimerHandle_t tmr;
+};
 
-    ConfigHandling::AudioEndpointConfig audiocfg;
+static void timerCb( TimerHandle_t xTimer )
+{
+    Timer* me = reinterpret_cast<Timer*>(pvTimerGetTimerID( xTimer ));
+    me->Expired();
+}
 
-    Platform::AudioEndpointLocal audioEndpoint(audiocfg);
+Timer::Timer() : cb_(NULL), arg_(NULL)
+{
+    timer_ = new Timer_t;
+    timer_->tmr = NULL;
+}
 
-    if(argc > 1)
-        servaddr = std::string(argv[1]);
+Timer::~Timer()
+{
+    delete timer_;
+}
 
-    SocketClient sc(servaddr, "7788");
-    RemoteMediaInterface m(sc);
+void Timer::Start( unsigned int timeout, bool isPeriodic, TimerCallbackFn cb, void* arg )
+{
+    cb_ = cb;
+    arg_ = arg;
+    // todo: if ( timer_->tmr != NULL )
+    timer_->tmr = xTimerCreate("tmr", timeout/portTICK_PERIOD_MS, isPeriodic ? pdTRUE : pdFALSE, this, timerCb );
+    xTimerStart( timer_->tmr, 0 );
+}
 
-    RemoteAudioEndpointManager audioMgr(sc);
-    audioMgr.createEndpoint(audioEndpoint, NULL, NULL);
+void Timer::Cancel()
+{
+    xTimerStop( timer_->tmr, 0 );
+}
 
-    UIConsole ui( m, audioMgr );
+void Timer::Expired()
+{
+    cb_(arg_);
+}
 
-    /* wait for ui thread to exit */
-    ui.joinThread();
+bool Timer::IsRunning()
+{
+    return ( xTimerIsTimerActive( timer_->tmr ) == pdTRUE );
+}
 
-    std::cout << "Exiting" << std::endl;
 
-    /* cleanup */
-    ui.destroy();
-    sc.destroy();
+// Empty "timer framework" functions since this is handled entirely by FreeRTOS
+void initTimers()
+{
+}
+void deinitTimers()
+{
+}
 
-#if AUDIO_SERVER
-    audioserver.destroy();
-#endif
 
-    Platform::deinitTimers();
-
-    return 0;
 }

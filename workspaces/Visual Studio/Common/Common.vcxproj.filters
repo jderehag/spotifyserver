@@ -44,6 +44,9 @@
     <Filter Include="Platform\Utils\Windows">
       <UniqueIdentifier>{fa1ef398-51e3-4ed5-9b64-f1ef42e0052f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Platform\Timers">
+      <UniqueIdentifier>{a54e698f-b521-469d-ab15-cd80ca209499}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\common\Platform\Socket\Socket.h">
@@ -139,6 +142,15 @@
     <ClInclude Include="..\..\..\common\MediaContainers\Track.h">
       <Filter>MediaContainers</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\common\Platform\Timers\Timer.h">
+      <Filter>Platform\Timers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\Platform\Timers\Generic\TimerThread.h">
+      <Filter>Platform\Timers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\Platform\Timers\TimerFramework.h">
+      <Filter>Platform\Timers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\common\Platform\Socket\Windows\WindowsSocket.cpp">
@@ -227,6 +239,12 @@
     </ClCompile>
     <ClCompile Include="..\..\..\common\Platform\AudioEndpoints\Endpoints\AudioEndpoint-Wasapi.cpp">
       <Filter>Platform\AudioEndpoints\Endpoints</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\Platform\Timers\Generic\GenericTimer.cpp">
+      <Filter>Platform\Timers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\Platform\Timers\Generic\TimerThread.cpp">
+      <Filter>Platform\Timers</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

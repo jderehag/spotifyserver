@@ -95,6 +95,9 @@
     <ClInclude Include="..\..\..\common\Platform\Threads\Mutex.h" />
     <ClInclude Include="..\..\..\common\Platform\Threads\Runnable.h" />
     <ClInclude Include="..\..\..\common\Platform\Threads\Windows\WindowsMutexPimpl.h" />
+    <ClInclude Include="..\..\..\common\Platform\Timers\Generic\TimerThread.h" />
+    <ClInclude Include="..\..\..\common\Platform\Timers\Timer.h" />
+    <ClInclude Include="..\..\..\common\Platform\Timers\TimerFramework.h" />
     <ClInclude Include="..\..\..\common\Platform\Utils\Utils.h" />
     <ClInclude Include="..\..\..\common\SocketHandling\Messenger.h" />
     <ClInclude Include="..\..\..\common\SocketHandling\SocketClient.h" />
@@ -126,6 +129,8 @@
     <ClCompile Include="..\..\..\common\Platform\Threads\Windows\WindowsMessagebox.cpp" />
     <ClCompile Include="..\..\..\common\Platform\Threads\Windows\WindowsMutex.cpp" />
     <ClCompile Include="..\..\..\common\Platform\Threads\Windows\WindowsRunnable.cpp" />
+    <ClCompile Include="..\..\..\common\Platform\Timers\Generic\GenericTimer.cpp" />
+    <ClCompile Include="..\..\..\common\Platform\Timers\Generic\TimerThread.cpp" />
     <ClCompile Include="..\..\..\common\Platform\Utils\Windows\WindowsUtils.cpp" />
     <ClCompile Include="..\..\..\common\SocketHandling\Messenger.cpp" />
     <ClCompile Include="..\..\..\common\SocketHandling\SocketClient.cpp" />

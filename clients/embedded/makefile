@@ -90,6 +90,7 @@ CPPSRC = main.cpp buttonHandler.cpp UIEmbedded.cpp heapWrap.cpp LoggerEmbedded.c
 		Logger/Logger.cpp \
 		Platform/Socket/LwIP/LwIPSocket.cpp \
 		Platform/Socket/LwIP/Select.cpp \
+		Platform/Timers/FreeRTOS/FreeRTOSTimer.cpp \
 		Platform/Utils/FreeRTOS/FreeRTOSUtils.cpp \
 		$(addprefix Platform/Threads/FreeRTOS/, FreeRTOSMessagebox.cpp FreeRTOSMutex.cpp FreeRTOSCondition.cpp FreeRTOSRunnable.cpp)
 

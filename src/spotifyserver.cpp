@@ -38,6 +38,7 @@
 #include "Platform/AudioEndpoints/AudioEndpointLocal.h"
 #include "ConfigHandling/ConfigHandler.h"
 #include "Platform/Utils/Utils.h"
+#include "Platform/Timers/TimerFramework.h"
 #include "UIConsole.h"
 
 
@@ -76,6 +77,8 @@ int main(int argc, char *argv[])
             return -1;
         }
     }
+
+    Platform::initTimers();
 
     ConfigHandling::ConfigHandler ch(configFile);
     ch.parseConfigFile();
@@ -126,6 +129,8 @@ int main(int argc, char *argv[])
     libspotifyif.destroy();
     clienthandler.destroy();
     audioEndpoint.destroy();
+
+    Platform::deinitTimers();
 
     return 0;
 }

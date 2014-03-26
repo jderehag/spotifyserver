@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Jens Nielsen
+ * Copyright (c) 2014, Jens Nielsen
  * All rights reserved.
 
  * Redistribution and use in source and binary forms, with or without
@@ -25,54 +25,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "SocketHandling/SocketClient.h"
-#include "RemoteMediaInterface.h"
-#include "UIConsole.h"
-#include "Platform/Utils/Utils.h"
-#include "Platform/AudioEndpoints/AudioEndpointLocal.h"
-#include "AudioEndpointManager/RemoteAudioEndpointManager.h"
-#include "Platform/Timers/TimerFramework.h"
-#include "applog.h"
-#include "LoggerImpl.h"
+#ifndef TIMERTHREAD_H
+#define TIMERTHREAD_H
 
-int main(int argc, char *argv[])
+namespace Platform
 {
-    Platform::initTimers();
 
-    std::string servaddr("");
-    ConfigHandling::LoggerConfig cfg;
-    cfg.setLogTo(ConfigHandling::LoggerConfig::STDOUT);
-    Logger::LoggerImpl l(cfg);
+void initTimers();
 
-    ConfigHandling::AudioEndpointConfig audiocfg;
+void deinitTimers();
 
-    Platform::AudioEndpointLocal audioEndpoint(audiocfg);
-
-    if(argc > 1)
-        servaddr = std::string(argv[1]);
-
-    SocketClient sc(servaddr, "7788");
-    RemoteMediaInterface m(sc);
-
-    RemoteAudioEndpointManager audioMgr(sc);
-    audioMgr.createEndpoint(audioEndpoint, NULL, NULL);
-
-    UIConsole ui( m, audioMgr );
-
-    /* wait for ui thread to exit */
-    ui.joinThread();
-
-    std::cout << "Exiting" << std::endl;
-
-    /* cleanup */
-    ui.destroy();
-    sc.destroy();
-
-#if AUDIO_SERVER
-    audioserver.destroy();
-#endif
-
-    Platform::deinitTimers();
-
-    return 0;
 }
+#endif
