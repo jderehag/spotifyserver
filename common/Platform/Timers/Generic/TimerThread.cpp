@@ -30,6 +30,7 @@
 #include "Platform/Utils/Utils.h"
 #include <assert.h>
 #include <stdint.h>
+#include <cstddef>
 
 namespace Platform
 {

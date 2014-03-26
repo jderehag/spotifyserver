@@ -27,6 +27,7 @@
 
 #include "../Timer.h"
 #include "TimerThread.h"
+#include <cstddef>
 
 namespace Platform
 {
