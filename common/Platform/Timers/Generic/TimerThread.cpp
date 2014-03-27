@@ -49,13 +49,13 @@ void deinitTimers()
 }
 
 
-typedef struct TimerEntry_s
+struct TimerEntry_t
 {
     Timer* t;
     bool isPeriodic;
     unsigned int period;
     unsigned int nextTimeout;
-} TimerEntry_t;
+};
 
 TimerThread::TimerThread()
 {
@@ -72,13 +72,19 @@ void TimerThread::AddTimer( Timer* t, bool isPeriodic, unsigned int timeout )
     TimerEntry_t entry = { t, isPeriodic, timeout, getTick_ms() + timeout };
 
     mtx.lock();
+    // make sure it's not already on the list
+    RemoveTimer( t );
+
+    // list is sorted by timeout, find position to put this timer
     std::list<TimerEntry_t>::iterator it = timerList.begin();
-    while( it != timerList.end() && (*it).nextTimeout < entry.nextTimeout )
+    while( it != timerList.end() && ((*it).nextTimeout - entry.nextTimeout) > 0x80000000 )
         it++;
 
+    // if this one will be first in list, wake up thread to re-evaluate sleep delay
     if ( it == timerList.begin() )
         cond.signal();
 
+    // put on list, we have the mutex so the thread shouldn't wake up before this
     timerList.insert( it, entry );
 
     mtx.unlock();
@@ -87,38 +93,43 @@ void TimerThread::AddTimer( Timer* t, bool isPeriodic, unsigned int timeout )
 void TimerThread::CancelTimer( Timer* t )
 {
     mtx.lock();
+    RemoveTimer( t );
+    mtx.unlock();
+}
+
+// internal function to remove timer from list, assumes mutex is already locked
+void TimerThread::RemoveTimer( Timer* t )
+{
     std::list<TimerEntry_t>::iterator it = timerList.begin();
     while( it != timerList.end() )
     {
         if ( (*it).t == t )
         {
-            if ( it == timerList.begin() )
-                cond.signal();
-
+            //just remove it, no need to wake up thread since the next timeout will be equal to or later than this one if this one was first
             timerList.erase(it);
-            mtx.unlock();
             return;
         }
         it++;
     }
-    mtx.unlock();
 }
 
 bool TimerThread::IsTimerRunning( Timer* t )
 {
+    bool ret = false;
     mtx.lock();
+    // iterate list and check if this one is on it
     std::list<TimerEntry_t>::iterator it = timerList.begin();
     while( it != timerList.end() )
     {
         if ( (*it).t == t )
         {
-            mtx.unlock();
-            return true;
+            ret = true;
+            break;
         }
         it++;
     }
     mtx.unlock();
-    return false;
+    return ret;
 }
 
 void TimerThread::run()
@@ -129,7 +140,7 @@ void TimerThread::run()
     while(!isCancellationPending())
     {
         if ( timerList.empty() )
-            cond.wait(mtx);
+            cond.wait( mtx );
         else
             cond.timedWait( mtx, timeToNext );
 
@@ -138,13 +149,15 @@ void TimerThread::run()
         {
             if ( timerList.empty() )
             {
+                // bail, no more timers
                 timeToNext = 0;
                 break;
             }
 
             timeToNext = timerList.front().nextTimeout - getTick_ms();
-            isExpired = ( timeToNext >= 0xFFFFFFF );
-            if ( isExpired ) // "negative" number if expired, this should handle wrap, I think..
+            // todo allow timeToNext == 0 here as well but evaluate what to do with timers with timeout 0
+            isExpired = ( timeToNext >= 0xFFFFF000 ); // "negative" number if expired, assuming we check within 0xFFF ms from actual timeout. This should also handle wrap, I think..
+            if ( isExpired )
             {
                 TimerEntry_t t = timerList.front();
                 timerList.pop_front();
@@ -152,9 +165,10 @@ void TimerThread::run()
 
                 if ( t.isPeriodic )
                 {
+                    // periodic timer, update timeout and put back at correct position in list
                     t.nextTimeout += t.period;
                     std::list<TimerEntry_t>::iterator it = timerList.begin();
-                    while( it != timerList.end() && (*it).nextTimeout < t.nextTimeout )
+                    while( it != timerList.end() && (*it).nextTimeout <= t.nextTimeout )
                         it++;
 
                     timerList.insert( it, t );

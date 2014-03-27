@@ -41,9 +41,11 @@ class Timer;
 class TimerThread : public Runnable
 {
 private:
-    std::list<struct TimerEntry_s> timerList;
+    std::list<struct TimerEntry_t> timerList;
     Mutex mtx;
     Condition cond;
+
+    void RemoveTimer( Timer* t );
 
     TimerThread( const TimerThread& );
     TimerThread& operator=( const TimerThread& );
