@@ -77,9 +77,10 @@ public:
         EVENT_STOP_REQ,
         EVENT_ENQUEUE_TRACK_REQ,
         EVENT_PLAY_TRACK,
-        EVENT_TRACK_ENDED,
         EVENT_PAUSE_PLAYBACK,
         EVENT_RESUME_PLAYBACK,
+        EVENT_NEXT_TRACK,
+        EVENT_PREVIOUS_TRACK,
         EVENT_SEEK,
 
         /* Others */

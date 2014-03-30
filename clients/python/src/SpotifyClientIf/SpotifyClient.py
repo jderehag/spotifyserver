@@ -212,7 +212,7 @@ class SpotifyClient(Thread):
                     if(state == TlvDefinitions.TlvPlaybackState.PLAYBACK_IDLE):
                         self.__statusIndObserversLock.acquire()
                         for obs in self.__statusIndObservers:
-                            obs.statusIndCb(self.PLAYBACK_IDLE, None, msgObj.getProgress(), msgObj.getVolume)
+                            obs.statusIndCb(self.PLAYBACK_IDLE, None, msgObj.getProgress(), msgObj.getVolume())
                         self.__statusIndObserversLock.release()
                     
                     elif(state == TlvDefinitions.TlvPlaybackState.PLAYBACK_PLAYING):
@@ -224,7 +224,7 @@ class SpotifyClient(Thread):
                     elif(state == TlvDefinitions.TlvPlaybackState.PLAYBACK_PAUSED):
                         self.__statusIndObserversLock.acquire()
                         for obs in self.__statusIndObservers:
-                            obs.statusIndCb(self.PLAYBACK_PAUSED, msgObj.getPlayingTrack(), msgObj.getProgress(), msgObj.getVolume)
+                            obs.statusIndCb(self.PLAYBACK_PAUSED, msgObj.getPlayingTrack(), msgObj.getProgress(), msgObj.getVolume())
                         self.__statusIndObserversLock.release()
                     else:
                         print "Unknown state=" + str(state)

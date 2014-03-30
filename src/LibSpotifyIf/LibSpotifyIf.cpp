@@ -230,22 +230,12 @@ void LibSpotifyIf::resume()
 
 void LibSpotifyIf::next()
 {
-    stop();
-
-    if (trackState_ == TRACK_STATE_PLAYING || trackState_ == TRACK_STATE_PAUSED)
-    {
-        playbackHandler_.trackEndedInd(); /*playNext() only picks from enqueued tracks? and this is the same thing as if track ended...*/
-    }
+    postToEventThread( new EventItem( EVENT_NEXT_TRACK ) );
 }
 
 void LibSpotifyIf::previous()
 {
-    stop();
-
-    if (trackState_ == TRACK_STATE_PLAYING || trackState_ == TRACK_STATE_PAUSED)
-    {
-        playbackHandler_.playPrevious();
-    }
+    postToEventThread( new EventItem( EVENT_PREVIOUS_TRACK ) );
 }
 
 void LibSpotifyIf::seek( uint32_t sec )
@@ -487,27 +477,27 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
                 }
 
             }
-		}
-		break;
+        }
+        break;
 
-		case EVENT_PLAY_REQ:
-		{
-		    PlayReqEventItem* reqEvent = static_cast<PlayReqEventItem*>( event );
-			if (state_ == STATE_LOGGED_IN)
-			{
-				sp_link* link = sp_link_create_from_string(reqEvent->query_.c_str());
-				if(link)
-				{
-				    switch(sp_link_type(link))
-				    {
-				        case SP_LINKTYPE_TRACK:
+        case EVENT_PLAY_REQ:
+        {
+            PlayReqEventItem* reqEvent = static_cast<PlayReqEventItem*>( event );
+            if (state_ == STATE_LOGGED_IN)
+            {
+                sp_link* link = sp_link_create_from_string(reqEvent->query_.c_str());
+                if(link)
+                {
+                    switch(sp_link_type(link))
+                    {
+                        case SP_LINKTYPE_TRACK:
+                        case SP_LINKTYPE_LOCALTRACK:
                             {
                                 sp_track* track = sp_link_as_track(link);
                                 Track trackObj(spotifyGetTrack(track, spotifySession_));
                                 playbackHandler_.playTrack(trackObj);
                             }
                             break;
-
 
                         case SP_LINKTYPE_PLAYLIST:
                             {
@@ -523,7 +513,6 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
                                     pendingMetadata.push( new PlayReqEventItem( *reqEvent ) );
                                     log(LOG_DEBUG) << "Waiting for metadata for playlist " << reqEvent->query_;
                                 }
-
                             }
                             break;
 
@@ -534,20 +523,20 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
                                 log(LOG_NOTICE) << "Created sp_albumbrowse for " << reqEvent->query_ << ", waiting for load finished callback";
                             }
                             break;
-				        /* FALL_THROUGH */
-				        case SP_LINKTYPE_SEARCH:
-				        case SP_LINKTYPE_ARTIST:
-				        default:
-				            log(LOG_EMERG) << "Unknown link type!";
-				            assert(false);
-				            break;
-				    }
-				    sp_link_release(link);
-				}
-			}
+                        /* FALL_THROUGH */
+                        case SP_LINKTYPE_SEARCH:
+                        case SP_LINKTYPE_ARTIST:
+                        default:
+                            log(LOG_EMERG) << "Unknown link type!";
+                            assert(false);
+                            break;
+                    }
+                    sp_link_release(link);
+                }
+            }
 
-			break;
-		}
+            break;
+        }
 
         case EVENT_STOP_REQ:
             if (trackState_ != TRACK_STATE_NOT_LOADED)
@@ -595,12 +584,13 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
             }
             break;
 
-        case EVENT_TRACK_ENDED:
+        case EVENT_NEXT_TRACK:
             {
                 if ( trackState_ != TRACK_STATE_NOT_LOADED )
                 {
-                    log(LOG_DEBUG) << "End of track notified, progress " << progress_;
+                    log(LOG_DEBUG) << "Next track, progress of current: " << progress_;
                     trackState_ = TRACK_STATE_NOT_LOADED; /*todo, this should happen when buffer is finished*/
+                    progress_ = 0;
 
                     /* unload track, otherwise end of track callback will just be called repeatedly until a new track is loaded */
                     sp_session_player_unload(spotifySession_);
@@ -613,7 +603,30 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
                 }
                 else
                 {
-                    log(LOG_NOTICE) << "End of track called, but no track is playing!";
+                    log(LOG_NOTICE) << "Next track called, but no track is playing!";
+                } 
+            }
+            break;
+
+        case EVENT_PREVIOUS_TRACK:
+            {
+                if ( trackState_ != TRACK_STATE_NOT_LOADED )
+                {
+                    log(LOG_DEBUG) << "Previous track, progress of current: " << progress_;
+                    trackState_ = TRACK_STATE_NOT_LOADED; /*todo, this should happen when buffer is finished*/
+
+                    /* unload track, otherwise end of track callback will just be called repeatedly until a new track is loaded */
+                    sp_session_player_unload(spotifySession_);
+
+                    /* Tell all subscribers that the track has ended */
+                    doStatusNtf();
+
+                    /* notify playbackhandler so it can load a new track */
+                    playbackHandler_.playPrevious();
+                }
+                else
+                {
+                    log(LOG_NOTICE) << "Next track called, but no track is playing!";
                 } 
             }
             break;
@@ -836,7 +849,7 @@ void LibSpotifyIf::metadataUpdatedCb(sp_session *session)
 void LibSpotifyIf::endOfTrackCb(sp_session *session)
 {
     log(LOG_DEBUG) << "Track ended";
-    postToEventThread( new EventItem( EVENT_TRACK_ENDED ) );
+    postToEventThread( new EventItem( EVENT_NEXT_TRACK ) );
 }
 
 void LibSpotifyIf::loggedOutCb(sp_session *session)
@@ -913,31 +926,50 @@ void LibSpotifyIf::imageLoadedCb(sp_image* image, void *userdata)
 void LibSpotifyIf::albumLoadedCb(sp_albumbrowse* result, void *userdata)
 {
     EventItem* ev = static_cast<EventItem*>(userdata);
-    Album album = spotifyGetAlbum(result, spotifySession_);
-
-    log(LOG_NOTICE) << "Album \"" << album.getName() << "\" loaded";
-
     switch ( ev->event_ )
     {
         case EVENT_GET_ALBUM:
         {
             QueryReqEventItem* msg = static_cast<QueryReqEventItem*>(userdata);
-            PendingMediaRequestData reqData = msg->reqData;
-            reqData.first->getAlbumResponse( album, reqData.second );
+
+            if ( sp_albumbrowse_error( result ) == SP_ERROR_OK )
+            {
+                Album album = spotifyGetAlbum(result, spotifySession_);
+
+                log(LOG_NOTICE) << "Album \"" << album.getName() << "\" loaded";
+
+                PendingMediaRequestData reqData = msg->reqData;
+                reqData.first->getAlbumResponse( album, reqData.second );
+            }
             delete msg;
             break;
         }
         case EVENT_PLAY_REQ:
         {
             PlayReqEventItem* msg = static_cast<PlayReqEventItem*>(userdata);
-            playbackHandler_.playAlbum(album, msg->startIndex_);
+            if ( sp_albumbrowse_error( result ) == SP_ERROR_OK )
+            {
+                Album album = spotifyGetAlbum(result, spotifySession_);
+
+                log(LOG_NOTICE) << "Album \"" << album.getName() << "\" loaded";
+                playbackHandler_.playAlbum(album, msg->startIndex_);
+            }
             delete msg;
             break;
         }
         case EVENT_GET_IMAGE:
         {
             QueryReqEventItem* msg = static_cast<QueryReqEventItem*>(userdata);
-            postToEventThread( msg );
+            if ( sp_albumbrowse_error( result ) == SP_ERROR_OK )
+            {
+                postToEventThread( msg );
+            }
+            else
+            {
+                log(LOG_WARN) << "Image load error!";
+                PendingMediaRequestData reqData = msg->reqData;
+                reqData.first->getImageResponse( NULL, 0, reqData.second );
+            }
             break;
         }
         default:
@@ -993,8 +1025,10 @@ const char* getEventName(LibSpotifyIf::EventItem* event)
             return "EVENT_SEEK";
         case LibSpotifyIf::EVENT_PLAY_TRACK:
             return "EVENT_PLAY_TRACK";
-        case LibSpotifyIf::EVENT_TRACK_ENDED:
-            return "EVENT_TRACK_ENDED";
+        case LibSpotifyIf::EVENT_NEXT_TRACK:
+            return "EVENT_NEXT_TRACK";
+        case LibSpotifyIf::EVENT_PREVIOUS_TRACK:
+            return "EVENT_PREVIOUS_TRACK";
 
              /* Session handling */
         case LibSpotifyIf::EVENT_LOGGING_IN:
@@ -1007,7 +1041,7 @@ const char* getEventName(LibSpotifyIf::EventItem* event)
             return "EVENT_LOGGED_OUT";
         case LibSpotifyIf::EVENT_CONNECTION_LOST:
             return "EVENT_CONNECTION_LOST";
-	}
+    }
     return "Unknown event type!";
 }
 
