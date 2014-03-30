@@ -475,6 +475,11 @@ sp_artist* sp_albumbrowse_artist(sp_albumbrowse* alb)
     return &artist_array_1[0];
 }
 
+sp_error sp_albumbrowse_error(sp_albumbrowse *alb)
+{
+    return SP_ERROR_OK;
+}
+
 /* ************************************
  * Image stubs
  * * *********************************/
