@@ -90,10 +90,9 @@ public:
     void enqueueTrack(const Track& track);
 
     void playNext();
-    void playPrevious();
+    void playPrevious( unsigned int currentTrackProgress );
 
     void rootFolderUpdatedInd();
-    void trackEndedInd();
     void setShuffle(bool shuffleOn);
     void setRepeat(bool repeatOn);
     bool getShuffle();

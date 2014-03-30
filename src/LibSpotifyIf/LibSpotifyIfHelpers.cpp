@@ -146,6 +146,7 @@ Playlist spotifyGetPlaylist(sp_playlist* playlist, sp_session* session)
         trackObj.setIndex(trackIndex);
         playlistObj.addTrack(trackObj);
     }
+    log(LOG_NOTICE) << "Loaded playlist " << sp_playlist_name(playlist) << " - " << uri << " with " << sp_playlist_num_tracks(playlist) << " tracks";
     return playlistObj;
 }
 

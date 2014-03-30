@@ -506,7 +506,7 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
                                 {
                                     Playlist playlistObj( spotifyGetPlaylist( playlist, spotifySession_ ) );
                                     playbackHandler_.playPlaylist( playlistObj, reqEvent->startIndex_ );
-                                    log(LOG_NOTICE) << "Adding " << reqEvent->query_ << " to playbackhandler";
+                                    log(LOG_NOTICE) << "Adding " << reqEvent->query_ << " (" << playlistObj.getLink() << ") with " << playlistObj.getTracks().size() << " tracks to playbackhandler";
                                 }
                                 else
                                 {
@@ -523,12 +523,12 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
                                 log(LOG_NOTICE) << "Created sp_albumbrowse for " << reqEvent->query_ << ", waiting for load finished callback";
                             }
                             break;
+
                         /* FALL_THROUGH */
                         case SP_LINKTYPE_SEARCH:
                         case SP_LINKTYPE_ARTIST:
                         default:
                             log(LOG_EMERG) << "Unknown link type!";
-                            assert(false);
                             break;
                     }
                     sp_link_release(link);
@@ -599,7 +599,7 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
                     doStatusNtf();
 
                     /* notify playbackhandler so it can load a new track */
-                    playbackHandler_.trackEndedInd();
+                    playbackHandler_.playNext();
                 }
                 else
                 {
@@ -612,8 +612,10 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
             {
                 if ( trackState_ != TRACK_STATE_NOT_LOADED )
                 {
+                    unsigned int progress = progress_/10;
                     log(LOG_DEBUG) << "Previous track, progress of current: " << progress_;
                     trackState_ = TRACK_STATE_NOT_LOADED; /*todo, this should happen when buffer is finished*/
+                    progress_ = 0;
 
                     /* unload track, otherwise end of track callback will just be called repeatedly until a new track is loaded */
                     sp_session_player_unload(spotifySession_);
@@ -622,7 +624,7 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
                     doStatusNtf();
 
                     /* notify playbackhandler so it can load a new track */
-                    playbackHandler_.playPrevious();
+                    playbackHandler_.playPrevious( progress );
                 }
                 else
                 {
@@ -672,7 +674,7 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
                     else
                     {
                         log(LOG_WARN) << "Player load error for " << trackObj.getLink().c_str() << " (" << sp_error_message(err) << ")";
-                        playbackHandler_.trackEndedInd(); /*todo: some proper handling here, this will put track on the history list */
+                        playbackHandler_.playNext(); /*todo: some proper handling here, this will put track on the history list */
                     }
                     sp_track_release( track );
                 }
