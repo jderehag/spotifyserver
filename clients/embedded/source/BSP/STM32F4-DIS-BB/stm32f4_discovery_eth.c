@@ -69,12 +69,13 @@ uint8_t BSP_ETH_Init( ETH_HandleTypeDef* EthHandle )
     {
         ret = 1;
 
-        /* Initialize Tx Descriptors list: Chain Mode */
-        HAL_ETH_DMATxDescListInit( handle, DMATxDscrTab, &Tx_Buff[0][0], ETH_TXBUFNB);
-
-        /* Initialize Rx Descriptors list: Chain Mode  */
-        HAL_ETH_DMARxDescListInit( handle, DMARxDscrTab, &Rx_Buff[0][0], ETH_RXBUFNB);
     }
+
+    /* Initialize Tx Descriptors list: Chain Mode */
+    HAL_ETH_DMATxDescListInit( handle, DMATxDscrTab, &Tx_Buff[0][0], ETH_TXBUFNB);
+
+    /* Initialize Rx Descriptors list: Chain Mode  */
+    HAL_ETH_DMARxDescListInit( handle, DMARxDscrTab, &Rx_Buff[0][0], ETH_RXBUFNB);
 
     /* create a binary semaphore used for synchronisation */
     s_xSemaphore = xSemaphoreCreateCounting(5,0);
