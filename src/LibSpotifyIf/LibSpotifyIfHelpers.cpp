@@ -77,14 +77,15 @@ Track spotifyGetTrack(sp_track* track, sp_session* session)
     for(int artistIndex = 0; artistIndex < sp_track_num_artists(track); artistIndex++)
     {
         sp_artist* artist = sp_track_artist(track, artistIndex);
-        Artist artistObj(sp_artist_name(artist));
         sp_link* artistlink = sp_link_create_from_artist(artist);
+        uri[0] = '\0';
         if(artistlink)
         {
             sp_link_as_string(artistlink, uri, sizeof(uri));
             sp_link_release(artistlink);
-            artistObj.setLink(uri);
         }
+        Artist artistObj(sp_artist_name(artist), uri);
+
         trackObj.addArtist(artistObj);
     }
 
@@ -93,13 +94,13 @@ Track spotifyGetTrack(sp_track* track, sp_session* session)
     if(album)
     {
         sp_link* albumlink = sp_link_create_from_album(album);
-        trackObj.setAlbum(sp_album_name(album));
+        uri[0] = '\0';
         if(albumlink)
         {
             sp_link_as_string(albumlink, uri, sizeof(uri));
             sp_link_release(albumlink);
-            trackObj.setAlbumLink(uri);
         }
+        trackObj.setAlbum(sp_album_name(album), uri);
     }
     trackObj.setDurationMillisecs(sp_track_duration(track));
     trackObj.setIsStarred(sp_track_is_starred(session, track));
@@ -150,11 +151,9 @@ Playlist spotifyGetPlaylist(sp_playlist* playlist, sp_session* session)
     return playlistObj;
 }
 
-
-Album spotifyGetAlbum(sp_albumbrowse* albumbrowse, sp_session* session)
+Album spotifyGetAlbum(sp_album* album, sp_session* session)
 {
     char uri[MAX_LINK_NAME_LENGTH];
-    sp_album* album = sp_albumbrowse_album( albumbrowse );
     sp_link* link = sp_link_create_from_album(album);
 
     sp_link_as_string(link, uri, sizeof(uri));
@@ -163,24 +162,62 @@ Album spotifyGetAlbum(sp_albumbrowse* albumbrowse, sp_session* session)
     Album albumObj( sp_album_name(album), uri );
 
     albumObj.setYear( sp_album_year( album ) );
-    albumObj.setReview( sp_albumbrowse_review( albumbrowse ) );
     albumObj.setIsAvailable( sp_album_is_available( album ) );
 
-    sp_artist* artist = sp_albumbrowse_artist(albumbrowse);
-    Artist artistObj(sp_artist_name(artist));
-    sp_link* artistlink = sp_link_create_from_artist(artist);
-    sp_link_as_string(artistlink, uri, sizeof(uri));
-    sp_link_release(artistlink);
-    artistObj.setLink(uri);
+    sp_artist* artist = sp_album_artist( album );
+    sp_link* artistlink = sp_link_create_from_artist( artist );
+    sp_link_as_string( artistlink, uri, sizeof( uri ) );
+    sp_link_release( artistlink );
+    Artist artistObj( sp_artist_name( artist ), uri );
     albumObj.setArtist(artistObj);
+
+    return albumObj;
+}
+
+void spotifyAddAlbumBrowseInfo( Album& album, sp_albumbrowse* albumbrowse, sp_session* session )
+{
+    album.setReview( sp_albumbrowse_review( albumbrowse ) );
 
     for (int trackIndex = 0; trackIndex < sp_albumbrowse_num_tracks(albumbrowse); ++trackIndex)
     {
         Track trackObj(spotifyGetTrack(sp_albumbrowse_track(albumbrowse, trackIndex), session));
         trackObj.setIndex(trackIndex);
-        albumObj.addTrack(trackObj);
+        album.addTrack(trackObj);
     }
+}
+
+Album spotifyGetAlbum(sp_albumbrowse* albumbrowse, sp_session* session)
+{
+    sp_album* album = sp_albumbrowse_album( albumbrowse );
+
+    Album albumObj = spotifyGetAlbum( album, session );
+    spotifyAddAlbumBrowseInfo( albumObj, albumbrowse, session );
+
     return albumObj;
+}
+
+
+Artist spotifyGetArtist(sp_artistbrowse* artistbrowse, sp_session* session)
+{
+    sp_artist* artist = sp_artistbrowse_artist( artistbrowse );
+
+    char uri[MAX_LINK_NAME_LENGTH];
+    sp_link* link = sp_link_create_from_artist(artist);
+
+    sp_link_as_string(link, uri, sizeof(uri));
+    sp_link_release(link);
+
+    Artist artistObj( sp_artist_name(artist), uri );
+
+    for ( int i = 0; i < sp_artistbrowse_num_albums(artistbrowse); i++ )
+    {
+        sp_album* album = sp_artistbrowse_album( artistbrowse, i );
+        // todo maybe filter out "appears on" albums as well?
+        if ( sp_album_is_available( album ) ) // there's a ridiculous amount of albums not available
+            artistObj.addAlbum( spotifyGetAlbum( album, session ) );
+    }
+
+    return artistObj;
 }
 
 void LibSpotifyIf::libSpotifySessionCreate()

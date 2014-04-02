@@ -180,15 +180,6 @@ public:
     std::string print() const;
 };
 
-class PlaylistTlv : public TlvContainer
-{
-public:
-    PlaylistTlv();
-
-    void addLink(const uint8_t* url, uint32_t len);
-    void addLink(const std::string& url);
-};
-
 
 std::ostream& operator <<(std::ostream& os, const Tlv& rhs);
 

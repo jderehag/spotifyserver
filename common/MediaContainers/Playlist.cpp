@@ -35,15 +35,9 @@
 namespace LibSpotify
 {
 
-Playlist::Playlist(const std::string& name, const std::string& link) : name_(name), link_(link) { }
-Playlist::Playlist(const std::string& name, const std::string& link, bool nullObject) : name_(name), link_(link) { }
-Playlist::Playlist(const char* name, const char* link) : name_(name), link_(link) { }
-Playlist::Playlist(const TlvContainer* tlv)
+Playlist::Playlist(const std::string& name, const std::string& link) : MediaBaseInfo(name, link) { }
+Playlist::Playlist(const TlvContainer* tlv) : MediaBaseInfo(tlv)
 {
-    const StringTlv* tlvName = (const StringTlv*) tlv->getTlv(TLV_NAME);
-    const StringTlv* tlvLink = (const StringTlv*) tlv->getTlv(TLV_LINK);
-    name_ = (tlvName ? tlvName->getString() : "no-name");
-    link_ = (tlvLink ? tlvLink->getString() : "no-link");
     isStarred_ = false;
     isCollaborative_ = false;
 
@@ -74,16 +68,6 @@ void Playlist::addTrack(Track& track)
 	tracks_.push_back(track);
 }
 
-const std::string& Playlist::getName() const
-{
-	return name_;
-}
-
-const std::string& Playlist::getLink() const
-{
-	return link_;
-}
-
 const std::deque<Track>& Playlist::getTracks() const
 {
 	return tracks_;
@@ -91,11 +75,7 @@ const std::deque<Track>& Playlist::getTracks() const
 
 Tlv* Playlist::toTlv() const
 {
-    PlaylistTlv* playlist = new PlaylistTlv;
-
-    playlist->addTlv(TLV_NAME, name_);
-    playlist->addLink(link_);
-
+    TlvContainer* playlist = createTlv(TLV_PLAYLIST);
     return playlist;
 }
 

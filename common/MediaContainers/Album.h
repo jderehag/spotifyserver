@@ -34,15 +34,13 @@
 namespace LibSpotify
 {
 
-class Artist;
-
 class Album : public Playlist
 {
 private:
     int year_;
     std::string review_;
     bool isAvailable_;
-    Artist artist_;
+    MediaBaseInfo artist_;
 
 public:
     Album(const char* name, const char* link);
@@ -58,8 +56,8 @@ public:
     void setIsAvailable( bool isAvailable );
     int getIsAvailable() const;
 
-    void setArtist( Artist& artist );
-    const Artist& getArtist() const;
+    void setArtist( MediaBaseInfo& artist );
+    const MediaBaseInfo& getArtist() const;
 
     TlvContainer* toTlv() const;
 };

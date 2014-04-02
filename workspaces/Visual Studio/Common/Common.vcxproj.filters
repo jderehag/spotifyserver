@@ -151,6 +151,9 @@
     <ClInclude Include="..\..\..\common\Platform\Timers\TimerFramework.h">
       <Filter>Platform\Timers</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\common\MediaContainers\MediaBaseInfo.h">
+      <Filter>MediaContainers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\common\Platform\Socket\Windows\WindowsSocket.cpp">
@@ -245,6 +248,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\common\Platform\Timers\Generic\TimerThread.cpp">
       <Filter>Platform\Timers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\MediaContainers\MediaBaseInfo.cpp">
+      <Filter>MediaContainers</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

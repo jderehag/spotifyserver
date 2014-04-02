@@ -31,6 +31,7 @@
 #include "MediaContainers/Track.h"
 #include "MediaContainers/Playlist.h"
 #include "MediaContainers/Album.h"
+#include "MediaContainers/Artist.h"
 #include <libspotify/api.h>
 #include <string>
 
@@ -44,6 +45,7 @@ namespace LibSpotify
 
     //Album spotifyGetAlbum(std::string* album_uri, sp_session* session);
     Album spotifyGetAlbum(sp_albumbrowse* album, sp_session* session);
+    Artist spotifyGetArtist(sp_artistbrowse* artist, sp_session* session);
 
 } /* namespace LibSpotify */
 #endif /* LIBSPOTIFYIFHELPERS_H_ */

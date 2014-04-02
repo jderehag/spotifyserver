@@ -201,6 +201,12 @@ TlvContainer* MessageDecoder::decodeArtist()
 
         switch(getCurrentTlv())
         {
+            case TLV_ALBUM:
+            {
+                groupTlv->addTlv(decodeAlbum());
+            }
+            break;
+
             case TLV_LINK:
             {
                 if(groupTlv->getNumTlv(getCurrentTlv()) == 0)
@@ -386,7 +392,7 @@ TlvContainer* MessageDecoder::decodePlaylist()
 {
     uint32_t end;
     uint32_t len = getCurrentTlvLen();
-    PlaylistTlv* groupTlv = new PlaylistTlv();
+    TlvContainer* groupTlv = new TlvContainer( TLV_PLAYLIST );
 
     enterTlvGroup();
     end = len + rpos_;

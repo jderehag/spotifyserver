@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Jesper Derehag
+ * Copyright (c) 2014, Jens Nielsen
  * All rights reserved.
 
  * Redistribution and use in source and binary forms, with or without
@@ -16,7 +16,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL JESPER DEREHAG BE LIABLE FOR ANY
+ * DISCLAIMED. IN NO EVENT SHALL JENS NIELSEN BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -25,57 +25,39 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef TRACK_H_
-#define TRACK_H_
-
 #include "MediaBaseInfo.h"
-#include "MessageFactory/Tlvs.h"
-#include <string>
-#include <vector>
 
 namespace LibSpotify
 {
 
-class Track : public MediaBaseInfo
+MediaBaseInfo::MediaBaseInfo( const std::string& name, const std::string& link ) : name_(name), link_(link)
 {
-private:
-    std::vector<MediaBaseInfo> artistList_;
-    MediaBaseInfo album_;
-	bool isStarred_;
-	bool isLocal_;
-	bool isAutoLinked_;
-	unsigned int durationMillisecs_;
-    int index_; /* index in list when referenced by playlist or album */
-
-
-public:
-	Track(const std::string& name, const std::string& link);
-    Track( const TlvContainer* tlv );
-	virtual ~Track();
-
-	const std::vector<MediaBaseInfo>& getArtists() const;
-	void addArtist(MediaBaseInfo& artist);
-	const std::string& getAlbum() const;
-	void setAlbum(const std::string& name, const std::string& link);
-    const std::string& getAlbumLink() const;
-	unsigned int getDurationMillisecs() const;
-	void setDurationMillisecs(unsigned int duration);
-	bool isStarred() const;
-	void setIsStarred(bool isStarred);
-	bool isLocal() const;
-	void setIsLocal(bool isStarred);
-	bool isAutoLinked() const;
-	void setIsAutoLinked(bool isStarred);
-	int getIndex() const;
-	void setIndex(int index);
-
-	void write(MessageEncoder* msg) const;
-	TlvContainer* toTlv() const;
-
-	bool operator!=(const Track& rhs) const;
-	bool operator==(const Track& rhs) const;
-};
-
 }
 
-#endif /* TRACK_H_ */
+MediaBaseInfo::MediaBaseInfo(const TlvContainer* tlv)
+{
+    const StringTlv* tlvName = (const StringTlv*) tlv->getTlv(TLV_NAME);
+    const StringTlv* tlvLink = (const StringTlv*) tlv->getTlv(TLV_LINK);
+    name_ = (tlvName ? tlvName->getString() : "no-name");
+    link_ = (tlvLink ? tlvLink->getString() : "no-link");
+}
+
+MediaBaseInfo::~MediaBaseInfo()
+{
+}
+
+const std::string& MediaBaseInfo::getName() const { return name_; }
+
+const std::string& MediaBaseInfo::getLink() const { return link_; }
+
+TlvContainer* MediaBaseInfo::createTlv(TlvType_t type) const
+{
+    TlvContainer* container = new TlvContainer( type );
+
+    container->addTlv(TLV_NAME, name_);
+    container->addTlv(TLV_LINK, link_);
+
+    return container;
+}
+
+} /* namespace LibSpotify */

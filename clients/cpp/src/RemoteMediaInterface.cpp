@@ -208,6 +208,17 @@ void RemoteMediaInterface::receivedResponse( const Message* rsp, const Message* 
             }
             break;
 
+            case GET_ARTIST_RSP:
+            {
+                const TlvContainer* artistTlv = (const TlvContainer*)rsp->getTlv(TLV_ARTIST);
+                if ( artistTlv )
+                {
+                    Artist artist( artistTlv );
+                    subscriber->getArtistResponse( artist, subscriberData );
+                }
+            }
+            break;
+
             case GENERIC_SEARCH_RSP:
             {
                 std::deque<Track> tracks;
@@ -350,6 +361,13 @@ void RemoteMediaInterface::play( std::string link, IMediaInterfaceCallbackSubscr
 void RemoteMediaInterface::getAlbum( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
     Message* msg = new Message( GET_ALBUM_REQ);
+    msg->addTlv(TLV_LINK, link);
+    messenger_.queueRequest( msg, this, new PendingMediaRequestData(subscriber, userData) );
+}
+
+void RemoteMediaInterface::getArtist( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
+{
+    Message* msg = new Message( GET_ARTIST_REQ);
     msg->addTlv(TLV_LINK, link);
     messenger_.queueRequest( msg, this, new PendingMediaRequestData(subscriber, userData) );
 }

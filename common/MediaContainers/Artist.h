@@ -28,29 +28,31 @@
 #ifndef ARTIST_H_
 #define ARTIST_H_
 
+#include "MediaBaseInfo.h"
+#include "Album.h"
 #include "MessageFactory/Tlvs.h"
 #include <string>
+#include <deque>
 
 namespace LibSpotify
 {
+typedef std::deque<Album> AlbumContainer;
 
-class Artist
+class Artist : public MediaBaseInfo
 {
 private:
-    std::string name_;
-    std::string link_;
+
+    AlbumContainer albums;
 
 public:
-    Artist(const char* name);
+    Artist( const std::string& name, const std::string& link );
     Artist(const TlvContainer* tlv);
     virtual ~Artist();
 
-    const std::string& getName() const;
+    void addAlbum( Album album );
+    const AlbumContainer& getAlbums() const;
 
-    const std::string& getLink() const;
-    void setLink(const std::string& link);
-
-    Tlv* toTlv() const;
+    TlvContainer* toTlv() const;
 
 };
 

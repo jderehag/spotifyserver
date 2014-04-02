@@ -36,9 +36,9 @@ Album::Album(const char* name, const char* link) : Playlist(name, link),
                                                    year_(0), 
                                                    review_(""),
                                                    isAvailable_(false), 
-                                                   artist_(Artist(""))
+                                                   artist_(Artist("", ""))
 { }
-Album::Album(const TlvContainer* tlv) : Playlist(tlv), artist_(Artist(""))
+Album::Album(const TlvContainer* tlv) : Playlist(tlv), artist_(Artist("", ""))
 {
     const IntTlv* tlvYear = (const IntTlv*) tlv->getTlv(TLV_ALBUM_RELEASE_YEAR);
     const StringTlv* tlvReview = (const StringTlv*) tlv->getTlv(TLV_ALBUM_REVIEW);
@@ -51,12 +51,6 @@ Album::Album(const TlvContainer* tlv) : Playlist(tlv), artist_(Artist(""))
         artist_ = Artist( tlvArtist );
 }
 Album::~Album() { }
-/*
-const std::string& Album::getName() const { return name_; }
-
-const std::string& Album::getLink() const { return link_; }
-void Album::setLink(const std::string& link){ link_ = link; }
-*/
 
 void Album::setYear(int year) { year_ = year; }
 int Album::getYear() const { return year_; }
@@ -67,20 +61,18 @@ const std::string& Album::getReview() const { return review_; }
 void Album::setIsAvailable( bool isAvailable ) { isAvailable_ = isAvailable; }
 int Album::getIsAvailable() const { return isAvailable_; }
 
-void Album::setArtist( Artist& artist ) { artist_ = artist; }
-const Artist& Album::getArtist() const { return artist_; }
+void Album::setArtist( MediaBaseInfo& artist ) { artist_ = artist; }
+const MediaBaseInfo& Album::getArtist() const { return artist_; }
 
 TlvContainer* Album::toTlv() const
 {
-    TlvContainer* album = new TlvContainer(TLV_ALBUM);
+    TlvContainer* album = createTlv(TLV_ALBUM);
 
-    album->addTlv( TLV_NAME, name_ );
-    album->addTlv( TLV_LINK, link_ );
     album->addTlv( TLV_ALBUM_RELEASE_YEAR, year_ );
     album->addTlv( TLV_ALBUM_REVIEW, review_ );
     album->addTlv( TLV_ALBUM_IS_AVAILABLE, isAvailable_ ? 1 : 0 );
 
-    album->addTlv( artist_.toTlv() );
+    album->addTlv( artist_.createTlv(TLV_ARTIST) );
 
     return album;
 }

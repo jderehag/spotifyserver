@@ -26,7 +26,7 @@ CPPSRC =	spotifyserver.cpp \
 			$(addprefix ConfigHandling/Configs/, SpotifyConfig.cpp NetworkConfig.cpp AudioEndpointConfig.cpp LoggerConfig.cpp) \
 			$(addprefix LibSpotifyIf/, LibSpotifyIf.cpp LibSpotifyIfCallbackWrapper.cpp LibSpotifyIfHelpers.cpp LibSpotifyPlaybackHandler.cpp) \
 
-CPPSRC +=	$(addprefix MediaContainers/, Album.cpp Artist.cpp Folder.cpp Playlist.cpp Track.cpp) \
+CPPSRC +=	$(addprefix MediaContainers/, MediaBaseInfo.cpp Album.cpp Artist.cpp Folder.cpp Playlist.cpp Track.cpp) \
 			$(addprefix MessageFactory/, Message.cpp MessageDecoder.cpp MessageEncoder.cpp TlvDefinitions.cpp Tlvs.cpp SocketReader.cpp SocketWriter.cpp) \
 			$(addprefix SocketHandling/, Messenger.cpp SocketServer.cpp SocketPeer.cpp ) \
 			$(addprefix Platform/AudioEndpoints/, AudioEndpointLocalShared.cpp AudioEndpointRemote.cpp AudioDispatch.cpp AudioFifo.cpp ) \

@@ -27,30 +27,24 @@
 
 #include "Track.h"
 #include "MessageFactory/Tlvs.h"
+#include "Artist.h"
 
 namespace LibSpotify
 {
 
-Track::Track(const std::string& name, const std::string& link) : name_(name), link_(link), index_(-1) { }
-Track::Track(const char* name, const char* link) : name_(name), link_(link), index_(-1) { }
-Track::Track( const TlvContainer* tlv )
+Track::Track(const std::string& name, const std::string& link) : MediaBaseInfo(name, link), album_("", ""), index_(-1) { }
+Track::Track( const TlvContainer* tlv ) : MediaBaseInfo( tlv ), album_("", "")
 {
-    const StringTlv* tlvName = (const StringTlv*) tlv->getTlv(TLV_NAME);
-    const StringTlv* tlvLink = (const StringTlv*) tlv->getTlv(TLV_LINK);
     const IntTlv* tlvIndex = (const IntTlv*) tlv->getTlv(TLV_TRACK_INDEX);
     const IntTlv* tlvDuration = (const IntTlv*) tlv->getTlv(TLV_TRACK_DURATION);
     const TlvContainer* tlvAlbum = (const TlvContainer*) tlv->getTlv(TLV_ALBUM);
-    name_ = (tlvName ? tlvName->getString() : "no-name");
-    link_ = (tlvLink ? tlvLink->getString() : "no-link");
+
     index_ = ( tlvIndex ? (int)tlvIndex->getVal() : -1);
     durationMillisecs_ = ( tlvDuration ? (int)tlvDuration->getVal() : 0 );
 
     if ( tlvAlbum )
     {
-        tlvName = (const StringTlv*) tlvAlbum->getTlv(TLV_NAME);
-        tlvLink = (const StringTlv*) tlvAlbum->getTlv(TLV_LINK);
-        album_ = (tlvName ? tlvName->getString() : "");
-        albumLink_ = (tlvLink ? tlvLink->getString() : "");
+        album_ = MediaBaseInfo(tlvAlbum);
     }
 
     for ( TlvContainer::const_iterator it = tlv->begin();
@@ -58,25 +52,19 @@ Track::Track( const TlvContainer* tlv )
     {
         if ( (*it)->getType() == TLV_ARTIST )
         {
-            Artist artist( (const TlvContainer*)(*it) );
+            MediaBaseInfo artist( (const TlvContainer*)(*it) );
             addArtist( artist );
         }
     }
 }
 Track::~Track() { }
 
-const std::string& Track::getLink() const { return link_; }
-const std::string& Track::getName() const { return name_; }
+const std::vector<MediaBaseInfo>& Track::getArtists() const { return artistList_; }
+void Track::addArtist(MediaBaseInfo& artist) {artistList_.push_back(artist); }
 
-
-const std::vector<Artist>& Track::getArtists() const { return artistList_; }
-void Track::addArtist(Artist& artist) {artistList_.push_back(artist); }
-
-const std::string& Track::getAlbum() const { return album_; }
-void Track::setAlbum(const std::string& name){ album_ = name; }
-
-const std::string& Track::getAlbumLink() const { return albumLink_; }
-void Track::setAlbumLink(const std::string& link){ albumLink_ = link; }
+void Track::setAlbum(const std::string& name, const std::string& link){ album_ = MediaBaseInfo(name, link); }
+const std::string& Track::getAlbum() const { return album_.getName(); }
+const std::string& Track::getAlbumLink() const { return album_.getLink(); }
 
 unsigned int Track::getDurationMillisecs() const {return durationMillisecs_;}
 void Track::setDurationMillisecs(unsigned int duration){durationMillisecs_ = duration;}
@@ -93,27 +81,17 @@ void Track::setIsAutoLinked(bool isAutoLinked) { isAutoLinked_ = isAutoLinked; }
 int Track::getIndex() const { return index_; }
 void Track::setIndex(int index) { index_ = index; }
 
-Tlv* Track::toTlv() const
+TlvContainer* Track::toTlv() const
 {
-    TlvContainer* track = new TlvContainer(TLV_TRACK);
+    TlvContainer* track = createTlv(TLV_TRACK);
 
-    track->addTlv(TLV_LINK, link_);
-    track->addTlv(TLV_NAME, name_);
-
-    for(std::vector<Artist>::const_iterator it = artistList_.begin(); it != artistList_.end(); it++)
+    for(std::vector<MediaBaseInfo>::const_iterator it = artistList_.begin(); it != artistList_.end(); it++)
     {
-        TlvContainer* artist = new TlvContainer(TLV_ARTIST);
-        artist->addTlv(TLV_NAME, it->getName());
-        artist->addTlv(TLV_LINK, it->getLink());
-        track->addTlv(artist);
+        track->addTlv(it->createTlv(TLV_ARTIST));
     }
 
-    {
-        TlvContainer* album = new TlvContainer(TLV_ALBUM);
-        album->addTlv(TLV_NAME, album_);
-        album->addTlv(TLV_LINK, albumLink_);
-        track->addTlv(album);
-    }
+    track->addTlv(album_.createTlv(TLV_ALBUM));
+
     track->addTlv(TLV_TRACK_DURATION, durationMillisecs_);
     if ( index_ >= 0 )
     {

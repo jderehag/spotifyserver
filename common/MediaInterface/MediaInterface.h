@@ -34,6 +34,7 @@
 
 #include "MediaContainers/Folder.h"
 #include "MediaContainers/Album.h"
+#include "MediaContainers/Artist.h"
 #include "MediaContainers/Track.h"
 #include <deque>
 
@@ -51,6 +52,7 @@ public:
     virtual void getTracksResponse( const std::deque<Track>& tracks, void* userData ) = 0;
     virtual void getImageResponse( const void* data, size_t dataSize, void* userData ) = 0;
     virtual void getAlbumResponse( const Album& album, void* userData ) = 0;
+    virtual void getArtistResponse( const Artist& artist, void* userData ) = 0;
     virtual void genericSearchCallback( const std::deque<Track>& listOfTracks, const std::string& didYouMean, void* userData ) = 0;
     virtual void getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume, const Track& currentTrack, unsigned int progress, void* userData ) = 0;
     virtual void getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume, void* userData ) = 0;
@@ -101,6 +103,7 @@ public:
     virtual void play( std::string link, int startIndex, IMediaInterfaceCallbackSubscriber* subscriber, void* userData ) = 0;
     virtual void play( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData ) = 0;
     virtual void getAlbum( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData ) = 0;
+    virtual void getArtist( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData ) = 0;
     virtual void search( std::string query, IMediaInterfaceCallbackSubscriber* subscriber, void* userData ) = 0;
 
     /* todo move to AudioEndpointManager? */

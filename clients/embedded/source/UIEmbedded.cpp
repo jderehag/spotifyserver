@@ -136,6 +136,8 @@ void UIEmbedded::getImageResponse( const void* data, size_t dataSize, void* user
 {}
 void UIEmbedded::getAlbumResponse( const Album& album, void* userData )
 {}
+void UIEmbedded::getArtistResponse( const Artist& artist, void* userData )
+{}
 void UIEmbedded::genericSearchCallback( const std::deque<Track>& listOfTracks, const std::string& didYouMean, void* userData )
 {}
 void UIEmbedded::getCurrentAudioEndpointsResponse( const std::set<std::string> endpoints, void* userData )
@@ -242,7 +244,7 @@ void UIEmbedded::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool
     ypos += 13;
 
     std::stringstream out;
-    for ( std::vector<Artist>::const_iterator it = currentTrack.getArtists().begin();
+    for ( std::vector<MediaBaseInfo>::const_iterator it = currentTrack.getArtists().begin();
             it != currentTrack.getArtists().end(); it++ )
     {
         out << (*it).getName();

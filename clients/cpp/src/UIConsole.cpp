@@ -132,6 +132,13 @@ void UIConsole::run()
             continue;
         }
 
+        if ( argv[0] == "getArtist")
+        {
+            if ( argc == 2 )
+                m_.getArtist( argv[1], this, NULL );
+            continue;
+        }
+
         //handle the old commands the old way for now..
         c = argv[0][0];
         switch(c)
@@ -276,6 +283,18 @@ void UIConsole::getAlbumResponse( const Album& album, void* userData )
     std::cout << "  By " << album.getArtist().getName() << " - " << album.getArtist().getLink() << std::endl;
     printTracks( album.getTracks() );
 }
+void UIConsole::getArtistResponse( const Artist& artist, void* userData )
+{
+    std::cout << "  " << artist.getName() << " - " << artist.getLink() << std::endl;
+    AlbumContainer albums = artist.getAlbums();
+    for ( AlbumContainer::const_iterator it = albums.begin();
+          it != albums.end(); it++ )
+    {
+        std::cout << "  " << (*it).getName() << " - " << (*it).getLink() << std::endl;
+        printTracks( (*it).getTracks() );
+        std::cout << std::endl;
+    }
+}
 void UIConsole::genericSearchCallback( const std::deque<Track>& listOfTracks, const std::string& didYouMean, void* userData )
 {
     printTracks( listOfTracks );
@@ -287,7 +306,7 @@ void UIConsole::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool 
 
     std::cout << "  Current track: " << currentTrack.getName() << "  -  "  << currentTrack.getLink() << std::endl;
     std::cout << "    " << currentTrack.getAlbum() << "  -  "  << currentTrack.getAlbumLink() << std::endl;
-    for ( std::vector<Artist>::const_iterator it = currentTrack.getArtists().begin();
+    for ( std::vector<MediaBaseInfo>::const_iterator it = currentTrack.getArtists().begin();
             it != currentTrack.getArtists().end(); it++ )
     {
         std::cout << "    " << (*it).getName() << "  -  "  << (*it).getLink() << std::endl;

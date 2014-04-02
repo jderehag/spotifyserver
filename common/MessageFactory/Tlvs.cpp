@@ -371,20 +371,6 @@ std::string TlvRoot::print() const
     return ss.str();
 }
 
-
-PlaylistTlv::PlaylistTlv() : TlvContainer(TLV_PLAYLIST)
-{
-}
-void PlaylistTlv::addLink(const uint8_t* url, uint32_t len)
-{
-    addTlv(TLV_LINK, url, len);
-}
-void PlaylistTlv::addLink(const std::string& url)
-{
-    addTlv(TLV_LINK, url);
-}
-
-
 std::ostream& operator <<(std::ostream& os, const Tlv& rhs)
 {
     os << rhs.print();

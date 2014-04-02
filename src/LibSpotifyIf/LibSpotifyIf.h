@@ -71,6 +71,7 @@ public:
         EVENT_GENERIC_SEARCH,
         EVENT_GET_IMAGE,
         EVENT_GET_ALBUM,
+        EVENT_GET_ARTIST,
 
         /* Playback Handling */
         EVENT_PLAY_REQ,
@@ -225,6 +226,7 @@ private:
 	void genericSearchCb(sp_search *search, void *userdata);
     void imageLoadedCb(sp_image* image, void *userdata);
     void albumLoadedCb(sp_albumbrowse* result, void *userdata);
+    void artistLoadedCb(sp_artistbrowse* result, void *userdata);
 	/* Util callbacks */
 	void logMessageCb(sp_session *session, const char *data);
 
@@ -254,6 +256,7 @@ public:
     virtual void play( std::string link, int startIndex, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
     virtual void play( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
     virtual void getAlbum( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
+    virtual void getArtist( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
     virtual void search( std::string query, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
 
     virtual void getCurrentAudioEndpoints( IMediaInterfaceCallbackSubscriber* subscriber, void* userData );

@@ -66,6 +66,7 @@ public:
 	static void SP_CALLCONV genericSearchCallback(sp_search *search, void *userdata);
 	static void SP_CALLCONV imageLoadedCallback(sp_image *search, void *userdata);
 	static void SP_CALLCONV albumLoadedCallback(sp_albumbrowse *result, void *userdata);
+    static void SP_CALLCONV artistLoadedCallback(sp_artistbrowse *result, void *userdata);
 
 };
 }

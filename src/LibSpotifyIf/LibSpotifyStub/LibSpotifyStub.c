@@ -33,12 +33,16 @@
 
 static sp_session_config g_config;
 
+static sp_artist oasis = {
+        .name ="Oasis",
+        .url = "spotify:artist:Oasis",
+};
 static sp_artist artist_array_1[] =
 {
         {
                 .name ="Oasis",
                 .url = "spotify:artist:Oasis",
-        }
+        },
 };
 
 static sp_artist artist_array_2[] =
@@ -47,7 +51,6 @@ static sp_artist artist_array_2[] =
                 .name ="Oasis",
                 .url = "spotify:artist:Oasis",
         },
-
         {
                 .name ="Bon Jovi",
                 .url = "spotify:artist:BonJovi",
@@ -60,6 +63,19 @@ static sp_album best_oasis_album =
         .name = "Oasis, the second coming..",
         .url = "spotify:album:Oasisthesecondcoming",
         .releaseYear = 2012,
+};
+
+static sp_album oasis_albums[] = {
+    {
+        .name = "Oasis, the second coming..",
+        .url = "spotify:album:Oasisthesecondcoming",
+        .releaseYear = 2012,
+    },
+    {
+        .name = "Oasis, the second coming.. Remastered",
+        .url = "spotify:album:OasisthesecondcomingRemastered",
+        .releaseYear = 2014,
+    }
 };
 
 static sp_track track_array_1[] =
@@ -193,6 +209,13 @@ static sp_albumbrowse albumbrowse_result =
         .num_tracks = sizeof(track_array_1)/sizeof(track_array_1[0]),
         .track_array = track_array_1,
         .review = "The best album ever. Angels are weeping rainbows.",
+};
+
+static sp_artistbrowse artistbrowse_result =
+{
+        .artist = &oasis,
+        .num_albums = sizeof(oasis_albums)/sizeof(oasis_albums[0]),
+        .album_array = oasis_albums,
 };
 
 /*************************************
@@ -429,6 +452,11 @@ int sp_album_year(sp_album *album)
     return album->releaseYear;
 }
 
+sp_artist* sp_album_artist(sp_album* alb)
+{
+    return &artist_array_1[0];
+}
+
 bool sp_album_is_available(sp_album *album)
 {
     return 1;
@@ -476,6 +504,41 @@ sp_artist* sp_albumbrowse_artist(sp_albumbrowse* alb)
 }
 
 sp_error sp_albumbrowse_error(sp_albumbrowse *alb)
+{
+    return SP_ERROR_OK;
+}
+
+/* ************************************
+ * Artistbrowse stubs
+ * * *********************************/
+
+sp_artistbrowse * sp_artistbrowse_create(sp_session *session, sp_artist *artist, sp_artistbrowse_type type, artistbrowse_complete_cb *callback, void *userdata)
+{
+    callback(&artistbrowse_result, userdata);
+    return &artistbrowse_result;
+}
+
+sp_artist * sp_artistbrowse_artist(sp_artistbrowse *arb)
+{
+    return arb->artist;
+}
+
+int sp_artistbrowse_num_albums(sp_artistbrowse *arb)
+{
+    return arb->num_albums;
+}
+
+sp_album * sp_artistbrowse_album(sp_artistbrowse *arb, int index)
+{
+    return &arb->album_array[index];
+}
+
+sp_error sp_artistbrowse_release(sp_artistbrowse *artist)
+{
+    return SP_ERROR_OK;
+}
+
+sp_error sp_artistbrowse_error(sp_artistbrowse *artist)
 {
     return SP_ERROR_OK;
 }
@@ -575,6 +638,11 @@ sp_track* sp_link_as_track(sp_link *link)
 sp_album* sp_link_as_album(sp_link *link)
 {
     return &best_oasis_album;
+}
+
+sp_artist* sp_link_as_artist(sp_link *link)
+{
+    return &artist_array_1[0];
 }
 
 sp_linktype sp_link_type(sp_link *link)

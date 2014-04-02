@@ -30,27 +30,32 @@
 namespace LibSpotify
 {
 
-Artist::Artist(const char* name) : name_(name), link_("") { }
-Artist::Artist(const TlvContainer* tlv)
+Artist::Artist( const std::string& name, const std::string& link ) : MediaBaseInfo(name, link) { }
+Artist::Artist( const TlvContainer* tlv ) : MediaBaseInfo(tlv)
 {
-    const StringTlv* tlvName = (const StringTlv*) tlv->getTlv(TLV_NAME);
-    const StringTlv* tlvLink = (const StringTlv*) tlv->getTlv(TLV_LINK);
-    name_ = (tlvName ? tlvName->getString() : "no-name");
-    link_ = (tlvLink ? tlvLink->getString() : "no-link");
+    for ( TlvContainer::const_iterator it = tlv->begin();
+        it != tlv->end(); it++ )
+    {
+        if ( (*it)->getType() == TLV_ALBUM )
+        {
+            Album album( (const TlvContainer*)(*it) );
+            addAlbum( album );
+        }
+    }
 }
+
 Artist::~Artist() { }
 
-const std::string& Artist::getName() const { return name_; }
-
-const std::string& Artist::getLink() const { return link_; }
-void Artist::setLink(const std::string& link){ link_ = link; }
-
-Tlv* Artist::toTlv() const
+void Artist::addAlbum( Album album )
 {
-    TlvContainer* artist = new TlvContainer( TLV_ARTIST );
+    albums.push_back(album);
+}
 
-    artist->addTlv(TLV_NAME, name_);
-    artist->addTlv(TLV_LINK, link_);
+const AlbumContainer& Artist::getAlbums() const { return albums; }
+
+TlvContainer* Artist::toTlv() const
+{
+    TlvContainer* artist = createTlv( TLV_ARTIST );
 
     return artist;
 }

@@ -112,6 +112,11 @@ void LibSpotifyIf::getAlbum( std::string link, IMediaInterfaceCallbackSubscriber
     postToEventThread( new QueryReqEventItem( EVENT_GET_ALBUM, subscriber, userData, link ) );
 }
 
+void LibSpotifyIf::getArtist( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
+{
+    postToEventThread( new QueryReqEventItem( EVENT_GET_ARTIST, subscriber, userData, link ) );
+}
+
 void LibSpotifyIf::getStatus( IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
     switch ( trackState_ )
@@ -383,6 +388,34 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
                 else
                 {
                     log(LOG_WARN) << "Bad link: " << album_uri;
+                }
+            }
+            break;
+        }
+
+        case EVENT_GET_ARTIST:
+        {
+            QueryReqEventItem* reqEvent = static_cast<QueryReqEventItem*>( event );
+            const char* artist_uri = reqEvent->query_.c_str();
+            if (state_ == STATE_LOGGED_IN)
+            {
+                sp_link* link = sp_link_create_from_string(artist_uri);
+                if (link)
+                {
+                    if (sp_link_type(link) == SP_LINKTYPE_ARTIST)
+                    {
+                        sp_artist* artist = sp_link_as_artist(link);
+                        sp_artistbrowse_create( spotifySession_, artist, SP_ARTISTBROWSE_NO_TRACKS, &LibSpotifyIfCallbackWrapper::artistLoadedCallback, new QueryReqEventItem(*reqEvent));
+                    }
+                    else
+                    {
+                        log(LOG_WARN) << "Link is not an album: " << artist_uri;
+                    }
+                    sp_link_release(link);
+                }
+                else
+                {
+                    log(LOG_WARN) << "Bad link: " << artist_uri;
                 }
             }
             break;
@@ -695,9 +728,9 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
                 
             break;
 
-		/* Session Handling*/
+        /* Session Handling*/
 
-		case EVENT_LOGGING_IN:
+        case EVENT_LOGGING_IN:
             state_ = STATE_LOGGING_IN;
             log(LOG_NOTICE) << "Logging in as " << config_.getUsername();
             sp_session_login(spotifySession_, config_.getUsername().c_str(), config_.getPassword().c_str(), 0, NULL);
@@ -709,32 +742,30 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
             updateRootFolder(sp_session_playlistcontainer(spotifySession_));
             break;
 
-		case EVENT_CONNECTION_LOST:
-			if(state_ == STATE_LOGGED_IN ||
-			   state_ == STATE_LOGGING_IN)
-			{
-				state_ = STATE_LOGGING_IN;
-				sp_session_relogin(spotifySession_);
-			}
-			break;
+        case EVENT_CONNECTION_LOST:
+            // spotify will relogin automatically
+            // we should probably keep track of this though and subscribe to connectionstate_updated
+            break;
 
-		case EVENT_LOGGING_OUT:
-			state_ = STATE_LOGGING_OUT;
-			log(LOG_NOTICE) << "Connection state=" << sp_session_connectionstate(spotifySession_);
-			sp_session_logout(spotifySession_);
-			break;
-		case EVENT_LOGGED_OUT:
-			state_ = STATE_LOGGED_OUT;
-			break;
+        case EVENT_LOGGING_OUT:
+            state_ = STATE_LOGGING_OUT;
+            log(LOG_NOTICE) << "Connection state=" << sp_session_connectionstate(spotifySession_);
+            sp_session_logout(spotifySession_);
+            break;
 
-		default:
-			break;
-	}
-	do
-	{
-		sp_session_process_events(spotifySession_, &nextTimeoutForLibSpotify);
-	} while (nextTimeoutForLibSpotify == 0);
+        case EVENT_LOGGED_OUT:
+            state_ = STATE_LOGGED_OUT;
+            break;
+
+        default:
+            break;
+    }
+    do
+    {
+        sp_session_process_events(spotifySession_, &nextTimeoutForLibSpotify);
+    } while (nextTimeoutForLibSpotify == 0);
 }
+
 void LibSpotifyIf::postToEventThread(EventItem* event)
 {
 	eventQueueMtx_.lock();
@@ -981,6 +1012,33 @@ void LibSpotifyIf::albumLoadedCb(sp_albumbrowse* result, void *userdata)
     sp_albumbrowse_release(result);
 }
 
+void LibSpotifyIf::artistLoadedCb(sp_artistbrowse* result, void *userdata)
+{
+    EventItem* ev = static_cast<EventItem*>(userdata);
+    switch ( ev->event_ )
+    {
+        case EVENT_GET_ARTIST:
+        {
+            QueryReqEventItem* msg = static_cast<QueryReqEventItem*>(userdata);
+
+            if ( sp_artistbrowse_error( result ) == SP_ERROR_OK )
+            {
+                Artist artist = spotifyGetArtist(result, spotifySession_);
+
+                log(LOG_NOTICE) << "Artist \"" << artist.getName() << "\" loaded";
+
+                PendingMediaRequestData reqData = msg->reqData;
+                reqData.first->getArtistResponse( artist, reqData.second );
+            }
+            delete msg;
+            break;
+        }
+        default:
+            assert(0);
+    }
+
+    sp_artistbrowse_release(result);
+}
 /* *****************
  * Audio endpoints
  * *****************/
@@ -1011,6 +1069,8 @@ const char* getEventName(LibSpotifyIf::EventItem* event)
             return "EVENT_GET_IMAGE";
         case LibSpotifyIf::EVENT_GET_ALBUM:
             return "EVENT_GET_ALBUM";
+        case LibSpotifyIf::EVENT_GET_ARTIST:
+            return "EVENT_GET_ARTIST";
 
             /* Playback handling */
         case LibSpotifyIf::EVENT_PLAY_REQ:

@@ -65,6 +65,7 @@ private:
     virtual void getTracksResponse( const std::deque<Track>& tracks, void* userData );
     virtual void getImageResponse( const void* data, size_t dataSize, void* userData );
     virtual void getAlbumResponse( const Album& album, void* userData );
+    virtual void getArtistResponse( const Artist& artist, void* userData );
     virtual void genericSearchCallback( const std::deque<Track>& listOfTracks, const std::string& didYouMean, void* userData );
     virtual void getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume, const Track& currentTrack, unsigned int progress, void* userData );
     virtual void getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume, void* userData );

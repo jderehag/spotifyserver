@@ -66,6 +66,7 @@ public:
     virtual void play( std::string link, int startIndex, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
     virtual void play( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
     virtual void getAlbum( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
+    virtual void getArtist( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
     virtual void search( std::string query, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
     virtual void getCurrentAudioEndpoints( IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
 

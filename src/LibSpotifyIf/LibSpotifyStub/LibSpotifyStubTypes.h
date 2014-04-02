@@ -102,6 +102,13 @@ struct sp_albumbrowse
     char review[256];
 };
 
+struct sp_artistbrowse
+{
+    sp_artist* artist;
+    int num_albums;
+    sp_album* album_array;
+};
+
 struct sp_image
 {
     char data[100];

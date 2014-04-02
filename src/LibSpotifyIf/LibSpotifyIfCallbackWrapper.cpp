@@ -173,4 +173,9 @@ void SP_CALLCONV LibSpotifyIfCallbackWrapper::albumLoadedCallback(sp_albumbrowse
 {
     libSpotifyIfSingleton->albumLoadedCb(result, userdata);
 }
+
+void SP_CALLCONV LibSpotifyIfCallbackWrapper::artistLoadedCallback(sp_artistbrowse *result, void *userdata)
+{
+    libSpotifyIfSingleton->artistLoadedCb(result, userdata);
+}
 }

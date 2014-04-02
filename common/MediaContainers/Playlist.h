@@ -28,6 +28,7 @@
 #ifndef PLAYLIST_H_
 #define PLAYLIST_H_
 
+#include "MediaBaseInfo.h"
 #include "MessageFactory/Tlvs.h"
 
 #include "Track.h"
@@ -38,7 +39,7 @@
 namespace LibSpotify
 {
 
-class Playlist
+class Playlist : public MediaBaseInfo
 {
 protected:
 	std::string name_;
@@ -47,17 +48,13 @@ protected:
 	bool isCollaborative_;
 	bool isStarred_;
 public:
-    Playlist(const std::string& name, const std::string& link,bool nullObject);
 	Playlist(const std::string& name, const std::string& link);
-	Playlist(const char* name, const char* link);
 	Playlist(const TlvContainer* tlv);
 	virtual ~Playlist();
 
 	bool isCollaborative();
 	void setIsCollaborative(bool isCollaborative);
 	void addTrack(Track& track);
-	const std::string& getName() const;
-	const std::string& getLink() const;
 	const std::deque<Track>& getTracks() const;
 
     Tlv* toTlv() const;

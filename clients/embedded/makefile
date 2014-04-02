@@ -82,7 +82,7 @@ SRC += $(LWIP_MEM)
 # List C++ source files here.
 # use file-extension .cpp for C++-files (not .C)
 CPPSRC = main.cpp buttonHandler.cpp UIEmbedded.cpp heapWrap.cpp LoggerEmbedded.cpp LcdLog.cpp clock.cpp \
-		$(addprefix MediaContainers/, Album.cpp Artist.cpp Folder.cpp Playlist.cpp Track.cpp) \
+		$(addprefix MediaContainers/, MediaBaseInfo.cpp Album.cpp Artist.cpp Folder.cpp Playlist.cpp Track.cpp) \
 		$(addprefix MessageFactory/, Message.cpp MessageDecoder.cpp MessageEncoder.cpp TlvDefinitions.cpp Tlvs.cpp SocketReader.cpp SocketWriter.cpp) \
 		RemoteMediaInterface.cpp \
 		$(addprefix SocketHandling/, Messenger.cpp SocketClient.cpp ) \

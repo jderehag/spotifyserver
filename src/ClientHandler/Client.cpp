@@ -91,6 +91,7 @@ void Client::processMessage(const Message* msg)
         case GET_STATUS_REQ:     handleGetStatusReq(msg);     break;
         case GET_IMAGE_REQ:      handleGetImageReq(msg);      break;
         case GET_ALBUM_REQ:      handleGetAlbumReq(msg);      break;
+        case GET_ARTIST_REQ:     handleGetArtistReq(msg);     break;
 
         case ADD_AUDIO_ENDPOINTS_REQ:         handleAddAudioEpReq(msg);        break;
         case REM_AUDIO_ENDPOINTS_REQ:         handleRemAudioEpReq(msg);        break;
@@ -199,9 +200,32 @@ void Client::getAlbumResponse( const Album& album, void* userData )
         log(LOG_DEBUG) << "\t" << (*trackIt).getName();
         albumTlv->addTlv((*trackIt).toTlv());
     }
-    log(LOG_DEBUG) << "#tracks found=" << tracks.size();
 
     rsp->addTlv(albumTlv);
+
+    queueMessage( rsp );
+}
+
+void Client::getArtistResponse( const Artist& artist, void* userData )
+{
+    Message* rsp = (Message*) userData;
+
+    TlvContainer* artistTlv = artist.toTlv();
+    AlbumContainer albums = artist.getAlbums();
+    for ( AlbumContainer::const_iterator it = albums.begin();
+          it != albums.end(); it++ )
+    {
+        TlvContainer* albumTlv = (*it).toTlv();
+        const std::deque<Track>& tracks = (*it).getTracks();
+
+        for (std::deque<Track>::const_iterator trackIt = tracks.begin(); trackIt != tracks.end(); trackIt++)
+        {
+            albumTlv->addTlv((*trackIt).toTlv());
+        }
+        artistTlv->addTlv(albumTlv);
+    }
+
+    rsp->addTlv(artistTlv);
 
     queueMessage( rsp );
 }
@@ -424,6 +448,12 @@ void Client::handleGetAlbumReq(const Message* msg)
     spotify_.getAlbum( link ? link->getString() : std::string(""), this, rsp );
 }
 
+void Client::handleGetArtistReq(const Message* msg)
+{
+    const StringTlv* link = (const StringTlv*) msg->getTlvRoot()->getTlv(TLV_LINK);
+    Message* rsp = msg->createResponse();
+    spotify_.getArtist( link ? link->getString() : std::string(""), this, rsp );
+}
 
 void Client::handleAddAudioEpReq( const Message* msg )
 {

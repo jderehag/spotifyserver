@@ -76,6 +76,7 @@
     <ClInclude Include="..\..\..\common\MediaContainers\Album.h" />
     <ClInclude Include="..\..\..\common\MediaContainers\Artist.h" />
     <ClInclude Include="..\..\..\common\MediaContainers\Folder.h" />
+    <ClInclude Include="..\..\..\common\MediaContainers\MediaBaseInfo.h" />
     <ClInclude Include="..\..\..\common\MediaContainers\Playlist.h" />
     <ClInclude Include="..\..\..\common\MediaContainers\Track.h" />
     <ClInclude Include="..\..\..\common\MessageFactory\Message.h" />
@@ -110,6 +111,7 @@
     <ClCompile Include="..\..\..\common\MediaContainers\Album.cpp" />
     <ClCompile Include="..\..\..\common\MediaContainers\Artist.cpp" />
     <ClCompile Include="..\..\..\common\MediaContainers\Folder.cpp" />
+    <ClCompile Include="..\..\..\common\MediaContainers\MediaBaseInfo.cpp" />
     <ClCompile Include="..\..\..\common\MediaContainers\Playlist.cpp" />
     <ClCompile Include="..\..\..\common\MediaContainers\Track.cpp" />
     <ClCompile Include="..\..\..\common\MessageFactory\Message.cpp" />
