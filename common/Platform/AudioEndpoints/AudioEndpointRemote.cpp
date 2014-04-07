@@ -245,7 +245,7 @@ void AudioEndpointRemote::setMasterVolume( uint8_t volume )
     masterVolume_ = volume;
     ctrlIf_->setMasterVolume(volume);
 }
-void AudioEndpointRemote::setRelativeVolume( uint8_t volume )
+void AudioEndpointRemote::doSetRelativeVolume( uint8_t volume )
 {
     relativeVolume_ = volume;
     ctrlIf_->setRelativeVolume(volume);

@@ -54,7 +54,7 @@ public:
     virtual unsigned int getNumberOfQueuedSamples();
 
     virtual void setMasterVolume( uint8_t volume );
-    virtual void setRelativeVolume( uint8_t volume );
+    virtual void doSetRelativeVolume( uint8_t volume );
 
     virtual std::string getId() const { return "local"; }
 

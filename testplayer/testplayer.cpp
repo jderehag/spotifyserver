@@ -82,16 +82,16 @@ int main(int argc, char *argv[])
 
     Logger::LoggerImpl l(ch.getLoggerConfig());
 
+    TestPlayerIf testplayer;
+
     Platform::AudioEndpointLocal audioEndpoint(ch.getAudioEndpointConfig());
-    AudioEndpointManager audioMgr;
-    audioMgr.addEndpoint( audioEndpoint, NULL, NULL );
-
-
-    TestPlayerIf testplayer(audioMgr);
+    AudioEndpointManager audioMgr( testplayer );
+    audioMgr.createEndpoint( audioEndpoint, NULL, NULL );
+    audioMgr.addEndpoint( audioEndpoint.getId(), NULL, NULL );
 
     ClientHandler clienthandler(ch.getNetworkConfig(), testplayer, audioMgr);
 
-    UIConsole ui( testplayer );
+    UIConsole ui( testplayer, audioMgr );
     ui.joinThread();
 
 

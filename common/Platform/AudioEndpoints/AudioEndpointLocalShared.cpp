@@ -91,7 +91,7 @@ void AudioEndpointLocal::setMasterVolume( uint8_t volume )
     newVolume = (uint16_t) relativeVolume_*volume/255;
     actualVolume_ = (uint8_t) newVolume;
 }
-void AudioEndpointLocal::setRelativeVolume( uint8_t volume )
+void AudioEndpointLocal::doSetRelativeVolume( uint8_t volume )
 {
     uint16_t newVolume;
     relativeVolume_ = volume;

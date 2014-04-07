@@ -97,8 +97,6 @@
     <ClInclude Include="..\..\..\src\LibSpotifyIf\LibSpotifyIfCallbackWrapper.h" />
     <ClInclude Include="..\..\..\src\LibSpotifyIf\LibSpotifyIfHelpers.h" />
     <ClInclude Include="..\..\..\src\LibSpotifyIf\LibSpotifyPlaybackHandler.h" />
-    <ClInclude Include="..\..\..\src\Utils\CircularQueue.h" />
-    <ClInclude Include="..\..\..\src\Utils\FixedQueue.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

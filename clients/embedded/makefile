@@ -92,7 +92,8 @@ CPPSRC = main.cpp buttonHandler.cpp UIEmbedded.cpp heapWrap.cpp LoggerEmbedded.c
 		Platform/Socket/LwIP/Select.cpp \
 		Platform/Timers/FreeRTOS/FreeRTOSTimer.cpp \
 		Platform/Utils/FreeRTOS/FreeRTOSUtils.cpp \
-		$(addprefix Platform/Threads/FreeRTOS/, FreeRTOSMessagebox.cpp FreeRTOSMutex.cpp FreeRTOSCondition.cpp FreeRTOSRunnable.cpp)
+		$(addprefix Platform/Threads/FreeRTOS/, FreeRTOSMessagebox.cpp FreeRTOSMutex.cpp FreeRTOSCondition.cpp FreeRTOSRunnable.cpp) \
+		Utils/ActionFilter.cpp \
 
 #AUDIOSRC =	STM32F4XX/stm32f4_discovery_audio_codec.c
 AUDIOSRC =	STM32F4XX/audio_driver.c

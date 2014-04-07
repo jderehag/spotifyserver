@@ -173,8 +173,8 @@ class RightFrame(Frame):
         masterVolLabel = Label(self, justify=LEFT, text="Master volume:")
         masterVolLabel.pack(side=BOTTOM, anchor=W)
 
-        self.lastMasterVolUpdate = 0
         self.masterVolUpdateInProgress = 0
+        self.suppressSetVolume = 0
 
     def __del__(self):
         return
@@ -274,26 +274,22 @@ class RightFrame(Frame):
         return
 
     def mainvolchangecb(self, val):
+        if self.suppressSetVolume == 1:
+            self.suppressSetVolume = 0
+            return
+        
         # don't act unless enabled yet, this is to suppress cb triggered by init
         state = self.masterVol.cget("state")
-        if state != DISABLED and self.masterVolUpdateInProgress == 0:
-            self.masterVolUpdateInProgress = 1
+        if state != DISABLED:
             self.spotify.sendSetMasterVolume(self.masterVol.get())
-            self.lastMasterVolUpdate = self.masterVol.get()
-            self.after(100, self.checkMasterVolAgain)
-            
-    def checkMasterVolAgain(self):
-        self.masterVolUpdateInProgress = 0
-        if self.lastMasterVolUpdate != self.masterVol.get():
-            self.masterVolUpdateInProgress = 1
-            self.spotify.sendSetMasterVolume(self.masterVol.get())
-            self.lastMasterVolUpdate = self.masterVol.get()
-            self.after(100, self.checkMasterVolAgain)
+            self.masterVolUpdateInProgress = 0
 
     def statusIndCb(self, playStatus, track, progress, volume):
-        if self.masterVolUpdateInProgress == 0 and volume != self.masterVol.get():
-            self.masterVol.set(volume)
         self.masterVol.config(state = NORMAL)
+        if volume != self.masterVol.get():
+            self.suppressSetVolume = 1
+            self.masterVol.set(volume)
+        self.masterVolUpdateInProgress = 0
 
 class LeftFrame(Frame):
     def __init__(self, parentFrame,  **kwargs):

@@ -47,6 +47,9 @@
     <Filter Include="Platform\Timers">
       <UniqueIdentifier>{a54e698f-b521-469d-ab15-cd80ca209499}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Utils">
+      <UniqueIdentifier>{a4b61b51-3614-412d-81a9-e8c9f75f8d13}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\common\Platform\Socket\Socket.h">
@@ -154,6 +157,15 @@
     <ClInclude Include="..\..\..\common\MediaContainers\MediaBaseInfo.h">
       <Filter>MediaContainers</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\src\Utils\CircularQueue.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Utils\FixedQueue.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\Utils\ActionFilter.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\common\Platform\Socket\Windows\WindowsSocket.cpp">
@@ -251,6 +263,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\common\MediaContainers\MediaBaseInfo.cpp">
       <Filter>MediaContainers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\Utils\ActionFilter.cpp">
+      <Filter>Utils</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

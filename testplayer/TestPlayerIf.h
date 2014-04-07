@@ -40,7 +40,7 @@
 
 
 
-class TestPlayerIf : Platform::Runnable, public MediaInterface
+class TestPlayerIf : Platform::Runnable, public MediaInterface, public AudioProvider
 {
 /**********************
  *
@@ -124,7 +124,6 @@ private:
  ***********************/
 private:
 
-    AudioEndpointManager& audioMgr_;
     Platform::AudioDispatch audioOut_;
 
 private:
@@ -148,7 +147,7 @@ private:
 	size_t playBufferPos;
         bool isPlaying;
 public:
-	TestPlayerIf(AudioEndpointManager& audioMgr );
+	TestPlayerIf();
 	virtual ~TestPlayerIf();
 
 	void logIn();
@@ -160,18 +159,19 @@ public:
     virtual void next();
     virtual void resume();
     virtual void pause();
+    virtual void seek( uint32_t sec );
     virtual void setShuffle( bool shuffleOn );
     virtual void setRepeat( bool repeatOn );
+    virtual void setVolume( uint8_t volume );
     virtual void getStatus( IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
     virtual void getPlaylists( IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
     virtual void getTracks( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
     virtual void play( std::string link, int startIndex, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
     virtual void play( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
     virtual void getAlbum( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
+    virtual void getArtist( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
     virtual void search( std::string query, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
 
-    virtual void addAudioEndpoint( const std::string& id, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
-    virtual void removeAudioEndpoint( const std::string& id, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
     virtual void getCurrentAudioEndpoints( IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
 
 

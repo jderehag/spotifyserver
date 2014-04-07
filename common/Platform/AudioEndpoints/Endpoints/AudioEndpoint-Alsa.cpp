@@ -113,14 +113,14 @@ void AudioEndpointLocal::run()
                     /*static*/ int timetoplay = timeToPlayThisPacket;
                     //timetoplay += (timeToPlayThisPacket - timetoplay)/3;
 
-                    if ( timetoplay > 25 )
-                    {
-                        sleep_ms( timetoplay-10 );
-                    }
-                    else if ( timetoplay < -25 )
+                    if ( timetoplay < -25 || timetoplay > 500 /*this has to be some error*/ )
                     {
                         fifo_.returnFifoDataBuffer( afd );
                         continue;
+                    }
+                    else if ( timetoplay > 25 )
+                    {
+                        sleep_ms( timetoplay-10 );
                     }
                     else if ( timetoplay < -1 || timetoplay > 1 )
                     {

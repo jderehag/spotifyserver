@@ -33,7 +33,8 @@ CPPSRC +=	$(addprefix MediaContainers/, Album.cpp Artist.cpp Folder.cpp Playlist
 			AudioEndpointManager/AudioEndpointManager.cpp \
 			Logger/Logger.cpp Logger/LoggerImpl.cpp \
 			MediaInterface/MediaInterface.cpp \
-			UIConsole.cpp
+			UIConsole.cpp \
+			Utils/ActionFilter.cpp
 
 CPPSRC +=	$(ARCH_SRC) $(AUDIO_SRC)
 

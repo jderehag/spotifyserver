@@ -23,9 +23,6 @@
     <Filter Include="MediaInterface">
       <UniqueIdentifier>{65e9a27b-448e-4a7c-a43e-be9e040fa9e1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Utils">
-      <UniqueIdentifier>{e5cfc25e-80ba-4e90-a2f5-5a8891394fab}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ClockSync">
       <UniqueIdentifier>{1e76688a-d77c-451b-a45b-808fb92015bd}</UniqueIdentifier>
     </Filter>
@@ -117,12 +114,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\common\MediaInterface\MediaInterface.h">
       <Filter>MediaInterface</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\Utils\CircularQueue.h">
-      <Filter>Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\Utils\FixedQueue.h">
-      <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\common\ClockSync\ClockSyncServer.h">
       <Filter>ClockSync</Filter>

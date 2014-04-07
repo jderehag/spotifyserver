@@ -104,6 +104,9 @@
     <ClInclude Include="..\..\..\common\SocketHandling\SocketClient.h" />
     <ClInclude Include="..\..\..\common\SocketHandling\SocketPeer.h" />
     <ClInclude Include="..\..\..\common\SocketHandling\SocketServer.h" />
+    <ClInclude Include="..\..\..\common\Utils\ActionFilter.h" />
+    <ClInclude Include="..\..\..\src\Utils\CircularQueue.h" />
+    <ClInclude Include="..\..\..\src\Utils\FixedQueue.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\common\Logger\Logger.cpp" />
@@ -138,6 +141,7 @@
     <ClCompile Include="..\..\..\common\SocketHandling\SocketClient.cpp" />
     <ClCompile Include="..\..\..\common\SocketHandling\SocketPeer.cpp" />
     <ClCompile Include="..\..\..\common\SocketHandling\SocketServer.cpp" />
+    <ClCompile Include="..\..\..\common\Utils\ActionFilter.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

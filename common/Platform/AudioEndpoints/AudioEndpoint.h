@@ -29,9 +29,11 @@
 #define AUDIOENDPOINT_H_
 
 #include "AudioFifo.h"
+#include "Utils/ActionFilter.h"
 #include <string>
 
 namespace Platform {
+static void setRelativeVolumeCb( void* arg, uint32_t volume );
 
 class AudioEndpoint
 {
@@ -44,8 +46,10 @@ protected:
     uint8_t masterVolume_;
     uint8_t relativeVolume_;
 
+    ActionFilter setVolumeFilter;
+
 public:
-    AudioEndpoint(uint8_t volume = 255, bool dynamicFifo = true) : fifo_(dynamicFifo), paused_(false), relativeVolume_(volume) {}
+    AudioEndpoint(uint8_t volume = 255, bool dynamicFifo = true) : fifo_(dynamicFifo), paused_(false), relativeVolume_(volume), setVolumeFilter(100, setRelativeVolumeCb, this) {}
     virtual ~AudioEndpoint() {}
     virtual int enqueueAudioData( unsigned int timestamp, unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples ) = 0;
     virtual void flushAudioData() = 0;
@@ -54,7 +58,8 @@ public:
     virtual unsigned int getNumberOfQueuedSamples() = 0;
 
     virtual void setMasterVolume( uint8_t volume ) = 0;
-    virtual void setRelativeVolume( uint8_t volume ) = 0;
+    void setRelativeVolume( uint8_t volume ) { setVolumeFilter.Event(volume); }
+    virtual void doSetRelativeVolume( uint8_t volume ) = 0;
     uint8_t getRelativeVolume() { return relativeVolume_; }
     virtual std::string getId() const = 0;
 
@@ -65,5 +70,11 @@ public:
     virtual bool isLocal() const = 0;
 
 };
+
+static void setRelativeVolumeCb( void* arg, uint32_t volume )
+{
+    AudioEndpoint* this_ = static_cast<AudioEndpoint*>( arg );
+    this_->doSetRelativeVolume( volume );
+}
 }
 #endif /* AUDIOENDPOINT_H_ */

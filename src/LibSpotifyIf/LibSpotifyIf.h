@@ -39,6 +39,7 @@
 #include "Platform/Threads/Condition.h"
 #include "MediaInterface/MediaInterface.h"
 #include "MediaInterface/AudioProvider.h"
+#include "Utils/ActionFilter.h"
 #include <libspotify/api.h>
 #include <set>
 #include <vector>
@@ -193,6 +194,14 @@ private:
 	friend class LibSpotifyPlaybackHandler;
 	LibSpotifyPlaybackHandler playbackHandler_;
 	void playTrack(const Track& track);
+
+    ActionFilter seekFilter;
+    void doSeek( uint32_t sec );
+    friend void seekCb( void* arg, uint32_t sec );
+
+    ActionFilter volumeFilter;
+    void doVolume( uint32_t volume );
+    friend void volumeCb( void* arg, uint32_t volume );
 
 	/**************************
 	 * libspotify interactions

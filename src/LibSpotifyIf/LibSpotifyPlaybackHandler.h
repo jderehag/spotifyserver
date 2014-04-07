@@ -34,7 +34,7 @@
 #include "MediaContainers/Album.h"
 #include "Platform/Threads/Mutex.h"
 #include <deque>
-#include "CircularQueue.h"
+#include "Utils/CircularQueue.h"
 
 
 namespace LibSpotify

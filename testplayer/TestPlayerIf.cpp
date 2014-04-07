@@ -45,10 +45,8 @@ static const char* getEventName(TestPlayerIf::EventItem* event);
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
-TestPlayerIf::TestPlayerIf( AudioEndpointManager& audioMgr ) : audioMgr_(audioMgr), playBuffer(NULL), playBufferSize(0), playBufferPos(0), isPlaying(false)
+TestPlayerIf::TestPlayerIf() : playBuffer(NULL), playBufferSize(0), playBufferPos(0), isPlaying(false)
 {
-    Platform::AudioEndpoint* ep = audioMgr_.getEndpoint( "local" );
-    audioOut_.addEndpoint( *ep );
     startThread();
 }
 
@@ -86,6 +84,11 @@ void TestPlayerIf::getAlbum( std::string link, IMediaInterfaceCallbackSubscriber
 {
     postToEventThread( new QueryReqEventItem( EVENT_GET_ALBUM, subscriber, userData, link ) );
 }
+
+void TestPlayerIf::getArtist( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
+{
+}
+
 
 void TestPlayerIf::getStatus( IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
@@ -128,9 +131,16 @@ void TestPlayerIf::previous()
 
 }
 
+void TestPlayerIf::seek( uint32_t sec )
+{
+}
+
 void TestPlayerIf::setShuffle( bool shuffleOn ) {  }
 void TestPlayerIf::setRepeat( bool repeatOn )   {  }
 
+void TestPlayerIf::setVolume( uint8_t volume )
+{
+}
 /* * * * * * * * * * * * * * * * * * * * * * * * * * *
  * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
@@ -290,37 +300,6 @@ void TestPlayerIf::postToEventThread(EventItem* event)
 	cond_.signal();
 }
 
-
-
-void TestPlayerIf::addAudioEndpoint( const std::string& id, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
-{
-    Platform::AudioEndpoint* ep;
-    if ( id == "" )
-        ep = audioMgr_.getEndpoint( "local" );
-    else
-        ep = audioMgr_.getEndpoint( id );
-
-    if ( ep )
-    {
-        audioOut_.addEndpoint( *ep );
-    }
-    //todo: subscriber->
-}
-
-void TestPlayerIf::removeAudioEndpoint( const std::string& id, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
-{
-    Platform::AudioEndpoint* ep;
-    if ( id == "" )
-        ep = audioMgr_.getEndpoint( "local" );
-    else
-        ep = audioMgr_.getEndpoint( id );
-
-    if ( ep )
-    {
-        audioOut_.removeEndpoint( *ep );
-    }
-    //todo: subscriber->
-}
 
 void TestPlayerIf::getCurrentAudioEndpoints( IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {

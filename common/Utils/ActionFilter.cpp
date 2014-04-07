@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Jens Nielsen
+ * Copyright (c) 2014, Jens Nielsen
  * All rights reserved.
 
  * Redistribution and use in source and binary forms, with or without
@@ -25,54 +25,53 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef AUDIOENDPOINTREMOTE_H_
-#define AUDIOENDPOINTREMOTE_H_
+#include "ActionFilter.h"
+#include "applog.h"
 
-#include "AudioEndpoint.h"
-#include "Platform/Threads/Runnable.h"
-#include "Platform/Socket/Socket.h"
-#include <string>
-
-class IAudioEndpointRemoteCtrlInterface
+static void timerCallbackFn(void* arg)
 {
-public:
-//    virtual ~IAudioEndpointRemoteCtrlInterface();
-    virtual void setMasterVolume( uint8_t volume ) = 0;
-    virtual void setRelativeVolume( uint8_t volume ) = 0;
-};
-
-namespace Platform
-{
-
-class AudioEndpointRemote : public AudioEndpoint, public Platform::Runnable
-{
-private:
-    Socket sock_;
-    std::string id_;
-    uint32_t remoteBufferSize;
-    IAudioEndpointRemoteCtrlInterface* ctrlIf_;
-
-public:
-    AudioEndpointRemote(IAudioEndpointRemoteCtrlInterface* ctrlIf, const std::string& id, const std::string& serveraddr, const std::string& serverport, uint8_t volume, unsigned int bufferNSecs);
-
-    /* AudioEndpoint implementation */
-    virtual int enqueueAudioData( unsigned int timestamp, unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples );
-    virtual void flushAudioData();
-
-    virtual unsigned int getNumberOfQueuedSamples();
-
-    virtual void setMasterVolume( uint8_t volume );
-    virtual void doSetRelativeVolume( uint8_t volume );
-
-    virtual std::string getId() const;
-
-    virtual bool isLocal() const {return false;};
-
-    /* Runnable implementation*/
-    virtual void run();
-
-    virtual void destroy();
-};
-
+    ActionFilter* this_ = static_cast<ActionFilter*>( arg );
+    this_->TimerCb();
 }
-#endif /* AUDIOENDPOINTREMOTE_H_ */
+
+ActionFilter::ActionFilter( int delay, ActionFn actionCb, void* arg ) :
+                                                             actionCb_(actionCb),
+                                                             delay_(delay),
+                                                             arg_(arg),
+                                                             lastValue(0),
+                                                             newValue(0)
+{
+}
+
+ActionFilter::~ActionFilter()
+{
+    tmr.Cancel();
+}
+
+void ActionFilter::Event( uint32_t val )
+{
+    if ( tmr.IsRunning() )
+    {
+        newValue = val;
+        log(LOG_WARN) << "Filter " << val;
+    }
+    else
+    {
+        tmr.Start( delay_, false, timerCallbackFn, this );
+        lastValue = val;
+        newValue = val;
+        actionCb_( arg_, lastValue );
+        log(LOG_WARN) << "Setting " << val;
+    }
+}
+
+void ActionFilter::TimerCb()
+{
+    if ( newValue != lastValue )
+    {
+        lastValue = newValue;
+        actionCb_( arg_, lastValue );
+        tmr.Start( delay_, false, timerCallbackFn, this );
+        log(LOG_WARN) << "Delayed Setting " << lastValue;
+    }
+}

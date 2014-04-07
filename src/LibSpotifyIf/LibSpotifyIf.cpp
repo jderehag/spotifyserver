@@ -42,6 +42,8 @@ namespace LibSpotify {
 
 
 static const char* getEventName(LibSpotifyIf::EventItem* event);
+void seekCb( void* arg, uint32_t sec );
+void volumeCb( void* arg, uint32_t volume );
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * *
  * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -55,6 +57,8 @@ LibSpotifyIf::LibSpotifyIf(const ConfigHandling::SpotifyConfig& config) :config_
                                                                          state_(STATE_INVALID),
                                                                          nextTimeoutForLibSpotify(0),
                                                                          playbackHandler_(*this),
+                                                                         seekFilter( 500, seekCb, this ),
+                                                                         volumeFilter( 100, volumeCb, this ),
                                                                          itsCallbackWrapper_(*this),
                                                                          trackState_(TRACK_STATE_NOT_LOADED),
                                                                          currentTrack_("","")
@@ -245,7 +249,18 @@ void LibSpotifyIf::previous()
 
 void LibSpotifyIf::seek( uint32_t sec )
 {
+    seekFilter.Event( sec );
+}
+
+void LibSpotifyIf::doSeek( uint32_t sec )
+{
     postToEventThread( new ParamEventItem( EVENT_SEEK, sec ) );
+}
+
+void seekCb( void* arg, uint32_t sec )
+{
+    LibSpotifyIf* this_ = static_cast<LibSpotifyIf*>( arg );
+    this_->doSeek( sec );
 }
 
 void LibSpotifyIf::setShuffle( bool shuffleOn )
@@ -268,13 +283,20 @@ void LibSpotifyIf::setRepeat( bool repeatOn )
 
 void LibSpotifyIf::setVolume( uint8_t volume )
 {
-    if ( volume != audioOut_.getVolume() )
-    {
-        audioOut_.setVolume(volume);
-        doStatusNtf();
-    }
+    volumeFilter.Event( volume );
 }
 
+void LibSpotifyIf::doVolume( uint32_t volume )
+{
+    audioOut_.setVolume( volume );
+    doStatusNtf();
+}
+
+void volumeCb( void* arg, uint32_t volume )
+{
+    LibSpotifyIf* this_ = static_cast<LibSpotifyIf*>( arg );
+    this_->doVolume( volume );
+}
 /* * * * * * * * * * * * * * * * * * * * * * * * * * *
  * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
