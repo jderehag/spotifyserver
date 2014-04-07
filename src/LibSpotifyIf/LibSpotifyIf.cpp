@@ -250,12 +250,20 @@ void LibSpotifyIf::seek( uint32_t sec )
 
 void LibSpotifyIf::setShuffle( bool shuffleOn )
 {
-    playbackHandler_.setShuffle( shuffleOn );
+    if ( playbackHandler_.getShuffle() != shuffleOn )
+    {
+        playbackHandler_.setShuffle( shuffleOn );
+        doStatusNtf();
+    }
 }
 
 void LibSpotifyIf::setRepeat( bool repeatOn )
 {
-    playbackHandler_.setRepeat( repeatOn );
+    if ( playbackHandler_.getRepeat() != repeatOn )
+    {
+        playbackHandler_.setRepeat( repeatOn );
+        doStatusNtf();
+    }
 }
 
 void LibSpotifyIf::setVolume( uint8_t volume )
