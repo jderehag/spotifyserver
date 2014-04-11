@@ -28,11 +28,13 @@
 #include <iostream>
 
 #include "ConfigParser_TEST.h"
+#include "ConfigGenerator_TEST.h"
 
 int main(int argc, char *argv[])
 {
 	bool success = false;
 	success = Test::ConfigParser_SUITE::run_unittests();
+    success &= Test::ConfigGenerator_SUITE::run_unittests();
 	if(success)std::cout << "All UnitTests ran Successfully!" << std::endl;
 }
 

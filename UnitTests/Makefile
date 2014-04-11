@@ -10,9 +10,11 @@ VPATH +=	../src/ConfigHandling
 INCLUDES +=	-I../src/ConfigHandling
 
 
-OBJS :=		ConfigParser_TEST.o	 	\
+OBJS :=	ConfigParser_TEST.o		\
+		ConfigGenerator_TEST.o	\
 		TestRunner.o			\
-		ConfigParser.o
+		ConfigParser.o			\
+		ConfigGenerator.o
 
 
 		

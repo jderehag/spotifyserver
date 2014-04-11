@@ -44,6 +44,19 @@ NetworkConfig::BindType NetworkConfig::getBindType() const
     return bindType_;
 }
 
+const std::string NetworkConfig::getBindTypeString() const
+{
+    switch(bindType_)
+    {
+    case IP:
+        return "IP";
+    case DEVICE:
+        return "DEVICE";
+    }
+
+    return "";
+}
+
 const std::string& NetworkConfig::getDevice() const
 {
     return device_;

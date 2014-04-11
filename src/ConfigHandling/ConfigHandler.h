@@ -29,7 +29,9 @@
 #define CONFIGHANDLER_H_
 
 #include "Logger/LogLevels.h"
+#include "ConfigDefs.h"
 #include <string>
+#include <list>
 
 namespace ConfigHandling
 {
@@ -45,6 +47,7 @@ public:
     AudioEndpointConfig();
     const std::string& getDevice() const;
     EndpointType getEndpointType() const;
+    const std::string getEndpointTypeString() const;
     void setDevice(const std::string& device);
     void setEndpointType(const std::string& endpointType);
 
@@ -66,6 +69,7 @@ public:
     LoggerConfig();
     const std::string& getLogFile() const;
     LogLevel getLogLevel() const;
+    const std::string getLogLevelString() const;
     LogTo getLogTo() const;
     void setLogFile(const std::string& logFile);
     void setLogLevel(const std::string& logLevel);
@@ -90,6 +94,7 @@ public:
     NetworkConfig();
 
     BindType getBindType() const;
+    const std::string getBindTypeString() const;
     const std::string& getDevice() const;
     const std::string& getIp() const;
     const std::string& getPort() const;
@@ -141,13 +146,34 @@ private:
     AudioEndpointConfig audioEndpointConfig_;
     LoggerConfig loggerConfig_;
 
-	std::string configFilePath_;
-	void readFromFile(std::string& configString);
+    std::string configFilePath_;
+    std::list<std::string> config;
+    void readFromFile();
+    std::list<SectionAttributes> getConfigAttributes();
 
+    /* Spotify Section*/
+    std::string spotifyUsername;
+    std::string spotifyPassword;
+    std::string spotifyCacheLocation;
+    std::string spotifySettingsLocation;
+    /* Network Section*/
+    std::string networkBindType;
+    std::string networkIp;
+    std::string networkPort;
+    std::string networkDevice;
+    std::string networkUsername;
+    std::string networkPassword;
+    /* AudioEndpoint Section*/
+    std::string audioEndpointType;
+    std::string audioEndpointAlsaDevice;
+    /* Logger Section */
+    std::string loggerLogLevel;
+    std::string loggerLogFile;
 public:
 	ConfigHandler(const std::string& pathToConfigFile);
 	virtual ~ConfigHandler();
 	void parseConfigFile();
+    void writeConfigFile();
     const AudioEndpointConfig& getAudioEndpointConfig() const;
     const LoggerConfig& getLoggerConfig() const;
     const NetworkConfig& getNetworkConfig() const;

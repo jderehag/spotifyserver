@@ -77,6 +77,9 @@
     <ClCompile Include="..\..\..\common\AudioEndpointManager\AudioEndpointManagerCtrlInterface.cpp">
       <Filter>AudioEndpointManager</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\ConfigHandling\ConfigGenerator.cpp">
+      <Filter>ConfigHandling</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\common\AudioEndpointManager\AudioEndpointManager.h">
@@ -120,6 +123,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\common\MediaInterface\AudioProvider.h">
       <Filter>MediaInterface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ConfigHandling\ConfigDefs.h">
+      <Filter>ConfigHandling</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ConfigHandling\ConfigGenerator.h">
+      <Filter>ConfigHandling</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

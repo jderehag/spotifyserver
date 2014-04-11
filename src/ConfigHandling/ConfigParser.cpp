@@ -43,144 +43,210 @@
 #include <string>
 #include <iostream>
 
+#include <string.h>
 #include <assert.h>
 
-bool findSection(const std::string& scope, const char* sectionName, std::string& outputScope)
+static void iterateTo( const std::list<std::string>& scope, const char* tag, std::list<std::string>::const_iterator& it )
 {
-	size_t startSection = 0;
-	while(true)
-	{
-	    size_t sectionIndex = scope.find("Section", startSection);
-		if(sectionIndex == std::string::npos)goto not_found;
-		startSection = sectionIndex;
-
-		// Found 'A' section, lets find out if its the correct one..
-		size_t startMark = scope.find_first_of('"', startSection);
-		if(startMark == std::string::npos)goto not_found;
-		size_t endMark = scope.find_first_of('"', startMark+1);
-		if(endMark == std::string::npos)goto not_found;
-		startSection += (endMark+1) - startSection; //Forward the lookup pointer past this section name
-
-		std::string sectionNameString = scope.substr(startMark + 1, endMark - startMark - 1);
-		if(sectionNameString == sectionName)
-		{
-			// Found the correct section!
-			size_t endSection = scope.find("EndSection", startSection);
-			if(endSection == std::string::npos)goto not_found;
-			outputScope = scope.substr(startSection, endSection - startSection);
-			break;
-		}
-	}
-	return true;
-
-not_found:
-	return false;
-}
-
-bool findSubSection(const std::string& scope, const char* sectionName, std::string& outputScope)
-{
-	size_t startSection = 0;
-	while(true)
-	{
-	    size_t sectionIndex = scope.find("SubSection", startSection);
-		if(sectionIndex == std::string::npos)goto not_found;
-        startSection = sectionIndex;
-
-		size_t startMark = scope.find_first_of('"', startSection);
-		if(startMark == std::string::npos)goto not_found;
-		size_t endMark = scope.find_first_of('"', startMark + 1);
-		if(endMark == std::string::npos)goto not_found;
-		startSection += (endMark + 1) - startSection; //Forward the lookup pointer past this section name
-
-		std::string sectionNameString = scope.substr(startMark + 1, endMark - startMark - 1);
-		if(sectionNameString == sectionName)
-		{
-			// Found the correct section!
-			size_t endSection = scope.find("EndSubSection", startSection);
-			if(endSection != std::string::npos)
-			{
-				// Found the endsection
-				outputScope = scope.substr(startSection, endSection - startSection);
-				break;
-			}
-		}
-	}
-	return true;
-
-not_found:
-	return false;
-}
-
-void findAttribute(const std::string& scope, const char* attributeName, std::string& outputScope)
-{
-	size_t startAttribute = scope.find(attributeName);
-	if(startAttribute == std::string::npos)goto not_found;
-
-	/* found the attribute, now store it.. */
-	{
-		size_t startMark = scope.find_first_of('"', startAttribute);
-		if(startMark == std::string::npos)goto not_found;
-		size_t endMark = scope.find_first_of('"', startMark + 1);
-		if(endMark == std::string::npos)goto not_found;
-		outputScope = scope.substr(startMark + 1, endMark - startMark - 1);
-	}
-	return;
-
-not_found:
-	return;
-}
-
-void findNextElementScope(const std::string& scope, SectionAttributes listOfSubSections[],
-																	  unsigned int length,
-																	  unsigned int& listOfSubsectionIndex)
-{
-	/* should never happen*/
-	assert(listOfSubsectionIndex < length);
-
-	while(true)
-	{
-		SectionAttributes* attribute = &listOfSubSections[listOfSubsectionIndex];
-
-		std::string subScope;
-		const std::string* nextScope = NULL;
-
-		switch(attribute->type)
-		{
-		case TYPE_SECTION:
-			findSection(scope, attribute->attributeName, subScope);
-			nextScope = &subScope;
-			break;
-		case TYPE_SUBSECTION:
-			findSubSection(scope, attribute->attributeName, subScope);
-			nextScope = &subScope;
-			break;
-		case TYPE_ATTRIBUTE:
-			findAttribute(scope, attribute->attributeName, subScope);
-			nextScope = &scope;
-			break;
-
-		}
-
-		/* if user has set the attribute, then store it */
-		if(attribute->attributeValue != NULL)*attribute->attributeValue = subScope;
-
-		/* check if we should go deeper into the tree */
-		listOfSubsectionIndex++;
-
-        if(listOfSubsectionIndex < length &&
-           listOfSubSections[listOfSubsectionIndex].level >= attribute->level)
+    for(;it != scope.end(); it++)
+    {
+        size_t startTag = (*it).find_first_not_of(" \t");
+        if ( startTag != std::string::npos &&
+             (*it)[startTag] != '#' &&
+             (*it).compare(startTag, strlen(tag), tag ) == 0 )
         {
-            findNextElementScope(*nextScope, listOfSubSections, length, listOfSubsectionIndex);
+            break;
         }
-		/* could be changed in the recursive findNextElementScope(..), therefore check it again */
-		if(listOfSubsectionIndex >= length)break;
-		if(listOfSubSections[listOfSubsectionIndex].level < attribute->level)break;
-	}
+    }
 }
 
-void parseConfigInt(const std::string& config, SectionAttributes listOfSubSections[], unsigned int length)
+static std::list<std::string>::const_iterator findSectionStart(const std::list<std::string>& scope, const char* sectionName)
 {
-	unsigned int iteratorIndex = 0;
-	findNextElementScope(config, listOfSubSections, length, iteratorIndex);
+    std::list<std::string>::const_iterator startSection = scope.begin();
+
+    while(true)
+    {
+        std::list<std::string>::const_iterator it = startSection;
+
+        iterateTo( scope, "Section", it );
+
+        if ( it == scope.end() ) return scope.end();
+
+        size_t startMark = (*it).find_first_of('"');
+        if(startMark == std::string::npos) return scope.end();
+        size_t endMark = (*it).find_first_of('"', startMark + 1);
+        if(endMark == std::string::npos) return scope.end();
+
+        std::string sectionNameString = (*it).substr(startMark + 1, endMark - startMark - 1);
+
+        if(sectionNameString == sectionName)
+        {
+            return it;
+        }
+
+        it++;
+        startSection = it;
+    }
+
+    return scope.end();
+}
+
+static bool findSection(const std::list<std::string>& scope, const char* sectionName, std::list<std::string>& outputScope)
+{
+    outputScope.clear();
+    std::list<std::string>::const_iterator startSection = findSectionStart(scope, sectionName);
+
+    if ( startSection != scope.end() )
+    {
+        startSection++;
+        std::list<std::string>::const_iterator it = startSection;
+    
+        // Found the correct section!
+        iterateTo( scope, "EndSection", it );
+
+        if ( it != scope.end() )
+        {
+            // Found the endsection
+            std::list<std::string>::const_iterator endSection = it;
+
+            if ( startSection != endSection )
+                outputScope = std::list<std::string>(startSection, endSection);
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static std::list<std::string>::const_iterator findSubSectionStart(const std::list<std::string>& scope, const char* sectionName)
+{
+    std::list<std::string>::const_iterator startSection = scope.begin();
+
+    while(true)
+    {
+        std::list<std::string>::const_iterator it = startSection;
+
+        iterateTo( scope, "SubSection", it );
+
+        if ( it == scope.end() ) return scope.end();
+
+        size_t startMark = (*it).find_first_of('"');
+        if(startMark == std::string::npos) return scope.end();
+        size_t endMark = (*it).find_first_of('"', startMark + 1);
+        if(endMark == std::string::npos) return scope.end();
+
+        std::string sectionNameString = (*it).substr(startMark + 1, endMark - startMark - 1);
+
+        if(sectionNameString == sectionName)
+        {
+            return it;
+        }
+
+        it++;
+        startSection = it;
+    }
+
+    return scope.end();
+}
+
+
+static bool findSubSection(const std::list<std::string>& scope, const char* sectionName, std::list<std::string>& outputScope)
+{
+    outputScope.clear();
+    std::list<std::string>::const_iterator startSection = findSubSectionStart(scope, sectionName);
+
+    if ( startSection != scope.end() )
+    {
+        startSection++;
+        std::list<std::string>::const_iterator it = startSection;
+    
+        // Found the correct section!
+        iterateTo( scope, "EndSubSection", it );
+
+        if ( it != scope.end() )
+        {
+            // Found the endsection
+            std::list<std::string>::const_iterator endSection = it;
+
+            if ( startSection != endSection )
+                outputScope = std::list<std::string>(startSection, endSection);
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static void findAttribute(const std::list<std::string>& scope, const char* attributeName, std::string& outputScope)
+{
+    outputScope = "";
+
+    std::list<std::string>::const_iterator it = scope.begin();
+    iterateTo( scope, attributeName, it );
+
+    if ( it != scope.end() )
+    {
+        /* found the attribute, now store it.. */
+        size_t startMark = (*it).find_first_of('"');
+        if(startMark == std::string::npos)
+            return;
+        size_t endMark = (*it).find_first_of('"', startMark + 1);
+        if(endMark == std::string::npos)
+            return;
+        outputScope = (*it).substr(startMark + 1, endMark - startMark - 1);
+    }
+
+    return;
+}
+
+static void findNextElementScope(const std::list<std::string>& scope, std::list<SectionAttributes>& listOfSubSections,
+                                                    std::list<SectionAttributes>::iterator& listOfSubsectionIterator)
+{
+    while(true)
+    {
+        SectionAttributes& attribute = *listOfSubsectionIterator;
+
+        std::list<std::string> subScope;
+        std::string attributeValue;
+
+        switch(attribute.type)
+        {
+        case TYPE_SECTION:
+            findSection(scope, attribute.attributeName, subScope);
+            break;
+        case TYPE_SUBSECTION:
+            findSubSection(scope, attribute.attributeName, subScope);
+            break;
+        case TYPE_ATTRIBUTE:
+            findAttribute(scope, attribute.attributeName, attributeValue);
+            /* if user has set the attribute, then store it */
+            if(attribute.attributeValue != NULL) 
+                *attribute.attributeValue = attributeValue;
+            break;
+        }
+
+        /* check if we should go deeper into the tree */
+        listOfSubsectionIterator++;
+
+        if ( listOfSubsectionIterator != listOfSubSections.end() &&
+             listOfSubsectionIterator->level > attribute.level)
+        {
+            assert( attribute.type != TYPE_ATTRIBUTE );
+            findNextElementScope(subScope, listOfSubSections, listOfSubsectionIterator);
+        }
+
+        /* could be changed in the recursive findNextElementScope(..), therefore check it again */
+        if ( listOfSubsectionIterator == listOfSubSections.end() ||
+             listOfSubsectionIterator->level < attribute.level )
+            break;
+    }
+}
+
+void parseConfig( const std::list<std::string>& config, std::list<SectionAttributes>& listOfSubSections )
+{
+    std::list<SectionAttributes>::iterator listOfSubsectionIterator = listOfSubSections.begin();
+    findNextElementScope(config, listOfSubSections, listOfSubsectionIterator);
 }
 

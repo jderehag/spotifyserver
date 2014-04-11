@@ -47,6 +47,15 @@ AudioEndpointConfig::EndpointType AudioEndpointConfig::getEndpointType() const
     return endpointType_;
 }
 
+const std::string AudioEndpointConfig::getEndpointTypeString() const
+{
+    switch( endpointType_ )
+    {
+        case ALSA: return "ALSA";
+    }
+    return "";
+}
+
 void AudioEndpointConfig::setDevice(const std::string& device)
 {
     if(!device.empty())device_ = device;
@@ -56,7 +65,10 @@ void AudioEndpointConfig::setEndpointType(const std::string& endpointType)
 {
     if(!endpointType.empty())
     {
-        if(endpointType == "ALSA")endpointType_ = AudioEndpointConfig::ALSA;
+        if(endpointType == "ALSA")
+        {
+            endpointType_ = AudioEndpointConfig::ALSA;
+        }
         else
         {
                 std::cerr << "Unknown endpoint type: " << endpointType << std::endl;

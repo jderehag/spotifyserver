@@ -36,25 +36,31 @@
 namespace Test
 {
 
-static std::string validConfig(
-"###############################\n"
-"# this is a valid config       \n"
-"###############################\n"
-"Section \"section1\"		    \n"
-"Attribute1 	\"value1\"		\n"
-"###############################\n"
-"# this is a random comment		\n"
-"###############################\n"
-"Attribute2		\"value2\"		\n"
-"SubSection   \"subsection1\"   \n"
-"	Attribute1 \"value3\"		\n"
-"EndSubSection 					\n"
-"EndSection 					\n"
-"Section \"section2\"		    \n"
-"Attribute4 	\"value4\"		\n"
-"Attribute5		\"value5\"		\n"
-"EndSection 					\n");
-
+static std::list<std::string> getValidConfig()
+{
+    std::list<std::string> validConfig;
+    validConfig.push_back( "################################");
+    validConfig.push_back( "# this is a valid config        ");
+    validConfig.push_back( "################################");
+    validConfig.push_back( "Section \"section1\"		    ");
+    validConfig.push_back( "Attribute1 	\"value1\"		    ");
+    validConfig.push_back( "################################");
+    validConfig.push_back( "# this is a random comment		");
+    validConfig.push_back( "################################");
+    validConfig.push_back( "WrongAttribute2 \"wrongvalue\"  ");
+    validConfig.push_back( "Attribute2		\"value2\"		");
+    validConfig.push_back( "SubSection   \"subsection1\"    ");
+    validConfig.push_back( "	 Attribute1 \"value3\"		");
+    validConfig.push_back( " EndSubSection 					");
+    validConfig.push_back( "EndSection 					    ");
+    validConfig.push_back( "Section \"section2\"		    ");
+    validConfig.push_back( "#Attribute4 \"wrongvalue\"      ");
+    validConfig.push_back( "Attribute4 	\"value4\"		    ");
+    validConfig.push_back( "Attribute5		\"value5\"		");
+    validConfig.push_back( "#Attribute6  \"notconfigured\"  ");
+    validConfig.push_back( "EndSection 					    ");
+    return validConfig;
+}
 static bool ut_testValidConfig()
 {
 	std::string attributeValue1;
@@ -62,42 +68,48 @@ static bool ut_testValidConfig()
 	std::string attributeValue3;
 	std::string attributeValue4;
 	std::string attributeValue5;
+    std::string attributeValue6;
 
-	SectionAttributes parseDefintion[] =
-	{
-			 /* section 1 */
-			 {0, TYPE_SECTION, 		"section1", 		NULL					},
-			 {1, TYPE_ATTRIBUTE, 	"Attribute1", 		&attributeValue1   		},
-			 {1, TYPE_ATTRIBUTE, 	"Attribute2", 		&attributeValue2   		},
-			 {1, TYPE_SUBSECTION, 	"subsection1", 		NULL	   				},
-			 {2, TYPE_ATTRIBUTE, 	"Attribute1", 		&attributeValue3		},
-			 /* section 2 */
-			 {0, TYPE_SECTION, 		"section2", 		NULL					},
-			 {1, TYPE_ATTRIBUTE, 	"Attribute4", 		&attributeValue4   		},
-			 {1, TYPE_ATTRIBUTE, 	"Attribute5", 		&attributeValue5   		}
-	};
-	parseConfig(validConfig, parseDefintion);
+	std::list<SectionAttributes> parseDefintion;
+	/* section 1 */
+	parseDefintion.push_back( SectionAttributes(0, TYPE_SECTION, 	"section1" ));
+	parseDefintion.push_back( SectionAttributes(1, TYPE_ATTRIBUTE, 	"Attribute1", 		&attributeValue1 ));
+	parseDefintion.push_back( SectionAttributes(1, TYPE_ATTRIBUTE, 	"Attribute2", 		&attributeValue2 ));
+	parseDefintion.push_back( SectionAttributes(1, TYPE_SUBSECTION, "subsection1", 		NULL ));
+	parseDefintion.push_back( SectionAttributes(2, TYPE_ATTRIBUTE, 	"Attribute1", 		&attributeValue3 ));
+	/* section 2 */
+	parseDefintion.push_back( SectionAttributes(0, TYPE_SECTION, 	"section2", 		NULL ));
+	parseDefintion.push_back( SectionAttributes(1, TYPE_ATTRIBUTE, 	"Attribute4", 		&attributeValue4 ));
+	parseDefintion.push_back( SectionAttributes(1, TYPE_ATTRIBUTE, 	"Attribute5", 		&attributeValue5 ));
+    parseDefintion.push_back( SectionAttributes(1, TYPE_ATTRIBUTE,  "Attribute6",       &attributeValue6 ));
+
+	parseConfig(getValidConfig(), parseDefintion);
 
 	assert(attributeValue1 == "value1");
 	assert(attributeValue2 == "value2");
 	assert(attributeValue3 == "value3");
 	assert(attributeValue4 == "value4");
 	assert(attributeValue5 == "value5");
+    assert(attributeValue6 == "");
 
 	return true;
 }
 
 
 
-static const char* invalidConfigNoEndSection(
-"###############################\n"
-"# this is an invalid config    \n"
-"# (No EndSubsection)			\n"
-"###############################\n"
-"Section \"section1\"		    \n"
-"Attribute1 	\"value1\"		\n"
-"Attribute2		\"value2\"		\n"
-"Attribute3 \"value3\"			\n");
+static std::list<std::string> getInvalidConfigNoEndSection()
+{
+    std::list<std::string> config;
+    config.push_back( "###############################" );
+    config.push_back( "# this is an invalid config    " );
+    config.push_back( "# (No EndSubsection)			" );
+    config.push_back( "###############################" );
+    config.push_back( "Section \"section1\"		    " );
+    config.push_back( "Attribute1 	\"value1\"		" );
+    config.push_back( "Attribute2		\"value2\"		" );
+    config.push_back( "Attribute3 \"value3\"			");
+    return config;
+}
 
 static bool ut_testInvalidConfigNoEndSection()
 {
@@ -106,15 +118,14 @@ static bool ut_testInvalidConfigNoEndSection()
 	std::string attributeValue2;
 	std::string attributeValue3;
 
-	SectionAttributes parseDefintion[] =
-	{
+	std::list<SectionAttributes> parseDefintion;
 
-			 {0, TYPE_SECTION, 		"section1", 		NULL					},
-			 {1, TYPE_ATTRIBUTE, 	"Attribute1", 		&attributeValue1   		},
-			 {1, TYPE_ATTRIBUTE, 	"Attribute2", 		&attributeValue2   		},
-			 {1, TYPE_ATTRIBUTE, 	"Attribute3", 		&attributeValue3		}
-	};
-	parseConfig(invalidConfigNoEndSection, parseDefintion);
+	parseDefintion.push_back( SectionAttributes( 0, TYPE_SECTION, 		"section1", 		NULL ));
+	parseDefintion.push_back( SectionAttributes( 1, TYPE_ATTRIBUTE, 	"Attribute1", 		&attributeValue1 ));
+	parseDefintion.push_back( SectionAttributes( 1, TYPE_ATTRIBUTE, 	"Attribute2", 		&attributeValue2 ));
+	parseDefintion.push_back( SectionAttributes( 1, TYPE_ATTRIBUTE, 	"Attribute3", 		&attributeValue3 ));
+
+	parseConfig(getInvalidConfigNoEndSection(), parseDefintion);
 
 	assert(attributeValue1 == "");
 	assert(attributeValue2 == "");

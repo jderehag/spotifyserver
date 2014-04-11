@@ -27,125 +27,147 @@
 
 #include "ConfigHandler.h"
 #include "ConfigParser.h"
+#include "ConfigGenerator.h"
 
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
 #include <cstring>
 
+
 namespace ConfigHandling
 {
+
 ConfigHandler::ConfigHandler(const std::string& pathToConfigFile) : configFilePath_(pathToConfigFile) { }
 ConfigHandler::~ConfigHandler() { }
 
+
+void ConfigHandler::writeConfigFile()
+{
+    /* Spotify Section*/
+    spotifyUsername = spotifyConfig_.getUsername();
+    spotifyPassword = spotifyConfig_.getPassword();
+    spotifyCacheLocation = spotifyConfig_.getCacheLocation();
+    spotifySettingsLocation = spotifyConfig_.getSettingsLocation();
+    /* Network Section*/
+    networkBindType = networkConfig_.getBindTypeString();
+    networkIp = networkConfig_.getIp();
+    networkPort = networkConfig_. getPort();
+    networkDevice = networkConfig_.getDevice();
+    networkUsername = networkConfig_.getUsername();
+    networkPassword = networkConfig_.getPassword();
+    /* AudioEndpoint Section*/
+    audioEndpointType = audioEndpointConfig_.getEndpointTypeString();
+    audioEndpointAlsaDevice = audioEndpointConfig_.getDevice();
+    /* Logger Section */
+    loggerLogLevel = loggerConfig_.getLogLevelString();
+    loggerLogFile = loggerConfig_.getLogFile();
+
+    std::list<std::string> outConfig;
+    std::list<SectionAttributes> listOfAttributes = getConfigAttributes();
+    generateConfig(config, outConfig, listOfAttributes);
+
+    std::ofstream configFile(configFilePath_.c_str());
+
+    if(configFile.is_open())
+    {
+        std::list<std::string>::iterator it = outConfig.begin();
+        while( it != outConfig.end() )
+        {
+            configFile << *it;
+            it++;
+            if ( it != outConfig.end() )
+                configFile << '\n';
+        }
+    }
+}
+
+
+std::list<SectionAttributes> ConfigHandler::getConfigAttributes()
+{
+    std::list<SectionAttributes> listOfSectionAttributes;
+
+    /* Spotify Section*/
+    listOfSectionAttributes.push_back(SectionAttributes ( 0,  TYPE_SECTION,      "Spotify"));
+    listOfSectionAttributes.push_back(SectionAttributes ( 1,  TYPE_ATTRIBUTE,    "Username",          &spotifyUsername            ));
+    listOfSectionAttributes.push_back(SectionAttributes ( 1,  TYPE_ATTRIBUTE,    "Password",          &spotifyPassword            ));
+    listOfSectionAttributes.push_back(SectionAttributes ( 1,  TYPE_ATTRIBUTE,    "CacheLocation",     &spotifyCacheLocation       ));
+    listOfSectionAttributes.push_back(SectionAttributes ( 1,  TYPE_ATTRIBUTE,    "SettingsLocation",  &spotifySettingsLocation    ));
+
+    /* Network Section*/
+    listOfSectionAttributes.push_back(SectionAttributes ( 0,  TYPE_SECTION,      "Network",           NULL                        ));
+    listOfSectionAttributes.push_back(SectionAttributes ( 1,  TYPE_ATTRIBUTE,    "BindType",          &networkBindType            ));
+    listOfSectionAttributes.push_back(SectionAttributes ( 1,  TYPE_ATTRIBUTE,    "Ip",                &networkIp                  ));
+    listOfSectionAttributes.push_back(SectionAttributes ( 1,  TYPE_ATTRIBUTE,    "Port",              &networkPort                ));
+    listOfSectionAttributes.push_back(SectionAttributes ( 1,  TYPE_ATTRIBUTE,    "Device",            &networkDevice              ));
+    listOfSectionAttributes.push_back(SectionAttributes ( 1,  TYPE_ATTRIBUTE,    "Username",          &networkUsername            ));
+    listOfSectionAttributes.push_back(SectionAttributes ( 1,  TYPE_ATTRIBUTE,    "Password",          &networkPassword            ));
+
+    /* AudioEndpoint Section*/
+    listOfSectionAttributes.push_back(SectionAttributes ( 0,  TYPE_SECTION,      "AudioEndpoint",     NULL                        ));
+    listOfSectionAttributes.push_back(SectionAttributes ( 1,  TYPE_ATTRIBUTE,    "Type",              &audioEndpointType          ));
+    listOfSectionAttributes.push_back(SectionAttributes ( 1,  TYPE_SUBSECTION,   "ALSA",              NULL                        ));
+    listOfSectionAttributes.push_back(SectionAttributes ( 2,  TYPE_ATTRIBUTE,    "Device",            &audioEndpointAlsaDevice    ));
+
+    /* Logger Section*/
+    listOfSectionAttributes.push_back(SectionAttributes ( 0,  TYPE_SECTION,      "Logger",            NULL                        ));
+    listOfSectionAttributes.push_back(SectionAttributes ( 1,  TYPE_ATTRIBUTE,    "LogLevel",          &loggerLogLevel             ));
+    listOfSectionAttributes.push_back(SectionAttributes ( 1,  TYPE_ATTRIBUTE,    "LogFile",           &loggerLogFile              ));
+
+    return listOfSectionAttributes;
+}
+
 void ConfigHandler::parseConfigFile()
 {
-    std::string configString("");
-    readFromFile(configString);
-    /* Spotify Section*/
-    std::string spotifyUsername;
-    std::string spotifyPassword;
-    std::string spotifyCacheLocation;
-    std::string spotifySettingsLocation;
-    /* Network Section*/
-    std::string networkBindType;
-    std::string networkIp;
-    std::string networkPort;
-    std::string networkDevice;
-    std::string networkUsername;
-    std::string networkPassword;
-    /* AudioEndpoint Section*/
-    std::string audioEndpointType;
-    std::string audioEndpointAlsaDevice;
-    /* Logger Section */
-    std::string loggerLogLevel;
-    std::string loggerLogFile;
+    readFromFile();
 
-    SectionAttributes parseDefintion[] = {
+    std::list<SectionAttributes> listOfAttributes = getConfigAttributes();
+    parseConfig(config, listOfAttributes);
 
-        /* Spotify Section*/
-        {0,     TYPE_SECTION,                 "Spotify",               NULL                        },
-        {1,     TYPE_ATTRIBUTE,               "Username",              &spotifyUsername            },
-        {1,     TYPE_ATTRIBUTE,               "Password",              &spotifyPassword            },
-        {1,     TYPE_ATTRIBUTE,               "CacheLocation",         &spotifyCacheLocation       },
-        {1,     TYPE_ATTRIBUTE,               "SettingsLocation",      &spotifySettingsLocation    },
+    /* Spotify */
+    spotifyConfig_.setUsername(spotifyUsername);
+    spotifyConfig_.setPassword(spotifyPassword);
+    spotifyConfig_.setCacheLocation(spotifyCacheLocation);
+    spotifyConfig_.setSettingsLocation(spotifySettingsLocation);
 
-        /* Network Section*/
-        {0,     TYPE_SECTION,                 "Network",               NULL                        },
-        {1,     TYPE_ATTRIBUTE,               "BindType",              &networkBindType            },
-        {1,     TYPE_ATTRIBUTE,               "Ip",                    &networkIp                  },
-        {1,     TYPE_ATTRIBUTE,               "Port",                  &networkPort                },
-        {1,     TYPE_ATTRIBUTE,               "Device",                &networkDevice              },
-        {1,     TYPE_ATTRIBUTE,               "Username",              &networkUsername            },
-        {1,     TYPE_ATTRIBUTE,               "Password",              &networkPassword            },
-
-        /* AudioEndpoint Section*/
-        {0,     TYPE_SECTION,                 "AudioEndpoint",         NULL                        },
-        {1,     TYPE_ATTRIBUTE,               "Type",                  &audioEndpointType          },
-        {1,     TYPE_SUBSECTION,              "ALSA",                  NULL                        },
-        {2,     TYPE_ATTRIBUTE,               "Device",                &audioEndpointAlsaDevice    },
-
-        /* Logger Section*/
-        {0,     TYPE_SECTION,                 "Logger",                NULL                        },
-        {1,     TYPE_ATTRIBUTE,               "LogLevel",              &loggerLogLevel             },
-        {1,     TYPE_ATTRIBUTE,               "LogFile",               &loggerLogFile              }
-	};
-
-	parseConfig(configString, parseDefintion);
-
-	/* Spotify */
-	spotifyConfig_.setUsername(spotifyUsername);
-	spotifyConfig_.setPassword(spotifyPassword);
-	spotifyConfig_.setCacheLocation(spotifyCacheLocation);
-	spotifyConfig_.setSettingsLocation(spotifySettingsLocation);
-
-	/* Network */
-	networkConfig_.setBindType(networkBindType);
-	networkConfig_.setIp(networkIp);
-	networkConfig_.setPort(networkPort);
-	networkConfig_.setDevice(networkDevice);
+    /* Network */
+    networkConfig_.setBindType(networkBindType);
+    networkConfig_.setIp(networkIp);
+    networkConfig_.setPort(networkPort);
+    networkConfig_.setDevice(networkDevice);
     networkConfig_.setUsername(networkUsername);
     networkConfig_.setPassword(networkPassword);
 
-	/* AudioEndpoint */
-	audioEndpointConfig_.setEndpointType(audioEndpointType);
-	audioEndpointConfig_.setDevice(audioEndpointAlsaDevice);
+    /* AudioEndpoint */
+    audioEndpointConfig_.setEndpointType(audioEndpointType);
+    audioEndpointConfig_.setDevice(audioEndpointAlsaDevice);
 
-	/* Logger */
-	loggerConfig_.setLogLevel(loggerLogLevel);
-	loggerConfig_.setLogFile(loggerLogFile);
-
+    /* Logger */
+    loggerConfig_.setLogLevel(loggerLogLevel);
+    loggerConfig_.setLogFile(loggerLogFile);
 }
 
-void ConfigHandler::readFromFile(std::string& configString)
+void ConfigHandler::readFromFile()
 {
-	configString.clear();
-	std::ifstream configFile(configFilePath_.c_str());
+    config.clear();
+    std::ifstream configFile(configFilePath_.c_str());
 
-	if(configFile.is_open())
-	{
-		while(configFile.good())
-		{
-			char line[256];
-			configFile.getline(line, sizeof(line));
+    if(configFile.is_open())
+    {
+        while(configFile.good())
+        {
+            std::string line;
+            getline(configFile, line);
 
-			/* skip comments and empty lines, should perhaps be done in the parser, but is more efficient this way */
-			if(line[0] != '#' &&
-			   line[0] != '\r' &&
-			   line[0] != '\n' &&
-			   line[0] != '\0')
-			{
-				configString += line;
-				configString += '\n';
-			}
-		}
-	}
-	else
-	{
-		std::cerr << "Failed to open config file " << configFilePath_ << ", using default parameters" << std::endl;
-		return;
-	}
-	configFile.close();
+            config.push_back( line );
+        }
+    }
+    else
+    {
+        std::cerr << "Failed to open config file " << configFilePath_ << ", using default parameters" << std::endl;
+        return;
+    }
+    configFile.close();
 }
 
 const std::string& ConfigHandler::getConfigFilePath() const

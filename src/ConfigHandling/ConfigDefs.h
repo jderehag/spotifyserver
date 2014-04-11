@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Jesper Derehag
+ * Copyright (c) 2014, Jens Nielsen
  * All rights reserved.
 
  * Redistribution and use in source and binary forms, with or without
@@ -16,7 +16,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL JESPER DEREHAG BE LIABLE FOR ANY
+ * DISCLAIMED. IN NO EVENT SHALL JENS NIELSEN BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -25,12 +25,27 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef CONFIGPARSER_H_
-#define CONFIGPARSER_H_
+#ifndef CONFIGDEFS_H_
+#define CONFIGDEFS_H_
 
-#include "ConfigDefs.h"
-#include <list>
 
-void parseConfig(const std::list<std::string>& config, std::list<SectionAttributes>& listOfSubSections);
+#include <string>
 
-#endif /* CONFIGPARSER_H_ */
+typedef enum
+{
+    TYPE_SECTION,
+    TYPE_SUBSECTION,
+    TYPE_ATTRIBUTE
+}ElementType;
+
+typedef struct SectionAttributes
+{
+    unsigned int level;
+    ElementType type;
+    const char* attributeName;
+    std::string* attributeValue;
+    SectionAttributes( unsigned int level_, ElementType type_, const char* attributeName_, std::string* attributeValue_ = NULL) : level(level_), type(type_), attributeName(attributeName_), attributeValue(attributeValue_) {}
+}SectionAttributes;
+
+
+#endif /* CONFIGDEFS_H_ */

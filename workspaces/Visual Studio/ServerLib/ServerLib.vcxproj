@@ -77,6 +77,7 @@
     <ClCompile Include="..\..\..\src\ConfigHandling\Configs\LoggerConfig.cpp" />
     <ClCompile Include="..\..\..\src\ConfigHandling\Configs\NetworkConfig.cpp" />
     <ClCompile Include="..\..\..\src\ConfigHandling\Configs\SpotifyConfig.cpp" />
+    <ClCompile Include="..\..\..\src\ConfigHandling\ConfigGenerator.cpp" />
     <ClCompile Include="..\..\..\src\LibSpotifyIf\LibSpotifyIf.cpp" />
     <ClCompile Include="..\..\..\src\LibSpotifyIf\LibSpotifyIfCallbackWrapper.cpp" />
     <ClCompile Include="..\..\..\src\LibSpotifyIf\LibSpotifyIfHelpers.cpp" />
@@ -90,8 +91,10 @@
     <ClInclude Include="..\..\..\common\MediaInterface\MediaInterface.h" />
     <ClInclude Include="..\..\..\src\ClientHandler\Client.h" />
     <ClInclude Include="..\..\..\src\ClientHandler\ClientHandler.h" />
+    <ClInclude Include="..\..\..\src\ConfigHandling\ConfigDefs.h" />
     <ClInclude Include="..\..\..\src\ConfigHandling\ConfigHandler.h" />
     <ClInclude Include="..\..\..\src\ConfigHandling\ConfigParser.h" />
+    <ClInclude Include="..\..\..\src\ConfigHandling\ConfigGenerator.h" />
     <ClInclude Include="..\..\..\src\LibSpotifyIf\ILibSpotifyIfCallbackSubscriber.h" />
     <ClInclude Include="..\..\..\src\LibSpotifyIf\LibSpotifyIf.h" />
     <ClInclude Include="..\..\..\src\LibSpotifyIf\LibSpotifyIfCallbackWrapper.h" />

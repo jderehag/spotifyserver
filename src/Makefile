@@ -22,7 +22,7 @@ SRC =	appkey.c
 # use file-extension .cpp for C++-files (not .C)
 CPPSRC =	spotifyserver.cpp \
 			$(addprefix ClientHandler/, ClientHandler.cpp Client.cpp) \
-			$(addprefix ConfigHandling/, ConfigHandler.cpp ConfigParser.cpp) \
+			$(addprefix ConfigHandling/, ConfigHandler.cpp ConfigParser.cpp ConfigGenerator.cpp) \
 			$(addprefix ConfigHandling/Configs/, SpotifyConfig.cpp NetworkConfig.cpp AudioEndpointConfig.cpp LoggerConfig.cpp) \
 			$(addprefix LibSpotifyIf/, LibSpotifyIf.cpp LibSpotifyIfCallbackWrapper.cpp LibSpotifyIfHelpers.cpp LibSpotifyPlaybackHandler.cpp) \
 			

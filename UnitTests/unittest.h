@@ -37,6 +37,13 @@
 
 #include <stdio.h>
 
+#define UT_ASSERT_STRING_EQUAL(s1, s2)                                                    \
+    if((s1).compare((s2)) != 0) {                                                          \
+        std::cout << __FUNCTION__  << ":" << __LINE__ << " " <<         \
+                    "Failed: [" << (s1) << "] != [" << (s2) << "]" << std::endl;                  \
+        return false; \
+    }
+
 #define UT_ASSERT(x)													\
 	if(!(x)) {															\
 		std::cout << __FUNCTION__  << ":" << __LINE__ << " " <<			\

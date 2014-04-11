@@ -47,6 +47,18 @@ LogLevel LoggerConfig::getLogLevel() const
     return logLevel_;
 }
 
+const std::string LoggerConfig::getLogLevelString() const
+{
+    switch( logLevel_ )
+    {
+    case LOG_DEBUG: return "DEBUG";
+    case LOG_NOTICE: return "NOTICE";
+    case LOG_WARN: return "WARN";
+    case LOG_EMERG: return "EMERG";
+    }
+    return "";
+}
+
 LoggerConfig::LogTo LoggerConfig::getLogTo() const
 {
     return logTo_;
