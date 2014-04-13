@@ -291,8 +291,9 @@ void AudioEndpointLocal::run()
                 DWORD outbytes = (afd->nsamples*pwfxOut->nAvgBytesPerSec/afd->rate);
                 outbytes += 320;
 
-                if ( outbytes > bufferFrameCount * pwfxOut->nBlockAlign );
-                    outbytes = bufferFrameCount * pwfxOut->nBlockAlign;
+                if ( outbytes > bufferFrameCount * pwfxOut->nBlockAlign / 2 )
+                    outbytes = bufferFrameCount * pwfxOut->nBlockAlign / 2;
+
                 HRC( MFCreateSample(&pOutSample) );
                 HRC( MFCreateMemoryBuffer( outbytes, &pBuffer ) );
                 HRC( pOutSample->AddBuffer( pBuffer ) );
