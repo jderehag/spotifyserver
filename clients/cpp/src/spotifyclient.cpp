@@ -37,21 +37,46 @@
 
 int main(int argc, char *argv[])
 {
+    std::string configFile = std::string("spotifyclient.conf");
+
+    /*no getopt for windows...*/
+    for(int i = 1; i < argc; i++)
+    {
+        std::string arg = std::string(argv[i]);
+        if (arg == "-c")
+        {
+            if (i+1 < argc)
+            {
+                configFile = std::string(argv[i+1]);
+                i++;
+            }
+            else
+            {
+                std::cout << "No file specified for option: " << arg << std::endl;
+                //printUsage();
+                return -1;
+            }
+        }
+        else
+        {
+            std::cout << "Unknown option: " << arg << std::endl;
+            //printUsage();
+            return -1;
+        }
+    }
+
     Platform::initTimers();
 
-    std::string servaddr("");
-    ConfigHandling::LoggerConfig cfg;
+    ConfigHandling::ConfigHandler ch(configFile);
+    ch.parseConfigFile();
+
+    ConfigHandling::LoggerConfig cfg = ch.getLoggerConfig();
     cfg.setLogTo(ConfigHandling::LoggerConfig::STDOUT);
     Logger::LoggerImpl l(cfg);
 
-    ConfigHandling::AudioEndpointConfig audiocfg;
+    Platform::AudioEndpointLocal audioEndpoint(ch.getAudioEndpointConfig());
 
-    Platform::AudioEndpointLocal audioEndpoint(audiocfg);
-
-    if(argc > 1)
-        servaddr = std::string(argv[1]);
-
-    SocketClient sc(servaddr, "7788");
+    SocketClient sc(ch.getNetworkConfig());
     RemoteMediaInterface m(sc);
 
     RemoteAudioEndpointManager audioMgr(sc);

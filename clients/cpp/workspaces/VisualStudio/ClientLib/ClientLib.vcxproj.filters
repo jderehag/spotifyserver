@@ -25,9 +25,6 @@
     <ClCompile Include="..\..\..\..\..\common\AudioEndpointManager\RemoteAudioEndpointManager.cpp">
       <Filter>AudioEndpointManager</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\src\ConfigHandling\ConfigHandler.cpp">
-      <Filter>ConfigHandling</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\..\src\ConfigHandling\ConfigParser.cpp">
       <Filter>ConfigHandling</Filter>
     </ClCompile>
@@ -40,9 +37,6 @@
     <ClCompile Include="..\..\..\..\..\src\ConfigHandling\Configs\NetworkConfig.cpp">
       <Filter>ConfigHandling\Configs</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\src\ConfigHandling\Configs\SpotifyConfig.cpp">
-      <Filter>ConfigHandling\Configs</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\..\common\MediaInterface\MediaInterface.cpp">
       <Filter>MediaInterface</Filter>
     </ClCompile>
@@ -52,6 +46,12 @@
     <ClCompile Include="..\..\..\..\..\common\AudioEndpointManager\AudioEndpointManagerCtrlInterface.cpp">
       <Filter>AudioEndpointManager</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\ConfigHandler.cpp">
+      <Filter>ConfigHandling</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\src\ConfigHandling\ConfigGenerator.cpp">
+      <Filter>ConfigHandling</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\..\common\AudioEndpointManager\AudioEndpointManagerCtrlInterface.h">
@@ -59,9 +59,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\common\AudioEndpointManager\RemoteAudioEndpointManager.h">
       <Filter>AudioEndpointManager</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\..\src\ConfigHandling\ConfigHandler.h">
-      <Filter>ConfigHandling</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\src\ConfigHandling\ConfigParser.h">
       <Filter>ConfigHandling</Filter>
@@ -78,5 +75,14 @@
     <ClInclude Include="..\..\..\src\AudioEndpointRemoteSocketServer.h" />
     <ClInclude Include="..\..\..\src\RemoteMediaInterface.h" />
     <ClInclude Include="..\..\..\..\..\common\ClockSync\ClockSyncClient.h" />
+    <ClInclude Include="..\..\..\src\ConfigHandler.h">
+      <Filter>ConfigHandling</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\src\ConfigHandling\ConfigDefs.h">
+      <Filter>ConfigHandling</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\src\ConfigHandling\ConfigGenerator.h">
+      <Filter>ConfigHandling</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

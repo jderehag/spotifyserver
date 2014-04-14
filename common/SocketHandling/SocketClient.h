@@ -30,6 +30,7 @@
 
 #include "Messenger.h"
 #include "Platform/Threads/Runnable.h"
+#include "ConfigHandling/ConfigHandler.h"
 #include <string>
 
 class SocketClient : public Messenger, public Platform::Runnable
@@ -40,6 +41,7 @@ private:
 
 public:
     SocketClient(const std::string& serveraddr, const std::string& serverport);
+    SocketClient(ConfigHandling::NetworkConfig config);
     virtual ~SocketClient();
 
     void run();

@@ -41,52 +41,60 @@ SocketClient::SocketClient(const std::string& serveraddr, const std::string& ser
     startThread();
 }
 
+SocketClient::SocketClient(ConfigHandling::NetworkConfig config) : serveraddr_(config.getIp()), serverport_(config.getPort())
+{
+    startThread();
+}
+
 SocketClient::~SocketClient()
 {
 }
 
 void SocketClient::run()
 {
-    if ( serveraddr_ == "" )
-        log(LOG_NOTICE) << "Auto discovery...";
-
-    while( serveraddr_ == "" && isCancellationPending() == false)
+    while(isCancellationPending() == false)
     {
-        uint8_t msg[] = {'?'};
-        Socket socket( SOCKTYPE_DATAGRAM );
-        socket.EnableBroadcast();
+        std::string currentServerAddress = serveraddr_;
 
-        if ( socket.SendTo( msg, sizeof(msg), "255.255.255.255", "7788") < 0 )
+        if ( currentServerAddress == "ANY" )
         {
-            log(LOG_EMERG) << "Failed to send auto discovery message!";
-            sleep_ms(10000);
-            continue;
-        }
-
-        std::set<Socket*> readset;
-
-        readset.insert( &socket );
-
-        if ( select(&readset, NULL, NULL, 10000) > 0 )
-        {
-            if ( readset.find( &socket ) != readset.end() )
+            log(LOG_NOTICE) << "Auto discovery...";
+            while( currentServerAddress == "ANY" && isCancellationPending() == false)
             {
-                std::string addr, port;
-                if ( socket.ReceiveFrom( msg, 1, addr, port ) == 1 )
+                uint8_t msg[] = {'?'};
+                Socket discoversocket( SOCKTYPE_DATAGRAM );
+                discoversocket.EnableBroadcast();
+
+                if ( discoversocket.SendTo( msg, sizeof(msg), "255.255.255.255", "7788") < 0 )
                 {
-                    serveraddr_ = addr;
-                    log(LOG_NOTICE) << "Auto discovery found server at " << serveraddr_;
+                    log(LOG_EMERG) << "Failed to send auto discovery message!";
+                    sleep_ms(10000);
+                    continue;
+                }
+
+                std::set<Socket*> readset;
+
+                readset.insert( &discoversocket );
+
+                if ( select(&readset, NULL, NULL, 10000) > 0 )
+                {
+                    if ( readset.find( &discoversocket ) != readset.end() )
+                    {
+                        std::string addr, port;
+                        if ( discoversocket.ReceiveFrom( msg, 1, addr, port ) == 1 )
+                        {
+                            currentServerAddress = addr;
+                            log(LOG_NOTICE) << "Auto discovery found server at " << currentServerAddress;
+                        }
+                    }
                 }
             }
         }
-    }
 
-    while(isCancellationPending() == false)
-    {
         Socket socket(SOCKTYPE_STREAM);
 
-        log(LOG_NOTICE) << "Connecting to " << serveraddr_ << "...";
-        if ( socket.Connect( serveraddr_, serverport_ ) == 0 )
+        log(LOG_NOTICE) << "Connecting to " << currentServerAddress << "...";
+        if ( socket.Connect( currentServerAddress, serverport_ ) == 0 )
         {
             log(LOG_NOTICE) << "Connected";
 #if 0
