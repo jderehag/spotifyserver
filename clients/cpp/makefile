@@ -23,7 +23,8 @@ SRC  =
 CPPSRC =	spotifyclient.cpp \
 			RemoteMediaInterface.cpp \
 			AudioEndpointRemoteSocketServer.cpp \
-			UIConsole.cpp
+			UIConsole.cpp \
+			ConfigHandler.cpp
 
 #common
 CPPSRC +=	$(addprefix MediaContainers/, MediaBaseInfo.cpp Album.cpp Artist.cpp Folder.cpp Playlist.cpp Track.cpp) \
@@ -37,7 +38,8 @@ CPPSRC +=	$(addprefix MediaContainers/, MediaBaseInfo.cpp Album.cpp Artist.cpp F
 			Utils/ActionFilter.cpp
 
 #server...
-CPPSRC +=	$(addprefix ConfigHandling/Configs/, AudioEndpointConfig.cpp LoggerConfig.cpp)
+CPPSRC +=	$(addprefix ConfigHandling/Configs/, AudioEndpointConfig.cpp LoggerConfig.cpp NetworkConfig.cpp) \
+			$(addprefix ConfigHandling/, ConfigParser.cpp ConfigGenerator.cpp)
 
 #arch
 CPPSRC +=	$(ARCH_SRC) $(AUDIO_SRC)
