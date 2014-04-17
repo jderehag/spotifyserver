@@ -59,7 +59,7 @@ SRC +=	$(addprefix $(FREERTOS)/, list.c queue.c tasks.c timers.c event_groups.c 
 SRC +=	BSP/STM32F4-Discovery/stm32f4_discovery.c \
 		$(addprefix STM32F4XX/, system_stm32f4xx.c stm32f4xx_it.c netconf.c) \
 		$(addprefix STM32F4XX/STM32F4xx_HAL_Driver/src/, stm32f4xx_hal.c stm32f4xx_hal_dma.c stm32f4xx_hal_gpio.c stm32f4xx_hal_rcc.c stm32f4xx_hal_pwr.c stm32f4xx_hal_rtc.c) \
-		$(addprefix STM32F4XX/STM32F4xx_HAL_Driver/src/, stm32f4xx_hal_cortex.c stm32f4xx_hal_eth.c  ) \
+		$(addprefix STM32F4XX/STM32F4xx_HAL_Driver/src/, stm32f4xx_hal_cortex.c stm32f4xx_hal_eth.c stm32f4xx_hal_flash.c stm32f4xx_hal_flash_ex.c  ) \
 		$(addprefix BSP/STM32F4-DIS-BB/, stm32f4_discovery_eth.c )
 
 #LCD display output
@@ -82,6 +82,7 @@ SRC += $(LWIP_MEM)
 # List C++ source files here.
 # use file-extension .cpp for C++-files (not .C)
 CPPSRC = main.cpp buttonHandler.cpp UIEmbedded.cpp heapWrap.cpp LoggerEmbedded.cpp LcdLog.cpp clock.cpp \
+		params/params.cpp \
 		$(addprefix MediaContainers/, MediaBaseInfo.cpp Album.cpp Artist.cpp Folder.cpp Playlist.cpp Track.cpp) \
 		$(addprefix MessageFactory/, Message.cpp MessageDecoder.cpp MessageEncoder.cpp TlvDefinitions.cpp Tlvs.cpp SocketReader.cpp SocketWriter.cpp) \
 		RemoteMediaInterface.cpp \

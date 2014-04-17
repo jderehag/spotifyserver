@@ -42,6 +42,7 @@
 #include "LoggerEmbedded.h"
 #include "NtpClient.h"
 #include "clock.h"
+#include "params/params.h"
 
 #ifdef WITH_LCD
 #include "stm32f4_discovery_lcd.h"
@@ -146,6 +147,10 @@ Main::Main() : Platform::Runnable(false, SIZE_SMALL, PRIO_VERY_HIGH)
 void Main::run()
 {
     clockInit();
+
+    Logger::LoggerEmbedded* l = new Logger::LoggerEmbedded(LOG_NOTICE);
+    LedFlasher* fl = new LedFlasher;
+
     /* Initialise the LwIP stack */
     LwIP_Init();
 
@@ -153,14 +158,20 @@ void Main::run()
     NtpClient* nc = new NtpClient();
     putenv( "TZ=CET-1CEST-2,M3.5.0/2,M10.5.0/3" ); /* initialize current time zone to CET, with DST switch */
 #endif
-    Logger::LoggerEmbedded* l = new Logger::LoggerEmbedded(LOG_NOTICE);
-    LedFlasher* fl = new LedFlasher;
 
 #if 0
     SocketClient* sc = new SocketClient("192.168.5.98", "7788");
 #else
-    SocketClient* sc = new SocketClient("", "7788");
+    SocketClient* sc = new SocketClient("ANY", "7788");
 #endif
+
+    std::string id;
+    if ( paramsGet( PARAM_CLIENT_ID, id ) )
+    {
+        log(LOG_NOTICE) << "Hi! My name is (what?)";
+        log(LOG_NOTICE) << "My name is (who?)";
+        log(LOG_NOTICE) << "My name is (shika-shika) " << id;
+    }
 
     ConfigHandling::AudioEndpointConfig* audiocfg = new ConfigHandling::AudioEndpointConfig;
     Platform::AudioEndpointLocal* audioEndpoint = new Platform::AudioEndpointLocal( *audiocfg );
@@ -189,6 +200,7 @@ int main(void)
     Main* m = new Main();
     BSP_PB_Init(BUTTON_KEY, BUTTON_MODE_EXTI);
     BSP_LED_Init(LED4);
+
     InitializeAudio();
 
 #ifndef WITH_LCD
@@ -198,6 +210,8 @@ int main(void)
 #else
     BSP_LCD_Init();
 #endif
+
+    paramsInit();
 
     vTaskStartScheduler();
 }

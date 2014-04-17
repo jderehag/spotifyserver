@@ -37,7 +37,8 @@
 /* Configure memory regions */
 MEMORY
 {
-  FLASH (rx) : ORIGIN = 0x08000000, LENGTH = 1024K
+  BOOT (rx) : ORIGIN = 0x08000000, LENGTH = 16K
+  FLASH (rx) : ORIGIN = 0x0800C000, LENGTH = 976K
   RAM (rwx)  : ORIGIN = 0x20000000, LENGTH = 128K
   RAM_CCM (xrw)   : ORIGIN = 0x10000000, LENGTH = 64K
 }
@@ -75,9 +76,13 @@ MEMORY
 
 SECTIONS
 {
-	.text :
+	.boot :
 	{
 		KEEP(*(.isr_vector))
+	} > BOOT
+	
+	.text :
+	{
 		*(.text*)
 
 		KEEP(*(.init))
