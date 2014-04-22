@@ -44,6 +44,8 @@ ConfigHandler::~ConfigHandler() { }
 
 void ConfigHandler::writeConfigFile()
 {
+    /* General */
+    applicationId = generalConfig_.getId();
     /* Network Section*/
     networkBindType = networkConfig_.getBindTypeString();
     networkIp = networkConfig_.getIp();
@@ -82,6 +84,10 @@ std::list<SectionAttributes> ConfigHandler::getConfigAttributes()
 {
     std::list<SectionAttributes> listOfSectionAttributes;
 
+    /* General Section*/
+    listOfSectionAttributes.push_back(SectionAttributes ( 0,  TYPE_SECTION,      "General"));
+    listOfSectionAttributes.push_back(SectionAttributes ( 1,  TYPE_ATTRIBUTE,    "ID",                &applicationId            ));
+
     /* Network Section*/
     listOfSectionAttributes.push_back(SectionAttributes ( 0,  TYPE_SECTION,      "Network",           NULL                        ));
     listOfSectionAttributes.push_back(SectionAttributes ( 1,  TYPE_ATTRIBUTE,    "BindType",          &networkBindType            ));
@@ -111,6 +117,9 @@ void ConfigHandler::parseConfigFile()
 
     std::list<SectionAttributes> listOfAttributes = getConfigAttributes();
     parseConfig(config, listOfAttributes);
+
+    /* General */
+    generalConfig_.setId( applicationId );
 
     /* Network */
     networkConfig_.setBindType(networkBindType);
@@ -157,12 +166,15 @@ const std::string& ConfigHandler::getConfigFilePath() const
     return configFilePath_;
 }
 
+const GeneralConfig& ConfigHandler::getGeneralConfig() const
+{
+    return generalConfig_;
+}
 
 const AudioEndpointConfig& ConfigHandler::getAudioEndpointConfig() const
 {
     return audioEndpointConfig_;
 }
-
 
 const LoggerConfig& ConfigHandler::getLoggerConfig() const
 {

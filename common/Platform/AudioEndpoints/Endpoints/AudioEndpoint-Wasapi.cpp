@@ -47,9 +47,11 @@ namespace Platform {
 
 #define HRC(x) do{ hr = x; assert( hr == S_OK ); } while(0)
 
-AudioEndpointLocal::AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config) : Platform::Runnable(true, SIZE_SMALL, PRIO_HIGH), 
-                                                                                            config_(config), 
-                                                                                            adjustSamples_(0)
+AudioEndpointLocal::AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config,
+                                       const EndpointIdIf& epId ) :  AudioEndpoint( epId ),
+                                                                     Runnable(true, SIZE_SMALL, PRIO_HIGH),
+                                                                     config_(config),
+                                                                     adjustSamples_(0)
 {
     startThread();
 }

@@ -159,12 +159,6 @@ void Main::run()
     putenv( "TZ=CET-1CEST-2,M3.5.0/2,M10.5.0/3" ); /* initialize current time zone to CET, with DST switch */
 #endif
 
-#if 0
-    SocketClient* sc = new SocketClient("192.168.5.98", "7788");
-#else
-    SocketClient* sc = new SocketClient("ANY", "7788");
-#endif
-
     std::string id;
     if ( paramsGet( PARAM_CLIENT_ID, id ) )
     {
@@ -173,8 +167,15 @@ void Main::run()
         log(LOG_NOTICE) << "My name is (shika-shika) " << id;
     }
 
+    EndpointId epId(id);
+#if 0
+    SocketClient* sc = new SocketClient("192.168.5.98", "7788", epId);
+#else
+    SocketClient* sc = new SocketClient("ANY", "7788", epId);
+#endif
+
     ConfigHandling::AudioEndpointConfig* audiocfg = new ConfigHandling::AudioEndpointConfig;
-    Platform::AudioEndpointLocal* audioEndpoint = new Platform::AudioEndpointLocal( *audiocfg );
+    Platform::AudioEndpointLocal* audioEndpoint = new Platform::AudioEndpointLocal( *audiocfg, epId );
     RemoteAudioEndpointManager* audioMgr = new RemoteAudioEndpointManager( *sc );
     audioMgr->createEndpoint( *audioEndpoint, NULL, NULL );
 

@@ -35,6 +35,16 @@
 
 namespace ConfigHandling
 {
+class GeneralConfig
+{
+public:
+    GeneralConfig() : id_("Client") {}
+    const std::string getId() const { return id_; }
+    void setId(const std::string& id) { if ( !id.empty() ) id_ = id; }
+
+private:
+    std::string id_;
+};
 
 class AudioEndpointConfig
 {
@@ -122,6 +132,7 @@ private:
 class ConfigHandler
 {
 private:
+    GeneralConfig generalConfig_;
     NetworkConfig networkConfig_;
     AudioEndpointConfig audioEndpointConfig_;
     LoggerConfig loggerConfig_;
@@ -131,6 +142,8 @@ private:
     void readFromFile();
     std::list<SectionAttributes> getConfigAttributes();
 
+    /* General Section */
+    std::string applicationId;
     /* Network Section*/
     std::string networkBindType;
     std::string networkIp;
@@ -149,6 +162,7 @@ public:
     virtual ~ConfigHandler();
     void parseConfigFile();
     void writeConfigFile();
+    const GeneralConfig& getGeneralConfig() const;
     const AudioEndpointConfig& getAudioEndpointConfig() const;
     const LoggerConfig& getLoggerConfig() const;
     const NetworkConfig& getNetworkConfig() const;

@@ -45,7 +45,7 @@ private:
     uint8_t actualVolume_;
 
 public:
-    AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config);
+    AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config, const EndpointIdIf& epId );
     virtual ~AudioEndpointLocal();
 
     virtual int enqueueAudioData( unsigned int timestamp, unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples );
@@ -55,8 +55,6 @@ public:
 
     virtual void setMasterVolume( uint8_t volume );
     virtual void doSetRelativeVolume( uint8_t volume );
-
-    virtual std::string getId() const { return "local"; }
 
     virtual void run();
     virtual void destroy();

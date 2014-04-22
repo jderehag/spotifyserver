@@ -44,6 +44,8 @@ ConfigHandler::~ConfigHandler() { }
 
 void ConfigHandler::writeConfigFile()
 {
+    /* General */
+    applicationId = generalConfig_.getId();
     /* Spotify Section*/
     spotifyUsername = spotifyConfig_.getUsername();
     spotifyPassword = spotifyConfig_.getPassword();
@@ -87,6 +89,10 @@ std::list<SectionAttributes> ConfigHandler::getConfigAttributes()
 {
     std::list<SectionAttributes> listOfSectionAttributes;
 
+    /* General Section*/
+    listOfSectionAttributes.push_back(SectionAttributes ( 0,  TYPE_SECTION,      "General"));
+    listOfSectionAttributes.push_back(SectionAttributes ( 1,  TYPE_ATTRIBUTE,    "ID",                &applicationId            ));
+
     /* Spotify Section*/
     listOfSectionAttributes.push_back(SectionAttributes ( 0,  TYPE_SECTION,      "Spotify"));
     listOfSectionAttributes.push_back(SectionAttributes ( 1,  TYPE_ATTRIBUTE,    "Username",          &spotifyUsername            ));
@@ -123,6 +129,9 @@ void ConfigHandler::parseConfigFile()
 
     std::list<SectionAttributes> listOfAttributes = getConfigAttributes();
     parseConfig(config, listOfAttributes);
+
+    /* General */
+    generalConfig_.setId( applicationId );
 
     /* Spotify */
     spotifyConfig_.setUsername(spotifyUsername);
@@ -175,12 +184,15 @@ const std::string& ConfigHandler::getConfigFilePath() const
     return configFilePath_;
 }
 
+const GeneralConfig& ConfigHandler::getGeneralConfig() const
+{
+    return generalConfig_;
+}
 
 const AudioEndpointConfig& ConfigHandler::getAudioEndpointConfig() const
 {
     return audioEndpointConfig_;
 }
-
 
 const LoggerConfig& ConfigHandler::getLoggerConfig() const
 {

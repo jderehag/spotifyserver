@@ -13,6 +13,20 @@
 # Comments must begin with a #-sign
 ############################################################################
 
+################################################################
+# General section
+################################################################
+Section "General"
+
+#---------------------------------------------------------------
+# ID attribute
+# Defines a (system wide unique) ID that this application presents
+# itself as (one will be renamed if ID is not unique)
+# Default depends on application
+#---------------------------------------------------------------
+ID				"Server"
+
+EndSection
 
 ################################################################
 # Spotify section

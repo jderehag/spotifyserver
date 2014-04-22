@@ -41,7 +41,9 @@ namespace Platform {
 
 #define NUM_BUFFERS 3
 
-AudioEndpointLocal::AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config) : Platform::Runnable(true, SIZE_SMALL, PRIO_HIGH), 
+AudioEndpointLocal::AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config, const EndpointIdIf& epId ) :
+                                                                                            AudioEndpoint( epId ),
+                                                                                            Platform::Runnable(true, SIZE_SMALL, PRIO_HIGH),
                                                                                             config_(config), 
                                                                                             adjustSamples_(0)
 {

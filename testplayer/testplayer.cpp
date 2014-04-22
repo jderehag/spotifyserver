@@ -84,12 +84,15 @@ int main(int argc, char *argv[])
 
     TestPlayerIf testplayer;
 
-    Platform::AudioEndpointLocal audioEndpoint(ch.getAudioEndpointConfig());
+    EndpointId epId( "TestPlayer" );
+    Platform::AudioEndpointLocal audioEndpoint(ch.getAudioEndpointConfig(), epId);
     AudioEndpointManager audioMgr( testplayer );
     audioMgr.createEndpoint( audioEndpoint, NULL, NULL );
     audioMgr.addEndpoint( audioEndpoint.getId(), NULL, NULL );
 
-    ClientHandler clienthandler(ch.getNetworkConfig(), testplayer, audioMgr);
+    EndpointsDb epDb = EndpointsDb( audioMgr );
+    epDb.registerId( &epId );
+    ClientHandler clienthandler(ch.getNetworkConfig(), testplayer, audioMgr, epDb );
 
     UIConsole ui( testplayer, audioMgr );
     ui.joinThread();

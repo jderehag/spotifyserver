@@ -113,12 +113,15 @@ int main(int argc, char *argv[])
     LibSpotify::LibSpotifyIf libspotifyif(spConfig);
     libspotifyif.logIn();
 
-    Platform::AudioEndpointLocal audioEndpoint(ch.getAudioEndpointConfig());
+    EndpointId serverId( ch.getGeneralConfig().getId() );
+    Platform::AudioEndpointLocal audioEndpoint( ch.getAudioEndpointConfig(), serverId );
     AudioEndpointManager audioMgr( libspotifyif );
     audioMgr.createEndpoint( audioEndpoint, NULL, NULL );
     audioMgr.addEndpoint( audioEndpoint.getId(), NULL, NULL );
 
-    ClientHandler clienthandler(ch.getNetworkConfig(), libspotifyif, audioMgr);
+    EndpointsDb epDb = EndpointsDb( audioMgr );
+    epDb.registerId( &serverId );
+    ClientHandler clienthandler(ch.getNetworkConfig(), libspotifyif, audioMgr, epDb );
 
     UIConsole ui( libspotifyif, audioMgr );
     ui.joinThread();

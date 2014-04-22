@@ -22,15 +22,16 @@ SRC =
 # use file-extension .cpp for C++-files (not .C)
 CPPSRC =	testplayer.cpp TestPlayerIf.cpp \
 			$(addprefix ClientHandler/, ClientHandler.cpp Client.cpp) \
-			$(addprefix ConfigHandling/, ConfigHandler.cpp ConfigParser.cpp) \
-			$(addprefix ConfigHandling/Configs/, SpotifyConfig.cpp NetworkConfig.cpp AudioEndpointConfig.cpp LoggerConfig.cpp)
+			$(addprefix ConfigHandling/, ConfigHandler.cpp ConfigParser.cpp ConfigGenerator.cpp) \
+			$(addprefix ConfigHandling/Configs/, SpotifyConfig.cpp NetworkConfig.cpp AudioEndpointConfig.cpp LoggerConfig.cpp) \
+			EndpointId/EndpointsDb.cpp
 
-CPPSRC +=	$(addprefix MediaContainers/, Album.cpp Artist.cpp Folder.cpp Playlist.cpp Track.cpp) \
+CPPSRC +=	$(addprefix MediaContainers/, MediaBaseInfo.cpp Album.cpp Artist.cpp Folder.cpp Playlist.cpp Track.cpp) \
 			$(addprefix MessageFactory/, Message.cpp MessageDecoder.cpp MessageEncoder.cpp TlvDefinitions.cpp Tlvs.cpp SocketReader.cpp SocketWriter.cpp) \
 			$(addprefix SocketHandling/, Messenger.cpp SocketServer.cpp SocketPeer.cpp ) \
 			$(addprefix Platform/AudioEndpoints/, AudioEndpointLocalShared.cpp AudioEndpointRemote.cpp AudioDispatch.cpp AudioFifo.cpp ) \
 			ClockSync/ClockSyncServer.cpp \
-			AudioEndpointManager/AudioEndpointManager.cpp \
+			$(addprefix AudioEndpointManager/, AudioEndpointManager.cpp AudioEndpointManagerCtrlInterface.cpp) \
 			Logger/Logger.cpp Logger/LoggerImpl.cpp \
 			MediaInterface/MediaInterface.cpp \
 			UIConsole.cpp \

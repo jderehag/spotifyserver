@@ -20,8 +20,8 @@ CFLAGS += -MD -MP -MF $(OUTDIR)/dep/$(@F).d
 CONLYFLAGS += 
 CONLYFLAGS += $(CSTANDARD)
 
-# flags only for C++ (arm-*-g++)
-CPPFLAGS += 
+# flags only for C++ (g++)
+CPPFLAGS += $(CPPSTANDARD)
 
 # Assembler flags.
 #  -Wa,...:    tell GCC to pass this to the assembler.

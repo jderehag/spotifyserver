@@ -74,9 +74,10 @@ int main(int argc, char *argv[])
     cfg.setLogTo(ConfigHandling::LoggerConfig::STDOUT);
     Logger::LoggerImpl l(cfg);
 
-    Platform::AudioEndpointLocal audioEndpoint(ch.getAudioEndpointConfig());
+    EndpointId clientId( ch.getGeneralConfig().getId() );
+    Platform::AudioEndpointLocal audioEndpoint(ch.getAudioEndpointConfig(), clientId );
 
-    SocketClient sc(ch.getNetworkConfig());
+    SocketClient sc( ch.getNetworkConfig(), clientId );
     RemoteMediaInterface m(sc);
 
     RemoteAudioEndpointManager audioMgr(sc);

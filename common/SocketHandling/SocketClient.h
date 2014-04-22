@@ -31,6 +31,7 @@
 #include "Messenger.h"
 #include "Platform/Threads/Runnable.h"
 #include "ConfigHandling/ConfigHandler.h"
+#include "EndpointId/EndpointIdIf.h"
 #include <string>
 
 class SocketClient : public Messenger, public Platform::Runnable
@@ -38,10 +39,11 @@ class SocketClient : public Messenger, public Platform::Runnable
 private:
     std::string serveraddr_;
     std::string serverport_;
+    EndpointIdIf& epId_;
 
 public:
-    SocketClient(const std::string& serveraddr, const std::string& serverport);
-    SocketClient(ConfigHandling::NetworkConfig config);
+    SocketClient(const std::string& serveraddr, const std::string& serverport, EndpointIdIf& epId);
+    SocketClient(ConfigHandling::NetworkConfig config, EndpointIdIf& epId);
     virtual ~SocketClient();
 
     void run();

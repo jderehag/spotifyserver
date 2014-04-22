@@ -25,7 +25,7 @@ CPPSRC =	spotifyserver.cpp \
 			$(addprefix ConfigHandling/, ConfigHandler.cpp ConfigParser.cpp ConfigGenerator.cpp) \
 			$(addprefix ConfigHandling/Configs/, SpotifyConfig.cpp NetworkConfig.cpp AudioEndpointConfig.cpp LoggerConfig.cpp) \
 			$(addprefix LibSpotifyIf/, LibSpotifyIf.cpp LibSpotifyIfCallbackWrapper.cpp LibSpotifyIfHelpers.cpp LibSpotifyPlaybackHandler.cpp) \
-			
+			EndpointId/EndpointsDb.cpp
 
 CPPSRC +=	$(addprefix MediaContainers/, MediaBaseInfo.cpp Album.cpp Artist.cpp Folder.cpp Playlist.cpp Track.cpp) \
 			$(addprefix MessageFactory/, Message.cpp MessageDecoder.cpp MessageEncoder.cpp TlvDefinitions.cpp Tlvs.cpp SocketReader.cpp SocketWriter.cpp) \
@@ -36,7 +36,7 @@ CPPSRC +=	$(addprefix MediaContainers/, MediaBaseInfo.cpp Album.cpp Artist.cpp F
 			Logger/Logger.cpp Logger/LoggerImpl.cpp \
 			MediaInterface/MediaInterface.cpp \
 			UIConsole.cpp \
-			Utils/ActionFilter.cpp
+			Utils/ActionFilter.cpp \
 
 CPPSRC +=	$(ARCH_SRC) $(AUDIO_SRC)
 
@@ -79,6 +79,9 @@ ADEFS = -D__ASSEMBLY__
 # c99   - ISO C99 standard (not yet fully implemented)
 # gnu99 - c99 plus GCC extensions
 CSTANDARD = -std=gnu99
+
+# Same for C++.
+CPPSTANDARD = -std=gnu++0x
 
 # Optimization level, can be [0, 1, 2, 3, s]. 
 # 0 = turn off optimization. s = optimize for size.

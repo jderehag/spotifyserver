@@ -36,12 +36,12 @@
 #include "applog.h"
 
 
-SocketClient::SocketClient(const std::string& serveraddr, const std::string& serverport) : serveraddr_(serveraddr), serverport_(serverport)
+SocketClient::SocketClient(const std::string& serveraddr, const std::string& serverport, EndpointIdIf& epId) : serveraddr_(serveraddr), serverport_(serverport), epId_(epId)
 {
     startThread();
 }
 
-SocketClient::SocketClient(ConfigHandling::NetworkConfig config) : serveraddr_(config.getIp()), serverport_(config.getPort())
+SocketClient::SocketClient(ConfigHandling::NetworkConfig config, EndpointIdIf& epId) : serveraddr_(config.getIp()), serverport_(config.getPort()), epId_(epId)
 {
     startThread();
 }
@@ -97,15 +97,14 @@ void SocketClient::run()
         if ( socket.Connect( currentServerAddress, serverport_ ) == 0 )
         {
             log(LOG_NOTICE) << "Connected";
-#if 0
+
             Message hello(HELLO_REQ);
 
-            hello.setId(messageId++);
+            hello.setId(reqId++);
 
             hello.addTlv(TLV_PROTOCOL_VERSION_MAJOR, PROTOCOL_VERSION_MAJOR);
             hello.addTlv(TLV_PROTOCOL_VERSION_MINOR, PROTOCOL_VERSION_MINOR);
-            hello.addTlv(TLV_LOGIN_USERNAME, "wonder");
-            hello.addTlv(TLV_LOGIN_PASSWORD, "wall");
+            hello.addTlv(TLV_LINK, epId_.getId());
 
             MessageEncoder* enc = hello.encode();
             enc->printHex();
@@ -117,7 +116,7 @@ void SocketClient::run()
                 continue;
             }
             delete enc;
-#endif
+
             SocketReader reader(&socket);
             SocketWriter writer(&socket);
 

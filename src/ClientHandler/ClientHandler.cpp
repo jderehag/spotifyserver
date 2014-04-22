@@ -29,10 +29,14 @@
 #include "Client.h"
 #include "applog.h"
 
-ClientHandler::ClientHandler(const ConfigHandling::NetworkConfig& config, MediaInterface& media, AudioEndpointCtrlInterface& audioCtrl) :
+ClientHandler::ClientHandler( const ConfigHandling::NetworkConfig& config,
+                              MediaInterface& media,
+                              AudioEndpointCtrlInterface& audioCtrl,
+                              EndpointsDb& epDb) :
      SocketServer(config),
      media_(media),
-     audioCtrl_(audioCtrl)
+     audioCtrl_(audioCtrl),
+     epDb_(epDb)
 {
 }
 
@@ -42,7 +46,7 @@ ClientHandler::~ClientHandler()
 
 SocketPeer* ClientHandler::newPeer( Socket* s )
 {
-    Client* c = new Client(s, media_, audioCtrl_);
+    Client* c = new Client(s, media_, audioCtrl_, epDb_ );
     c->setUsername(config_.getUsername());
     c->setPassword(config_.getPassword());
     return c;

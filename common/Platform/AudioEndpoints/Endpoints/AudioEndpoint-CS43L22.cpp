@@ -71,7 +71,8 @@ EventGroupHandle_t xAvailableBuffers;
 
 static void AudioCallbackFromISR(void *context __attribute__((unused)),int buffer);
 
-AudioEndpointLocal::AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config) : AudioEndpoint(64, false),
+AudioEndpointLocal::AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config, const EndpointIdIf& epId ) :
+                                                                                            AudioEndpoint(epId, 64, false),
                                                                                             Platform::Runnable(false, SIZE_SMALL, PRIO_VERY_HIGH),
                                                                                             config_(config),
                                                                                             adjustSamples_(0),

@@ -69,6 +69,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\common\EndpointId\EndpointId.h" />
+    <ClInclude Include="..\..\..\common\EndpointId\EndpointIdIf.h" />
+    <ClInclude Include="..\..\..\common\EndpointId\EndpointsDb.h" />
+    <ClInclude Include="..\..\..\common\EndpointId\EndpointsDbIf.h" />
+    <ClInclude Include="..\..\..\common\EndpointId\RemoteEndpointsDb.h" />
     <ClInclude Include="..\..\..\common\Logger\applog.h" />
     <ClInclude Include="..\..\..\common\Logger\Logger.h" />
     <ClInclude Include="..\..\..\common\Logger\LoggerImpl.h" />
@@ -109,6 +114,7 @@
     <ClInclude Include="..\..\..\src\Utils\FixedQueue.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\common\EndpointId\EndpointsDb.cpp" />
     <ClCompile Include="..\..\..\common\Logger\Logger.cpp" />
     <ClCompile Include="..\..\..\common\Logger\LoggerImpl.cpp" />
     <ClCompile Include="..\..\..\common\MediaContainers\Album.cpp" />

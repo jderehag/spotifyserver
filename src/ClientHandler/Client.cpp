@@ -31,10 +31,11 @@
 
 uint32_t Client::count;
 
-Client::Client(Socket* socket, MediaInterface& spotifyif, AudioEndpointCtrlInterface& audioCtrl ) :
+Client::Client(Socket* socket, MediaInterface& spotifyif, AudioEndpointCtrlInterface& audioCtrl, EndpointsDb& epDb ) :
                                                             SocketPeer(socket),
                                                             spotify_(spotifyif),
                                                             audioCtrl_(audioCtrl),
+                                                            epDb_(epDb),
                                                             audioEp(NULL),
                                                             loggedIn_(true),
                                                             networkUsername_(""),
@@ -46,6 +47,7 @@ Client::Client(Socket* socket, MediaInterface& spotifyif, AudioEndpointCtrlInter
 
     std::cout << "Client " << id << " connected from " << getSocket()->getRemoteAddr() << std::endl;
 
+    epDb_.registerId( this );
     spotify_.registerForCallbacks(*this);
     audioCtrl_.registerForCallbacks(*this);
 }
@@ -63,6 +65,8 @@ Client::~Client()
         delete audioEp;
         audioEp = NULL;
     }
+
+    epDb_.unregisterId( this );
 }
 
 void Client::setUsername(std::string username) { networkUsername_ = username; }
@@ -290,6 +294,18 @@ void Client::handleHelloReq(const Message* msg)
         }
         else
         {
+            const StringTlv* idTlv = (const StringTlv*)msg->getTlvRoot()->getTlv(TLV_LINK);
+            if ( idTlv != NULL )
+            {
+                std::string newId = idTlv->getString();
+                if ( !newId.empty() )
+                {
+                    epDb_.unregisterId( this );
+                    id = newId;
+                    epDb_.registerId( this );
+                }
+            }
+#if 0
             const StringTlv* usernameTlv = (const StringTlv*)msg->getTlvRoot()->getTlv(TLV_LOGIN_USERNAME);
             const StringTlv* passwordTlv = (const StringTlv*)msg->getTlvRoot()->getTlv(TLV_LOGIN_PASSWORD);
             std::string username = usernameTlv ? usernameTlv->getString() : std::string("");
@@ -303,6 +319,7 @@ void Client::handleHelloReq(const Message* msg)
                 rsp->addTlv(TLV_FAILURE, FAIL_BAD_LOGIN);
             }
             else
+#endif
             {
                 /*all is well!*/
                 loggedIn_ = true;
@@ -526,7 +543,7 @@ void Client::handleCreateAudioEpReq( const Message* msg )
                 delete audioEp;
             }
 
-            audioEp = new Platform::AudioEndpointRemote( this, id, ip, portStr.str(), relativeVolume, 1);
+            audioEp = new Platform::AudioEndpointRemote( this, *this, ip, portStr.str(), relativeVolume, 1);
             audioCtrl_.createEndpoint(*audioEp, NULL, NULL);
         }
         else
@@ -594,10 +611,10 @@ void Client::handleSetVolumeReq(const Message* msg)
             case TLV_CLIENT:
             {
                 TlvContainer* epTlv = (TlvContainer*)tlv;
-                StringTlv* id  = (StringTlv*)epTlv->getTlv( TLV_LINK );
+                StringTlv* idTlv  = (StringTlv*)epTlv->getTlv( TLV_LINK );
                 IntTlv* volume = (IntTlv*)epTlv->getTlv( TLV_VOLUME );
-                if ( id && volume )
-                    audioCtrl_.setRelativeVolume( id->getString(), volume->getVal() );
+                if ( idTlv && volume )
+                    audioCtrl_.setRelativeVolume( idTlv->getString(), volume->getVal() );
                 break;
             }
             default:
@@ -625,3 +642,10 @@ void Client::setRelativeVolume( uint8_t volume )
     queueRequest( msg, NULL, NULL );
 }
 
+
+void Client::rename( std::string& newId )
+{
+    id = newId;
+
+    // todo: send to client
+}

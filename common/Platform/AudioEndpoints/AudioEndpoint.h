@@ -29,6 +29,7 @@
 #define AUDIOENDPOINT_H_
 
 #include "AudioFifo.h"
+#include "EndpointId/EndpointId.h"
 #include "Utils/ActionFilter.h"
 #include <string>
 
@@ -37,6 +38,8 @@ static void setRelativeVolumeCb( void* arg, uint32_t volume );
 
 class AudioEndpoint
 {
+private:
+    const EndpointIdIf& epId_;
 
 protected:
     AudioFifo fifo_;
@@ -49,7 +52,7 @@ protected:
     ActionFilter setVolumeFilter;
 
 public:
-    AudioEndpoint(uint8_t volume = 255, bool dynamicFifo = true) : fifo_(dynamicFifo), paused_(false), relativeVolume_(volume), setVolumeFilter(100, setRelativeVolumeCb, this) {}
+    AudioEndpoint(const EndpointIdIf& epId, uint8_t volume = 255, bool dynamicFifo = true) : epId_(epId), fifo_(dynamicFifo), paused_(false), relativeVolume_(volume), setVolumeFilter(100, setRelativeVolumeCb, this) {}
     virtual ~AudioEndpoint() {}
     virtual int enqueueAudioData( unsigned int timestamp, unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples ) = 0;
     virtual void flushAudioData() = 0;
@@ -61,7 +64,7 @@ public:
     void setRelativeVolume( uint8_t volume ) { setVolumeFilter.Event(volume); }
     virtual void doSetRelativeVolume( uint8_t volume ) = 0;
     uint8_t getRelativeVolume() { return relativeVolume_; }
-    virtual std::string getId() const = 0;
+    const std::string& getId() const { return epId_.getId(); };
 
     /*todo do something proper with these...*/
     void pause() { paused_ = true; }

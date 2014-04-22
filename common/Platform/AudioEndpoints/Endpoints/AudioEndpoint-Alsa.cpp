@@ -37,7 +37,7 @@ static void alsaSetVolume(uint8_t volume);
 
 namespace Platform {
 
-AudioEndpointLocal::AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config) : config_(config), adjustSamples_(0)
+AudioEndpointLocal::AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config, const EndpointIdIf& epId ) : AudioEndpoint( epId ), config_(config), adjustSamples_(0)
 {
     startThread();
 }

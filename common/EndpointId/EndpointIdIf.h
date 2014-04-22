@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Jesper Derehag
+ * Copyright (c) 2014, Jens Nielsen
  * All rights reserved.
 
  * Redistribution and use in source and binary forms, with or without
@@ -16,7 +16,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL JESPER DEREHAG BE LIABLE FOR ANY
+ * DISCLAIMED. IN NO EVENT SHALL JENS NIELSEN BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -25,23 +25,23 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "../AudioEndpointLocal.h"
+#ifndef ENDPOINTIDIF_H_
+#define ENDPOINTIDIF_H_
 
-namespace Platform {
+#include <string>
 
-AudioEndpointLocal::AudioEndpointLocal( const ConfigHandling::AudioEndpointConfig& config, const EndpointIdIf& epId ) : AudioEndpoint( epId ), config_(config)
+class EndpointIdIf
 {
-}
-AudioEndpointLocal::~AudioEndpointLocal()
-{
-}
+protected:
+    std::string id;
 
-void AudioEndpointLocal::destroy()
-{
-}
+public:
+    EndpointIdIf( const std::string& id_ ) : id(id_) {}
+    EndpointIdIf() : id("") {}
+    virtual ~EndpointIdIf() {}
 
-void AudioEndpointLocal::run()
-{
-}
+    const std::string& getId() const { return id; }
+    virtual void rename( std::string& newId ) = 0;
+};
 
-}
+#endif

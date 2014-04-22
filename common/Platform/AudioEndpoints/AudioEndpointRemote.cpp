@@ -41,14 +41,13 @@ extern bool simPacketDrop;
 namespace Platform {
 
 AudioEndpointRemote::AudioEndpointRemote( IAudioEndpointRemoteCtrlInterface* ctrlIf,
-                                          const std::string& id,
+                                          const EndpointIdIf& epId,
                                           const std::string& serveraddr,
                                           const std::string& serverport,
                                           uint8_t volume,
-                                          unsigned int bufferNSecs) : AudioEndpoint(volume),
+                                          unsigned int bufferNSecs) : AudioEndpoint(epId, volume),
                                                                       Platform::Runnable( true, SIZE_SMALL, PRIO_HIGH ),
                                                                       sock_(SOCKTYPE_DATAGRAM),
-                                                                      id_(id),
                                                                       remoteBufferSize(0),
                                                                       ctrlIf_(ctrlIf)
 {
@@ -56,11 +55,6 @@ AudioEndpointRemote::AudioEndpointRemote( IAudioEndpointRemoteCtrlInterface* ctr
     sock_.Connect(serveraddr, serverport);
 
     startThread();
-}
-
-std::string AudioEndpointRemote::getId() const
-{
-    return id_;
 }
 
 /* todo some of this stuff should be set remotely */

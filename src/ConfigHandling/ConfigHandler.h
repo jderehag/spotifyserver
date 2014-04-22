@@ -36,6 +36,17 @@
 namespace ConfigHandling
 {
 
+class GeneralConfig
+{
+public:
+    GeneralConfig() : id_("Server") {}
+    const std::string getId() const { return id_; }
+    void setId(const std::string& id) { if ( !id.empty() ) id_ = id; }
+
+private:
+    std::string id_;
+};
+
 class AudioEndpointConfig
 {
 public:
@@ -141,6 +152,7 @@ public:
 class ConfigHandler
 {
 private:
+    GeneralConfig generalConfig_;
     SpotifyConfig spotifyConfig_;
     NetworkConfig networkConfig_;
     AudioEndpointConfig audioEndpointConfig_;
@@ -151,6 +163,8 @@ private:
     void readFromFile();
     std::list<SectionAttributes> getConfigAttributes();
 
+    /* General Section */
+    std::string applicationId;
     /* Spotify Section*/
     std::string spotifyUsername;
     std::string spotifyPassword;
@@ -174,6 +188,7 @@ public:
 	virtual ~ConfigHandler();
 	void parseConfigFile();
     void writeConfigFile();
+    const GeneralConfig& getGeneralConfig() const;
     const AudioEndpointConfig& getAudioEndpointConfig() const;
     const LoggerConfig& getLoggerConfig() const;
     const NetworkConfig& getNetworkConfig() const;

@@ -32,19 +32,23 @@
 #include "AudioEndpointManager/AudioEndpointManagerCtrlInterface.h"
 #include "SocketHandling/SocketPeer.h"
 #include "Platform/AudioEndpoints/AudioEndpointRemote.h"
+#include "EndpointId/EndpointsDb.h"
+#include "EndpointId/EndpointIdIf.h"
+#include "ClientHandler.h"
 
 using namespace LibSpotify;
 
-class Client : IMediaInterfaceCallbackSubscriber, IAudioEndpointCtrlCallbackSubscriber, IAudioEndpointRemoteCtrlInterface, public SocketPeer
+class Client : IMediaInterfaceCallbackSubscriber, IAudioEndpointCtrlCallbackSubscriber, IAudioEndpointRemoteCtrlInterface, public EndpointIdIf, public SocketPeer
 {
 private:
 
     MediaInterface& spotify_;
     AudioEndpointCtrlInterface& audioCtrl_;
+    EndpointsDb& epDb_;
+
     Platform::AudioEndpointRemote* audioEp;
 
     static uint32_t count;
-    std::string id;
 
     bool loggedIn_;
     std::string networkUsername_;
@@ -108,9 +112,13 @@ private:
     /* implements IAudioEndpointRemoteCtrlInterface */
     virtual void setMasterVolume( uint8_t volume );
     virtual void setRelativeVolume( uint8_t volume );
+
+    /* Implements EndpointIdIf */
+    void rename( std::string& newId );
+
 public:
 
-    Client(Socket* socket, MediaInterface& spotifyif, AudioEndpointCtrlInterface& audioCtrl);
+    Client(Socket* socket, MediaInterface& spotifyif, AudioEndpointCtrlInterface& audioCtrl, EndpointsDb& epDb);
     virtual ~Client();
 
     void setUsername(std::string username);

@@ -48,12 +48,11 @@ class AudioEndpointRemote : public AudioEndpoint, public Platform::Runnable
 {
 private:
     Socket sock_;
-    std::string id_;
     uint32_t remoteBufferSize;
     IAudioEndpointRemoteCtrlInterface* ctrlIf_;
 
 public:
-    AudioEndpointRemote(IAudioEndpointRemoteCtrlInterface* ctrlIf, const std::string& id, const std::string& serveraddr, const std::string& serverport, uint8_t volume, unsigned int bufferNSecs);
+    AudioEndpointRemote(IAudioEndpointRemoteCtrlInterface* ctrlIf, const EndpointIdIf& epId, const std::string& serveraddr, const std::string& serverport, uint8_t volume, unsigned int bufferNSecs);
 
     /* AudioEndpoint implementation */
     virtual int enqueueAudioData( unsigned int timestamp, unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples );
@@ -63,8 +62,6 @@ public:
 
     virtual void setMasterVolume( uint8_t volume );
     virtual void doSetRelativeVolume( uint8_t volume );
-
-    virtual std::string getId() const;
 
     virtual bool isLocal() const {return false;};
 

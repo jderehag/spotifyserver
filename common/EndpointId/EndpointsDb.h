@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Jesper Derehag
+ * Copyright (c) 2014, Jens Nielsen
  * All rights reserved.
 
  * Redistribution and use in source and binary forms, with or without
@@ -16,7 +16,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL JESPER DEREHAG BE LIABLE FOR ANY
+ * DISCLAIMED. IN NO EVENT SHALL JENS NIELSEN BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -25,23 +25,34 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "../AudioEndpointLocal.h"
+#ifndef ENDPOINTSDB_H_
+#define ENDPOINTSDB_H_
 
-namespace Platform {
 
-AudioEndpointLocal::AudioEndpointLocal( const ConfigHandling::AudioEndpointConfig& config, const EndpointIdIf& epId ) : AudioEndpoint( epId ), config_(config)
+#include "EndpointIdIf.h"
+#include "EndpointsDbIf.h"
+#include "AudioEndpointManager/AudioEndpointManager.h"
+#include <list>
+#include <string>
+
+class EndpointsDb : public EndpointsDbIf
 {
-}
-AudioEndpointLocal::~AudioEndpointLocal()
-{
-}
+private:
+    typedef std::list<EndpointIdIf*> DbContainer;
+    DbContainer epIds;
+    const AudioEndpointManager& audioMgr;
 
-void AudioEndpointLocal::destroy()
-{
-}
+    DbContainer::iterator find( const std::string& id );
+public:
+    EndpointsDb( const AudioEndpointManager& audioMgr_ );
+    virtual ~EndpointsDb();
 
-void AudioEndpointLocal::run()
-{
-}
+    void registerId( EndpointIdIf* appId );
+    void unregisterId( EndpointIdIf* appId );
 
-}
+    virtual void getIds( EndpointsDbSubscriber* subscriber, void* userData );
+    virtual void rename( std::string from, std::string to );
+};
+
+
+#endif

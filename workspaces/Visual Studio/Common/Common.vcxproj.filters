@@ -50,6 +50,9 @@
     <Filter Include="Utils">
       <UniqueIdentifier>{a4b61b51-3614-412d-81a9-e8c9f75f8d13}</UniqueIdentifier>
     </Filter>
+    <Filter Include="EndpointId">
+      <UniqueIdentifier>{3da9a813-4dd7-48c6-9f75-93b8c6debae0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\common\Platform\Socket\Socket.h">
@@ -166,6 +169,21 @@
     <ClInclude Include="..\..\..\common\Utils\ActionFilter.h">
       <Filter>Utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\common\EndpointId\EndpointId.h">
+      <Filter>EndpointId</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\EndpointId\EndpointIdIf.h">
+      <Filter>EndpointId</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\EndpointId\EndpointsDb.h">
+      <Filter>EndpointId</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\EndpointId\EndpointsDbIf.h">
+      <Filter>EndpointId</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\EndpointId\RemoteEndpointsDb.h">
+      <Filter>EndpointId</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\common\Platform\Socket\Windows\WindowsSocket.cpp">
@@ -266,6 +284,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\common\Utils\ActionFilter.cpp">
       <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\EndpointId\EndpointsDb.cpp">
+      <Filter>EndpointId</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

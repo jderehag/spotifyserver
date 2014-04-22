@@ -81,6 +81,8 @@ ADEFS = -D__ASSEMBLY__
 # c99   - ISO C99 standard (not yet fully implemented)
 # gnu99 - c99 plus GCC extensions
 CSTANDARD = -std=gnu99
+# Same for C++.
+CPPSTANDARD = -std=gnu++0x
 
 # Optimization level, can be [0, 1, 2, 3, s]. 
 # 0 = turn off optimization. s = optimize for size.

@@ -96,6 +96,8 @@ void AudioEndpointManager::getEndpoints( IAudioEndpointCtrlCallbackSubscriber* s
         result.push_back( AudioEndpointInfo((*it).first->getId(), (*it).second != NULL, (*it).first->getRelativeVolume()) );
     }
 
+    result.sort();
+
     subscriber->getEndpointsResponse( result, userData );
 }
 

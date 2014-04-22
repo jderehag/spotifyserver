@@ -31,19 +31,19 @@
 #include "SocketHandling/SocketServer.h"
 #include "MediaInterface/MediaInterface.h"
 #include "AudioEndpointManager/AudioEndpointManagerCtrlInterface.h"
+#include "EndpointId/EndpointsDb.h"
 
-
-using namespace LibSpotify;
 
 class ClientHandler : public SocketServer
 {
 private:
     MediaInterface& media_;
     AudioEndpointCtrlInterface& audioCtrl_;
+    EndpointsDb& epDb_;
 
     virtual SocketPeer* newPeer( Socket* s );
 public:
-    ClientHandler(const ConfigHandling::NetworkConfig& config, MediaInterface& media, AudioEndpointCtrlInterface& audioCtrl);
+    ClientHandler(const ConfigHandling::NetworkConfig& config, MediaInterface& media, AudioEndpointCtrlInterface& audioCtrl, EndpointsDb& epDb);
     virtual ~ClientHandler();
 
 };

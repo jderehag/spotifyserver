@@ -41,6 +41,8 @@ public:
     std::string id;
     bool active;
     uint8_t relativeVolume;
+
+    bool operator< (const AudioEndpointInfo& r) const { return id < r.id; }
 };
 
 typedef std::list<AudioEndpointInfo> AudioEndpointInfoList;

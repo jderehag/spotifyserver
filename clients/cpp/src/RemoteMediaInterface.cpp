@@ -41,18 +41,6 @@ RemoteMediaInterface::~RemoteMediaInterface()
 
 void RemoteMediaInterface::connectionState( bool up )
 {
-    if ( up )
-    {
-        Message* hello = new Message(HELLO_REQ);
-
-        hello->addTlv(TLV_PROTOCOL_VERSION_MAJOR, PROTOCOL_VERSION_MAJOR);
-        hello->addTlv(TLV_PROTOCOL_VERSION_MINOR, PROTOCOL_VERSION_MINOR);
-        hello->addTlv(TLV_LOGIN_USERNAME, "wonder");
-        hello->addTlv(TLV_LOGIN_PASSWORD, "wall");
-
-        messenger_.queueRequest( hello, this, NULL ); /* we should make sure this goes out first, ahead of any old pending messages from an old connection */
-    }
-
     callbackSubscriberMtx_.lock();
     for( std::set<IMediaInterfaceCallbackSubscriber*>::iterator it = callbackSubscriberList_.begin();
             it != callbackSubscriberList_.end(); it++)
