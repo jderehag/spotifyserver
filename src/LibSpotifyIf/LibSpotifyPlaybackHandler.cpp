@@ -28,6 +28,7 @@
 #include "LibSpotifyPlaybackHandler.h"
 #include "LibSpotifyIf.h"
 #include <algorithm>
+#include <ctime>
 
 namespace LibSpotify
 {
@@ -37,6 +38,7 @@ LibSpotifyPlaybackHandler::LibSpotifyPlaybackHandler(LibSpotifyIf& libspotify) :
                                                                                  isShuffle(false),
                                                                                  isRepeat(false)
 {
+    std::srand(std::time(0));
     playQueueIter_ = playQueue_.end();
 }
 
