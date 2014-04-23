@@ -34,6 +34,7 @@
 #include "MediaContainers/Album.h"
 #include "Platform/Threads/Mutex.h"
 #include <deque>
+#include <random>
 #include "Utils/CircularQueue.h"
 
 
@@ -72,6 +73,8 @@ private:
 
     bool isShuffle;
     bool isRepeat;
+
+    std::default_random_engine shuffleGenerator;
 
     void loadPlaylist(const Playlist& playlist, int startIndex);
     void shuffle();

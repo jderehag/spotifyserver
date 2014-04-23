@@ -36,9 +36,9 @@ namespace LibSpotify
 LibSpotifyPlaybackHandler::LibSpotifyPlaybackHandler(LibSpotifyIf& libspotify) : libSpotifyIf_(libspotify),
                                                                                  historyQueue_(HISTORY_QUEUE_DEPTH),
                                                                                  isShuffle(false),
-                                                                                 isRepeat(false)
+                                                                                 isRepeat(false),
+                                                                                 shuffleGenerator((unsigned int)time(0))
 {
-    std::srand(std::time(0));
     playQueueIter_ = playQueue_.end();
 }
 
@@ -188,7 +188,7 @@ void LibSpotifyPlaybackHandler::playPrevious( unsigned int currentTrackProgress 
 
 void LibSpotifyPlaybackHandler::shuffle()
 {
-    random_shuffle( playQueue_.begin(), playQueue_.end() );
+    std::shuffle( playQueue_.begin(), playQueue_.end(), shuffleGenerator );
 }
 
 void LibSpotifyPlaybackHandler::playNext()
