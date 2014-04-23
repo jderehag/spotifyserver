@@ -29,6 +29,8 @@
 #include "LibSpotifyIf.h"
 #include <algorithm>
 #include <ctime>
+#include <random>
+#include "applog.h"
 
 namespace LibSpotify
 {

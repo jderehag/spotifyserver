@@ -29,9 +29,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "applog.h"
-#include "LoggerImpl.h"
-
 #include "LibSpotifyIf/LibSpotifyIf.h"
 #include "AudioEndpointManager/AudioEndpointManager.h"
 #include "ClientHandler/ClientHandler.h"
@@ -40,6 +37,10 @@
 #include "Platform/Utils/Utils.h"
 #include "Platform/Timers/TimerFramework.h"
 #include "UIConsole.h"
+
+#include "applog.h"
+#include "LoggerImpl.h"
+
 
 
 
