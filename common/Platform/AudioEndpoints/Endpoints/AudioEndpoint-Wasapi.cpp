@@ -45,7 +45,7 @@
 
 namespace Platform {
 
-#define HRC(x) do{ hr = x; assert( hr == S_OK ); } while(0)
+#define HRC(x) do{ hr = x; if( hr != S_OK ) { reset = true; goto cleanup; } } while(0)
 
 AudioEndpointLocal::AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config,
                                        const EndpointIdIf& epId ) :  AudioEndpoint( epId ),
@@ -77,52 +77,83 @@ const IID IID_IAudioRenderClient = __uuidof(IAudioRenderClient);
 const IID IID_ISimpleAudioVolume = __uuidof(ISimpleAudioVolume);
 const IID IID_IAudioSessionControl = __uuidof(IAudioSessionControl);
 
+static IAudioClient* getAudioClient()
+{
+    IAudioClient *pAudioClient = NULL;
+
+    /* create an 'enumerator' ... */
+    IMMDeviceEnumerator *pEnumerator = NULL;
+    if ( CoCreateInstance(
+            CLSID_MMDeviceEnumerator, NULL,
+            CLSCTX_ALL, IID_IMMDeviceEnumerator,
+            (void**)&pEnumerator) != S_OK )
+    {
+        log( LOG_EMERG ) << "Failed creating enumerator";
+        return NULL;
+    }
+
+    /* ... from which we get the 'default device' ... */
+    IMMDevice *pDevice = NULL;
+    if ( pEnumerator->GetDefaultAudioEndpoint(
+                        eRender, eConsole, &pDevice) != S_OK )
+    {
+        log( LOG_EMERG ) << "Failed getting default endpoint";
+        pEnumerator->Release();
+        return NULL;
+    }
+
+    /* ... from which we get an 'audio client' */
+    if ( pDevice->Activate(
+                    IID_IAudioClient, CLSCTX_ALL,
+                    NULL, (void**)&pAudioClient) != S_OK )
+    {
+        log( LOG_EMERG ) << "Failed getting audio client";
+        pAudioClient = NULL;
+    }
+
+    pEnumerator->Release();
+    pDevice->Release();
+    return pAudioClient;
+}
+
 void AudioEndpointLocal::run()
 {
     AudioFifoData* afd = NULL;
     HRESULT hr;
-    REFERENCE_TIME hnsRequestedDuration = REFTIMES_PER_SEC / 10;
-    REFERENCE_TIME hnsActualDuration;
-    IMMDeviceEnumerator *pEnumerator = NULL;
-    IMMDevice *pDevice = NULL;
+    bool playing = false;
+    bool reset = false;
+    uint8_t lastVolume = 0;
+
+    /* audio output data structures*/
     IAudioClient *pAudioClient = NULL;
     IAudioRenderClient *pRenderClient = NULL;
     ISimpleAudioVolume * pStreamVolume = NULL;
-    IAudioSessionControl* pSessionControl = NULL;
-
-    IMFMediaType* pInputType = NULL;
-    IMFMediaType* pOutputType = NULL;
-    IMFTransform* pResampler = NULL;
-    WAVEFORMATEX *pwfxOut = NULL;
-
+//    IAudioSessionControl* pSessionControl = NULL; // for callbacks? not implemented yet
+    REFERENCE_TIME hnsRequestedDuration = REFTIMES_PER_SEC / 10;
     UINT32 bufferFrameCount;
-    UINT32 numFramesAvailable;
-    UINT32 numFramesPadding;
-    BYTE *pData;
-    DWORD flags = 0;
-    int i;
-    unsigned int prevrate = -1;
-    unsigned int prevchannels = -1;
-    bool playing = false;
-    int msInResampler = 0;
-    int msOutResampler = 0;
-    uint8_t lastVolume = 0;
+
+    /* resampler data structures */
+    IMFTransform* pResampler = NULL;
+    IMFMediaType* pInputType = NULL; /* resampler input format (spotify format) */
+    IMFMediaType* pOutputType = NULL; /* resampler output format (audio client format) */
+    WAVEFORMATEX *pwfxOut = NULL; /* audio client format */
+
+    /* resampler input and output containers */
+    IMFSample *pResamplerInSample = NULL;
+    IMFSample *pResamplerOutSample = NULL;
+    IMFMediaBuffer *pResamplerInBuffer = NULL;
+    IMFMediaBuffer *pResamplerOutBuffer = NULL;
+    IMFMediaBuffer* pResamplerContiguousOutBuffer = NULL;
+
+
+    HRC( CoInitialize( NULL ) );
 
     while(isCancellationPending() == false)
     {
-        HRC( CoInitialize( NULL ) );
+        unsigned int prevrate = -1;
+        unsigned int prevchannels = -1;
 
-        HRC( CoCreateInstance(
-               CLSID_MMDeviceEnumerator, NULL,
-               CLSCTX_ALL, IID_IMMDeviceEnumerator,
-               (void**)&pEnumerator) );
-
-        HRC( pEnumerator->GetDefaultAudioEndpoint(
-                            eRender, eConsole, &pDevice) );
-
-        HRC( pDevice->Activate(
-                        IID_IAudioClient, CLSCTX_ALL,
-                        NULL, (void**)&pAudioClient) );
+        pAudioClient = getAudioClient();
 
         HRC( pAudioClient->GetMixFormat(&pwfxOut) );
 
@@ -140,9 +171,9 @@ void AudioEndpointLocal::run()
                 IID_IAudioRenderClient,
                 (void**)&pRenderClient) );
 
-        HRC( pAudioClient->GetService(
+/*        HRC( pAudioClient->GetService(
                 IID_IAudioSessionControl,
-                (void**)&pSessionControl) );
+                (void**)&pSessionControl) );*/
 
         HRC( pAudioClient->GetService(
                 IID_ISimpleAudioVolume,
@@ -152,7 +183,7 @@ void AudioEndpointLocal::run()
 
         HRC( CoCreateInstance(CLSID_CResamplerMediaObject, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pResampler)) );
 
-        while(isCancellationPending() == false)
+        while ( isCancellationPending() == false && reset == false )
         {
             Sleep(1);
 
@@ -167,6 +198,7 @@ void AudioEndpointLocal::run()
             if ( afd == NULL && ( afd = fifo_.getFifoDataTimedWait(10) ) == NULL )
                 continue;
 
+            /** Set up resampler if necessary */
             if ( afd->rate != prevrate || afd->channels != prevchannels )
             {
                 // resampler input type
@@ -208,10 +240,8 @@ void AudioEndpointLocal::run()
                 int timeToPlayThisPacket = afd->timestamp - now;
 
                 UINT32 totalBufferedSamples = 0;
-                REFERENCE_TIME outputLatency = 0;
                 pAudioClient->GetCurrentPadding( &totalBufferedSamples );
-                pAudioClient->GetStreamLatency( &outputLatency );
-                int timeToBufferUnderrun = (totalBufferedSamples * 1000 / pwfxOut->nSamplesPerSec) + 30/*outputLatency/REFTIMES_PER_MILLISEC*/;
+                int timeToBufferUnderrun = (totalBufferedSamples * 1000 / pwfxOut->nSamplesPerSec) + 30; // hack! hardcoded 30 ms delay measured on my machine.. no idea if this is proper but better than nothing
                 int offset = timeToPlayThisPacket - timeToBufferUnderrun;
                 
                 timetoplaysamples[j] = offset;
@@ -225,13 +255,9 @@ void AudioEndpointLocal::run()
                 }
                 timetoplay /= ntimetoplaysamples;
 
-
-                /*static int timetoplay = timeToPlayThisPacket;
-                timetoplay += (timeToPlayThisPacket - timetoplay)/3;*/
-
                 if ( timetoplay > 25 )
                 {
-                    sleep_ms( timetoplay-10 );
+                    sleep_ms( (unsigned int)timetoplay-10 );
                     ntimetoplaysamples = 0;
                     j=0;
                 }
@@ -246,7 +272,7 @@ void AudioEndpointLocal::run()
                 else if ( timetoplay < -1 || timetoplay > 1 )
                 {
                     //we're off, adjust playback
-                    adjustSamples_ = timetoplay * (int)afd->rate / 1000;
+                    adjustSamples_ = (int)timetoplay * (int)afd->rate / 1000;
                     for ( uint8_t i=0; i<ntimetoplaysamples; i++ )
                     {
                         timetoplaysamples[i] -= timetoplay;
@@ -263,74 +289,75 @@ void AudioEndpointLocal::run()
                 adjustSamples( afd );
             }
 
+            /** Put incoming data into resampler */
             DWORD bytes = afd->nsamples*afd->channels*sizeof(int16_t);
-            IMFMediaBuffer *pBuffer = NULL;
-            HRC( MFCreateMemoryBuffer( bytes, &pBuffer) );
+            HRC( MFCreateMemoryBuffer( bytes, &pResamplerInBuffer) );
 
             BYTE  *pByteBufferTo = NULL;
-            HRC( pBuffer->Lock(&pByteBufferTo, NULL, NULL) );
+            HRC( pResamplerInBuffer->Lock(&pByteBufferTo, NULL, NULL) );
             assert(pByteBufferTo != NULL);
             memcpy(pByteBufferTo, (BYTE*)afd->samples, bytes);
-            pBuffer->Unlock();
+            pResamplerInBuffer->Unlock();
             pByteBufferTo = NULL;
 
-            HRC( pBuffer->SetCurrentLength(bytes) );
+            HRC( pResamplerInBuffer->SetCurrentLength(bytes) );
 
-            IMFSample *pSample = NULL;
-            HRC( MFCreateSample(&pSample) );
-            HRC( pSample->AddBuffer(pBuffer) );
+            HRC( MFCreateSample(&pResamplerInSample) );
+            HRC( pResamplerInSample->AddBuffer(pResamplerInBuffer) );
 
-            msInResampler += afd->nsamples;
-            HRC( pResampler->ProcessInput(0, pSample, 0) );
+            HRC( pResampler->ProcessInput(0, pResamplerInSample, 0) );
 
-            pBuffer->Release();
-            pBuffer = NULL;
-
-            MFT_OUTPUT_DATA_BUFFER outputDataBuffer;
             do {
+                MFT_OUTPUT_DATA_BUFFER outputDataBuffer;
                 DWORD dwStatus;
-                IMFSample *pOutSample = NULL;
                 DWORD outbytes = (afd->nsamples*pwfxOut->nAvgBytesPerSec/afd->rate);
                 outbytes += 320;
 
+                // cap resampler output chunk to half of audio client buffer
                 if ( outbytes > bufferFrameCount * pwfxOut->nBlockAlign / 2 )
                     outbytes = bufferFrameCount * pwfxOut->nBlockAlign / 2;
 
-                HRC( MFCreateSample(&pOutSample) );
-                HRC( MFCreateMemoryBuffer( outbytes, &pBuffer ) );
-                HRC( pOutSample->AddBuffer( pBuffer ) );
+                /** Get data from resampler */
+                HRC( MFCreateSample(&pResamplerOutSample) );
+                HRC( MFCreateMemoryBuffer( outbytes, &pResamplerOutBuffer ) );
+                HRC( pResamplerOutSample->AddBuffer( pResamplerOutBuffer ) );
 
                 memset( &outputDataBuffer, 0, sizeof(outputDataBuffer) );
-                outputDataBuffer.pSample = pOutSample;
+                outputDataBuffer.pSample = pResamplerOutSample;
 
                 hr = pResampler->ProcessOutput(0, 1, &outputDataBuffer, &dwStatus);
                 if ( hr == MF_E_TRANSFORM_NEED_MORE_INPUT) {
                     // conversion end
-                    pBuffer->Release();
-                    pOutSample->Release();
+                    pResamplerOutBuffer->Release();
+                    pResamplerOutBuffer = NULL;
+                    pResamplerOutSample->Release();
+                    pResamplerOutSample = NULL;
                     break;
                 }
 
-                // output PCM data is set in outputDataBuffer.pSample;
-                IMFSample *pSample = outputDataBuffer.pSample;
- 
-                IMFMediaBuffer* spBuffer;
-                HRC( pSample->ConvertToContiguousBuffer(&spBuffer) );
+                /** Convert resampler output to one contiguous buffer (todo optmize?) */
+                HRC( pResamplerOutSample->ConvertToContiguousBuffer(&pResamplerContiguousOutBuffer) );
                 DWORD cbBytes = 0;
-                HRC( spBuffer->GetCurrentLength(&cbBytes) );
+                HRC( pResamplerContiguousOutBuffer->GetCurrentLength(&cbBytes) );
 
                 BYTE  *pByteBuffer = NULL;
-                HRC( spBuffer->Lock(&pByteBuffer, NULL, NULL) );
+                HRC( pResamplerContiguousOutBuffer->Lock(&pByteBuffer, NULL, NULL) );
 
+                /** Send resampler output to audio client */
                 unsigned int outsamples = cbBytes/pwfxOut->nBlockAlign;
-                msOutResampler += outsamples;
 
+                BYTE *pData = NULL;
                 do
                 {
                     hr = pRenderClient->GetBuffer(outsamples, &pData);
                     if ( hr != S_OK )
                     {
-                        assert ( hr == AUDCLNT_E_BUFFER_TOO_LARGE );
+                        if ( hr != AUDCLNT_E_BUFFER_TOO_LARGE )
+                        {
+                            log(LOG_WARN) << "Wasapi error " << hr;
+                            reset = true;
+                            goto cleanup;
+                        }
 
                         if ( !playing )
                         {
@@ -344,21 +371,68 @@ void AudioEndpointLocal::run()
                 assert( pData );
                 memcpy(pData, pByteBuffer, outsamples*pwfxOut->nBlockAlign);
 
-                HRC( pRenderClient->ReleaseBuffer( outsamples, flags ) );
+                HRC( pRenderClient->ReleaseBuffer( outsamples, 0 /* AUDCLNT_BUFFERFLAGS_SILENT for mute */ ) );
 
-                HRC( spBuffer->Unlock() );
+                HRC( pResamplerContiguousOutBuffer->Unlock() );
 
-                spBuffer->Release();
+                /** Done with this output chunk, clean up */
+cleanup:
+                if ( pResamplerContiguousOutBuffer ) pResamplerContiguousOutBuffer->Release();
+                pResamplerContiguousOutBuffer = NULL;
+                if ( pResamplerOutSample ) pResamplerOutSample->Release();
+                pResamplerOutSample = NULL;
+                if ( pResamplerOutBuffer ) pResamplerOutBuffer->Release();
+                pResamplerOutBuffer = NULL;
+            } while ( !reset && !isCancellationPending() );
 
-                pOutSample->Release();
-                pBuffer->Release();
-            } while (1);
-
-            pSample->Release();
+            /** Done with this input chunk, clean up */
+            if ( pResamplerInBuffer ) pResamplerInBuffer->Release();
+            pResamplerInBuffer = NULL;
+            if ( pResamplerInSample ) pResamplerInSample->Release();
+            pResamplerInSample = NULL;
 
             fifo_.returnFifoDataBuffer( afd );
             afd = NULL;
         }
+
+        log(LOG_NOTICE) << "Resetting audio client (" << hr <<")";
+
+        if ( pAudioClient )
+        {
+            hr = pAudioClient->Stop();
+            hr = pAudioClient->Reset();
+            pAudioClient->Release();
+            pAudioClient = NULL;
+        }
+
+        if ( pStreamVolume )
+        {
+            pStreamVolume->Release();
+            pStreamVolume = NULL;
+        }
+
+        if ( pRenderClient )
+        {
+            pRenderClient->Release();
+            pRenderClient = NULL;
+        }
+
+        if ( pResampler )
+        {
+            hr = pResampler->ProcessMessage(MFT_MESSAGE_NOTIFY_END_OF_STREAM, NULL);
+            hr = pResampler->ProcessMessage(MFT_MESSAGE_NOTIFY_END_STREAMING, NULL);
+            hr = pResampler->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH, NULL);
+            pResampler->Release();
+            pResampler = NULL;
+        }
+
+        if ( pInputType ) pInputType->Release();
+        pInputType = NULL;
+        if ( pOutputType ) pOutputType->Release();
+        pOutputType = NULL;
+
+        reset = false;
+        playing = false;
     }
 
     log(LOG_DEBUG) << "Exiting AudioEndpoint::run()";
