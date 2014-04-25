@@ -140,7 +140,7 @@ void UIEmbedded::getArtistResponse( const Artist& artist, void* userData )
 {}
 void UIEmbedded::genericSearchCallback( const std::deque<Track>& listOfTracks, const std::string& didYouMean, void* userData )
 {}
-void UIEmbedded::getCurrentAudioEndpointsResponse( const std::set<std::string> endpoints, void* userData )
+void UIEmbedded::getCurrentAudioEndpointsResponse( const std::set<std::string>& endpoints, void* userData )
 {}
 
 #define TEXT_COL White

@@ -31,11 +31,10 @@
 
 uint32_t Client::count;
 
-Client::Client(Socket* socket, MediaInterface& spotifyif, AudioEndpointCtrlInterface& audioCtrl, EndpointsDb& epDb ) :
+Client::Client(Socket* socket, MediaInterface& spotifyif, EndpointCtrlInterface& epCtrl ) :
                                                             SocketPeer(socket),
                                                             spotify_(spotifyif),
-                                                            audioCtrl_(audioCtrl),
-                                                            epDb_(epDb),
+                                                            epCtrl_(epCtrl),
                                                             audioEp(NULL),
                                                             loggedIn_(true),
                                                             networkUsername_(""),
@@ -47,26 +46,26 @@ Client::Client(Socket* socket, MediaInterface& spotifyif, AudioEndpointCtrlInter
 
     std::cout << "Client " << id << " connected from " << getSocket()->getRemoteAddr() << std::endl;
 
-    epDb_.registerId( this );
+    epCtrl_.registerId( *this );
     spotify_.registerForCallbacks(*this);
-    audioCtrl_.registerForCallbacks(*this);
+    epCtrl_.registerForCallbacks(*this);
 }
 
 Client::~Client()
 {
     log(LOG_DEBUG) << "~Client";
     spotify_.unRegisterForCallbacks(*this);
-    audioCtrl_.unRegisterForCallbacks(*this);
+    epCtrl_.unRegisterForCallbacks(*this);
 
     if ( audioEp )
     {
-        audioCtrl_.deleteEndpoint( *audioEp, NULL, NULL );
+        epCtrl_.deleteAudioEndpoint( *audioEp, NULL, NULL );
         audioEp->destroy();
         delete audioEp;
         audioEp = NULL;
     }
 
-    epDb_.unregisterId( this );
+    epCtrl_.unregisterId( *this );
 }
 
 void Client::setUsername(std::string username) { networkUsername_ = username; }
@@ -96,6 +95,9 @@ void Client::processMessage(const Message* msg)
         case GET_IMAGE_REQ:      handleGetImageReq(msg);      break;
         case GET_ALBUM_REQ:      handleGetAlbumReq(msg);      break;
         case GET_ARTIST_REQ:     handleGetArtistReq(msg);     break;
+
+        case GET_ENDPOINTS_REQ:           handleGetEndpointsReq(msg);          break;
+        case RENAME_ENDPOINT_REQ:         handleRenameEndpointReq(msg);        break;
 
         case ADD_AUDIO_ENDPOINTS_REQ:         handleAddAudioEpReq(msg);        break;
         case REM_AUDIO_ENDPOINTS_REQ:         handleRemAudioEpReq(msg);        break;
@@ -300,9 +302,9 @@ void Client::handleHelloReq(const Message* msg)
                 std::string newId = idTlv->getString();
                 if ( !newId.empty() )
                 {
-                    epDb_.unregisterId( this );
+                    epCtrl_.unregisterId( *this );
                     id = newId;
-                    epDb_.registerId( this );
+                    epCtrl_.registerId( *this );
                 }
             }
 #if 0
@@ -472,6 +474,54 @@ void Client::handleGetArtistReq(const Message* msg)
     spotify_.getArtist( link ? link->getString() : std::string(""), this, rsp );
 }
 
+void Client::handleRenameEndpointReq( const Message* msg )
+{
+    Message* rsp = msg->createResponse();
+    const TlvContainer* fromClientTlv = (const TlvContainer*) msg->getTlv( TLV_CLIENT );
+    const StringTlv* fromIdTlv = fromClientTlv ? (const StringTlv*)fromClientTlv->getTlv( TLV_LINK ) : NULL;
+    const StringTlv* toIdTlv = (const StringTlv*) msg->getTlv( TLV_LINK );
+    std::string from = fromIdTlv ? fromIdTlv->getString() : "";
+    std::string to = toIdTlv ? toIdTlv->getString() : "";
+    if (from == "")
+        from = id; /* no id specified means this client*/
+
+    if ( to != "" )
+    {
+        epCtrl_.renameEndpoint( from, to, this, rsp );
+    }
+    else
+    {
+        // todo handle error
+        queueMessage( rsp );
+    }
+}
+
+void Client::renameEndpointResponse( void* userData )
+{
+    Message* rsp = (Message*) userData;
+    queueMessage( rsp );
+}
+
+void Client::handleGetEndpointsReq( const Message* msg )
+{
+    Message* rsp = msg->createResponse();
+    epCtrl_.getEndpoints( this, rsp );
+}
+
+void Client::getEndpointsResponse( const EndpointInfoList& endpoints, void* userData )
+{
+    Message* rsp = (Message*) userData;
+
+    for ( EndpointInfoList::const_iterator it = endpoints.begin(); it != endpoints.end(); it++)
+    {
+        TlvContainer* epTlv = new TlvContainer( TLV_CLIENT );
+        epTlv->addTlv( TLV_LINK, (*it) );
+        rsp->addTlv( epTlv );
+    }
+
+    queueMessage( rsp );
+}
+
 void Client::handleAddAudioEpReq( const Message* msg )
 {
     Message* rsp = msg->createResponse();
@@ -481,7 +531,7 @@ void Client::handleAddAudioEpReq( const Message* msg )
         endpointId = id; /* no id specified means this client*/
 
     //todo handle multiple tlvs
-    audioCtrl_.addEndpoint( endpointId, this, rsp );
+    epCtrl_.addAudioEndpoint( endpointId, this, rsp );
     queueMessage( rsp );
 }
 
@@ -492,7 +542,7 @@ void Client::handleRemAudioEpReq( const Message* msg )
     std::string endpointId = idTlv ? idTlv->getString() : id; /* no id specified means this client*/
 
     //todo handle multiple tlvs
-    audioCtrl_.removeEndpoint( endpointId, this, rsp );
+    epCtrl_.removeAudioEndpoint( endpointId, this, rsp );
     queueMessage( rsp );
 }
 
@@ -502,7 +552,7 @@ void Client::handleGetCurrentAudioEpReq( const Message* msg )
     spotify_.getCurrentAudioEndpoints( this, rsp );
 }
 
-void Client::getCurrentAudioEndpointsResponse( const std::set<std::string> endpoints, void* userData )
+void Client::getCurrentAudioEndpointsResponse( const std::set<std::string>& endpoints, void* userData )
 {
     Message* rsp = (Message*) userData;
 
@@ -538,13 +588,13 @@ void Client::handleCreateAudioEpReq( const Message* msg )
 
             if ( audioEp )
             {
-                audioCtrl_.deleteEndpoint( *audioEp, NULL, NULL );
+                epCtrl_.deleteAudioEndpoint( *audioEp, NULL, NULL );
                 audioEp->destroy();
                 delete audioEp;
             }
 
             audioEp = new Platform::AudioEndpointRemote( this, *this, ip, portStr.str(), relativeVolume, 1);
-            audioCtrl_.createEndpoint(*audioEp, NULL, NULL);
+            epCtrl_.createAudioEndpoint(*audioEp, NULL, NULL);
         }
         else
         {
@@ -560,7 +610,7 @@ void Client::handleDeleteAudioEpReq( const Message* msg )
     Message* rsp = msg->createResponse();
     if ( audioEp )
     {
-        audioCtrl_.deleteEndpoint( *audioEp, NULL, NULL );
+        epCtrl_.deleteAudioEndpoint( *audioEp, NULL, NULL );
         audioEp->destroy();
         delete audioEp;
     }
@@ -569,13 +619,13 @@ void Client::handleDeleteAudioEpReq( const Message* msg )
     queueMessage( rsp );
 }
 
-void Client::endpointsUpdatedNtf()
+void Client::audioEndpointsUpdatedNtf()
 {
     Message* ind = new Message( AUDIO_ENDPOINTS_UPDATED_IND );
     queueMessage( ind );
 }
 
-void Client::getEndpointsResponse( const AudioEndpointInfoList endpoints, void* userData )
+void Client::getAudioEndpointsResponse( const AudioEndpointInfoList& endpoints, void* userData )
 {
     Message* rsp = (Message*) userData;
 
@@ -593,7 +643,7 @@ void Client::getEndpointsResponse( const AudioEndpointInfoList endpoints, void* 
 void Client::handleGetAudioEpReq( const Message* msg )
 {
     Message* rsp = msg->createResponse();
-    audioCtrl_.getEndpoints( this, rsp );
+    epCtrl_.getAudioEndpoints( this, rsp );
 }
 
 void Client::handleSetVolumeReq(const Message* msg)
@@ -614,7 +664,7 @@ void Client::handleSetVolumeReq(const Message* msg)
                 StringTlv* idTlv  = (StringTlv*)epTlv->getTlv( TLV_LINK );
                 IntTlv* volume = (IntTlv*)epTlv->getTlv( TLV_VOLUME );
                 if ( idTlv && volume )
-                    audioCtrl_.setRelativeVolume( idTlv->getString(), volume->getVal() );
+                    epCtrl_.setRelativeVolume( idTlv->getString(), volume->getVal() );
                 break;
             }
             default:
@@ -643,9 +693,11 @@ void Client::setRelativeVolume( uint8_t volume )
 }
 
 
-void Client::rename( std::string& newId )
+void Client::rename( const std::string& newId )
 {
     id = newId;
 
-    // todo: send to client
+    Message* msg = new Message( RENAME_ENDPOINT_REQ );
+    msg->addTlv( TLV_LINK, newId );
+    queueRequest( msg, NULL, NULL );
 }

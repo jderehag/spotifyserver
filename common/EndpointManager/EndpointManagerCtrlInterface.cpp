@@ -25,26 +25,31 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "EndpointManagerCtrlInterface.h"
 
-#ifndef ENDPOINTSDBIF_H_
-#define ENDPOINTSDBIF_H_
-
-#include <set>
-#include <string>
-
-class EndpointsDbSubscriber
+void EndpointCtrlInterface::registerForCallbacks(IEndpointCtrlCallbackSubscriber& subscriber)
 {
-public:
-    virtual void getIdsResponse( std::set<std::string> ids, void* userData ) = 0;
+    callbackSubscriberMtx_.lock();
+    callbackSubscriberList_.insert(&subscriber);
+    callbackSubscriberMtx_.unlock();
+}
 
-};
-
-class EndpointsDbIf
+void EndpointCtrlInterface::unRegisterForCallbacks(IEndpointCtrlCallbackSubscriber& subscriber)
 {
-public:
-    virtual void getIds( EndpointsDbSubscriber* subscriber, void* userData ) = 0;
-    virtual void rename( std::string from, std::string to ) = 0;
-};
+    callbackSubscriberMtx_.lock();
+    callbackSubscriberList_.erase(&subscriber);
+    callbackSubscriberMtx_.unlock();
+}
 
-#endif
+
+void EndpointCtrlInterface::doAudioEndpointsUpdatedNotification()
+{
+    callbackSubscriberMtx_.lock();
+    for ( EndpointCtrlCallbackSubscriberSet::iterator it = callbackSubscriberList_.begin();
+          it != callbackSubscriberList_.end(); it++ )
+    {
+        (*it)->audioEndpointsUpdatedNtf();
+    }
+    callbackSubscriberMtx_.unlock();
+}
 

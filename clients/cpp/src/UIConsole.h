@@ -30,21 +30,21 @@
 
 #include "Platform/Threads/Runnable.h"
 #include "MediaInterface/MediaInterface.h"
-#include "AudioEndpointManager/AudioEndpointManagerCtrlInterface.h"
+#include "EndpointManager/EndpointManagerCtrlInterface.h"
 
 
-class UIConsole : public Platform::Runnable, public IMediaInterfaceCallbackSubscriber, public IAudioEndpointCtrlCallbackSubscriber
+class UIConsole : public Platform::Runnable, public IMediaInterfaceCallbackSubscriber, public IEndpointCtrlCallbackSubscriber
 {
 private:
     MediaInterface& m_;
-    AudioEndpointCtrlInterface& audioMgr_;
+    EndpointCtrlInterface& epMgr_;
 
     LibSpotify::PlaylistContainer playlists;
     LibSpotify::PlaylistContainer::iterator itPlaylists_;
     bool isShuffle;
     bool isRepeat;
 public:
-    UIConsole(MediaInterface& m, AudioEndpointCtrlInterface& audioMgr);
+    UIConsole(MediaInterface& m, EndpointCtrlInterface& epMgr);
     ~UIConsole();
 
     void run();
@@ -65,11 +65,14 @@ public:
     virtual void getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume, const Track& currentTrack, unsigned int progress, void* userData );
     virtual void getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume, void* userData );
 
-    virtual void getCurrentAudioEndpointsResponse( const std::set<std::string> endpoints, void* userData );
+    virtual void getCurrentAudioEndpointsResponse( const std::set<std::string>& endpoints, void* userData );
 
-    /* Implements IAudioEndpointCtrlCallbackSubscriber */
-    virtual void getEndpointsResponse( const AudioEndpointInfoList endpoints, void* userData );
-    virtual void endpointsUpdatedNtf();
+    /* Implements IEndpointCtrlCallbackSubscriber */
+    virtual void renameEndpointResponse( void* userData );
+    virtual void getEndpointsResponse( const EndpointInfoList& endpoints, void* userData );
+
+    virtual void getAudioEndpointsResponse( const AudioEndpointInfoList& endpoints, void* userData );
+    virtual void audioEndpointsUpdatedNtf();
 };
 
 #endif /* UICONSOLE_H_ */

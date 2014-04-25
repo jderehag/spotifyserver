@@ -31,7 +31,7 @@ CPPSRC +=	$(addprefix MediaContainers/, MediaBaseInfo.cpp Album.cpp Artist.cpp F
 			$(addprefix MessageFactory/, Message.cpp MessageDecoder.cpp MessageEncoder.cpp TlvDefinitions.cpp Tlvs.cpp SocketReader.cpp SocketWriter.cpp) \
 			$(addprefix SocketHandling/, Messenger.cpp SocketClient.cpp ) \
 			$(addprefix Platform/AudioEndpoints/, AudioFifo.cpp AudioEndpointLocalShared.cpp ) \
-			$(addprefix AudioEndpointManager/, RemoteAudioEndpointManager.cpp AudioEndpointManagerCtrlInterface.cpp) \
+			$(addprefix EndpointManager/, RemoteEndpointManager.cpp EndpointManagerCtrlInterface.cpp) \
 			ClockSync/ClockSyncClient.cpp \
 			MediaInterface/MediaInterface.cpp \
 			Logger/Logger.cpp Logger/LoggerImpl.cpp \

@@ -62,6 +62,11 @@ const char* messageTypeToString(const MessageType_t type)
         STR(SET_VOLUME_REQ);
         STR(SET_VOLUME_RSP);
 
+        STR(GET_ENDPOINTS_REQ);
+        STR(GET_ENDPOINTS_RSP);
+        STR(RENAME_ENDPOINT_REQ);
+        STR(RENAME_ENDPOINT_RSP);
+
         STR(ADD_AUDIO_ENDPOINTS_REQ);
         STR(ADD_AUDIO_ENDPOINTS_RSP);
         STR(REM_AUDIO_ENDPOINTS_REQ);

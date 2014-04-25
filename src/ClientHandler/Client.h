@@ -29,22 +29,20 @@
 #define CLIENT_H_
 
 #include "MediaInterface/MediaInterface.h"
-#include "AudioEndpointManager/AudioEndpointManagerCtrlInterface.h"
+#include "EndpointManager/EndpointManagerCtrlInterface.h"
 #include "SocketHandling/SocketPeer.h"
 #include "Platform/AudioEndpoints/AudioEndpointRemote.h"
-#include "EndpointId/EndpointsDb.h"
 #include "EndpointId/EndpointIdIf.h"
 #include "ClientHandler.h"
 
 using namespace LibSpotify;
 
-class Client : IMediaInterfaceCallbackSubscriber, IAudioEndpointCtrlCallbackSubscriber, IAudioEndpointRemoteCtrlInterface, public EndpointIdIf, public SocketPeer
+class Client : IMediaInterfaceCallbackSubscriber, IEndpointCtrlCallbackSubscriber, IAudioEndpointRemoteCtrlInterface, public EndpointIdIf, public SocketPeer
 {
 private:
 
     MediaInterface& spotify_;
-    AudioEndpointCtrlInterface& audioCtrl_;
-    EndpointsDb& epDb_;
+    EndpointCtrlInterface& epCtrl_;
 
     Platform::AudioEndpointRemote* audioEp;
 
@@ -79,7 +77,7 @@ private:
     virtual void getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume, const Track& currentTrack, unsigned int progress, void* userData );
     virtual void getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume, void* userData );
 
-    virtual void getCurrentAudioEndpointsResponse( const std::set<std::string> endpoints, void* userData );
+    virtual void getCurrentAudioEndpointsResponse( const std::set<std::string>& endpoints, void* userData );
 
 
     /* Message Handler functions*/
@@ -99,26 +97,33 @@ private:
     void handleGetCurrentAudioEpReq(const Message* msg);
 
 
-    /* implements IAudioEndpointCtrlCallbackSubscriber */
-    virtual void getEndpointsResponse( const AudioEndpointInfoList endpoints, void* userData );
-    virtual void endpointsUpdatedNtf();
+    /* implements IEndpointCtrlCallbackSubscriber */
+    virtual void renameEndpointResponse( void* userData );
+    virtual void getEndpointsResponse( const EndpointInfoList& endpoints, void* userData );
 
+    virtual void getAudioEndpointsResponse( const AudioEndpointInfoList& endpoints, void* userData );
+    virtual void audioEndpointsUpdatedNtf();
+
+    /* endpoint control message handlers */
+    void handleRenameEndpointReq(const Message* msg);
+    void handleGetEndpointsReq(const Message* msg);
     void handleCreateAudioEpReq(const Message* msg);
     void handleDeleteAudioEpReq(const Message* msg);
     void handleAddAudioEpReq(const Message* msg);
     void handleRemAudioEpReq(const Message* msg);
     void handleGetAudioEpReq(const Message* msg);
 
+
     /* implements IAudioEndpointRemoteCtrlInterface */
     virtual void setMasterVolume( uint8_t volume );
     virtual void setRelativeVolume( uint8_t volume );
 
     /* Implements EndpointIdIf */
-    void rename( std::string& newId );
+    void rename( const std::string& newId );
 
 public:
 
-    Client(Socket* socket, MediaInterface& spotifyif, AudioEndpointCtrlInterface& audioCtrl, EndpointsDb& epDb);
+    Client( Socket* socket, MediaInterface& spotifyif, EndpointCtrlInterface& epCtrl );
     virtual ~Client();
 
     void setUsername(std::string username);

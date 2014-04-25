@@ -28,12 +28,12 @@
 #ifndef TESTPLAYERIF_H_
 #define TESTPLAYERIF_H_
 
-#include "AudioEndpointManager/AudioEndpointManager.h"
 #include "Platform/AudioEndpoints/AudioDispatch.h"
 #include "MessageFactory/Message.h"
 #include "Platform/Threads/Runnable.h"
 #include "Platform/Threads/Condition.h"
 #include "MediaInterface/MediaInterface.h"
+#include "MediaInterface/AudioProvider.h"
 #include <set>
 #include <vector>
 #include <queue>

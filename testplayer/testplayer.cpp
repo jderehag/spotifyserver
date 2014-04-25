@@ -33,7 +33,7 @@
 #include "LoggerImpl.h"
 
 #include "TestPlayerIf.h"
-#include "AudioEndpointManager/AudioEndpointManager.h"
+#include "EndpointManager/EndpointManager.h"
 #include "ClientHandler/ClientHandler.h"
 #include "Platform/AudioEndpoints/AudioEndpointLocal.h"
 #include "ConfigHandling/ConfigHandler.h"
@@ -84,17 +84,16 @@ int main(int argc, char *argv[])
 
     TestPlayerIf testplayer;
 
-    EndpointId epId( "TestPlayer" );
+    EndpointId epId( ch.getGeneralConfig() );
     Platform::AudioEndpointLocal audioEndpoint(ch.getAudioEndpointConfig(), epId);
-    AudioEndpointManager audioMgr( testplayer );
-    audioMgr.createEndpoint( audioEndpoint, NULL, NULL );
-    audioMgr.addEndpoint( audioEndpoint.getId(), NULL, NULL );
+    EndpointManager epMgr( testplayer );
+    epMgr.registerId( epId );
+    epMgr.createAudioEndpoint( audioEndpoint, NULL, NULL );
+    epMgr.addAudioEndpoint( audioEndpoint.getId(), NULL, NULL );
 
-    EndpointsDb epDb = EndpointsDb( audioMgr );
-    epDb.registerId( &epId );
-    ClientHandler clienthandler(ch.getNetworkConfig(), testplayer, audioMgr, epDb );
+    ClientHandler clienthandler(ch.getNetworkConfig(), testplayer, epMgr );
 
-    UIConsole ui( testplayer, audioMgr );
+    UIConsole ui( testplayer, epMgr );
     ui.joinThread();
 
 

@@ -30,20 +30,18 @@
 
 #include "SocketHandling/SocketServer.h"
 #include "MediaInterface/MediaInterface.h"
-#include "AudioEndpointManager/AudioEndpointManagerCtrlInterface.h"
-#include "EndpointId/EndpointsDb.h"
+#include "EndpointManager/EndpointManagerCtrlInterface.h"
 
 
 class ClientHandler : public SocketServer
 {
 private:
     MediaInterface& media_;
-    AudioEndpointCtrlInterface& audioCtrl_;
-    EndpointsDb& epDb_;
+    EndpointCtrlInterface& epCtrl_;
 
     virtual SocketPeer* newPeer( Socket* s );
 public:
-    ClientHandler(const ConfigHandling::NetworkConfig& config, MediaInterface& media, AudioEndpointCtrlInterface& audioCtrl, EndpointsDb& epDb);
+    ClientHandler(const ConfigHandling::NetworkConfig& config, MediaInterface& media, EndpointCtrlInterface& epCtrl);
     virtual ~ClientHandler();
 
 };

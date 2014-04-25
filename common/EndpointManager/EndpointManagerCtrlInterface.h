@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Jens Nielsen
+ * Copyright (c) 2014, Jens Nielsen
  * All rights reserved.
 
  * Redistribution and use in source and binary forms, with or without
@@ -25,8 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef AUDIOENDPOINTMANAGERCTRLINTERFACE_H_
-#define AUDIOENDPOINTMANAGERCTRLINTERFACE_H_
+#ifndef ENDPOINTMANAGERCTRLINTERFACE_H_
+#define ENDPOINTMANAGERCTRLINTERFACE_H_
 
 #include "Platform/Threads/Mutex.h"
 #include "Platform/AudioEndpoints/AudioEndpoint.h"
@@ -46,18 +46,22 @@ public:
 };
 
 typedef std::list<AudioEndpointInfo> AudioEndpointInfoList;
+typedef std::list<std::string> EndpointInfoList;
 
-class IAudioEndpointCtrlCallbackSubscriber
+class IEndpointCtrlCallbackSubscriber
 {
 public:
     virtual void connectionState( bool up ) = 0;
 
-    virtual void getEndpointsResponse( const AudioEndpointInfoList endpoints, void* userData ) = 0;
-    virtual void endpointsUpdatedNtf() = 0;
+    virtual void renameEndpointResponse( void* userData ) = 0;
+    virtual void getEndpointsResponse( const EndpointInfoList& endpoints, void* userData ) = 0;
+
+    virtual void getAudioEndpointsResponse( const AudioEndpointInfoList& endpoints, void* userData ) = 0;
+    virtual void audioEndpointsUpdatedNtf() = 0;
 };
 
 
-class AudioEndpointCtrlInterface
+class EndpointCtrlInterface
 {
 private:
 
@@ -66,29 +70,35 @@ protected:
      * Callback subscription
      ***********************/
     Platform::Mutex callbackSubscriberMtx_;
-    typedef std::set<IAudioEndpointCtrlCallbackSubscriber*> AudioEndpointCtrlCallbackSubscriberSet;
-    AudioEndpointCtrlCallbackSubscriberSet callbackSubscriberList_;
+    typedef std::set<IEndpointCtrlCallbackSubscriber*> EndpointCtrlCallbackSubscriberSet;
+    EndpointCtrlCallbackSubscriberSet callbackSubscriberList_;
 
     /*typical data related to a request that will be needed when it's time for a response
       i.e. the subscriber the request originated from and the user data allocated with the request*/
-    typedef std::pair<IAudioEndpointCtrlCallbackSubscriber*, void*> PendingAudioCtrlRequestData;
+    typedef std::pair<IEndpointCtrlCallbackSubscriber*, void*> PendingEndpointCtrlRequestData;
 
-    void doEndpointsUpdatedNotification();
+    void doAudioEndpointsUpdatedNotification();
 
 public:
 
-    void registerForCallbacks(IAudioEndpointCtrlCallbackSubscriber& subscriber);
-    void unRegisterForCallbacks(IAudioEndpointCtrlCallbackSubscriber& subscriber);
+    void registerForCallbacks(IEndpointCtrlCallbackSubscriber& subscriber);
+    void unRegisterForCallbacks(IEndpointCtrlCallbackSubscriber& subscriber);
 
-    virtual void createEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
-    virtual void deleteEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
-    virtual void addEndpoint( std::string id, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
-    virtual void removeEndpoint( std::string id, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
-    virtual void getEndpoints( IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
+    virtual void registerId( EndpointIdIf& appId ) = 0;
+    virtual void unregisterId( EndpointIdIf& appId ) = 0;
+
+    virtual void getEndpoints( IEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
+    virtual void renameEndpoint( const std::string& from, const std::string& to, IEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
+
+    virtual void createAudioEndpoint( Platform::AudioEndpoint& ep, IEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
+    virtual void deleteAudioEndpoint( Platform::AudioEndpoint& ep, IEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
+    virtual void addAudioEndpoint( std::string id, IEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
+    virtual void removeAudioEndpoint( std::string id, IEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
+    virtual void getAudioEndpoints( IEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
 
     virtual void setRelativeVolume( std::string id, uint8_t volume ) = 0;
 
 };
 
 
-#endif /* AUDIOENDPOINTMANAGERCTRLINTERFACE_H_ */
+#endif /* ENDPOINTMANAGERCTRLINTERFACE_H_ */

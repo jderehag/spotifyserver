@@ -29,14 +29,17 @@
 #define ENDPOINTID_H_
 
 #include "EndpointIdIf.h"
+#include "ConfigHandling/ConfigHandler.h"
 
 class EndpointId : public EndpointIdIf
 {
+private:
+    ConfigHandling::GeneralConfig& cfg;
 public:
-    EndpointId( const std::string& id_ ) : EndpointIdIf(id_) {}
+    EndpointId( ConfigHandling::GeneralConfig& cfg_ ) : EndpointIdIf( cfg_.getId() ), cfg(cfg_) {}
     virtual ~EndpointId() {}
 
-    virtual void rename( std::string& newId ) { id = newId; /*todo store to config*/ }
+    virtual void rename( const std::string& newId ) { id = newId; cfg.setId(newId); }
 };
 
 #endif

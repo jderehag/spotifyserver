@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Jens Nielsen
+ * Copyright (c) 2014, Jens Nielsen
  * All rights reserved.
 
  * Redistribution and use in source and binary forms, with or without
@@ -25,17 +25,19 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef REMOTEAUDIOENDPOINTMANAGER_H_
-#define REMOTEAUDIOENDPOINTMANAGER_H_
+#ifndef REMOTEENDPOINTMANAGER_H_
+#define REMOTEENDPOINTMANAGER_H_
 
-#include "AudioEndpointManagerCtrlInterface.h"
+#include "EndpointManagerCtrlInterface.h"
 #include "SocketHandling/Messenger.h"
 #include "AudioEndpointRemoteSocketServer.h"
+#include "EndpointId/EndpointIdIf.h"
 
-class RemoteAudioEndpointManager : public AudioEndpointCtrlInterface, public IMessageSubscriber
+class RemoteEndpointManager : public EndpointCtrlInterface, public IMessageSubscriber
 {
 private:
     Messenger& messenger_;
+    EndpointIdIf& epId;
     AudioEndpointRemoteSocketServer* server;
     Platform::AudioEndpoint* ep_;
 
@@ -43,14 +45,20 @@ private:
     void sendCreateEndpointMessage();
     void handleSetVolumeReq( const Message* msg );
 public:
-    RemoteAudioEndpointManager( Messenger& m );
-    virtual ~RemoteAudioEndpointManager();
+    RemoteEndpointManager( Messenger& m, EndpointIdIf&  epId_ );
+    virtual ~RemoteEndpointManager();
 
-    virtual void createEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData );
-    virtual void deleteEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData );
-    virtual void addEndpoint( std::string id, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData );
-    virtual void removeEndpoint( std::string id, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData );
-    virtual void getEndpoints( IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData );
+    virtual void registerId( EndpointIdIf& appId );
+    virtual void unregisterId( EndpointIdIf& appId );
+
+    virtual void getEndpoints( IEndpointCtrlCallbackSubscriber* subscriber, void* userData );
+    virtual void renameEndpoint( const std::string& from, const std::string& to, IEndpointCtrlCallbackSubscriber* subscriber, void* userData );
+
+    virtual void createAudioEndpoint( Platform::AudioEndpoint& ep, IEndpointCtrlCallbackSubscriber* subscriber, void* userData );
+    virtual void deleteAudioEndpoint( Platform::AudioEndpoint& ep, IEndpointCtrlCallbackSubscriber* subscriber, void* userData );
+    virtual void addAudioEndpoint( std::string id, IEndpointCtrlCallbackSubscriber* subscriber, void* userData );
+    virtual void removeAudioEndpoint( std::string id, IEndpointCtrlCallbackSubscriber* subscriber, void* userData );
+    virtual void getAudioEndpoints( IEndpointCtrlCallbackSubscriber* subscriber, void* userData );
 
     virtual void setRelativeVolume( std::string id, uint8_t volume );
 
@@ -59,4 +67,4 @@ public:
     virtual void receivedResponse( const Message* rsp, const Message* req, void* userData );
 };
 
-#endif /* REMOTEAUDIOENDPOINTMANAGER_H_ */
+#endif /* REMOTEENDPOINTMANAGER_H_ */

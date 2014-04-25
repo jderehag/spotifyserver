@@ -41,7 +41,7 @@ public:
     virtual ~EndpointIdIf() {}
 
     const std::string& getId() const { return id; }
-    virtual void rename( std::string& newId ) = 0;
+    virtual void rename( const std::string& newId ) = 0;
 };
 
 #endif

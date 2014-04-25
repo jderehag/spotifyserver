@@ -5,9 +5,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="AudioEndpointManager">
-      <UniqueIdentifier>{749b9983-eea9-4fd7-a4b2-af6ebd34ed45}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ClientHandler">
       <UniqueIdentifier>{14d7f406-da0e-4aba-8c55-fe26db9c2e4a}</UniqueIdentifier>
     </Filter>
@@ -26,11 +23,11 @@
     <Filter Include="ClockSync">
       <UniqueIdentifier>{1e76688a-d77c-451b-a45b-808fb92015bd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="EndpointManager">
+      <UniqueIdentifier>{b0b0286f-6b44-4bbc-a48c-108cd2a24081}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\common\AudioEndpointManager\AudioEndpointManager.cpp">
-      <Filter>AudioEndpointManager</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\src\ClientHandler\Client.cpp">
       <Filter>ClientHandler</Filter>
     </ClCompile>
@@ -74,20 +71,17 @@
     <ClCompile Include="..\..\..\common\ClockSync\ClockSyncServer.cpp">
       <Filter>ClockSync</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\common\AudioEndpointManager\AudioEndpointManagerCtrlInterface.cpp">
-      <Filter>AudioEndpointManager</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\src\ConfigHandling\ConfigGenerator.cpp">
       <Filter>ConfigHandling</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\common\EndpointManager\EndpointManager.cpp">
+      <Filter>EndpointManager</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\EndpointManager\EndpointManagerCtrlInterface.cpp">
+      <Filter>EndpointManager</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\common\AudioEndpointManager\AudioEndpointManager.h">
-      <Filter>AudioEndpointManager</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\AudioEndpointManager\AudioEndpointManagerCtrlInterface.h">
-      <Filter>AudioEndpointManager</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\src\ClientHandler\Client.h">
       <Filter>ClientHandler</Filter>
     </ClInclude>
@@ -129,6 +123,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\src\ConfigHandling\ConfigGenerator.h">
       <Filter>ConfigHandling</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\EndpointManager\EndpointManager.h">
+      <Filter>EndpointManager</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\EndpointManager\EndpointManagerCtrlInterface.h">
+      <Filter>EndpointManager</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

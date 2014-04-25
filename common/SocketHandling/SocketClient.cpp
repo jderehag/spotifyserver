@@ -106,8 +106,8 @@ void SocketClient::run()
             hello.addTlv(TLV_PROTOCOL_VERSION_MINOR, PROTOCOL_VERSION_MINOR);
             hello.addTlv(TLV_LINK, epId_.getId());
 
+            log(LOG_DEBUG) << hello;
             MessageEncoder* enc = hello.encode();
-            enc->printHex();
 
             if (socket.Send(enc->getBuffer(), enc->getLength()) <= 0)
             {

@@ -64,9 +64,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\..\common\AudioEndpointManager\AudioEndpointManagerCtrlInterface.cpp" />
-    <ClCompile Include="..\..\..\..\..\common\AudioEndpointManager\RemoteAudioEndpointManager.cpp" />
     <ClCompile Include="..\..\..\..\..\common\ClockSync\ClockSyncClient.cpp" />
+    <ClCompile Include="..\..\..\..\..\common\EndpointManager\EndpointManagerCtrlInterface.cpp" />
+    <ClCompile Include="..\..\..\..\..\common\EndpointManager\RemoteEndpointManager.cpp" />
     <ClCompile Include="..\..\..\..\..\common\MediaInterface\MediaInterface.cpp" />
     <ClCompile Include="..\..\..\..\..\src\ConfigHandling\ConfigGenerator.cpp" />
     <ClCompile Include="..\..\..\..\..\src\ConfigHandling\ConfigParser.cpp" />
@@ -78,9 +78,9 @@
     <ClCompile Include="..\..\..\src\RemoteMediaInterface.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\..\common\AudioEndpointManager\AudioEndpointManagerCtrlInterface.h" />
-    <ClInclude Include="..\..\..\..\..\common\AudioEndpointManager\RemoteAudioEndpointManager.h" />
     <ClInclude Include="..\..\..\..\..\common\ClockSync\ClockSyncClient.h" />
+    <ClInclude Include="..\..\..\..\..\common\EndpointManager\EndpointManagerCtrlInterface.h" />
+    <ClInclude Include="..\..\..\..\..\common\EndpointManager\RemoteEndpointManager.h" />
     <ClInclude Include="..\..\..\..\..\common\MediaInterface\MediaInterface.h" />
     <ClInclude Include="..\..\..\..\..\src\ConfigHandling\ConfigDefs.h" />
     <ClInclude Include="..\..\..\..\..\src\ConfigHandling\ConfigGenerator.h" />

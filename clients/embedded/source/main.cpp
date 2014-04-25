@@ -33,7 +33,7 @@
 #include "buttonHandler.h"
 #include "powerHandler.h"
 #include "SocketHandling/SocketClient.h"
-#include "AudioEndpointManager/RemoteAudioEndpointManager.h"
+#include "EndpointManager/RemoteEndpointManager.h"
 #include "AudioEndpointRemoteSocketServer.h"
 #include "Platform/AudioEndpoints/AudioEndpointLocal.h"
 #include "FreeRTOS.h"
@@ -129,6 +129,15 @@ void LedFlasher::run()
     }
 }
 
+/* temporary hack for writing config until we have a generic ConfigHandler */
+class EmbeddedConfigWriter : public ConfigHandling::IConfigWriter
+{
+    ConfigHandling::GeneralConfig generalConfig;
+public:
+    virtual void writeConfigFile() { paramsSet( PARAM_CLIENT_ID, generalConfig.getId() ); };
+    ConfigHandling::GeneralConfig& getGeneralConfig() { return generalConfig; }
+};
+
 class Main : public Platform::Runnable
 {
 public:
@@ -167,17 +176,21 @@ void Main::run()
         log(LOG_NOTICE) << "My name is (shika-shika) " << id;
     }
 
-    EndpointId epId(id);
+    EmbeddedConfigWriter* cfg = new EmbeddedConfigWriter();
+    ConfigHandling::GeneralConfig& gcfg = cfg->getGeneralConfig();
+    gcfg.setId(id);
+    gcfg.setWriteIf( cfg );
+    EndpointId* epId = new EndpointId(gcfg);
 #if 0
-    SocketClient* sc = new SocketClient("192.168.5.98", "7788", epId);
+    SocketClient* sc = new SocketClient("192.168.5.98", "7788", *epId);
 #else
-    SocketClient* sc = new SocketClient("ANY", "7788", epId);
+    SocketClient* sc = new SocketClient("ANY", "7788", *epId);
 #endif
 
     ConfigHandling::AudioEndpointConfig* audiocfg = new ConfigHandling::AudioEndpointConfig;
-    Platform::AudioEndpointLocal* audioEndpoint = new Platform::AudioEndpointLocal( *audiocfg, epId );
-    RemoteAudioEndpointManager* audioMgr = new RemoteAudioEndpointManager( *sc );
-    audioMgr->createEndpoint( *audioEndpoint, NULL, NULL );
+    Platform::AudioEndpointLocal* audioEndpoint = new Platform::AudioEndpointLocal( *audiocfg, *epId );
+    RemoteEndpointManager* audioMgr = new RemoteEndpointManager( *sc, *epId );
+    audioMgr->createAudioEndpoint( *audioEndpoint, NULL, NULL );
 
     RemoteMediaInterface* m = new RemoteMediaInterface( *sc );
     UIEmbedded* ui = new UIEmbedded(*m);

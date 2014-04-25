@@ -211,6 +211,9 @@ void printHexMsg(const uint8_t* msgbuf, uint32_t len)
 {
     std::string message;
     int rowCount = 0;
+    if ( logger->getConfiguredLogLevel() < LOG_DEBUG )
+        return;
+
     for(uint32_t i=0; i<len; i++)
     {
         char s[3];

@@ -31,12 +31,10 @@
 
 ClientHandler::ClientHandler( const ConfigHandling::NetworkConfig& config,
                               MediaInterface& media,
-                              AudioEndpointCtrlInterface& audioCtrl,
-                              EndpointsDb& epDb) :
+                              EndpointCtrlInterface& epCtrl ) :
      SocketServer(config),
      media_(media),
-     audioCtrl_(audioCtrl),
-     epDb_(epDb)
+     epCtrl_(epCtrl)
 {
 }
 
@@ -46,7 +44,7 @@ ClientHandler::~ClientHandler()
 
 SocketPeer* ClientHandler::newPeer( Socket* s )
 {
-    Client* c = new Client(s, media_, audioCtrl_, epDb_ );
+    Client* c = new Client(s, media_, epCtrl_ );
     c->setUsername(config_.getUsername());
     c->setPassword(config_.getPassword());
     return c;

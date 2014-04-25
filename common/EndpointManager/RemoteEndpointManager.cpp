@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Jens Nielsen
+ * Copyright (c) 2014, Jens Nielsen
  * All rights reserved.
 
  * Redistribution and use in source and binary forms, with or without
@@ -18,31 +18,59 @@
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  * DISCLAIMED. IN NO EVENT SHALL JENS NIELSEN BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING, BUT NOT LIMITED S; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITWHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "RemoteAudioEndpointManager.h"
+#include "RemoteEndpointManager.h"
 #include "MessageFactory/Message.h"
 #include "MessageFactory/TlvDefinitions.h"
 #include "applog.h"
+#include <assert.h>
 
-RemoteAudioEndpointManager::RemoteAudioEndpointManager( Messenger& m ) : messenger_(m), server(NULL), ep_(NULL), connectionUp_(false)
+RemoteEndpointManager::RemoteEndpointManager( Messenger& m, EndpointIdIf&  epId_ ) : messenger_(m), epId(epId_), server(NULL), ep_(NULL), connectionUp_(false)
 {
     messenger_.addSubscriber( this );
 }
 
-RemoteAudioEndpointManager::~RemoteAudioEndpointManager()
+RemoteEndpointManager::~RemoteEndpointManager()
 {
     messenger_.removeSubscriber( this );
     server->destroy();
     delete server;
 }
 
-void RemoteAudioEndpointManager::sendCreateEndpointMessage()
+void RemoteEndpointManager::registerId( EndpointIdIf& appId )
+{
+}
+
+void RemoteEndpointManager::unregisterId( EndpointIdIf& appId )
+{
+}
+
+void RemoteEndpointManager::getEndpoints( IEndpointCtrlCallbackSubscriber* subscriber, void* userData )
+{
+    Message* msg = new Message( GET_ENDPOINTS_REQ );
+    messenger_.queueRequest( msg, this, new PendingEndpointCtrlRequestData(subscriber, userData) );
+}
+
+void RemoteEndpointManager::renameEndpoint( const std::string& from, const std::string& to, IEndpointCtrlCallbackSubscriber* subscriber, void* userData )
+{
+    if ( !from.empty() && !to.empty() )
+    {
+        Message* msg = new Message( RENAME_ENDPOINT_REQ );
+        TlvContainer* tlv = new TlvContainer( TLV_CLIENT );
+        tlv->addTlv( TLV_LINK, from );
+        msg->addTlv( tlv );
+        msg->addTlv( TLV_LINK, to );
+        messenger_.queueRequest( msg, this, new PendingEndpointCtrlRequestData(subscriber, userData) );
+    }
+}
+
+void RemoteEndpointManager::sendCreateEndpointMessage()
 {
     Message* msg = new Message( CREATE_AUDIO_ENDPOINT_REQ );
     TlvContainer* epTlv = new TlvContainer(TLV_CLIENT);
@@ -58,7 +86,7 @@ void RemoteAudioEndpointManager::sendCreateEndpointMessage()
     messenger_.queueRequest( msg, this, NULL );
 }
 
-void RemoteAudioEndpointManager::createEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData )
+void RemoteEndpointManager::createAudioEndpoint( Platform::AudioEndpoint& ep, IEndpointCtrlCallbackSubscriber* subscriber, void* userData )
 {
     server = new AudioEndpointRemoteSocketServer( ep );
     ep_ = &ep;
@@ -68,36 +96,37 @@ void RemoteAudioEndpointManager::createEndpoint( Platform::AudioEndpoint& ep, IA
     }
 }
 
-void RemoteAudioEndpointManager::deleteEndpoint( Platform::AudioEndpoint& ep, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData )
+void RemoteEndpointManager::deleteAudioEndpoint( Platform::AudioEndpoint& ep, IEndpointCtrlCallbackSubscriber* subscriber, void* userData )
 {
+    assert( &ep == ep_ );
     ep_ = NULL;
     Message* msg = new Message( DELETE_AUDIO_ENDPOINT_REQ );
     messenger_.queueRequest( msg, this, NULL );
 }
-void RemoteAudioEndpointManager::getEndpoints( IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData )
+void RemoteEndpointManager::getAudioEndpoints( IEndpointCtrlCallbackSubscriber* subscriber, void* userData )
 {
     Message* msg = new Message( GET_AUDIO_ENDPOINTS_REQ );
-    messenger_.queueRequest( msg, this, new PendingAudioCtrlRequestData(subscriber, userData) );
+    messenger_.queueRequest( msg, this, new PendingEndpointCtrlRequestData(subscriber, userData) );
 }
 
-void RemoteAudioEndpointManager::addEndpoint( std::string id, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData )
+void RemoteEndpointManager::addAudioEndpoint( std::string id, IEndpointCtrlCallbackSubscriber* subscriber, void* userData )
 {
     Message* msg = new Message( ADD_AUDIO_ENDPOINTS_REQ );
     /*todo: should allow multiple endpoints*/
     if ( id != "" )
         msg->addTlv( TLV_LINK, id );
-    messenger_.queueRequest( msg, this, new PendingAudioCtrlRequestData(subscriber, userData) );
+    messenger_.queueRequest( msg, this, new PendingEndpointCtrlRequestData(subscriber, userData) );
 }
-void RemoteAudioEndpointManager::removeEndpoint( std::string id, IAudioEndpointCtrlCallbackSubscriber* subscriber, void* userData )
+void RemoteEndpointManager::removeAudioEndpoint( std::string id, IEndpointCtrlCallbackSubscriber* subscriber, void* userData )
 {
     Message* msg = new Message( REM_AUDIO_ENDPOINTS_REQ );
     /*todo: should allow multiple endpoints*/
     if ( id != "" )
         msg->addTlv( TLV_LINK, id );
-    messenger_.queueRequest( msg, this, new PendingAudioCtrlRequestData(subscriber, userData) );
+    messenger_.queueRequest( msg, this, new PendingEndpointCtrlRequestData(subscriber, userData) );
 }
 
-void RemoteAudioEndpointManager::setRelativeVolume( std::string id, uint8_t volume )
+void RemoteEndpointManager::setRelativeVolume( std::string id, uint8_t volume )
 {
     Message* msg = new Message( SET_VOLUME_REQ );
     TlvContainer* tlv = new TlvContainer( TLV_CLIENT );
@@ -108,7 +137,7 @@ void RemoteAudioEndpointManager::setRelativeVolume( std::string id, uint8_t volu
     messenger_.queueRequest( msg, this, NULL );
 }
 
-void RemoteAudioEndpointManager::connectionState( bool up )
+void RemoteEndpointManager::connectionState( bool up )
 {
     if ( up )
     {
@@ -116,22 +145,36 @@ void RemoteAudioEndpointManager::connectionState( bool up )
     }
     connectionUp_ = up;
 }
-void RemoteAudioEndpointManager::receivedMessage( const Message* msg )
+void RemoteEndpointManager::receivedMessage( const Message* msg )
 {
     switch( msg->getType() )
     {
         case AUDIO_ENDPOINTS_UPDATED_IND:
-            doEndpointsUpdatedNotification();
+            doAudioEndpointsUpdatedNotification();
             break;
         case SET_VOLUME_REQ:
             handleSetVolumeReq( msg );
+            break;
+        case RENAME_ENDPOINT_REQ:
+            {
+                StringTlv* tlv = (StringTlv*) msg->getTlv( TLV_LINK );
+                std::string newId = tlv ? tlv->getString() : "";
+                if ( !newId.empty() )
+                {
+                    epId.rename( newId );
+
+                    /* confirm name change */
+                    Message* rsp = msg->createResponse();
+                    messenger_.queueMessage( rsp );
+                }
+            }
             break;
         default:
             break;
     }
 }
 
-void RemoteAudioEndpointManager::handleSetVolumeReq( const Message* msg )
+void RemoteEndpointManager::handleSetVolumeReq( const Message* msg )
 {
     if ( ep_ )
     {
@@ -162,13 +205,13 @@ void RemoteAudioEndpointManager::handleSetVolumeReq( const Message* msg )
     messenger_.queueMessage( rsp );
 }
 
-void RemoteAudioEndpointManager::receivedResponse( const Message* rsp, const Message* req, void* userData )
+void RemoteEndpointManager::receivedResponse( const Message* rsp, const Message* req, void* userData )
 {
-    PendingAudioCtrlRequestData* reqData = (PendingAudioCtrlRequestData*) userData;
+    PendingEndpointCtrlRequestData* reqData = (PendingEndpointCtrlRequestData*) userData;
     if( reqData == NULL )
         return;
 
-    IAudioEndpointCtrlCallbackSubscriber* subscriber = reqData->first;
+    IEndpointCtrlCallbackSubscriber* subscriber = reqData->first;
     void* subscriberData = reqData->second;
 
     delete reqData;
@@ -195,10 +238,33 @@ void RemoteAudioEndpointManager::receivedResponse( const Message* rsp, const Mes
                 }
             }
 
-            subscriber->getEndpointsResponse( endpoints, userData );
+            subscriber->getAudioEndpointsResponse( endpoints, subscriberData );
         }
         break;
+    case GET_ENDPOINTS_RSP:
+        {
+            EndpointInfoList endpoints;
 
+            for ( TlvContainer::const_iterator it = rsp->getTlvRoot()->begin();
+                it != rsp->getTlvRoot()->end(); it++ )
+            {
+                if ( (*it)->getType() == TLV_CLIENT )
+                {
+                    TlvContainer* tlv = (TlvContainer*)(*it);
+                    StringTlv* name = (StringTlv*)tlv->getTlv( TLV_LINK );
+                    if ( name )
+                        endpoints.push_back( name->getString() );
+                }
+            }
+
+            subscriber->getEndpointsResponse( endpoints, subscriberData );
+        }
+        break;
+    case RENAME_ENDPOINT_RSP:
+        {
+            subscriber->renameEndpointResponse( subscriberData );
+        }
+        break;
     default:
         receivedMessage( rsp ); /* no handler here, might be there's one in receivedMessage() */
         break;

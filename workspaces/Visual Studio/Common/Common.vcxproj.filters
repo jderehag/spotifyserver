@@ -175,15 +175,6 @@
     <ClInclude Include="..\..\..\common\EndpointId\EndpointIdIf.h">
       <Filter>EndpointId</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\common\EndpointId\EndpointsDb.h">
-      <Filter>EndpointId</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\EndpointId\EndpointsDbIf.h">
-      <Filter>EndpointId</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\EndpointId\RemoteEndpointsDb.h">
-      <Filter>EndpointId</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\common\Platform\Socket\Windows\WindowsSocket.cpp">
@@ -284,9 +275,6 @@
     </ClCompile>
     <ClCompile Include="..\..\..\common\Utils\ActionFilter.cpp">
       <Filter>Utils</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\common\EndpointId\EndpointsDb.cpp">
-      <Filter>EndpointId</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -73,6 +73,10 @@ typedef enum
     REQ( GET_STATUS,       0x401 )
     IND( STATUS,           0x401 )
 
+    /* Endpoint management */
+    REQ( GET_ENDPOINTS,    0xF01 )
+    REQ( RENAME_ENDPOINT,  0xF02 )
+
     /* Remote Audio */
     REQ( CREATE_AUDIO_ENDPOINT,   0x1001 )
     REQ( DELETE_AUDIO_ENDPOINT,   0x1002 )

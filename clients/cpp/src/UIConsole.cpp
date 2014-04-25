@@ -32,13 +32,13 @@ static void printFolder( const Folder& f, int indent );
 static void printTracks( const std::deque<Track>& tracks );
 
 
-UIConsole::UIConsole( MediaInterface& m, AudioEndpointCtrlInterface& audioMgr ) : m_(m), audioMgr_(audioMgr),
+UIConsole::UIConsole( MediaInterface& m, EndpointCtrlInterface& epMgr ) : m_(m), epMgr_(epMgr),
                                             itPlaylists_(playlists.begin()),
                                             isShuffle(false),
                                             isRepeat(false)
 {
     m_.registerForCallbacks( *this );
-    audioMgr_.registerForCallbacks( *this );
+    epMgr_.registerForCallbacks( *this );
     startThread();
 }
 
@@ -49,7 +49,7 @@ UIConsole::~UIConsole()
 void UIConsole::destroy()
 {
     m_.unRegisterForCallbacks( *this );
-    audioMgr_.unRegisterForCallbacks( *this );
+    epMgr_.unRegisterForCallbacks( *this );
     cancelThread();
     joinThread();
 }
@@ -89,12 +89,27 @@ void UIConsole::run()
         if ( argc == 0)
             continue;
 
+        if ( argv[0] == "getEndpoints")
+        {
+            epMgr_.getEndpoints( this, NULL );
+            continue;
+        }
+
+        if ( argv[0] == "rename")
+        {
+            if ( argc == 3 )
+            {
+                epMgr_.renameEndpoint( argv[1], argv[2], this, NULL );
+            }
+            continue;
+        }
+
         if ( argv[0] == "addAudio")
         {
             std::string id = "";
             if ( argc > 1 )
                 id = argv[1];
-            audioMgr_.addEndpoint(id, this, NULL);
+            epMgr_.addAudioEndpoint(id, this, NULL);
             continue;
         }
         if ( argv[0] == "remAudio")
@@ -102,7 +117,7 @@ void UIConsole::run()
             std::string id = "";
             if ( argc > 1 )
                 id = argv[1];
-            audioMgr_.removeEndpoint(id, this, NULL);
+            epMgr_.removeAudioEndpoint(id, this, NULL);
             continue;
         }
         if ( argv[0] == "curAudio")
@@ -112,7 +127,7 @@ void UIConsole::run()
         }
         if ( argv[0] == "getAudio")
         {
-            audioMgr_.getEndpoints( this, NULL );
+            epMgr_.getAudioEndpoints( this, NULL );
             continue;
         }
 
@@ -121,7 +136,7 @@ void UIConsole::run()
             if ( argc == 2 )
                 m_.setVolume( atoi( argv[1].c_str() ) );
             else if ( argc == 3 )
-                audioMgr_.setRelativeVolume( argv[1], atoi( argv[2].c_str() ) );
+                epMgr_.setRelativeVolume( argv[1], atoi( argv[2].c_str() ) );
             continue;
         }
 
@@ -334,7 +349,7 @@ void UIConsole::getStatusResponse( PlaybackState_t state, bool repeatStatus, boo
 }
 
 
-void UIConsole::getCurrentAudioEndpointsResponse( const std::set<std::string> endpoints, void* userData )
+void UIConsole::getCurrentAudioEndpointsResponse( const std::set<std::string>& endpoints, void* userData )
 {
     std::cout << "Current endpoints:" << std::endl;
 
@@ -345,9 +360,21 @@ void UIConsole::getCurrentAudioEndpointsResponse( const std::set<std::string> en
     std::cout << std::endl;
 }
 
-void UIConsole::getEndpointsResponse( const AudioEndpointInfoList endpoints, void* userData )
+void UIConsole::renameEndpointResponse( void* userData ) {}
+void UIConsole::getEndpointsResponse( const EndpointInfoList& endpoints, void* userData )
 {
     std::cout << "Endpoints:" << std::endl;
+
+    for ( EndpointInfoList::const_iterator it = endpoints.begin(); it != endpoints.end(); it++ )
+    {
+        std::cout << "  " << (*it) << std::endl;
+    }
+    std::cout << std::endl;
+}
+
+void UIConsole::getAudioEndpointsResponse( const AudioEndpointInfoList& endpoints, void* userData )
+{
+    std::cout << "Audio Endpoints:" << std::endl;
 
     for (AudioEndpointInfoList::const_iterator it = endpoints.begin(); it != endpoints.end(); it++)
     {
@@ -356,7 +383,7 @@ void UIConsole::getEndpointsResponse( const AudioEndpointInfoList endpoints, voi
     std::cout << std::endl;
 }
 
-void UIConsole::endpointsUpdatedNtf()
+void UIConsole::audioEndpointsUpdatedNtf()
 {
 }
 

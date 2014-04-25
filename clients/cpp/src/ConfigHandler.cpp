@@ -136,6 +136,8 @@ void ConfigHandler::parseConfigFile()
     /* Logger */
     loggerConfig_.setLogLevel(loggerLogLevel);
     loggerConfig_.setLogFile(loggerLogFile);
+
+    generalConfig_.setWriteIf( this );
 }
 
 void ConfigHandler::readFromFile()
@@ -166,7 +168,7 @@ const std::string& ConfigHandler::getConfigFilePath() const
     return configFilePath_;
 }
 
-const GeneralConfig& ConfigHandler::getGeneralConfig() const
+GeneralConfig& ConfigHandler::getGeneralConfig()
 {
     return generalConfig_;
 }

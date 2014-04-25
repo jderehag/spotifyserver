@@ -35,12 +35,27 @@
 
 namespace ConfigHandling
 {
-class GeneralConfig
+class IConfigWriter
 {
 public:
-    GeneralConfig() : id_("Client") {}
-    const std::string getId() const { return id_; }
-    void setId(const std::string& id) { if ( !id.empty() ) id_ = id; }
+    virtual void writeConfigFile() = 0;
+};
+
+class ConfigBase
+{
+protected:
+    IConfigWriter* writer;
+public:
+    ConfigBase() : writer(NULL) {}
+    void setWriteIf( IConfigWriter* writer_ ) { writer = writer_; }
+};
+
+class GeneralConfig : public ConfigBase
+{
+public:
+    GeneralConfig() : id_("Server") {}
+    const std::string& getId() const { return id_; }
+    void setId(const std::string& id) { if ( !id.empty() ) { id_ = id; if(writer) writer->writeConfigFile(); } }
 
 private:
     std::string id_;
@@ -129,7 +144,7 @@ private:
 };
 
 
-class ConfigHandler
+class ConfigHandler : IConfigWriter
 {
 private:
     GeneralConfig generalConfig_;
@@ -162,7 +177,7 @@ public:
     virtual ~ConfigHandler();
     void parseConfigFile();
     void writeConfigFile();
-    const GeneralConfig& getGeneralConfig() const;
+    GeneralConfig& getGeneralConfig();
     const AudioEndpointConfig& getAudioEndpointConfig() const;
     const LoggerConfig& getLoggerConfig() const;
     const NetworkConfig& getNetworkConfig() const;

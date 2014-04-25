@@ -30,7 +30,7 @@
 #include <stdio.h>
 
 #include "LibSpotifyIf/LibSpotifyIf.h"
-#include "AudioEndpointManager/AudioEndpointManager.h"
+#include "EndpointManager/EndpointManager.h"
 #include "ClientHandler/ClientHandler.h"
 #include "Platform/AudioEndpoints/AudioEndpointLocal.h"
 #include "ConfigHandling/ConfigHandler.h"
@@ -114,17 +114,16 @@ int main(int argc, char *argv[])
     LibSpotify::LibSpotifyIf libspotifyif(spConfig);
     libspotifyif.logIn();
 
-    EndpointId serverId( ch.getGeneralConfig().getId() );
+    EndpointId serverId( ch.getGeneralConfig() );
     Platform::AudioEndpointLocal audioEndpoint( ch.getAudioEndpointConfig(), serverId );
-    AudioEndpointManager audioMgr( libspotifyif );
-    audioMgr.createEndpoint( audioEndpoint, NULL, NULL );
-    audioMgr.addEndpoint( audioEndpoint.getId(), NULL, NULL );
+    EndpointManager epMgr( libspotifyif );
+    epMgr.registerId( serverId );
+    epMgr.createAudioEndpoint( audioEndpoint, NULL, NULL );
+    epMgr.addAudioEndpoint( serverId.getId(), NULL, NULL );
 
-    EndpointsDb epDb = EndpointsDb( audioMgr );
-    epDb.registerId( &serverId );
-    ClientHandler clienthandler(ch.getNetworkConfig(), libspotifyif, audioMgr, epDb );
+    ClientHandler clienthandler(ch.getNetworkConfig(), libspotifyif, epMgr );
 
-    UIConsole ui( libspotifyif, audioMgr );
+    UIConsole ui( libspotifyif, epMgr );
     ui.joinThread();
 
     libspotifyif.logOut();
