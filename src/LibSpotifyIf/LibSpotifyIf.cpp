@@ -770,6 +770,16 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
             state_ = STATE_LOGGED_IN;
             sp_session_preferred_bitrate( spotifySession_, SP_BITRATE_320k );
             updateRootFolder(sp_session_playlistcontainer(spotifySession_));
+
+            {
+                callbackSubscriberMtx_.lock();
+                std::set<IMediaInterfaceCallbackSubscriber*>::iterator it = callbackSubscriberList_.begin();
+                for( ; it != callbackSubscriberList_.end(); it++)
+                {
+                    (*it)->connectionState( true );
+                }
+                callbackSubscriberMtx_.unlock();
+            }
             break;
 
         case EVENT_CONNECTION_LOST:

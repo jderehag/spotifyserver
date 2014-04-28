@@ -127,6 +127,7 @@ int main(int argc, char *argv[])
     ui.joinThread();
 
     libspotifyif.logOut();
+    sleep_ms( 2000 ); // todo wait for spotify to log out
 
     /* cleanup */
     libspotifyif.destroy();

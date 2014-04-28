@@ -41,10 +41,9 @@ typedef std::vector<class Folder> FolderContainer;  //can't be deque since it's 
                                                     //it's undefined behaviour according to C++ std and doesn't compile in VS. For some reason vector is ok.
 typedef std::deque<Playlist> PlaylistContainer;
 
-class Folder
+class Folder : public MediaBaseInfo
 {
 private:
-	std::string name_;
 	unsigned long long id_;
 	PlaylistContainer playlists_;
 	FolderContainer folders_;
@@ -52,7 +51,6 @@ private:
 
 public:
 	Folder(const std::string& name, unsigned long long id, Folder* parentFolder);
-	Folder(const char* name, unsigned long long id, Folder* parentFolder);
     Folder( const TlvContainer* tlv );
 	virtual ~Folder();
 
@@ -62,7 +60,6 @@ public:
 
 	bool findPlaylist(const std::string& playlist , Playlist& pl);
 
-	const std::string& getName() const;
     PlaylistContainer& getPlaylists();
     const PlaylistContainer& getPlaylists() const;
     FolderContainer& getFolders();

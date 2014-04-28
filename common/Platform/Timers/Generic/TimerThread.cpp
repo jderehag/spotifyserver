@@ -28,6 +28,7 @@
 #include "TimerThread.h"
 #include "../Timer.h"
 #include "Platform/Utils/Utils.h"
+#include "applog.h"
 #include <assert.h>
 #include <stdint.h>
 #include <cstddef>
@@ -177,6 +178,7 @@ void TimerThread::run()
         } while( isExpired );
     }
     mtx.unlock();
+    log(LOG_DEBUG) << "Exiting thread";
 }
 
 void TimerThread::destroy()

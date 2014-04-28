@@ -36,12 +36,9 @@ namespace LibSpotify
 {
 static void insertTabs(std::ostream& os, unsigned short numberOfTabs);
 
-Folder::Folder(const std::string& name, unsigned long long id, Folder* parentFolder) : name_(name), id_(id), parentFolder_(parentFolder) { }
-Folder::Folder(const char* name, unsigned long long id, Folder* parentFolder) : name_(name), id_(id), parentFolder_(parentFolder) { }
-Folder::Folder( const TlvContainer* tlv )
+Folder::Folder(const std::string& name, unsigned long long id, Folder* parentFolder) : MediaBaseInfo(name, ""), id_(id), parentFolder_(parentFolder) { }
+Folder::Folder( const TlvContainer* tlv ) : MediaBaseInfo(tlv)
 {
-    const StringTlv* tlvName = (const StringTlv*) tlv->getTlv(TLV_NAME);
-    name_ = (tlvName ? tlvName->getString() : "no-name");
     parentFolder_ = NULL;
 
     for ( TlvContainer::const_iterator it = tlv->begin(); it != tlv->end(); it++ )
@@ -80,11 +77,6 @@ void Folder::addPlaylist(Playlist& playlist)
 Folder* Folder::getParentFolder()
 {
 	return parentFolder_;
-}
-
-const std::string& Folder::getName() const
-{
-	return name_;
 }
 
 bool Folder::findPlaylist(const std::string& playlist, Playlist& pl)

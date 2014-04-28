@@ -39,7 +39,7 @@ MediaBaseInfo::MediaBaseInfo(const TlvContainer* tlv)
     const StringTlv* tlvName = (const StringTlv*) tlv->getTlv(TLV_NAME);
     const StringTlv* tlvLink = (const StringTlv*) tlv->getTlv(TLV_LINK);
     name_ = (tlvName ? tlvName->getString() : "no-name");
-    link_ = (tlvLink ? tlvLink->getString() : "no-link");
+    link_ = (tlvLink ? tlvLink->getString() : "");
 }
 
 MediaBaseInfo::~MediaBaseInfo()

@@ -42,8 +42,6 @@ namespace LibSpotify
 class Playlist : public MediaBaseInfo
 {
 protected:
-	std::string name_;
-	std::string link_;
 	std::deque<Track> tracks_;
 	bool isCollaborative_;
 	bool isStarred_;

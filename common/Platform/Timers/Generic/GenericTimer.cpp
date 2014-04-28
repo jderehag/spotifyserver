@@ -51,12 +51,14 @@ void Timer::Start( unsigned int timeout, bool isPeriodic, TimerCallbackFn cb, vo
 {
     cb_ = cb;
     arg_ = arg;
-    timers->AddTimer( this, isPeriodic, timeout );
+    if ( timers )
+        timers->AddTimer( this, isPeriodic, timeout );
 }
 
 void Timer::Cancel()
 {
-    timers->CancelTimer( this );
+    if ( timers )
+        timers->CancelTimer( this );
 }
 
 void Timer::Expired()
@@ -66,7 +68,10 @@ void Timer::Expired()
 
 bool Timer::IsRunning()
 {
-    return timers->IsTimerRunning( this );
+    if ( timers )
+        return timers->IsTimerRunning( this );
+    else
+        return false;
 }
 
 }
