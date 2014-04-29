@@ -41,13 +41,7 @@ RemoteMediaInterface::~RemoteMediaInterface()
 
 void RemoteMediaInterface::connectionState( bool up )
 {
-    callbackSubscriberMtx_.lock();
-    for( std::set<IMediaInterfaceCallbackSubscriber*>::iterator it = callbackSubscriberList_.begin();
-            it != callbackSubscriberList_.end(); it++)
-    {
-        (*it)->connectionState( up );
-    }
-    callbackSubscriberMtx_.unlock();
+    MediaInterface::connectionState( up );
 }
 
 void RemoteMediaInterface::receivedMessage( const Message* msg )
@@ -179,8 +173,16 @@ void RemoteMediaInterface::receivedResponse( const Message* rsp, const Message* 
 
             case GET_IMAGE_RSP:
             {
-                void* data = 0; /*todo decode message*/
+                const TlvContainer* imgTlv = (const TlvContainer*)rsp->getTlv( TLV_IMAGE );
+                const BinaryTlv* imgdataTlv = imgTlv ? (const BinaryTlv*)imgTlv->getTlv( TLV_IMAGE_DATA ) : NULL;
+
+                void* data = 0;
                 size_t dataSize = 0;
+                if ( imgdataTlv )
+                {
+                    data = imgdataTlv->getData();
+                    dataSize = imgdataTlv->getLen();
+                }
                 subscriber->getImageResponse( data, dataSize, subscriberData );
             }
             break;

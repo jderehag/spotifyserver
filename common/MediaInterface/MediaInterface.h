@@ -81,6 +81,8 @@ protected:
       i.e. the subscriber the request originated from and the user data allocated with the request*/
     typedef std::pair<IMediaInterfaceCallbackSubscriber*, void*> PendingMediaRequestData;
 
+    bool isConnected;
+    void connectionState( bool up );
 public:
     MediaInterface();
     virtual ~MediaInterface();

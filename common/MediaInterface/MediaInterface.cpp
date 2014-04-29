@@ -27,7 +27,7 @@
 
 #include "MediaInterface.h"
 
-MediaInterface::MediaInterface()
+MediaInterface::MediaInterface() : isConnected( false )
 {
 }
 
@@ -39,6 +39,7 @@ void MediaInterface::registerForCallbacks(IMediaInterfaceCallbackSubscriber& sub
 {
     callbackSubscriberMtx_.lock();
     callbackSubscriberList_.insert(&subscriber);
+    subscriber.connectionState( isConnected );
     callbackSubscriberMtx_.unlock();
 }
 
@@ -46,6 +47,18 @@ void MediaInterface::unRegisterForCallbacks(IMediaInterfaceCallbackSubscriber& s
 {
     callbackSubscriberMtx_.lock();
     callbackSubscriberList_.erase(&subscriber);
+    callbackSubscriberMtx_.unlock();
+}
+
+void MediaInterface::connectionState( bool up )
+{
+    callbackSubscriberMtx_.lock();
+    isConnected = up;
+    std::set<IMediaInterfaceCallbackSubscriber*>::iterator it = callbackSubscriberList_.begin();
+    for( ; it != callbackSubscriberList_.end(); it++)
+    {
+        (*it)->connectionState( isConnected );
+    }
     callbackSubscriberMtx_.unlock();
 }
 
