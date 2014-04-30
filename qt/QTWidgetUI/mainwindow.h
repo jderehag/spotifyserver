@@ -3,6 +3,7 @@
 
 #include <QTreeWidgetItem>
 #include <QMainWindow>
+#include <QTimer>
 #include "TrackListModel.h"
 #include "MediaInterface/MediaInterface.h"
 #include "EndpointManager/EndpointManagerCtrlInterface.h"
@@ -47,6 +48,7 @@ public:
 
 public slots:
     void updateGui();
+    void progressUpdate();
 
 private slots:
     void on_tableView_doubleClicked(const QModelIndex &index);
@@ -66,6 +68,8 @@ private:
     EndpointCtrlInterface& epMgr_;
     TrackListModel tracksModel;
 
+    unsigned int progress_;
+    QTimer progressTimer;
     bool isPlaying;
 };
 

@@ -153,7 +153,7 @@
      <string/>
     </property>
    </widget>
-   <widget class="QSlider" name="horizontalSlider">
+   <widget class="QSlider" name="progressBar">
     <property name="geometry">
      <rect>
       <x>190</x>
@@ -161,6 +161,9 @@
       <width>711</width>
       <height>22</height>
      </rect>
+    </property>
+    <property name="singleStep">
+     <number>5</number>
     </property>
     <property name="orientation">
      <enum>Qt::Horizontal</enum>
@@ -176,7 +179,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>00:00</string>
+     <string> 0:00</string>
     </property>
    </widget>
    <widget class="QLabel" name="durationLabel">
@@ -189,7 +192,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>00:00</string>
+     <string> 0:00</string>
     </property>
    </widget>
    <zorder>stackedWidget</zorder>
@@ -200,7 +203,7 @@
    <zorder>currentTrackLabel</zorder>
    <zorder>currentArtistLabel</zorder>
    <zorder>playlistsTree</zorder>
-   <zorder>horizontalSlider</zorder>
+   <zorder>progressBar</zorder>
    <zorder>progressLabel</zorder>
    <zorder>durationLabel</zorder>
   </widget>

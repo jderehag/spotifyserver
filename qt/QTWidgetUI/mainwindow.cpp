@@ -15,9 +15,10 @@ public:
 
 
 MainWindow::MainWindow( QString& title, MediaInterface& m, EndpointCtrlInterface& epMgr, QWidget *parent ) :
-    QMainWindow(parent),
-    ui(new Ui::MainWindow),
-    m_(m), epMgr_(epMgr), isPlaying(false)
+        QMainWindow(parent),
+        ui(new Ui::MainWindow),
+        m_(m), epMgr_(epMgr),
+        progress_(0), isPlaying(false)
 {
     ui->setupUi(this);
     setWindowTitle( title );
@@ -37,6 +38,8 @@ MainWindow::MainWindow( QString& title, MediaInterface& m, EndpointCtrlInterface
 
     ui->prevButton->setToolTip(tr("Previous"));
     ui->prevButton->setIcon(style()->standardIcon(QStyle::SP_MediaSkipBackward));
+
+    connect(&progressTimer, SIGNAL(timeout()), this, SLOT(progressUpdate()));
 
     m_.registerForCallbacks( *this );
 
@@ -88,14 +91,31 @@ void MainWindow::updateGui()
     {
         ui->playButton->setToolTip(tr("Pause"));
         ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
+        progressTimer.start( 1000 );
     }
     else
     {
         ui->playButton->setToolTip(tr("Play"));
         ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+        progressTimer.stop();
     }
 }
 
+QString toTextLabel( unsigned int sec )
+{
+    unsigned int minutes = sec / 60;
+    unsigned int seconds = sec % 60;
+    std::stringstream out;
+    out << (minutes < 10 ? " " : "") << minutes <<":" << (seconds < 10 ? "0" : "") << seconds;
+    return QString( out.str().c_str() );
+}
+
+void MainWindow::progressUpdate()
+{
+    progress_++;
+    ui->progressLabel->setText( toTextLabel(progress_) );
+    ui->progressBar->setValue( progress_ );
+}
 
 
 void MainWindow::rootFolderUpdatedInd()
@@ -158,8 +178,14 @@ void MainWindow::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool
     m_.getImage( currentTrack.getAlbumLink(), this, NULL );
     ui->currentTrackLabel->setText( QString( currentTrack.getName().c_str() ) );
     ui->currentArtistLabel->setText( QString( currentTrack.getArtists().front().getName().c_str() ) );
+    progress_ = progress / 1000;
+    ui->durationLabel->setText( toTextLabel(currentTrack.getDurationMillisecs()/1000) );
+    ui->progressLabel->setText( toTextLabel(progress_) );
+    ui->progressBar->setMaximum( currentTrack.getDurationMillisecs()/1000 );
+    ui->progressBar->setValue( progress/1000 );
     statusUpdateInd(state, repeatStatus, shuffleStatus, volume );
 }
+
 void MainWindow::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume )
 {
     isPlaying = (state == PLAYBACK_PLAYING);
