@@ -3,25 +3,31 @@
 #include "Logger/applog.h"
 
 
-class PlaylistsModelItem : public QStandardItem
+class PlaylistsModelItem : public QTreeWidgetItem
 {
 private:
     MediaBaseInfo m;
 public:
-    PlaylistsModelItem( const MediaBaseInfo& m_ ) : QStandardItem(QString::fromStdString(m_.getName())), m(m_) {}
+    PlaylistsModelItem( const MediaBaseInfo& m_ ) : m(m_) {}
     const std::string& getLink() { return m.getLink(); }
+    virtual QVariant data ( int column, int role ) const { if ( role != Qt::DisplayRole || column != 0 ) return QVariant(); else return QVariant( m.getName().c_str() ); }
 };
 
 
-MainWindow::MainWindow( MediaInterface& m, EndpointCtrlInterface& epMgr, QWidget *parent ) :
+MainWindow::MainWindow( QString& title, MediaInterface& m, EndpointCtrlInterface& epMgr, QWidget *parent ) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     m_(m), epMgr_(epMgr), isPlaying(false)
 {
     ui->setupUi(this);
-    ui->treeView->setModel( &model );
+    setWindowTitle( title );
+    ui->playlistsTree->setColumnCount( 1 );
+    ui->playlistsTree->header()->hide();
+    tracksModel.setHeaderData( 0, Qt::Horizontal, QVariant(QString("Name")));
     ui->tableView->setModel( &tracksModel );
-    ui->label->setScaledContents(true);
+
+    ui->tableView->verticalHeader()->hide();
+    ui->label->setScaledContents( true );
 
     ui->playButton->setToolTip(tr("Play"));
     ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
@@ -60,18 +66,18 @@ void MainWindow::on_nextButton_clicked()
     m_.next();
 }
 
-
-void MainWindow::on_treeView_clicked(const QModelIndex &index)
+void MainWindow::on_playlistsTree_itemClicked(QTreeWidgetItem *item, int column)
 {
-    PlaylistsModelItem* item = (PlaylistsModelItem*)model.itemFromIndex(index);
-    const std::string& link = item->getLink();
+    PlaylistsModelItem* pitem = (PlaylistsModelItem*)item;
+    const std::string& link = pitem->getLink();
     if ( !link.empty() )
         m_.getTracks( link, this, NULL );
 }
 
+
 void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
 {
-    PlaylistsModelItem* item = (PlaylistsModelItem*)model.itemFromIndex(ui->treeView->currentIndex());
+    PlaylistsModelItem* item = (PlaylistsModelItem*)ui->playlistsTree->currentItem();
     Track* t = static_cast<Track*>(index.internalPointer());
     m_.play( item->getLink(), t->getIndex(), this, NULL );
 }
@@ -91,18 +97,6 @@ void MainWindow::updateGui()
 }
 
 
-QVariant toString ( const Track& t, int column )
-{
-    switch ( column )
-    {
-    case 0:
-        return QVariant( t.getName().c_str() );
-    case 1:
-        return QVariant( t.getArtists().front().getName().c_str() );
-    }
-}
-
-
 
 void MainWindow::rootFolderUpdatedInd()
 {}
@@ -115,28 +109,28 @@ void MainWindow::connectionState( bool up )
     }
 }
 
-static void addFolder( QStandardItem* parent, const Folder& folder )
+static void addFolder( QTreeWidgetItem* parent, const Folder& folder )
 {
     FolderContainer::const_iterator fit = folder.getFolders().begin();
     for ( ; fit != folder.getFolders().end(); fit++ )
     {
         PlaylistsModelItem *item = new PlaylistsModelItem(*fit);
         addFolder( item, *fit );
-        parent->appendRow( item );
+        parent->addChild( item );
     }
 
     PlaylistContainer::const_iterator pit = folder.getPlaylists().begin();
     for ( ; pit != folder.getPlaylists().end(); pit++ )
     {
         PlaylistsModelItem *item = new PlaylistsModelItem(*pit);
-        parent->appendRow( item );
+        parent->addChild( item );
     }
 }
 
 void MainWindow::getPlaylistsResponse( const Folder& rootfolder, void* userData )
 {
-    model.clear();
-    QStandardItem *parentItem = model.invisibleRootItem();
+    ui->playlistsTree->clear();
+    QTreeWidgetItem *parentItem = ui->playlistsTree->invisibleRootItem();
     addFolder( parentItem, rootfolder );
 }
 void MainWindow::getTracksResponse( const std::deque<Track>& tracks, void* userData )
@@ -162,6 +156,8 @@ void MainWindow::genericSearchCallback( const std::deque<Track>& listOfTracks, c
 void MainWindow::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume, const Track& currentTrack, unsigned int progress )
 {
     m_.getImage( currentTrack.getAlbumLink(), this, NULL );
+    ui->currentTrackLabel->setText( QString( currentTrack.getName().c_str() ) );
+    ui->currentArtistLabel->setText( QString( currentTrack.getArtists().front().getName().c_str() ) );
     statusUpdateInd(state, repeatStatus, shuffleStatus, volume );
 }
 void MainWindow::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume )
@@ -197,5 +193,6 @@ void MainWindow::getAudioEndpointsResponse( const AudioEndpointInfoList& endpoin
 void MainWindow::audioEndpointsUpdatedNtf()
 {
 }
+
 
 

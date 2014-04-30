@@ -1,8 +1,9 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QStandardItemModel>
+#include <QTreeWidgetItem>
 #include <QMainWindow>
+#include "TrackListModel.h"
 #include "MediaInterface/MediaInterface.h"
 #include "EndpointManager/EndpointManagerCtrlInterface.h"
 
@@ -10,28 +11,13 @@ namespace Ui {
 class MainWindow;
 }
 
-QVariant toString ( const Track& t, int column );
-
-class TrackListModel : public QAbstractItemModel
-{
-private:
-    std::deque<Track> tracks;
-public:
-    TrackListModel() {}
-    void setTrackList( const std::deque<Track>& tracks_ ) { beginResetModel(); tracks = tracks_; endResetModel(); }
-    virtual int columnCount ( const QModelIndex & parent = QModelIndex() ) const { return 2; }
-    virtual int rowCount ( const QModelIndex & parent = QModelIndex() ) const { return tracks.size(); }
-    virtual QVariant data ( const QModelIndex & index, int role = Qt::DisplayRole ) const { if (!index.isValid() || role != Qt::DisplayRole) return QVariant(); else return toString( tracks[index.row()], index.column()); }
-    virtual QModelIndex index ( int row, int column, const QModelIndex & parent = QModelIndex() ) const { if( column >= 2 || row >= tracks.size()) return QModelIndex(); else return createIndex(row, column, (void*)&tracks[row]);}
-    virtual QModelIndex parent ( const QModelIndex & index ) const { return QModelIndex(); }
-};
 
 class MainWindow : public QMainWindow, public IMediaInterfaceCallbackSubscriber, public IEndpointCtrlCallbackSubscriber
 {
     Q_OBJECT
 
 public:
-    explicit MainWindow(MediaInterface &m, EndpointCtrlInterface &epMgr, QWidget *parent = 0);
+    explicit MainWindow( QString& title, MediaInterface &m, EndpointCtrlInterface &epMgr, QWidget *parent = 0 );
     ~MainWindow();
 
 
@@ -63,8 +49,6 @@ public slots:
     void updateGui();
 
 private slots:
-    void on_treeView_clicked(const QModelIndex &index);
-
     void on_tableView_doubleClicked(const QModelIndex &index);
 
     void on_playButton_clicked();
@@ -73,12 +57,13 @@ private slots:
 
     void on_nextButton_clicked();
 
+    void on_playlistsTree_itemClicked(QTreeWidgetItem *item, int column);
+
 private:
     Ui::MainWindow *ui;
 
     MediaInterface& m_;
     EndpointCtrlInterface& epMgr_;
-    QStandardItemModel model;
     TrackListModel tracksModel;
 
     bool isPlaying;

@@ -19,10 +19,12 @@ INCLUDEPATH += $$PWD/../../common += $$PWD/../../src
 DEPENDPATH += $$PWD/../../common += $$PWD/../../src
 
 SOURCES += \
-    mainwindow.cpp
+    mainwindow.cpp \
+    TrackListModel.cpp
 
 HEADERS += \
-    mainwindow.h
+    mainwindow.h \
+    TrackListModel.h
 unix {
     target.path = /usr/lib
     INSTALLS += target

@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
 
     ClientHandler clienthandler( ch.getNetworkConfig(), libspotifyif, epMgr );
 
-    MainWindow w( libspotifyif, epMgr );
+    MainWindow w( QStringLiteral("Server"), libspotifyif, epMgr );
     w.show();
 
     ret = a.exec();

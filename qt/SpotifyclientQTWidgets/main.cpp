@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
     epMgr.createAudioEndpoint(audioEndpoint, NULL, NULL);
 
 
-    MainWindow w( m, epMgr );
+    MainWindow w( QStringLiteral("Client"), m, epMgr );
     w.show();
 
     ret = a.exec();
