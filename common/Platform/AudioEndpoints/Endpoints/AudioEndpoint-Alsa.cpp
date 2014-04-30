@@ -61,6 +61,7 @@ void AudioEndpointLocal::run()
     unsigned int currentRate = 0;
     AudioFifoData *afd;
     uint8_t lastVolume = 0;
+    bool reset = false;
 
     while(isCancellationPending() == false)
     {
@@ -72,7 +73,7 @@ void AudioEndpointLocal::run()
         if((afd = fifo_.getFifoDataTimedWait(1)) != 0)
         {
             /* First set up the alsa device with correct parameters (rate & channels) */
-            if (!devFd || currentRate != afd->rate || currentChannels != afd->channels)
+            if ( !devFd || reset || currentRate != afd->rate || currentChannels != afd->channels)
             {
                 if (devFd) snd_pcm_close(devFd);
 
@@ -84,6 +85,7 @@ void AudioEndpointLocal::run()
                     fprintf(stderr, "Unable to open ALSA device %s (%d channels, %d Hz)\n",
                             config_.getDevice().c_str() , currentChannels, currentRate);
                 }
+                reset = false;
             }
 
             if(devFd)
@@ -138,7 +140,14 @@ void AudioEndpointLocal::run()
                     adjustSamples( afd );
                 }
 
-                snd_pcm_writei(devFd, afd->samples, afd->nsamples);
+                c = snd_pcm_writei(devFd, afd->samples, afd->nsamples);
+                if ( c != afd->nsamples )
+                {
+                    log(LOG_WARN) << "snd_pcm_writei returned " << c << " (" << afd->nsamples << " samples)";
+
+                    if ( c < 0 ) /* some error, let's reopen device */
+                        reset = true;
+                }
             }
             fifo_.returnFifoDataBuffer( afd );
             afd = 0;
