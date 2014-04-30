@@ -22,10 +22,18 @@ FORMS    +=
 win32: LIBS += -lMfplat -lMfuuid -lWs2_32 -lWinmm -lOle32
 
 # UI
-win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../build-QTWidgetUI-Desktop_Qt_5_2_1_MSVC2012_32bit-Debug/debug -lQTWidgetUI
-else:win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../build-QTWidgetUI-Desktop_Qt_5_2_1_MSVC2012_32bit-Release/release -lQTWidgetUI
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../QTWidgetUI/release/ -lQTWidgetUI
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../QTWidgetUI/debug/ -lQTWidgetUI
+else:unix: LIBS += -L$$OUT_PWD/../QTWidgetUI/ -lQTWidgetUI
 
 INCLUDEPATH += $$PWD/../QTWidgetUI
+DEPENDPATH += $$PWD/../QTWidgetUI
+
+win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../QTWidgetUI/release/libQTWidgetUI.a
+else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../QTWidgetUI/debug/libQTWidgetUI.a
+else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../QTWidgetUI/release/QTWidgetUI.lib
+else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../QTWidgetUI/debug/QTWidgetUI.lib
+else:unix: PRE_TARGETDEPS += $$OUT_PWD/../QTWidgetUI/libQTWidgetUI.a
 
 # visual studio libs
 win32:CONFIG(release, debug|release): LIBS += -L"$$PWD/../../clients/cpp/workspaces/VisualStudio/release/" -lClientLib
@@ -38,3 +46,5 @@ DEPENDPATH += $$PWD/../../clients/cpp/src $$PWD/../../common += $$PWD/../../src
 
 win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += "$$PWD/../../clients/cpp/workspaces/VisualStudio/release/ClientLib.lib"  "$$PWD/../../workspaces/Visual Studio/release/Common.lib"
 else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += "$$PWD/../../clients/cpp/workspaces/VisualStudio/debug/ClientLib.lib"  "$$PWD/../../workspaces/Visual Studio/debug/Common.lib"
+
+

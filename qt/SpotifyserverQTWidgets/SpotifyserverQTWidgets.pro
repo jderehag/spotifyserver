@@ -22,10 +22,18 @@ FORMS    +=
 win32: LIBS += -lMfplat -lMfuuid -lWs2_32 -lWinmm -lOle32
 
 # UI
-win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../build-QTWidgetUI-Desktop_Qt_5_2_1_MSVC2012_32bit-Debug/debug -lQTWidgetUI
-else:win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../build-QTWidgetUI-Desktop_Qt_5_2_1_MSVC2012_32bit-Release/release -lQTWidgetUI
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../QTWidgetUI/release/ -lQTWidgetUI
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../QTWidgetUI/debug/ -lQTWidgetUI
+else:unix: LIBS += -L$$OUT_PWD/../QTWidgetUI/ -lQTWidgetUI
 
 INCLUDEPATH += $$PWD/../QTWidgetUI
+DEPENDPATH += $$PWD/../QTWidgetUI
+
+win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../QTWidgetUI/release/libQTWidgetUI.a
+else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../QTWidgetUI/debug/libQTWidgetUI.a
+else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../QTWidgetUI/release/QTWidgetUI.lib
+else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../QTWidgetUI/debug/QTWidgetUI.lib
+else:unix: PRE_TARGETDEPS += $$OUT_PWD/../QTWidgetUI/libQTWidgetUI.a
 
 # libspotify
 win32: LIBS += -L$$PWD/../../../spotifyserver_deps/lib/libspotify-12.1.51-win32-release/lib/ -llibspotify
