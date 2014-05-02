@@ -245,6 +245,7 @@ private:
     void playlistRemoved( sp_playlist* pl );
     void playlistRenamed( sp_playlist* pl );
     void playlistsMoved();
+    void playlistContentsUpdated( sp_playlist* pl );
 
     void doStatusNtf();
     void sendGetImageRsp( sp_image* img, QueryReqEventItem* reqEvent );

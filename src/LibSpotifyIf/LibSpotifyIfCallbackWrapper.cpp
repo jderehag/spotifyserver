@@ -187,12 +187,15 @@ void SP_CALLCONV LibSpotifyIfCallbackWrapper::playlistContainerLoaded(sp_playlis
 
 void SP_CALLCONV LibSpotifyIfCallbackWrapper::tracksAdded(sp_playlist *pl, sp_track *const *tracks, int num_tracks, int position, void *userdata)
 {
+    libSpotifyIfSingleton->playlistContentsUpdated( pl );
 }
 void SP_CALLCONV LibSpotifyIfCallbackWrapper::tracksRemoved(sp_playlist *pl, const int *tracks, int num_tracks, void *userdata)
 {
+    libSpotifyIfSingleton->playlistContentsUpdated( pl );
 }
 void SP_CALLCONV LibSpotifyIfCallbackWrapper::tracksMoved(sp_playlist *pl, const int *tracks, int num_tracks, int new_position, void *userdata)
 {
+    libSpotifyIfSingleton->playlistContentsUpdated( pl );
 }
 void SP_CALLCONV LibSpotifyIfCallbackWrapper::playlistRenamed(sp_playlist *pl, void *userdata)
 {

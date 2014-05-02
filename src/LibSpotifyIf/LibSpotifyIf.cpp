@@ -834,6 +834,10 @@ void LibSpotifyIf::rootFolderLoaded()
                 sp_playlist* pl = sp_playlistcontainer_playlist(plContainer, playlistIndex);
                 sp_playlist_add_callbacks( pl, itsCallbackWrapper_.getRegisteredPlaylistCallbacks(), NULL );
             }
+            break;
+
+            default:
+                break;
         }
     }
 
@@ -863,6 +867,27 @@ void LibSpotifyIf::playlistsMoved()
     refreshRootFolder();
 }
 
+void LibSpotifyIf::playlistContentsUpdated( sp_playlist* pl )
+{
+    char uri[MAX_LINK_NAME_LENGTH];
+    uri[0] = '\0';
+    sp_link* link = sp_link_create_from_playlist( pl );
+    if( link )
+    {
+        sp_link_as_string(link, uri, sizeof(uri));
+        sp_link_release(link);
+
+        std::string linkstring(uri);
+        callbackSubscriberMtx_.lock();
+        /* Tell all subscribers that the rootFolder has been updated */
+        for(std::set<IMediaInterfaceCallbackSubscriber*>::iterator it = callbackSubscriberList_.begin();
+            it != callbackSubscriberList_.end(); it++)
+        {
+            (*it)->playlistUpdatedInd( linkstring );
+        }
+        callbackSubscriberMtx_.unlock();
+    }
+}
 void LibSpotifyIf::refreshRootFolder()
 {
     sp_playlistcontainer* plContainer = sp_session_playlistcontainer(spotifySession_);
@@ -919,8 +944,7 @@ void LibSpotifyIf::refreshRootFolder()
         }
         callbackSubscriberMtx_.unlock();
     }
-
-    }
+}
 
 
 

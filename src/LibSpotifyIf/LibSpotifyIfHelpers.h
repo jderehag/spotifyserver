@@ -37,6 +37,8 @@
 
 namespace LibSpotify
 {
+    #define MAX_LINK_NAME_LENGTH 256 /*examples use 200-256 for this size*/
+
     Track spotifyGetTrack(std::string* track_uri, sp_session* session);
     Track spotifyGetTrack(sp_track* track, sp_session* session);
 

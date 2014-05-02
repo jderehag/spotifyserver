@@ -23,7 +23,7 @@ int TrackListModel::rowCount( const QModelIndex & parent ) const
 
 QVariant TrackListModel::data( const QModelIndex & index, int role ) const
 {
-    if ( index.column() > NCOLUMNS || !index.isValid() || role != Qt::DisplayRole )
+    if ( !index.isValid() || index.row() >= tracks.size() || index.column() >= NCOLUMNS || role != Qt::DisplayRole )
         return QVariant();
     else
     {

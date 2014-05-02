@@ -44,8 +44,6 @@ extern const size_t g_appkey_size;
 namespace LibSpotify
 {
 
-#define MAX_LINK_NAME_LENGTH 256 /*examples use 200-256 for this size*/
-
 Track spotifyGetTrack(std::string& track_uri, sp_session* session)
 {
     sp_link* link = sp_link_create_from_string(track_uri.c_str());
