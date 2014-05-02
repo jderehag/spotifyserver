@@ -290,6 +290,7 @@ const char* sp_user_canonical_name(sp_user *user){ return user->canonicalName;}
  * *************************************/
 sp_playlistcontainer* sp_session_playlistcontainer(sp_session *session) { return &session->playlistcontainer; }
 int sp_playlistcontainer_num_playlists(sp_playlistcontainer *pc) { return pc->num_playlists; }
+sp_error sp_playlistcontainer_add_callbacks(sp_playlistcontainer *pc, sp_playlistcontainer_callbacks *callbacks, void *userdata) { return SP_ERROR_OK; }
 
 sp_playlist* sp_playlist_create(sp_session* session, sp_link* link)
 {
@@ -363,6 +364,8 @@ bool sp_playlist_is_loaded(sp_playlist *playlist)
 	return 1;
 }
 
+sp_error sp_playlist_add_callbacks(sp_playlist *playlist, sp_playlist_callbacks *callbacks, void *userdata) { return SP_ERROR_OK; }
+sp_error sp_playlist_remove_callbacks(sp_playlist *playlist, sp_playlist_callbacks *callbacks, void *userdata) { return SP_ERROR_OK; }
 
 /* ************************************
  * Track stubs

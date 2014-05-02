@@ -878,8 +878,9 @@ void LibSpotifyIf::playlistContentsUpdated( sp_playlist* pl )
         sp_link_release(link);
 
         std::string linkstring(uri);
+
         callbackSubscriberMtx_.lock();
-        /* Tell all subscribers that the rootFolder has been updated */
+        /* Tell all subscribers that this playlist has been updated */
         for(std::set<IMediaInterfaceCallbackSubscriber*>::iterator it = callbackSubscriberList_.begin();
             it != callbackSubscriberList_.end(); it++)
         {
