@@ -120,8 +120,16 @@ void Client::connectionState( bool up )
 {}
 void Client::rootFolderUpdatedInd()
 {
-    log(LOG_DEBUG) << "Client::rootFolderUpdatedInd()";
+    Message* msg = new Message( ROOT_FOLDER_UPDATED_IND );
+    queueMessage( msg );
 }
+void Client::playlistUpdatedInd( const std::string& link )
+{
+    Message* msg = new Message( PLAYLIST_UPDATED_IND );
+    msg->addTlv( TLV_LINK, link );
+    queueMessage( msg );
+}
+
 static void addStatusMsgMandatoryParameters( Message* msg, PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume )
 {
     msg->addTlv( TLV_STATE, state );

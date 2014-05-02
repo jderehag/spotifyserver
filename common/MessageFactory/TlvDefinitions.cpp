@@ -48,6 +48,9 @@ const char* messageTypeToString(const MessageType_t type)
         STR(GET_IMAGE_REQ);
         STR(GET_IMAGE_RSP);
 
+        STR(ROOT_FOLDER_UPDATED_IND);
+        STR(PLAYLIST_UPDATED_IND);
+
         STR(PLAY_TRACK_REQ);
         STR(PLAY_TRACK_RSP);
         STR(GENERIC_SEARCH_REQ);

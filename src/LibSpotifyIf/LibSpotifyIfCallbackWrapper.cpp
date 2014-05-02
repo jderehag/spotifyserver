@@ -36,6 +36,7 @@
 #include "LibSpotifyIf.h"
 #include <libspotify/api.h>
 #include <iostream>
+#include "applog.h"
 
 
 namespace LibSpotify
@@ -71,12 +72,30 @@ static sp_session_callbacks libSpotifySessioncallbacks =
  * The playlist container callbacks
  */
 static sp_playlistcontainer_callbacks libSpotifyContainerCallbacks = {
-	NULL,														//.playlist_added
-	NULL,														//.playlist_removed
-	NULL,														//.playlist_moved
-	NULL,														//.container_loaded
+    &LibSpotifyIfCallbackWrapper::playlistAdded,                //.playlist_added
+    &LibSpotifyIfCallbackWrapper::playlistRemoved,              //.playlist_removed
+    &LibSpotifyIfCallbackWrapper::playlistMoved,                //.playlist_moved
+    &LibSpotifyIfCallbackWrapper::playlistContainerLoaded,      //.container_loaded
 };
 
+/**
+ * The playlist callbacks
+ */
+static sp_playlist_callbacks libSpotifyPlaylistCallbacks = {
+    &LibSpotifyIfCallbackWrapper::tracksAdded,                   //.tracks_added
+    &LibSpotifyIfCallbackWrapper::tracksRemoved,                 //.tracks_removed
+    &LibSpotifyIfCallbackWrapper::tracksMoved,                   //.tracks_moved
+    &LibSpotifyIfCallbackWrapper::playlistRenamed,               //.playlist_renamed
+    &LibSpotifyIfCallbackWrapper::playlistStateChanged,          //.playlist_state_changed
+    &LibSpotifyIfCallbackWrapper::playlistUpdateInProgress,      //.playlist_update_in_progress
+    &LibSpotifyIfCallbackWrapper::playlistMetadataUpdated,       //.playlist_metadata_updated
+    &LibSpotifyIfCallbackWrapper::trackCreatedChanged,           //.track_created_changed
+    &LibSpotifyIfCallbackWrapper::trackSeenChanged,              //.track_seen_changed
+    &LibSpotifyIfCallbackWrapper::descriptionChanged,            //.description_changed 
+    &LibSpotifyIfCallbackWrapper::imageChanged,                  //.image_changed
+    &LibSpotifyIfCallbackWrapper::trackMessageChanged,           //.track_message_changed
+    &LibSpotifyIfCallbackWrapper::subscribersChanged,            //.subscribers_changed
+};
 
 LibSpotifyIfCallbackWrapper::LibSpotifyIfCallbackWrapper(LibSpotifyIf& libSpotifyIf)
 {
@@ -94,7 +113,12 @@ sp_session_callbacks* LibSpotifyIfCallbackWrapper::getRegisteredSessionCallbacks
 
 sp_playlistcontainer_callbacks* LibSpotifyIfCallbackWrapper::getRegisteredPlaylistContainerCallbacks()
 {
-	return &libSpotifyContainerCallbacks;
+    return &libSpotifyContainerCallbacks;
+}
+
+sp_playlist_callbacks* LibSpotifyIfCallbackWrapper::getRegisteredPlaylistCallbacks()
+{
+    return &libSpotifyPlaylistCallbacks;
 }
 
 /* *************************
@@ -141,21 +165,66 @@ void SP_CALLCONV LibSpotifyIfCallbackWrapper::logMessageCb(sp_session *session, 
 
 
 /* **************************
- * Playlist Callbacks
+ * Playlist Container Callbacks
  * **************************/
 void SP_CALLCONV LibSpotifyIfCallbackWrapper::playlistAdded(sp_playlistcontainer *pc, sp_playlist *playlist, int position, void *userdata)
 {
+    libSpotifyIfSingleton->playlistAdded( playlist );
 }
 void SP_CALLCONV LibSpotifyIfCallbackWrapper::playlistRemoved(sp_playlistcontainer *pc, sp_playlist *playlist, int position, void *userdata)
 {
+    libSpotifyIfSingleton->playlistRemoved( playlist );
 }
 void SP_CALLCONV LibSpotifyIfCallbackWrapper::playlistMoved(sp_playlistcontainer *pc, sp_playlist *playlist, int position, int new_position, void *userdata)
 {
+    libSpotifyIfSingleton->playlistsMoved();
 }
 void SP_CALLCONV LibSpotifyIfCallbackWrapper::playlistContainerLoaded(sp_playlistcontainer *pc, void *userdata)
 {
+    libSpotifyIfSingleton->rootFolderLoaded();
 }
 
+
+void SP_CALLCONV LibSpotifyIfCallbackWrapper::tracksAdded(sp_playlist *pl, sp_track *const *tracks, int num_tracks, int position, void *userdata)
+{
+}
+void SP_CALLCONV LibSpotifyIfCallbackWrapper::tracksRemoved(sp_playlist *pl, const int *tracks, int num_tracks, void *userdata)
+{
+}
+void SP_CALLCONV LibSpotifyIfCallbackWrapper::tracksMoved(sp_playlist *pl, const int *tracks, int num_tracks, int new_position, void *userdata)
+{
+}
+void SP_CALLCONV LibSpotifyIfCallbackWrapper::playlistRenamed(sp_playlist *pl, void *userdata)
+{
+    libSpotifyIfSingleton->playlistRenamed( pl );
+}
+void SP_CALLCONV LibSpotifyIfCallbackWrapper::playlistStateChanged(sp_playlist *pl, void *userdata)
+{
+}
+void SP_CALLCONV LibSpotifyIfCallbackWrapper::playlistUpdateInProgress(sp_playlist *pl, bool done, void *userdata)
+{
+}
+void SP_CALLCONV LibSpotifyIfCallbackWrapper::playlistMetadataUpdated(sp_playlist *pl, void *userdata)
+{
+}
+void SP_CALLCONV LibSpotifyIfCallbackWrapper::trackCreatedChanged(sp_playlist *pl, int position, sp_user *user, int when, void *userdata)
+{
+}
+void SP_CALLCONV LibSpotifyIfCallbackWrapper::trackSeenChanged(sp_playlist *pl, int position, bool seen, void *userdata)
+{
+}
+void SP_CALLCONV LibSpotifyIfCallbackWrapper::descriptionChanged(sp_playlist *pl, const char *desc, void *userdata)
+{
+}
+void SP_CALLCONV LibSpotifyIfCallbackWrapper::imageChanged(sp_playlist *pl, const byte *image, void *userdata)
+{
+}
+void SP_CALLCONV LibSpotifyIfCallbackWrapper::trackMessageChanged(sp_playlist *pl, int position, const char *message, void *userdata)
+{
+}
+void SP_CALLCONV LibSpotifyIfCallbackWrapper::subscribersChanged(sp_playlist *pl, void *userdata)
+{
+}
 /* **************************
  * Search Callbacks
  * **************************/

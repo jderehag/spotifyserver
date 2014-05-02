@@ -92,6 +92,32 @@ void RemoteMediaInterface::receivedMessage( const Message* msg )
         }
         break;
 
+        case ROOT_FOLDER_UPDATED_IND:
+            callbackSubscriberMtx_.lock();
+            for( std::set<IMediaInterfaceCallbackSubscriber*>::iterator it = callbackSubscriberList_.begin();
+                 it != callbackSubscriberList_.end(); it++)
+            {
+                (*it)->rootFolderUpdatedInd();
+            }
+            callbackSubscriberMtx_.unlock();
+            break;
+
+        case PLAYLIST_UPDATED_IND:
+        {
+            const StringTlv* tlv = (const StringTlv*) msg->getTlv(TLV_LINK);
+            std::string link = tlv ? tlv->getString() : "";
+            if ( !link.empty() )
+            {
+                callbackSubscriberMtx_.lock();
+                for( std::set<IMediaInterfaceCallbackSubscriber*>::iterator it = callbackSubscriberList_.begin();
+                     it != callbackSubscriberList_.end(); it++)
+                {
+                    (*it)->playlistUpdatedInd( link );
+                }
+                callbackSubscriberMtx_.unlock();
+            }
+        }
+        break;
 
         default:
             break;

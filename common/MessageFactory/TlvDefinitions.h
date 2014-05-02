@@ -63,6 +63,9 @@ typedef enum
     REQ( GET_ALBUM,        0x205 )
     REQ( GET_ARTIST,       0x206 )
 
+    IND( ROOT_FOLDER_UPDATED, 0x210 )
+    IND( PLAYLIST_UPDATED,    0x211 )
+
     /* Playback */
     REQ( PLAY_TRACK,       0x301 ) /* obsolete, use PLAY_REQ */
     REQ( PLAY,             0x302 )

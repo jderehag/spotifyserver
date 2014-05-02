@@ -106,7 +106,7 @@ QString toTextLabel( unsigned int sec )
     unsigned int minutes = sec / 60;
     unsigned int seconds = sec % 60;
     std::stringstream out;
-    out << (minutes < 10 ? " " : "") << minutes <<":" << (seconds < 10 ? "0" : "") << seconds;
+    out << (minutes < 10 ? " " : "") << minutes << ":" << (seconds < 10 ? "0" : "") << seconds;
     return QString( out.str().c_str() );
 }
 
@@ -119,7 +119,13 @@ void MainWindow::progressUpdate()
 
 
 void MainWindow::rootFolderUpdatedInd()
-{}
+{
+    m_.getPlaylists( this, NULL );
+}
+void MainWindow::playlistUpdatedInd( const std::string& link )
+{
+}
+
 void MainWindow::connectionState( bool up )
 {
     if ( up )

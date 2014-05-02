@@ -102,6 +102,9 @@ void UIEmbedded::longButtonPress()
 void UIEmbedded::rootFolderUpdatedInd()
 {
 }
+void UIEmbedded::playlistUpdatedInd( const std::string& link )
+{
+}
 
 void UIEmbedded::connectionState( bool up )
 {
@@ -169,7 +172,7 @@ void UIEmbedded::drawProgress()
 
     {
         std::stringstream out;
-        out << (progress_/60 < 10 ? " " : "") << progress_/60 <<":" << (progress_%60 < 10 ? "0" : "") << progress_%60;
+        out << (progress_/60 < 10 ? " " : "") << progress_/60 << ":" << (progress_%60 < 10 ? "0" : "") << progress_%60;
         printText(PROGBAR_POS, 4, PROGRESS_WIDTH, out.str().c_str(), &FONT);
     }
 

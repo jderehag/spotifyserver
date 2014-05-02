@@ -131,6 +131,7 @@ Playlist spotifyGetPlaylist(std::string& playlist_uri, sp_session* session)
 Playlist spotifyGetPlaylist(sp_playlist* playlist, sp_session* session)
 {
     char uri[MAX_LINK_NAME_LENGTH];
+    uri[0] = '\0';
     sp_link* link = sp_link_create_from_playlist(playlist);
     if(link)
     {
@@ -147,7 +148,7 @@ Playlist spotifyGetPlaylist(sp_playlist* playlist, sp_session* session)
         trackObj.setIndex(trackIndex);
         playlistObj.addTrack(trackObj);
     }
-    log(LOG_NOTICE) << "Loaded playlist " << sp_playlist_name(playlist) << " - " << uri << " with " << sp_playlist_num_tracks(playlist) << " tracks";
+    //log(LOG_NOTICE) << "Loaded playlist " << sp_playlist_name(playlist) << " - " << uri << " with " << sp_playlist_num_tracks(playlist) << " tracks";
     return playlistObj;
 }
 
@@ -257,11 +258,6 @@ void LibSpotifyIf::libSpotifySessionCreate()
         std::cerr << "failed to create session: " << sp_error_message(error);
         assert(0);
     }
-/*
-    sp_playlistcontainer_add_callbacks(
-        sp_session_playlistcontainer(spotifySession_),
-        itsCallbackWrapper_.getRegisteredPlaylistContainerCallbacks(),
-        NULL);*/
 }
 
 } /* namespace LibSpotify */

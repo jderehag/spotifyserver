@@ -41,8 +41,9 @@ public:
 	LibSpotifyIfCallbackWrapper(class LibSpotifyIf& libSpotifyIf);
 	~LibSpotifyIfCallbackWrapper();
 
-	sp_session_callbacks* getRegisteredSessionCallbacks();
-	sp_playlistcontainer_callbacks* getRegisteredPlaylistContainerCallbacks();
+    sp_session_callbacks* getRegisteredSessionCallbacks();
+    sp_playlistcontainer_callbacks* getRegisteredPlaylistContainerCallbacks();
+    sp_playlist_callbacks* getRegisteredPlaylistCallbacks();
 
 	/* Session Callbacks */
 	static void SP_CALLCONV loggedInCb(sp_session *session, sp_error error);
@@ -57,12 +58,26 @@ public:
 	static void SP_CALLCONV endOfTrackCb(sp_session *session);
 
 	/* Playlist callbacks */
-	void SP_CALLCONV playlistAdded(sp_playlistcontainer *pc, sp_playlist *playlist, int position, void *userdata);
-	void SP_CALLCONV playlistRemoved(sp_playlistcontainer *pc, sp_playlist *playlist, int position, void *userdata);
-	void SP_CALLCONV playlistMoved(sp_playlistcontainer *pc, sp_playlist *playlist, int position, int new_position, void *userdata);
-	void SP_CALLCONV playlistContainerLoaded(sp_playlistcontainer *pc, void *userdata);
+	static void SP_CALLCONV playlistAdded(sp_playlistcontainer *pc, sp_playlist *playlist, int position, void *userdata);
+	static void SP_CALLCONV playlistRemoved(sp_playlistcontainer *pc, sp_playlist *playlist, int position, void *userdata);
+	static void SP_CALLCONV playlistMoved(sp_playlistcontainer *pc, sp_playlist *playlist, int position, int new_position, void *userdata);
+	static void SP_CALLCONV playlistContainerLoaded(sp_playlistcontainer *pc, void *userdata);
 
-	/* search callbacks */
+    static void SP_CALLCONV tracksAdded(sp_playlist *pl, sp_track *const *tracks, int num_tracks, int position, void *userdata);
+    static void SP_CALLCONV tracksRemoved(sp_playlist *pl, const int *tracks, int num_tracks, void *userdata);
+    static void SP_CALLCONV tracksMoved(sp_playlist *pl, const int *tracks, int num_tracks, int new_position, void *userdata);
+    static void SP_CALLCONV playlistRenamed(sp_playlist *pl, void *userdata);
+    static void SP_CALLCONV playlistStateChanged(sp_playlist *pl, void *userdata);
+    static void SP_CALLCONV playlistUpdateInProgress(sp_playlist *pl, bool done, void *userdata);
+    static void SP_CALLCONV playlistMetadataUpdated(sp_playlist *pl, void *userdata);
+    static void SP_CALLCONV trackCreatedChanged(sp_playlist *pl, int position, sp_user *user, int when, void *userdata);
+    static void SP_CALLCONV trackSeenChanged(sp_playlist *pl, int position, bool seen, void *userdata);
+    static void SP_CALLCONV descriptionChanged(sp_playlist *pl, const char *desc, void *userdata);
+    static void SP_CALLCONV imageChanged(sp_playlist *pl, const byte *image, void *userdata);
+    static void SP_CALLCONV trackMessageChanged(sp_playlist *pl, int position, const char *message, void *userdata);
+    static void SP_CALLCONV subscribersChanged(sp_playlist *pl, void *userdata);
+
+    /* search callbacks */
 	static void SP_CALLCONV genericSearchCallback(sp_search *search, void *userdata);
 	static void SP_CALLCONV imageLoadedCallback(sp_image *search, void *userdata);
 	static void SP_CALLCONV albumLoadedCallback(sp_albumbrowse *result, void *userdata);

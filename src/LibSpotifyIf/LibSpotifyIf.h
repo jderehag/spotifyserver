@@ -207,7 +207,7 @@ private:
 	 * libspotify interactions
 	 **************************/
 	void libSpotifySessionCreate();
-	void updateRootFolder(sp_playlistcontainer* plContainer);
+    void refreshRootFolder();
 
    	/************************
      * Metadata handling
@@ -239,6 +239,12 @@ private:
 	/* Util callbacks */
 	void logMessageCb(sp_session *session, const char *data);
 
+    /* Playlist callbacks */
+    void rootFolderLoaded();
+    void playlistAdded( sp_playlist* pl );
+    void playlistRemoved( sp_playlist* pl );
+    void playlistRenamed( sp_playlist* pl );
+    void playlistsMoved();
 
     void doStatusNtf();
     void sendGetImageRsp( sp_image* img, QueryReqEventItem* reqEvent );

@@ -344,8 +344,6 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
     switch(event->event_)
     {
         case EVENT_METADATA_UPDATED:
-            updateRootFolder(sp_session_playlistcontainer(spotifySession_));
-
             while(!pendingMetadata.empty())
             {
                 EventItem* item = pendingMetadata.front();
@@ -769,8 +767,13 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
 
         case EVENT_LOGGED_IN:
             state_ = STATE_LOGGED_IN;
+
+            sp_playlistcontainer_add_callbacks(
+                sp_session_playlistcontainer(spotifySession_),
+                itsCallbackWrapper_.getRegisteredPlaylistContainerCallbacks(),
+                NULL);
+
             sp_session_preferred_bitrate( spotifySession_, SP_BITRATE_320k );
-            updateRootFolder(sp_session_playlistcontainer(spotifySession_));
 
             connectionState( true );
 
@@ -808,63 +811,118 @@ void LibSpotifyIf::postToEventThread(EventItem* event)
 	cond_.signal();
 }
 
-void LibSpotifyIf::updateRootFolder(sp_playlistcontainer* plContainer)
+
+void LibSpotifyIf::rootFolderLoaded()
 {
-	int numberOfPlaylists = sp_playlistcontainer_num_playlists(plContainer);
-	if(numberOfPlaylists < 0)return;
+    /* first time only */
+    static bool isLoaded = false;
+    if ( isLoaded )
+        return;
+    isLoaded = true;
 
-	/* create the root folder */
-	Folder tmpRootFolder("root", 0, 0);
+        sp_playlistcontainer* plContainer = sp_session_playlistcontainer(spotifySession_);
+    int numberOfPlaylists = sp_playlistcontainer_num_playlists(plContainer);
+    if(numberOfPlaylists < 0)return;
 
-	Folder* currentFolder = &tmpRootFolder;
+    /* register callbacks for all known playlists */
+    for (int playlistIndex = 0; playlistIndex < numberOfPlaylists; ++playlistIndex)
+    {
+        switch (sp_playlistcontainer_playlist_type(plContainer, playlistIndex))
+        {
+            case SP_PLAYLIST_TYPE_PLAYLIST:
+            {
+                sp_playlist* pl = sp_playlistcontainer_playlist(plContainer, playlistIndex);
+                sp_playlist_add_callbacks( pl, itsCallbackWrapper_.getRegisteredPlaylistCallbacks(), NULL );
+            }
+        }
+    }
 
-	for (int playlistIndex = 0; playlistIndex < numberOfPlaylists; ++playlistIndex)
-	{
-		switch (sp_playlistcontainer_playlist_type(plContainer, playlistIndex))
-		{
-			case SP_PLAYLIST_TYPE_PLAYLIST:
-			{
-
-				sp_playlist* pl = sp_playlistcontainer_playlist(plContainer, playlistIndex);
-				Playlist playlist(spotifyGetPlaylist(pl, spotifySession_));
-				currentFolder->addPlaylist(playlist);
-				break;
-			}
-			case SP_PLAYLIST_TYPE_START_FOLDER:
-			{
-				char folderName[200];
-				sp_playlistcontainer_playlist_folder_name(plContainer, playlistIndex, folderName, sizeof(folderName));
-				unsigned long long id = sp_playlistcontainer_playlist_folder_id(plContainer, playlistIndex);
-				Folder folder(folderName, id, currentFolder);
-				currentFolder->addFolder(folder);
-				currentFolder = &currentFolder->getFolders().back();
-				break;
-			}
-			case SP_PLAYLIST_TYPE_END_FOLDER:
-			{
-				if(currentFolder != 0)
-					currentFolder = currentFolder->getParentFolder();
-				break;
-			}
-			case SP_PLAYLIST_TYPE_PLACEHOLDER:
-				break;
-		}
-	}
-
-	if(rootFolder_ != tmpRootFolder)
-	{
-	    log(LOG_DEBUG) << "Root folder updated!";
-		rootFolder_ = tmpRootFolder;
-		callbackSubscriberMtx_.lock();
-		/* Tell all subscribers that the rootFolder has been updated */
-		for(std::set<IMediaInterfaceCallbackSubscriber*>::iterator it = callbackSubscriberList_.begin();
-			it != callbackSubscriberList_.end(); it++)
-		{
-			(*it)->rootFolderUpdatedInd();
-		}
-		callbackSubscriberMtx_.unlock();
-	}
+    refreshRootFolder();
 }
+
+void LibSpotifyIf::playlistAdded( sp_playlist* pl )
+{
+    log( LOG_DEBUG ) << sp_playlist_name( pl );
+    sp_playlist_add_callbacks( pl, itsCallbackWrapper_.getRegisteredPlaylistCallbacks(), NULL );
+    // no need to refresh yet, playlist contains no information. refresh will be triggered by rename callback
+}
+void LibSpotifyIf::playlistRemoved( sp_playlist* pl )
+{
+    log( LOG_DEBUG ) << sp_playlist_name( pl );
+    sp_playlist_remove_callbacks( pl, itsCallbackWrapper_.getRegisteredPlaylistCallbacks(), NULL );
+    refreshRootFolder();
+}
+void LibSpotifyIf::playlistRenamed( sp_playlist* pl )
+{
+    log( LOG_DEBUG ) << sp_playlist_name( pl );
+    refreshRootFolder();
+}
+void LibSpotifyIf::playlistsMoved()
+{
+    log( LOG_DEBUG );
+    refreshRootFolder();
+}
+
+void LibSpotifyIf::refreshRootFolder()
+{
+    sp_playlistcontainer* plContainer = sp_session_playlistcontainer(spotifySession_);
+    int numberOfPlaylists = sp_playlistcontainer_num_playlists(plContainer);
+    if(numberOfPlaylists < 0)return;
+
+    /* create the root folder */
+    Folder tmpRootFolder("root", 0, 0);
+
+    Folder* currentFolder = &tmpRootFolder;
+
+    for (int playlistIndex = 0; playlistIndex < numberOfPlaylists; ++playlistIndex)
+    {
+        switch (sp_playlistcontainer_playlist_type(plContainer, playlistIndex))
+        {
+            case SP_PLAYLIST_TYPE_PLAYLIST:
+            {
+                sp_playlist* pl = sp_playlistcontainer_playlist(plContainer, playlistIndex);
+                Playlist playlist(spotifyGetPlaylist(pl, spotifySession_));
+                currentFolder->addPlaylist(playlist);
+                break;
+            }
+            case SP_PLAYLIST_TYPE_START_FOLDER:
+            {
+                char folderName[200];
+                sp_playlistcontainer_playlist_folder_name(plContainer, playlistIndex, folderName, sizeof(folderName));
+                unsigned long long id = sp_playlistcontainer_playlist_folder_id(plContainer, playlistIndex);
+                Folder folder(folderName, id, currentFolder);
+                currentFolder->addFolder(folder);
+                currentFolder = &currentFolder->getFolders().back();
+                break;
+            }
+            case SP_PLAYLIST_TYPE_END_FOLDER:
+            {
+                if(currentFolder != 0)
+                    currentFolder = currentFolder->getParentFolder();
+                break;
+            }
+            case SP_PLAYLIST_TYPE_PLACEHOLDER:
+                break;
+        }
+    }
+
+    if(rootFolder_ != tmpRootFolder)
+    {
+        log(LOG_DEBUG) << "Root folder updated!";
+        rootFolder_ = tmpRootFolder;
+        callbackSubscriberMtx_.lock();
+        /* Tell all subscribers that the rootFolder has been updated */
+        for(std::set<IMediaInterfaceCallbackSubscriber*>::iterator it = callbackSubscriberList_.begin();
+            it != callbackSubscriberList_.end(); it++)
+        {
+            (*it)->rootFolderUpdatedInd();
+        }
+        callbackSubscriberMtx_.unlock();
+    }
+
+    }
+
+
 
 void LibSpotifyIf::sendGetImageRsp( sp_image* img, QueryReqEventItem* reqEvent )
 {

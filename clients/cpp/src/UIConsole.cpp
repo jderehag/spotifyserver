@@ -271,6 +271,8 @@ void UIConsole::run()
 
 void UIConsole::rootFolderUpdatedInd()
 {}
+void UIConsole::playlistUpdatedInd( const std::string& link )
+{}
 void UIConsole::connectionState( bool up )
 {}
 void UIConsole::getPlaylistsResponse( const Folder& rootfolder, void* userData )

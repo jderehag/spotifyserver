@@ -45,6 +45,7 @@ class IMediaInterfaceCallbackSubscriber
 public:
     virtual void connectionState( bool up ) = 0;
     virtual void rootFolderUpdatedInd() = 0;
+    virtual void playlistUpdatedInd( const std::string& link ) = 0;
     virtual void statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume, const Track& currentTrack, unsigned int progress ) = 0;
     virtual void statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume ) = 0;
 
