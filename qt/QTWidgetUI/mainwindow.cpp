@@ -75,14 +75,32 @@ void MainWindow::on_playlistsTree_itemClicked(QTreeWidgetItem *item, int column)
     const std::string& link = pitem->getLink();
     if ( !link.empty() )
         m_.getTracks( link, this, NULL );
+
+    ui->stackedWidget->setCurrentWidget( ui->playlistPage );
 }
 
+
+void MainWindow::on_playlistsTree_itemDoubleClicked(QTreeWidgetItem *item, int column)
+{
+    PlaylistsModelItem* pitem = (PlaylistsModelItem*)item;
+    const std::string& link = pitem->getLink();
+    if ( !link.empty() )
+        m_.play( link, this, NULL );
+
+    ui->stackedWidget->setCurrentWidget( ui->playlistPage );
+}
 
 void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
 {
     PlaylistsModelItem* item = (PlaylistsModelItem*)ui->playlistsTree->currentItem();
     Track* t = static_cast<Track*>(index.internalPointer());
     m_.play( item->getLink(), t->getIndex(), this, NULL );
+}
+
+void MainWindow::on_actionShowEndpoints_triggered()
+{
+    ui->stackedWidget->setCurrentWidget( ui->page );
+    epMgr_.getAudioEndpoints( this, NULL );
 }
 
 void MainWindow::updateGui()
@@ -230,6 +248,7 @@ void MainWindow::getAudioEndpointsResponse( const AudioEndpointInfoList& endpoin
 void MainWindow::audioEndpointsUpdatedNtf()
 {
 }
+
 
 
 

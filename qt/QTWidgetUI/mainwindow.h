@@ -62,6 +62,10 @@ private slots:
 
     void on_playlistsTree_itemClicked(QTreeWidgetItem *item, int column);
 
+    void on_playlistsTree_itemDoubleClicked(QTreeWidgetItem *item, int column);
+
+    void on_actionShowEndpoints_triggered();
+
 private:
     Ui::MainWindow *ui;
 
