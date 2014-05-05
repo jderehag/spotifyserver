@@ -41,11 +41,12 @@ int main(int argc, char *argv[])
 
     ClientHandler clienthandler( ch.getNetworkConfig(), libspotifyif, epMgr );
 
-    MainWindow w( QStringLiteral("Server"), libspotifyif, epMgr );
-    w.show();
+    {
+        MainWindow w( QStringLiteral("Server"), libspotifyif, epMgr );
+        w.show();
 
-    ret = a.exec();
-
+        ret = a.exec();
+    }
 
     libspotifyif.logOut();
     sleep_ms( 2000 ); // todo wait for spotify to log out

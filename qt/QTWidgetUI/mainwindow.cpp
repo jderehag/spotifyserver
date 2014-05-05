@@ -1,7 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "Logger/applog.h"
-
+#include <QCheckBox>
 
 class PlaylistsModelItem : public QTreeWidgetItem
 {
@@ -27,6 +27,8 @@ MainWindow::MainWindow( QString& title, MediaInterface& m, EndpointCtrlInterface
     tracksModel.setHeaderData( 0, Qt::Horizontal, QVariant(QString("Name")));
     ui->tableView->setModel( &tracksModel );
 
+    ui->endpointsScrollAreaLayout->setAlignment( Qt::AlignTop );
+
     ui->tableView->verticalHeader()->hide();
     ui->label->setScaledContents( true );
 
@@ -42,11 +44,14 @@ MainWindow::MainWindow( QString& title, MediaInterface& m, EndpointCtrlInterface
     connect(&progressTimer, SIGNAL(timeout()), this, SLOT(progressUpdate()));
 
     m_.registerForCallbacks( *this );
+    epMgr_.registerForCallbacks( *this );
 
 }
 
 MainWindow::~MainWindow()
 {
+    m_.unRegisterForCallbacks( *this );
+    epMgr_.unRegisterForCallbacks( *this );
     delete ui;
 }
 
@@ -99,8 +104,17 @@ void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
 
 void MainWindow::on_actionShowEndpoints_triggered()
 {
-    ui->stackedWidget->setCurrentWidget( ui->page );
+    ui->stackedWidget->setCurrentWidget( ui->endpointsPage );
     epMgr_.getAudioEndpoints( this, NULL );
+}
+
+void MainWindow::endpointCheckbox_stateChanged( int state )
+{
+    QCheckBox* cb = (QCheckBox*) QObject::sender();
+    if ( state != 0 )
+        epMgr_.addAudioEndpoint( cb->text().toStdString(), this, NULL );
+    else
+        epMgr_.removeAudioEndpoint( cb->text().toStdString(), this, NULL );
 }
 
 void MainWindow::updateGui()
@@ -116,6 +130,27 @@ void MainWindow::updateGui()
         ui->playButton->setToolTip(tr("Play"));
         ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
         progressTimer.stop();
+    }
+}
+
+void MainWindow::updateEndpointsGui()
+{
+
+    QLayoutItem *child;
+    while ((child = ui->endpointsScrollAreaLayout->takeAt(0)) != 0)
+    {
+        delete child->widget();
+        delete child;
+    }
+
+    AudioEndpointInfoList::const_iterator it = endpoints_.begin();
+    for ( ; it != endpoints_.end(); it++ )
+    {
+        QCheckBox* ep = new QCheckBox();
+        ep->setText( QString::fromStdString( (*it).id ) );
+        ep->setChecked( (*it).active );
+        connect( ep, SIGNAL(stateChanged(int)), this, SLOT(endpointCheckbox_stateChanged(int)));
+        ui->endpointsScrollAreaLayout->addWidget( ep );
     }
 }
 
@@ -243,10 +278,16 @@ void MainWindow::getEndpointsResponse( const EndpointInfoList& endpoints, void* 
 
 void MainWindow::getAudioEndpointsResponse( const AudioEndpointInfoList& endpoints, void* userData )
 {
+    endpoints_ = endpoints;
+    QMetaObject::invokeMethod( this, "updateEndpointsGui", Qt::QueuedConnection );
 }
 
 void MainWindow::audioEndpointsUpdatedNtf()
 {
+    if ( ui->stackedWidget->currentWidget() == ui->endpointsPage )
+    {
+        epMgr_.getAudioEndpoints( this, NULL );
+    }
 }
 
 

@@ -49,7 +49,9 @@ public:
 
 public slots:
     void updateGui();
+    void updateEndpointsGui();
     void progressUpdate();
+    void endpointCheckbox_stateChanged( int state );
 
 private slots:
     void on_tableView_doubleClicked(const QModelIndex &index);
@@ -72,6 +74,7 @@ private:
     MediaInterface& m_;
     EndpointCtrlInterface& epMgr_;
     TrackListModel tracksModel;
+    AudioEndpointInfoList endpoints_;
 
     unsigned int progress_;
     QTimer progressTimer;

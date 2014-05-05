@@ -62,10 +62,6 @@ public:
 };
 
 
-namespace Platform {
-    class AudioEndpoint;
-}
-
 class MediaInterface
 {
 private:
