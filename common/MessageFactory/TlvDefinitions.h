@@ -71,6 +71,7 @@ typedef enum
     REQ( PLAY,             0x302 )
     REQ( PLAY_CONTROL,     0x303 )
     REQ( SET_VOLUME,       0x304 )
+    REQ( ENQUEUE,          0x305 )
 
     /* Status */
     REQ( GET_STATUS,       0x401 )

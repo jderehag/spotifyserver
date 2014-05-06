@@ -71,11 +71,14 @@ private:
     TrackQueue::iterator playQueueIter_;
     TrackQueue playQueue_;
 
+    bool isPlayingQueuedTrack;
+
     bool isShuffle;
     bool isRepeat;
 
     std::default_random_engine shuffleGenerator;
 
+    void doPlayTrack(TrackQueue::iterator t);
     void loadPlaylist(const Playlist& playlist, int startIndex);
     void shuffle();
 

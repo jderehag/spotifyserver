@@ -97,27 +97,27 @@ void LibSpotifyIf::getPlaylists( IMediaInterfaceCallbackSubscriber* subscriber, 
     subscriber->getPlaylistsResponse( rootFolder_, userData );
 }
 
-void LibSpotifyIf::getTracks( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
+void LibSpotifyIf::getTracks( const std::string& link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
     postToEventThread( new QueryReqEventItem( EVENT_GET_TRACKS, subscriber, userData, link ) );
 }
 
-void LibSpotifyIf::search( std::string query, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
+void LibSpotifyIf::search( const std::string& query, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
     postToEventThread( new QueryReqEventItem( EVENT_GENERIC_SEARCH, subscriber, userData, query ) );
 }
 
-void LibSpotifyIf::getImage( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
+void LibSpotifyIf::getImage( const std::string& link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
     postToEventThread( new QueryReqEventItem( EVENT_GET_IMAGE, subscriber, userData, link ) );
 }
 
-void LibSpotifyIf::getAlbum( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
+void LibSpotifyIf::getAlbum( const std::string& link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
     postToEventThread( new QueryReqEventItem( EVENT_GET_ALBUM, subscriber, userData, link ) );
 }
 
-void LibSpotifyIf::getArtist( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
+void LibSpotifyIf::getArtist( const std::string& link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
     postToEventThread( new QueryReqEventItem( EVENT_GET_ARTIST, subscriber, userData, link ) );
 }
@@ -209,11 +209,11 @@ void LibSpotifyIf::playTrack(const Track& track)
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
-void LibSpotifyIf::play( std::string link, int startIndex, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
+void LibSpotifyIf::play( const std::string& link, int startIndex, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
     postToEventThread( new PlayReqEventItem(subscriber, userData, link, startIndex) );
 }
-void LibSpotifyIf::play( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
+void LibSpotifyIf::play( const std::string& link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
     play( link, -1, subscriber, userData );
 }
@@ -223,9 +223,9 @@ void LibSpotifyIf::stop()
     postToEventThread( new EventItem( EVENT_STOP_REQ ) );
 }
 
-void LibSpotifyIf::enqueueTrack(const char* track_uri)
+void LibSpotifyIf::enqueue( const std::string& link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
-    //todo: we need a callback subscriber here, right?
+    postToEventThread( new QueryReqEventItem( EVENT_ENQUEUE_REQ, subscriber, userData, link ) );
 }
 
 void LibSpotifyIf::pause()
@@ -474,7 +474,7 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
         {
             QueryReqEventItem* reqEvent = static_cast<QueryReqEventItem*>( event );
 
-            std::string linkStr = reqEvent->query_.empty() ? currentTrack_.getAlbumLink() : reqEvent->query_;
+            const std::string& linkStr = reqEvent->query_.empty() ? currentTrack_.getAlbumLink() : reqEvent->query_;
 
             if (!linkStr.empty())
             {
@@ -600,6 +600,28 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
             break;
         }
 
+        case EVENT_ENQUEUE_REQ:
+            if (state_ == STATE_LOGGED_IN)
+            {
+                QueryReqEventItem* reqEvent = static_cast<QueryReqEventItem*>( event );
+                sp_link* link = sp_link_create_from_string(reqEvent->query_.c_str());
+                if ( link )
+                {
+                    switch(sp_link_type(link))
+                    {
+                        case SP_LINKTYPE_TRACK:
+                        case SP_LINKTYPE_LOCALTRACK:
+                        {
+                            sp_track* track = sp_link_as_track(link);
+                            Track trackObj(spotifyGetTrack(track, spotifySession_));
+                            playbackHandler_.enqueueTrack(trackObj);
+                        }
+                        break;
+                    }
+                }
+            }
+            break;
+
         case EVENT_STOP_REQ:
             if (trackState_ != TRACK_STATE_NOT_LOADED)
             {
@@ -648,50 +670,46 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
 
         case EVENT_NEXT_TRACK:
             {
-                if ( trackState_ != TRACK_STATE_NOT_LOADED )
                 {
                     log(LOG_DEBUG) << "Next track, progress of current: " << progress_;
-                    trackState_ = TRACK_STATE_NOT_LOADED; /*todo, this should happen when buffer is finished*/
                     progress_ = 0;
 
                     /* unload track, otherwise end of track callback will just be called repeatedly until a new track is loaded */
                     sp_session_player_unload(spotifySession_);
 
                     /* Tell all subscribers that the track has ended */
-                    doStatusNtf();
+                    if ( trackState_ != TRACK_STATE_NOT_LOADED )
+                    {
+                        trackState_ = TRACK_STATE_NOT_LOADED; /*todo, this should happen when buffer is finished*/
+                        doStatusNtf();
+                    }
 
                     /* notify playbackhandler so it can load a new track */
                     playbackHandler_.playNext();
                 }
-                else
-                {
-                    log(LOG_NOTICE) << "Next track called, but no track is playing!";
-                } 
             }
             break;
 
         case EVENT_PREVIOUS_TRACK:
             {
-                if ( trackState_ != TRACK_STATE_NOT_LOADED )
                 {
                     unsigned int progress = progress_/10;
                     log(LOG_DEBUG) << "Previous track, progress of current: " << progress_;
-                    trackState_ = TRACK_STATE_NOT_LOADED; /*todo, this should happen when buffer is finished*/
                     progress_ = 0;
 
-                    /* unload track, otherwise end of track callback will just be called repeatedly until a new track is loaded */
+                    /* unload track */
                     sp_session_player_unload(spotifySession_);
 
-                    /* Tell all subscribers that the track has ended */
-                    doStatusNtf();
+                    if ( trackState_ != TRACK_STATE_NOT_LOADED )
+                    {
+                        /* Tell all subscribers that the track has ended */
+                        trackState_ = TRACK_STATE_NOT_LOADED;
+                        doStatusNtf();
+                    }
 
                     /* notify playbackhandler so it can load a new track */
                     playbackHandler_.playPrevious( progress );
                 }
-                else
-                {
-                    log(LOG_NOTICE) << "Next track called, but no track is playing!";
-                } 
             }
             break;
 
@@ -1194,8 +1212,8 @@ const char* getEventName(LibSpotifyIf::EventItem* event)
             return "EVENT_PLAY_REQ";
         case LibSpotifyIf::EVENT_STOP_REQ:
             return "EVENT_STOP_REQ";
-        case LibSpotifyIf::EVENT_ENQUEUE_TRACK_REQ:
-            return "EVENT_ENQUEUE_TRACK_REQ";
+        case LibSpotifyIf::EVENT_ENQUEUE_REQ:
+            return "EVENT_ENQUEUE_REQ";
         case LibSpotifyIf::EVENT_PAUSE_PLAYBACK:
             return "EVENT_PAUSE_PLAYBACK";
         case LibSpotifyIf::EVENT_RESUME_PLAYBACK:

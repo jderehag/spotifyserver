@@ -91,6 +91,7 @@ private:
     void handlePlayTrackReq(const Message* msg);
     void handlePlayControlReq(const Message* msg);
     void handleSetVolumeReq(const Message* msg);
+    void handleEnqueueReq(const Message* msg);
     void handleGetImageReq(const Message* msg);
     void handleGenericSearchReq(const Message* msg);
     void handleGetAlbumReq(const Message* msg);

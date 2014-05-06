@@ -51,7 +51,7 @@ public:
     virtual void connectionState( bool up );
 
     /*Implements MediaInterface*/
-    virtual void getImage( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
+    virtual void getImage( const std::string& link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
     virtual void previous();
     virtual void next();
     virtual void resume();
@@ -62,12 +62,13 @@ public:
     virtual void setVolume( uint8_t volume );
     virtual void getStatus( IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
     virtual void getPlaylists( IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
-    virtual void getTracks( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
-    virtual void play( std::string link, int startIndex, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
-    virtual void play( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
-    virtual void getAlbum( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
-    virtual void getArtist( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
-    virtual void search( std::string query, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
+    virtual void getTracks( const std::string& link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
+    virtual void play( const std::string& link, int startIndex, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
+    virtual void play( const std::string& link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
+    virtual void enqueue( const std::string& link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
+    virtual void getAlbum( const std::string& link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
+    virtual void getArtist( const std::string& link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
+    virtual void search( const std::string& query, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
     virtual void getCurrentAudioEndpoints( IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
 
 

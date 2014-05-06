@@ -274,7 +274,7 @@ void RemoteMediaInterface::receivedResponse( const Message* rsp, const Message* 
 }
 
 
-void RemoteMediaInterface::getImage( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
+void RemoteMediaInterface::getImage( const std::string& link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
     Message* msg = new Message( GET_IMAGE_REQ );
     msg->addTlv(TLV_LINK, link);
@@ -350,7 +350,7 @@ void RemoteMediaInterface::getPlaylists( IMediaInterfaceCallbackSubscriber* subs
     messenger_.queueRequest( msg, this, new PendingMediaRequestData(subscriber, userData) );
 }
 
-void RemoteMediaInterface::getTracks( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
+void RemoteMediaInterface::getTracks( const std::string& link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
     Message* msg = new Message(GET_TRACKS_REQ);
     TlvContainer* p = new TlvContainer(TLV_PLAYLIST);
@@ -359,7 +359,7 @@ void RemoteMediaInterface::getTracks( std::string link, IMediaInterfaceCallbackS
     messenger_.queueRequest( msg, this, new PendingMediaRequestData(subscriber, userData) );
 }
 
-void RemoteMediaInterface::play( std::string link, int startIndex, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
+void RemoteMediaInterface::play( const std::string& link, int startIndex, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
     Message* msg = new Message( PLAY_REQ );
     msg->addTlv(TLV_LINK, link);
@@ -367,28 +367,35 @@ void RemoteMediaInterface::play( std::string link, int startIndex, IMediaInterfa
     messenger_.queueRequest( msg, this, new PendingMediaRequestData(subscriber, userData) );
 }
 
-void RemoteMediaInterface::play( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
+void RemoteMediaInterface::play( const std::string& link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
     Message* msg = new Message( PLAY_REQ );
     msg->addTlv(TLV_LINK, link);
     messenger_.queueRequest( msg, this, new PendingMediaRequestData(subscriber, userData) );
 }
 
-void RemoteMediaInterface::getAlbum( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
+void RemoteMediaInterface::enqueue( const std::string& link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
+{
+    Message* msg = new Message( ENQUEUE_REQ );
+    msg->addTlv(TLV_LINK, link);
+    messenger_.queueRequest( msg, this, new PendingMediaRequestData(subscriber, userData) );
+}
+
+void RemoteMediaInterface::getAlbum( const std::string& link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
     Message* msg = new Message( GET_ALBUM_REQ);
     msg->addTlv(TLV_LINK, link);
     messenger_.queueRequest( msg, this, new PendingMediaRequestData(subscriber, userData) );
 }
 
-void RemoteMediaInterface::getArtist( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
+void RemoteMediaInterface::getArtist( const std::string& link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
     Message* msg = new Message( GET_ARTIST_REQ);
     msg->addTlv(TLV_LINK, link);
     messenger_.queueRequest( msg, this, new PendingMediaRequestData(subscriber, userData) );
 }
 
-void RemoteMediaInterface::search( std::string query, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
+void RemoteMediaInterface::search( const std::string& query, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
     Message* msg = new Message( GENERIC_SEARCH_REQ );
     msg->addTlv( TLV_SEARCH_QUERY, query );

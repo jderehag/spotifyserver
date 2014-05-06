@@ -154,6 +154,20 @@ void UIConsole::run()
             continue;
         }
 
+        if ( argv[0] == "play")
+        {
+            if ( argc == 2 )
+                m_.play( argv[1], this, NULL );
+            continue;
+        }
+
+        if ( argv[0] == "enqueue")
+        {
+            if ( argc == 2 )
+                m_.enqueue( argv[1], this, NULL );
+            continue;
+        }
+
         //handle the old commands the old way for now..
         c = argv[0][0];
         switch(c)

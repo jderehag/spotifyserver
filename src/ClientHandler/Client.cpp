@@ -90,6 +90,7 @@ void Client::processMessage(const Message* msg)
         case PLAY_TRACK_REQ:     handlePlayTrackReq(msg);     break;
         case PLAY_CONTROL_REQ:   handlePlayControlReq(msg);   break;
         case SET_VOLUME_REQ:     handleSetVolumeReq(msg);     break;
+        case ENQUEUE_REQ:        handleEnqueueReq(msg);       break;
         case GENERIC_SEARCH_REQ: handleGenericSearchReq(msg); break;
         case GET_STATUS_REQ:     handleGetStatusReq(msg);     break;
         case GET_IMAGE_REQ:      handleGetImageReq(msg);      break;
@@ -384,6 +385,19 @@ void Client::handlePlayTrackReq(const Message* msg)
     const StringTlv* url = (const StringTlv*) track->getTlv(TLV_LINK);
     log(LOG_DEBUG) << "spotify_.play(" << url->getString() << ")";
     spotify_.play( url->getString(), this, NULL );
+
+    Message* rsp = msg->createResponse();
+    queueMessage( rsp );
+}
+
+void Client::handleEnqueueReq(const Message* msg)
+{
+    const StringTlv* link = (const StringTlv*)msg->getTlvRoot()->getTlv(TLV_LINK);
+
+    if ( link )
+    {
+        spotify_.enqueue( link->getString(), this, NULL );
+    }
 
     Message* rsp = msg->createResponse();
     queueMessage( rsp );

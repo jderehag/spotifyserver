@@ -77,7 +77,7 @@ public:
         /* Playback Handling */
         EVENT_PLAY_REQ,
         EVENT_STOP_REQ,
-        EVENT_ENQUEUE_TRACK_REQ,
+        EVENT_ENQUEUE_REQ,
         EVENT_PLAY_TRACK,
         EVENT_PAUSE_PLAYBACK,
         EVENT_RESUME_PLAYBACK,
@@ -122,7 +122,7 @@ public:
     {
     public:
         std::string query_;
-        QueryReqEventItem(Event event, IMediaInterfaceCallbackSubscriber* callbackSubscriber, void* subscriberData, std::string query) : ReqEventItem(event, callbackSubscriber, subscriberData), query_(query) {}
+        QueryReqEventItem(Event event, IMediaInterfaceCallbackSubscriber* callbackSubscriber, void* subscriberData, const std::string& query) : ReqEventItem(event, callbackSubscriber, subscriberData), query_(query) {}
     };
 
     class ParamReqEventItem : public ReqEventItem, ParamEventItem
@@ -135,7 +135,7 @@ public:
     {
     public:
         int startIndex_;
-        PlayReqEventItem( IMediaInterfaceCallbackSubscriber* callbackSubscriber, void* subscriberData, std::string uri, int startIndex) : QueryReqEventItem(EVENT_PLAY_REQ, callbackSubscriber, subscriberData, uri), startIndex_(startIndex) {}
+        PlayReqEventItem( IMediaInterfaceCallbackSubscriber* callbackSubscriber, void* subscriberData, const std::string& uri, int startIndex) : QueryReqEventItem(EVENT_PLAY_REQ, callbackSubscriber, subscriberData, uri), startIndex_(startIndex) {}
     };
 
     enum LibSpotifyTrackStates
@@ -257,7 +257,7 @@ public:
 	void logOut();
 
     /* Implements MediaInterface */
-    virtual void getImage( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
+    virtual void getImage( const std::string& link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
     virtual void previous();
     virtual void next();
     virtual void resume();
@@ -268,17 +268,17 @@ public:
     virtual void setVolume( uint8_t volume );
     virtual void getStatus( IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
     virtual void getPlaylists( IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
-    virtual void getTracks( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
-    virtual void play( std::string link, int startIndex, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
-    virtual void play( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
-    virtual void getAlbum( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
-    virtual void getArtist( std::string link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
-    virtual void search( std::string query, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
+    virtual void getTracks( const std::string& link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
+    virtual void play( const std::string& link, int startIndex, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
+    virtual void play( const std::string& link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
+    virtual void enqueue( const std::string& link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
+    virtual void getAlbum( const std::string& link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
+    virtual void getArtist( const std::string& link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
+    virtual void search( const std::string& query, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
 
     virtual void getCurrentAudioEndpoints( IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
 
     void playSearchResult(const char* searchString);
-    void enqueueTrack(const char* track_uri);
     void stop();
 
 

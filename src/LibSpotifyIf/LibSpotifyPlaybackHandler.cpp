@@ -30,6 +30,7 @@
 #include <algorithm>
 #include <ctime>
 #include <random>
+#include <cassert>
 #include "applog.h"
 
 namespace LibSpotify
@@ -37,6 +38,7 @@ namespace LibSpotify
 
 LibSpotifyPlaybackHandler::LibSpotifyPlaybackHandler(LibSpotifyIf& libspotify) : libSpotifyIf_(libspotify),
                                                                                  historyQueue_(HISTORY_QUEUE_DEPTH),
+                                                                                 isPlayingQueuedTrack(false),
                                                                                  isShuffle(false),
                                                                                  isRepeat(false),
                                                                                  shuffleGenerator((unsigned int)time(0))
@@ -46,10 +48,15 @@ LibSpotifyPlaybackHandler::LibSpotifyPlaybackHandler(LibSpotifyIf& libspotify) :
 
 LibSpotifyPlaybackHandler::~LibSpotifyPlaybackHandler() { }
 
+void LibSpotifyPlaybackHandler::doPlayTrack( TrackQueue::iterator t )
+{
+    libSpotifyIf_.playTrack(*t);
+}
 
 void LibSpotifyPlaybackHandler::playTrack(const Track& track)
 {
     mtx_.lock();
+    enquedQueue_.clear();
     playQueue_.clear();
     currentlyPlayingFromName_ = track.getName();
     currentlyPlayingFromUri_ = track.getLink();
@@ -57,15 +64,17 @@ void LibSpotifyPlaybackHandler::playTrack(const Track& track)
     playQueue_.push_back(track);
     playQueueIter_ = playQueue_.begin();
     if( playQueueIter_ != playQueue_.end() )
-        libSpotifyIf_.playTrack(*playQueueIter_);
+        doPlayTrack(playQueueIter_);
     else
         libSpotifyIf_.stop();
+    isPlayingQueuedTrack = false;
     mtx_.unlock();
 }
 
 void LibSpotifyPlaybackHandler::playFolder(const Folder& folder)
 {
     mtx_.lock();
+    enquedQueue_.clear();
     playQueue_.clear();
     currentlyPlayingFromName_ = folder.getName();
     currentlyPlayingFromUri_ = ""; //Unknown so far as how to get the folder link..
@@ -73,9 +82,10 @@ void LibSpotifyPlaybackHandler::playFolder(const Folder& folder)
     folder.getAllTracks(playQueue_);
     playQueueIter_ = playQueue_.begin();
     if( playQueueIter_ != playQueue_.end() )
-        libSpotifyIf_.playTrack(*playQueueIter_);
+        doPlayTrack(playQueueIter_);
     else
         libSpotifyIf_.stop();
+    isPlayingQueuedTrack = false;
     mtx_.unlock();
 }
 
@@ -85,9 +95,10 @@ void LibSpotifyPlaybackHandler::playPlaylist( const Playlist& playlist, int star
     currentlyPlayingFromType_ = PLAYLIST;
     loadPlaylist( playlist, startIndex );
     if( playQueueIter_ != playQueue_.end() )
-        libSpotifyIf_.playTrack(*playQueueIter_);
+        doPlayTrack(playQueueIter_);
     else
         libSpotifyIf_.stop();
+    isPlayingQueuedTrack = false;
     mtx_.unlock();
 
 }
@@ -98,14 +109,16 @@ void LibSpotifyPlaybackHandler::playAlbum( const Album& album, int startIndex )
     currentlyPlayingFromType_ = ALBUM;
     loadPlaylist( album, startIndex );
     if( playQueueIter_ != playQueue_.end() )
-        libSpotifyIf_.playTrack(*playQueueIter_);
+        doPlayTrack(playQueueIter_);
     else
         libSpotifyIf_.stop();
+    isPlayingQueuedTrack = false;
     mtx_.unlock();
 }
 
 void LibSpotifyPlaybackHandler::loadPlaylist( const Playlist& playlist, int startIndex )
 {
+    enquedQueue_.clear();
     playQueue_.clear();
     currentlyPlayingFromName_ = playlist.getName();
     currentlyPlayingFromUri_ = playlist.getLink();
@@ -143,7 +156,8 @@ void LibSpotifyPlaybackHandler::playSearchResult(const std::string& searchString
     currentlyPlayingFromType_ = SEARCH;
     playQueue_ = searchResult;
     playQueueIter_ = playQueue_.begin();
-    libSpotifyIf_.playTrack(playQueue_.front());
+    doPlayTrack(playQueueIter_);
+    isPlayingQueuedTrack = false;
     mtx_.unlock();
 }
 
@@ -157,32 +171,42 @@ void LibSpotifyPlaybackHandler::enqueueTrack(const Track& track)
 void LibSpotifyPlaybackHandler::playPrevious( unsigned int currentTrackProgress )
 {
     mtx_.lock();
-    if(enquedQueue_.empty())
+    if ( !isPlayingQueuedTrack )
     {
-        if ( ( playQueueIter_ == playQueue_.begin() && !isRepeat ) || // if first track without repeat or..
-             ( ((float)currentTrackProgress / (*playQueueIter_).getDurationMillisecs()) > 0.02 ) ) //..if we've played this track for a while
+        if ( !playQueue_.empty() )
         {
-            libSpotifyIf_.playTrack(*playQueueIter_); //..restart this track
+            if ( ( playQueueIter_ == playQueue_.begin() && !isRepeat ) || // it's the first track without repeat or..
+                 ( ((float)currentTrackProgress / (*playQueueIter_).getDurationMillisecs()) > 0.02 ) ) //.. we've played this track for a while
+            {
+                doPlayTrack(playQueueIter_); //..restart this track
+            }
+            else // else back one step
+            {
+                if ( playQueueIter_ == playQueue_.begin() ) //this can only happen if repeat is on
+                    playQueueIter_ = playQueue_.end();
+                playQueueIter_--;
+                doPlayTrack(playQueueIter_);
+            }
         }
-        else // else back one step
-        {
-            if ( playQueueIter_ == playQueue_.begin() ) //this can only happen if repeat is on
-                playQueueIter_ = playQueue_.end();
-            playQueueIter_--;
-            libSpotifyIf_.playTrack(*playQueueIter_);
-        }
-        
     }
     else
     {
-        if ( ((float)currentTrackProgress / (*playQueueIter_).getDurationMillisecs()) > 0.02 ) //..if we've played this track for a while
+        assert(!enquedQueue_.empty());
+        if ( playQueue_.empty() || ((float)currentTrackProgress / (enquedQueue_.front()).getDurationMillisecs()) > 0.02 ) //..if we've played this track for a while
         {
-            libSpotifyIf_.playTrack(enquedQueue_.front()); //..restart this track
+            doPlayTrack(enquedQueue_.begin()); //..restart this track
         }
-        else // else scrap this queued track and go to the one we had on play queue
+        else // else scrap this queued track and find previous one on play queue
         {
             enquedQueue_.pop_front();
-            libSpotifyIf_.playTrack(*playQueueIter_);
+            if ( playQueueIter_ == playQueue_.begin() && isRepeat )
+                playQueueIter_ = playQueue_.end();
+
+            if ( playQueueIter_ != playQueue_.begin() )
+                playQueueIter_--;
+            doPlayTrack(playQueueIter_);
+
+            isPlayingQueuedTrack = false;
         }
     }
     mtx_.unlock();
@@ -197,34 +221,48 @@ void LibSpotifyPlaybackHandler::playNext()
 {
     mtx_.lock();
 
-    /* First check where we are playing from, and move that track into the history queue,
-     * then start playing the next item */
-
-    /* 1. Move to history queue */
-    if(enquedQueue_.empty())
+    /* 1. Move to history queue and step applicable queue to next item */
+    if ( !isPlayingQueuedTrack )
     {
-        if ( playQueueIter_ != playQueue_.end() ) // this is to catch a glitch, playlist was unloaded
+        if ( playQueueIter_ != playQueue_.end() ) // make sure we have a current track
         {
             historyQueue_.push_back(*playQueueIter_);
-            playQueueIter_++;
 
-            if( isRepeat && playQueueIter_ == playQueue_.end())
-                playQueueIter_ = playQueue_.begin();
+            playQueueIter_++;
         }
     }
     else
     {
+        assert(!enquedQueue_.empty());
         historyQueue_.push_back(enquedQueue_.front());
         enquedQueue_.pop_front();
     }
 
-    /* 2. Play next item */
-    if ( ( enquedQueue_.empty() == false ) ||
-         ( playQueue_.empty() == false && playQueueIter_ != playQueue_.end() ) )
+    /* 3. Play next item */
+    if ( enquedQueue_.empty() == false )
     {
-        if(enquedQueue_.empty())libSpotifyIf_.playTrack(*playQueueIter_);
-        else libSpotifyIf_.playTrack(enquedQueue_.front());
+        doPlayTrack( enquedQueue_.begin() );
+        isPlayingQueuedTrack = true;
     }
+    else
+    {
+        if ( !playQueue_.empty() )
+        {
+            if ( playQueueIter_ != playQueue_.end() )
+            {
+                doPlayTrack( playQueueIter_ );
+            }
+            else
+            {
+                /* wrap around */
+                playQueueIter_ = playQueue_.begin();
+                if ( isRepeat )
+                    doPlayTrack( playQueueIter_ );
+            }
+        }
+        isPlayingQueuedTrack = false;
+    }
+
     mtx_.unlock();
 }
 
@@ -241,14 +279,15 @@ void LibSpotifyPlaybackHandler::setShuffle(bool shuffleOn)
         return; /*client out of sync, just nop()*/
 
     mtx_.lock();
+
     if ( shuffleOn )
     {
         if ( playQueueIter_ != playQueue_.end() )
         {
-            Track current = *playQueueIter_;
-            playQueue_.erase(playQueueIter_);
+            Track currentTrack = *playQueueIter_;
+            playQueue_.erase( playQueueIter_ );
             shuffle();
-            playQueue_.push_front(current);
+            playQueue_.push_front( currentTrack );
             playQueueIter_ = playQueue_.begin();
         }
         else
@@ -258,7 +297,7 @@ void LibSpotifyPlaybackHandler::setShuffle(bool shuffleOn)
     {
         /*get the index of the current track (if we have one)*/
         int currentIndex = -1;
-        if ( playQueueIter_ != playQueue_.end() )
+        if ( playQueueIter_ != playQueue_.end() ) /* don't care if playing queued track, we'll just keep playQueueIter_ at the same track as it was */
             currentIndex = (*playQueueIter_).getIndex();
 
         /*put playqueue back in order*/
@@ -272,6 +311,7 @@ void LibSpotifyPlaybackHandler::setShuffle(bool shuffleOn)
                 playQueueIter_++;
         }
     }
+
     isShuffle = shuffleOn;
     mtx_.unlock();
 }

@@ -64,6 +64,8 @@ const char* messageTypeToString(const MessageType_t type)
         STR(PLAY_CONTROL_RSP);
         STR(SET_VOLUME_REQ);
         STR(SET_VOLUME_RSP);
+        STR(ENQUEUE_REQ);
+        STR(ENQUEUE_RSP);
 
         STR(GET_ENDPOINTS_REQ);
         STR(GET_ENDPOINTS_RSP);
