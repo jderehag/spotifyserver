@@ -418,9 +418,15 @@ void printTracks( const std::deque<Track>& tracks )
 {
     for( std::deque<Track>::const_iterator it = tracks.begin(); it != tracks.end() ; it++)
     {
-        if ( (*it).getIndex() == -1 )
-            std::cout << "  " << (*it).getName() << "  -  "  << (*it).getLink() << std::endl;
-        else
-            std::cout << "  " << (*it).getIndex() << ". " <<(*it).getName() << "  -  "  << (*it).getLink() << std::endl;
+        std::cout << "  ";
+        if ( !(*it).isAvailable() )
+            std::cout << "(";
+        if ( (*it).getIndex() >= 0 )
+            std::cout << (*it).getIndex() << ". ";
+        std::cout << (*it).getName() << "  -  "  << (*it).getLink();
+        if ( !(*it).isAvailable() )
+            std::cout << ")";
+
+        std::cout << std::endl;
     }
 }

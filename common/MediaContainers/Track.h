@@ -44,6 +44,7 @@ private:
 	bool isStarred_;
 	bool isLocal_;
 	bool isAutoLinked_;
+    bool isAvailable_;
 	unsigned int durationMillisecs_;
     int index_; /* index in list when referenced by playlist or album */
 
@@ -66,14 +67,16 @@ public:
 	void setIsLocal(bool isStarred);
 	bool isAutoLinked() const;
 	void setIsAutoLinked(bool isStarred);
+    bool isAvailable() const;
+    void setIsAvailable(bool available);
 	int getIndex() const;
 	void setIndex(int index);
 
 	void write(MessageEncoder* msg) const;
 	TlvContainer* toTlv() const;
-
+/*
 	bool operator!=(const Track& rhs) const;
-	bool operator==(const Track& rhs) const;
+	bool operator==(const Track& rhs) const;*/
 };
 
 }

@@ -83,7 +83,7 @@ bool Playlist::operator==(const Playlist& rhs) const
 {
 	return (name_ == rhs.name_) &&
 			(link_ == rhs.link_) &&
-			(tracks_ == rhs.tracks_) &&
+			//(tracks_ == rhs.tracks_) &&
 			(isCollaborative_ == rhs.isCollaborative_) &&
 			(isStarred_ == rhs.isStarred_);
 }

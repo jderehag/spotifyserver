@@ -123,6 +123,7 @@ const char* tlvTypeToString(const TlvType_t type)
         STR(TLV_NAME);
         STR(TLV_IP_ADDRESS);
         STR(TLV_PORT);
+        STR(TLV_IS_AVAILABLE);
 
         STR(TLV_IMAGE);
         STR(TLV_IMAGE_FORMAT);
@@ -130,7 +131,6 @@ const char* tlvTypeToString(const TlvType_t type)
         
         STR(TLV_ALBUM_RELEASE_YEAR);
         STR(TLV_ALBUM_REVIEW);
-        STR(TLV_ALBUM_IS_AVAILABLE);
         STR(TLV_ALBUM_TYPE);
 
         STR(TLV_LOGIN_USERNAME);

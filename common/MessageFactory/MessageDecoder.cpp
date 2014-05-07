@@ -298,7 +298,7 @@ TlvContainer* MessageDecoder::decodeAlbum()
 
             /* Integer TLVs */
             case TLV_ALBUM_RELEASE_YEAR:
-            case TLV_ALBUM_IS_AVAILABLE:
+            case TLV_IS_AVAILABLE:
             {
                 groupTlv->addTlv(getCurrentTlv(), getTlvIntData());
                 nextTlv();
@@ -495,6 +495,7 @@ TlvContainer* MessageDecoder::decodeTrack()
             /* Integer TLVs */
             case TLV_TRACK_DURATION:
             case TLV_TRACK_INDEX:
+            case TLV_IS_AVAILABLE:
             {
                 groupTlv->addTlv(getCurrentTlv(), getTlvIntData());
                 nextTlv();

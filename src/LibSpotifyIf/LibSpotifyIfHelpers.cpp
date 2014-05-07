@@ -104,6 +104,7 @@ Track spotifyGetTrack(sp_track* track, sp_session* session)
     trackObj.setIsStarred(sp_track_is_starred(session, track));
     trackObj.setIsLocal(sp_track_is_local(session, track));
     trackObj.setIsAutoLinked(sp_track_is_autolinked(session, track));
+    trackObj.setIsAvailable(sp_track_get_availability(session, track) == SP_TRACK_AVAILABILITY_AVAILABLE);
     return trackObj;
 }
 

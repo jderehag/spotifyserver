@@ -31,7 +31,7 @@
 #include <stdint.h>
 
 #define PROTOCOL_VERSION_MAJOR 1 /*increase when not backwards compatible*/
-#define PROTOCOL_VERSION_MINOR 5 /*increase when adding new messages and/or TLV's*/
+#define PROTOCOL_VERSION_MINOR 6 /*increase when adding new messages and/or TLV's*/
 
 /* Message header */
 typedef struct {
@@ -153,6 +153,7 @@ typedef enum
     TLV_PORT       = 0x704,
     TLV_SERVER_CLOCK = 0x705,
     TLV_CLIENT_CLOCK = 0x706,
+    TLV_IS_AVAILABLE = 0x707,
 
     /* Image TLV's */
     TLV_IMAGE_FORMAT = 0x801, /* ImageFormat_t */
@@ -162,7 +163,7 @@ typedef enum
     /* reserved 0x900 range */
     TLV_ALBUM_TYPE         = 0x901, /* TBD (sp_albumtype) */
     TLV_ALBUM_RELEASE_YEAR = 0x902,
-    TLV_ALBUM_IS_AVAILABLE = 0x903,
+    /* TLV_ALBUM_IS_AVAILABLE = 0x903, deprecated, use TLV_IS_AVAILABLE */
     TLV_ALBUM_REVIEW       = 0x904,
 
     /* Artist TLV's */

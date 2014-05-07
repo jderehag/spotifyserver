@@ -411,6 +411,11 @@ bool sp_track_is_autolinked(sp_session *session, sp_track *track)
 	return track->is_autolinked;
 }
 
+sp_track_availability sp_track_get_availability(sp_session *session, sp_track *track)
+{
+    return SP_TRACK_AVAILABILITY_AVAILABLE;
+}
+
 sp_error sp_track_add_ref(sp_track *track)
 {
 	track->ref_count++;

@@ -122,7 +122,22 @@ void LibSpotifyPlaybackHandler::loadPlaylist( const Playlist& playlist, int star
     playQueue_.clear();
     currentlyPlayingFromName_ = playlist.getName();
     currentlyPlayingFromUri_ = playlist.getLink();
-    playQueue_.insert(playQueue_.end(), playlist.getTracks().begin(), playlist.getTracks().end());
+    // copy all available tracks to play queue
+    for( std::deque<Track>::const_iterator it = playlist.getTracks().begin(); it != playlist.getTracks().end(); it++ )
+    {
+        if ( (*it).isAvailable() )
+        {
+            playQueue_.push_back( *it );
+        }
+        else if ( startIndex >= 0 && (*it).getIndex() == startIndex )
+        {
+            // requested track is unavailable
+            if ( isShuffle )
+                startIndex = -1; // if shuffle, just use any other track
+            else
+                startIndex++; // else try next one
+        }
+    }
     playQueueIter_ = playQueue_.begin();
     if ( startIndex >= 0 )
     {

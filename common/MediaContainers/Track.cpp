@@ -37,10 +37,12 @@ Track::Track( const TlvContainer* tlv ) : MediaBaseInfo( tlv ), album_("", "")
 {
     const IntTlv* tlvIndex = (const IntTlv*) tlv->getTlv(TLV_TRACK_INDEX);
     const IntTlv* tlvDuration = (const IntTlv*) tlv->getTlv(TLV_TRACK_DURATION);
+    const IntTlv* tlvAvailable = (const IntTlv*) tlv->getTlv( TLV_IS_AVAILABLE );
     const TlvContainer* tlvAlbum = (const TlvContainer*) tlv->getTlv(TLV_ALBUM);
 
     index_ = ( tlvIndex ? (int)tlvIndex->getVal() : -1);
     durationMillisecs_ = ( tlvDuration ? (int)tlvDuration->getVal() : 0 );
+    isAvailable_ = ( tlvAvailable ? tlvAvailable->getVal() != 0 : true );
 
     if ( tlvAlbum )
     {
@@ -78,6 +80,9 @@ void Track::setIsLocal(bool isLocal) { isLocal_ = isLocal; }
 bool Track::isAutoLinked() const { return isAutoLinked_; }
 void Track::setIsAutoLinked(bool isAutoLinked) { isAutoLinked_ = isAutoLinked; }
 
+bool Track::isAvailable() const { return isAvailable_; }
+void Track::setIsAvailable( bool available ) { isAvailable_ = available; }
+
 int Track::getIndex() const { return index_; }
 void Track::setIndex(int index) { index_ = index; }
 
@@ -97,9 +102,10 @@ TlvContainer* Track::toTlv() const
     {
         track->addTlv(TLV_TRACK_INDEX, index_);
     }
+    track->addTlv( TLV_IS_AVAILABLE, isAvailable_ );
     return track;
 }
-
+/*
 bool Track::operator==(const Track& rhs) const
 {
 	return (name_ == rhs.name_) &&
@@ -111,6 +117,6 @@ bool Track::operator==(const Track& rhs) const
 bool Track::operator!=(const Track& rhs) const
 {
 	return !(*this == rhs);
-}
+}*/
 
 }

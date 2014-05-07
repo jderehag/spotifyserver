@@ -42,7 +42,7 @@ Album::Album(const TlvContainer* tlv) : Playlist(tlv), artist_(Artist("", ""))
 {
     const IntTlv* tlvYear = (const IntTlv*) tlv->getTlv(TLV_ALBUM_RELEASE_YEAR);
     const StringTlv* tlvReview = (const StringTlv*) tlv->getTlv(TLV_ALBUM_REVIEW);
-    const IntTlv* tlvIsAvailable = (const IntTlv*) tlv->getTlv(TLV_ALBUM_IS_AVAILABLE);
+    const IntTlv* tlvIsAvailable = (const IntTlv*) tlv->getTlv(TLV_IS_AVAILABLE);
     const TlvContainer* tlvArtist = (const TlvContainer*) tlv->getTlv(TLV_ARTIST);
     year_ = (tlvYear ? tlvYear->getVal() : 0);
     review_ = (tlvReview ? tlvReview->getString() : "");
@@ -70,7 +70,7 @@ TlvContainer* Album::toTlv() const
 
     album->addTlv( TLV_ALBUM_RELEASE_YEAR, year_ );
     album->addTlv( TLV_ALBUM_REVIEW, review_ );
-    album->addTlv( TLV_ALBUM_IS_AVAILABLE, isAvailable_ ? 1 : 0 );
+    album->addTlv( TLV_IS_AVAILABLE, isAvailable_ ? 1 : 0 );
 
     album->addTlv( artist_.createTlv(TLV_ARTIST) );
 
