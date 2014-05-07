@@ -108,13 +108,23 @@ void MainWindow::on_actionShowEndpoints_triggered()
     epMgr_.getAudioEndpoints( this, NULL );
 }
 
-void MainWindow::endpointCheckbox_stateChanged( int state )
+void MainWindow::endpointCheckbox_clicked(bool checked)
 {
     QCheckBox* cb = (QCheckBox*) QObject::sender();
-    if ( state != 0 )
+    if ( checked )
         epMgr_.addAudioEndpoint( cb->text().toStdString(), this, NULL );
     else
         epMgr_.removeAudioEndpoint( cb->text().toStdString(), this, NULL );
+}
+
+void MainWindow::on_repeatButton_clicked(bool checked)
+{
+    m_.setRepeat( checked );
+}
+
+void MainWindow::on_shuffleButton_clicked(bool checked)
+{
+    m_.setShuffle( checked );
 }
 
 void MainWindow::updateGui()
@@ -149,7 +159,7 @@ void MainWindow::updateEndpointsGui()
         QCheckBox* ep = new QCheckBox();
         ep->setText( QString::fromStdString( (*it).id ) );
         ep->setChecked( (*it).active );
-        connect( ep, SIGNAL(stateChanged(int)), this, SLOT(endpointCheckbox_stateChanged(int)));
+        connect( ep, SIGNAL(clicked(bool)), this, SLOT(endpointCheckbox_clicked(bool)));
         ui->endpointsScrollAreaLayout->addWidget( ep );
     }
 }
@@ -254,6 +264,8 @@ void MainWindow::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool
 {
     isPlaying = (state == PLAYBACK_PLAYING);
 
+    ui->shuffleButton->setChecked( shuffleStatus );
+    ui->repeatButton->setChecked( repeatStatus );
     QMetaObject::invokeMethod( this, "updateGui", Qt::QueuedConnection );
 
 }
@@ -289,7 +301,4 @@ void MainWindow::audioEndpointsUpdatedNtf()
         epMgr_.getAudioEndpoints( this, NULL );
     }
 }
-
-
-
 

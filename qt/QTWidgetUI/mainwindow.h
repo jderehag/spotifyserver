@@ -51,7 +51,7 @@ public slots:
     void updateGui();
     void updateEndpointsGui();
     void progressUpdate();
-    void endpointCheckbox_stateChanged( int state );
+    void endpointCheckbox_clicked(bool checked);
 
 private slots:
     void on_tableView_doubleClicked(const QModelIndex &index);
@@ -67,6 +67,10 @@ private slots:
     void on_playlistsTree_itemDoubleClicked(QTreeWidgetItem *item, int column);
 
     void on_actionShowEndpoints_triggered();
+
+    void on_repeatButton_clicked(bool checked);
+
+    void on_shuffleButton_clicked(bool checked);
 
 private:
     Ui::MainWindow *ui;
