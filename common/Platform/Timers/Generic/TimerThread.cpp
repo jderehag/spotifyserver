@@ -135,35 +135,20 @@ bool TimerThread::IsTimerRunning( Timer* t )
 
 void TimerThread::run()
 {
-    uint32_t timeToNext = 0;
-
+    uint32_t lastCheck = getTick_ms();
     mtx.lock();
     while(!isCancellationPending())
     {
-        if ( timerList.empty() )
-            cond.wait( mtx );
-        else
-            cond.timedWait( mtx, timeToNext );
-
-        bool isExpired = false;
-        do
+        while ( !timerList.empty() )
         {
-            if ( timerList.empty() )
-            {
-                // bail, no more timers
-                timeToNext = 0;
-                break;
-            }
-
-            timeToNext = timerList.front().nextTimeout - getTick_ms();
+            lastCheck = getTick_ms();
+            uint32_t timeToNext = timerList.front().nextTimeout - lastCheck;
             // todo allow timeToNext == 0 here as well but evaluate what to do with timers with timeout 0
-            isExpired = ( timeToNext >= 0xFFFFF000 ); // "negative" number if expired, assuming we check within 0xFFF ms from actual timeout. This should also handle wrap, I think..
+            bool isExpired = ( timeToNext >= 0xFFFF0000 ); // "negative" number if expired, assuming we check within 0xFFFF ms from actual timeout. This should also handle wrap, I think..
             if ( isExpired )
             {
                 TimerEntry_t t = timerList.front();
                 timerList.pop_front();
-                t.t->Expired();
-
                 if ( t.isPeriodic )
                 {
                     // periodic timer, update timeout and put back at correct position in list
@@ -174,8 +159,21 @@ void TimerThread::run()
 
                     timerList.insert( it, t );
                 }
+                mtx.unlock();
+                // todo: tricky situation here, we must release the mutex to allow timer operations in callback,
+                // but this means we can never guarantee that t.t is still valid when callback is called.
+                // Maybe should give in and use a recursive mutex for this after all.
+                t.t->Expired();
+                mtx.lock();
             }
-        } while( isExpired );
+            else
+                break;
+        }
+
+        if ( timerList.empty() )
+            cond.wait( mtx );
+        else
+            cond.timedWait( mtx, timerList.front().nextTimeout - lastCheck );
     }
     mtx.unlock();
     log(LOG_DEBUG) << "Exiting thread";

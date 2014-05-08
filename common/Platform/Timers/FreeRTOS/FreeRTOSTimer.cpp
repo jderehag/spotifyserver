@@ -58,8 +58,10 @@ void Timer::Start( unsigned int timeout, bool isPeriodic, TimerCallbackFn cb, vo
 {
     cb_ = cb;
     arg_ = arg;
-    // todo: if ( timer_->tmr != NULL )
-    timer_->tmr = xTimerCreate("tmr", timeout/portTICK_PERIOD_MS, isPeriodic ? pdTRUE : pdFALSE, this, timerCb );
+    if ( timer_->tmr != NULL )
+        xTimerChangePeriod( timer_->tmr, timeout/portTICK_PERIOD_MS, 0 );
+    else
+        timer_->tmr = xTimerCreate("tmr", timeout/portTICK_PERIOD_MS, isPeriodic ? pdTRUE : pdFALSE, this, timerCb );
     xTimerStart( timer_->tmr, 0 );
 }
 
@@ -75,7 +77,7 @@ void Timer::Expired()
 
 bool Timer::IsRunning()
 {
-    return ( xTimerIsTimerActive( timer_->tmr ) == pdTRUE );
+    return timer_->tmr ? ( xTimerIsTimerActive( timer_->tmr ) == pdTRUE ) : false;
 }
 
 
