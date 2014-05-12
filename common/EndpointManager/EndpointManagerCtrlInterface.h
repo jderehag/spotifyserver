@@ -51,13 +51,13 @@ typedef std::list<std::string> EndpointInfoList;
 class IEndpointCtrlCallbackSubscriber
 {
 public:
-    virtual void connectionState( bool up ) = 0;
+    virtual void connectionState( bool up ) {}
 
-    virtual void renameEndpointResponse( void* userData ) = 0;
-    virtual void getEndpointsResponse( const EndpointInfoList& endpoints, void* userData ) = 0;
+    virtual void renameEndpointResponse( void* userData ) {}
+    virtual void getEndpointsResponse( const EndpointInfoList& endpoints, void* userData ) {}
 
-    virtual void getAudioEndpointsResponse( const AudioEndpointInfoList& endpoints, void* userData ) = 0;
-    virtual void audioEndpointsUpdatedNtf() = 0;
+    virtual void getAudioEndpointsResponse( const AudioEndpointInfoList& endpoints, void* userData ) {}
+    virtual void audioEndpointsUpdatedNtf() {}
 };
 
 

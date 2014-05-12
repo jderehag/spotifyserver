@@ -66,7 +66,7 @@ void AlbumEntry::on_albumTracksTable_customContextMenuRequested(const QPoint &po
             switch( (*it).type )
             {
             case TrackListModel::ContextMenuItem::ENQUEUE:
-                connect( act, SIGNAL(triggered()), this, SLOT(enqueue()));
+                connect( act, SIGNAL(triggered()), &actions, SLOT(enqueueTrack()));
                 break;
             case TrackListModel::ContextMenuItem::BROWSE_ALBUM:
                 connect( act, SIGNAL(triggered()), &actions, SLOT(browseAlbum()));
@@ -79,13 +79,6 @@ void AlbumEntry::on_albumTracksTable_customContextMenuRequested(const QPoint &po
         }
         menu->popup(ui->albumTracksTable->viewport()->mapToGlobal(pos));
     }
-}
-
-void AlbumEntry::enqueue()
-{
-    QAction* origin = (QAction*)sender();
-    QString data = origin->data().toString();
-    m.enqueue(data.toStdString(), this, NULL);
 }
 
 void AlbumEntry::on_albumTracksTable_doubleClicked(const QModelIndex &index)

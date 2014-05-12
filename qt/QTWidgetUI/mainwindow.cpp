@@ -1,14 +1,15 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "AlbumEntry.h"
+#include "PlaylistPage.h"
+#include "ArtistPage.h"
+#include "AlbumPage.h"
+#include "EndpointsPage.h"
 #include "Logger/applog.h"
-#include <QCheckBox>
 
 class PlaylistsModelItem : public QTreeWidgetItem
 {
-private:
-    MediaBaseInfo m;
 public:
+    MediaBaseInfo m;
     PlaylistsModelItem( const MediaBaseInfo& m_ ) : m(m_) {}
     const std::string& getLink() { return m.getLink(); }
     virtual QVariant data ( int column, int role ) const { if ( role != Qt::DisplayRole || column != 0 ) return QVariant(); else return QVariant( m.getName().c_str() ); }
@@ -18,7 +19,7 @@ public:
 MainWindow::MainWindow( QString& title, MediaInterface& m, EndpointCtrlInterface& epMgr, QWidget *parent ) :
         QMainWindow(parent),
         ui(new Ui::MainWindow),
-        m_(m), epMgr_(epMgr), artist_(NULL),
+        m_(m), epMgr_(epMgr),
         actions(*this),
         progress_(0), isPlaying(false)
 {
@@ -26,14 +27,11 @@ MainWindow::MainWindow( QString& title, MediaInterface& m, EndpointCtrlInterface
     setWindowTitle( title );
     ui->playlistsTree->setColumnCount( 1 );
 
-    ui->tableView->setModel( &tracksModel );
-    ui->albumTracksTable->setModel( &albumTracksModel );
-
-    ui->endpointsScrollAreaLayout->setAlignment( Qt::AlignTop );
-    ui->albumPageLabelsLayout->setAlignment( Qt::AlignTop );
-
-    ui->tableView->verticalHeader()->hide();
-    ui->albumTracksTable->verticalHeader()->hide();
+    // the splitter freaks out when it doesn't have any pages, manually set width
+    QList<int> sizes;
+    sizes.append(1); //this will force left frame to its minimum size
+    sizes.append(1000); //and whatever the rest is to right frame
+    ui->splitter->setSizes(sizes);
 
     ui->playButton->setToolTip(tr("Play"));
     ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
@@ -44,19 +42,20 @@ MainWindow::MainWindow( QString& title, MediaInterface& m, EndpointCtrlInterface
     ui->prevButton->setToolTip(tr("Previous"));
     ui->prevButton->setIcon(style()->standardIcon(QStyle::SP_MediaSkipBackward));
 
+    ui->actionBack->setEnabled(false);
+    ui->actionBack->setIcon(style()->standardIcon(QStyle::SP_ArrowBack));
+    ui->actionForward->setEnabled(false);
+    ui->actionForward->setIcon(style()->standardIcon(QStyle::SP_ArrowForward));
+
     connect(&progressTimer, SIGNAL(timeout()), this, SLOT(progressUpdate()));
 
     m_.registerForCallbacks( *this );
-    epMgr_.registerForCallbacks( *this );
-
 }
 
 MainWindow::~MainWindow()
 {
     m_.unRegisterForCallbacks( *this );
-    epMgr_.unRegisterForCallbacks( *this );
     delete ui;
-    if ( artist_ ) delete artist_;
 }
 
 
@@ -78,14 +77,47 @@ void MainWindow::on_nextButton_clicked()
     m_.next();
 }
 
-void MainWindow::on_playlistsTree_itemClicked(QTreeWidgetItem *item, int column)
+void MainWindow::newPage( QWidget* page )
 {
-    PlaylistsModelItem* pitem = (PlaylistsModelItem*)item;
+    int currentIndex = ui->stackedWidget->currentIndex();
+    int lastIndex = ui->stackedWidget->count() - 1;
+    // if current page isn't last in list, discard all pages after current
+    if ( currentIndex != -1 && currentIndex != lastIndex )
+    {
+
+        while( currentIndex+1 < ui->stackedWidget->count() )
+        {
+            QWidget* page = ui->stackedWidget->widget(currentIndex+1);
+            ui->stackedWidget->removeWidget(page);
+            delete page;
+        }
+    }
+
+    //keep maximum 30 pages
+    if ( ui->stackedWidget->count() >= 30 )
+    {
+        QWidget* page = ui->stackedWidget->widget(0);
+        ui->stackedWidget->removeWidget(page);
+        delete page;
+    }
+
+    //and finally insert new page
+    int index = ui->stackedWidget->addWidget( page );
+    ui->stackedWidget->setCurrentIndex( index );
+
+    ui->actionForward->setEnabled(false);
+    if ( index > 0 )
+        ui->actionBack->setEnabled(true);
+}
+
+void MainWindow::on_playlistsTree_currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous)
+{
+    PlaylistsModelItem* pitem = (PlaylistsModelItem*)current;
     const std::string& link = pitem->getLink();
     if ( !link.empty() )
-        m_.getTracks( link, this, NULL );
-
-    ui->stackedWidget->setCurrentWidget( ui->playlistPage );
+    {
+        newPage( new PlaylistPage( pitem->m, m_, actions, this ) );
+    }
 }
 
 
@@ -95,100 +127,38 @@ void MainWindow::on_playlistsTree_itemDoubleClicked(QTreeWidgetItem *item, int c
     const std::string& link = pitem->getLink();
     if ( !link.empty() )
         m_.play( link, this, NULL );
-
-    ui->stackedWidget->setCurrentWidget( ui->playlistPage );
 }
-
-void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
-{
-    PlaylistsModelItem* item = (PlaylistsModelItem*)ui->playlistsTree->currentItem();
-    Track* t = static_cast<Track*>(index.internalPointer());
-    m_.play( item->getLink(), t->getIndex(), this, NULL );
-}
-
-void MainWindow::on_tableView_customContextMenuRequested(const QPoint &pos)
-{
-    std::deque<TrackListModel::ContextMenuItem> items = tracksModel.constructContextMenu( ui->tableView->indexAt( pos ) );
-    if ( items.size() > 0 )
-    {
-        QMenu* menu = new QMenu();
-        std::deque<TrackListModel::ContextMenuItem>::iterator it = items.begin();
-        for ( ; it != items.end(); it++ )
-        {
-            QAction* act = new QAction(this);
-            switch( (*it).type )
-            {
-            case TrackListModel::ContextMenuItem::ENQUEUE:
-                connect( act, SIGNAL(triggered()), this, SLOT(enqueue()));
-                break;
-            case TrackListModel::ContextMenuItem::BROWSE_ALBUM:
-                connect( act, SIGNAL(triggered()), &actions, SLOT(browseAlbum()));
-                break;
-            case TrackListModel::ContextMenuItem::BROWSE_ARTIST:
-                connect( act, SIGNAL(triggered()), &actions, SLOT(browseArtist()));
-                break;
-            }
-
-            act->setText((*it).text);
-            act->setData(QVariant(QString( (*it).arg.c_str() )));
-            menu->addAction(act);
-        }
-        menu->popup(ui->tableView->viewport()->mapToGlobal(pos));
-    }
-}
-
-void MainWindow::on_albumTracksTable_doubleClicked(const QModelIndex &index)
-{
-    Track* t = static_cast<Track*>(index.internalPointer());
-    m_.play( t->getAlbumLink(), t->getIndex(), this, NULL );
-}
-
-void MainWindow::on_albumTracksTable_customContextMenuRequested(const QPoint &pos)
-{
-    std::deque<TrackListModel::ContextMenuItem> items = albumTracksModel.constructContextMenu( ui->albumTracksTable->indexAt( pos ) );
-    if ( items.size() > 0 )
-    {
-        QMenu* menu = new QMenu();
-        std::deque<TrackListModel::ContextMenuItem>::iterator it = items.begin();
-        for ( ; it != items.end(); it++ )
-        {
-            if ( (*it).type == TrackListModel::ContextMenuItem::BROWSE_ALBUM )
-                continue;
-
-            QAction* act = new QAction(this);
-            switch( (*it).type )
-            {
-            case TrackListModel::ContextMenuItem::ENQUEUE:
-                connect( act, SIGNAL(triggered()), this, SLOT(enqueue()));
-                break;
-            case TrackListModel::ContextMenuItem::BROWSE_ARTIST:
-                connect( act, SIGNAL(triggered()), &actions, SLOT(browseArtist()));
-                break;
-            }
-
-            act->setText((*it).text);
-            act->setData(QVariant(QString( (*it).arg.c_str() )));
-            menu->addAction(act);
-        }
-        menu->popup(ui->albumTracksTable->viewport()->mapToGlobal(pos));
-    }
-}
-
 
 void MainWindow::on_actionShowEndpoints_triggered()
 {
-    ui->stackedWidget->setCurrentWidget( ui->endpointsPage );
-    epMgr_.getAudioEndpoints( this, NULL );
+    newPage( new EndpointsPage(epMgr_, this) );
 }
 
-void MainWindow::endpointCheckbox_clicked(bool checked)
+void MainWindow::on_actionBack_triggered()
 {
-    QCheckBox* cb = (QCheckBox*) QObject::sender();
-    if ( checked )
-        epMgr_.addAudioEndpoint( cb->text().toStdString(), this, NULL );
-    else
-        epMgr_.removeAudioEndpoint( cb->text().toStdString(), this, NULL );
+    if ( ui->stackedWidget->currentIndex() > 0 )
+    {
+        int newIndex = ui->stackedWidget->currentIndex() - 1;
+        ui->stackedWidget->setCurrentIndex( newIndex);
+        ui->actionForward->setEnabled(true);
+        if ( newIndex == 0 )
+            ui->actionBack->setEnabled(false);
+
+    }
 }
+
+void MainWindow::on_actionForward_triggered()
+{
+    if ( ui->stackedWidget->currentIndex() < ui->stackedWidget->count() - 1 )
+    {
+        int newIndex = ui->stackedWidget->currentIndex() + 1;
+        ui->stackedWidget->setCurrentIndex( ui->stackedWidget->currentIndex()+1);
+        ui->actionBack->setEnabled(true);
+        if ( newIndex == ui->stackedWidget->count() - 1 )
+            ui->actionForward->setEnabled(false);
+    }
+}
+
 
 void MainWindow::on_repeatButton_clicked(bool checked)
 {
@@ -216,44 +186,6 @@ void MainWindow::updateGui()
     }
 }
 
-void MainWindow::updateEndpointsGui()
-{
-
-    QLayoutItem *child;
-    while ((child = ui->endpointsScrollAreaLayout->takeAt(0)) != 0)
-    {
-        delete child->widget();
-        delete child;
-    }
-
-    AudioEndpointInfoList::const_iterator it = endpoints_.begin();
-    for ( ; it != endpoints_.end(); it++ )
-    {
-        QCheckBox* ep = new QCheckBox();
-        ep->setText( QString::fromStdString( (*it).id ) );
-        ep->setChecked( (*it).active );
-        connect( ep, SIGNAL(clicked(bool)), this, SLOT(endpointCheckbox_clicked(bool)));
-        ui->endpointsScrollAreaLayout->addWidget( ep );
-    }
-}
-
-void MainWindow::updateArtistPage()
-{
-    ui->artistPageTitle->setText(QString::fromStdString( artist_->getName() ) );
-
-    QLayoutItem *child;
-    while ((child = ui->artistAlbumsContainerLayout->takeAt(0)) != 0)
-    {
-        delete child->widget();
-        delete child;
-    }
-
-    AlbumContainer::const_iterator it = artist_->getAlbums().begin();
-    for ( ; it != artist_->getAlbums().end(); it++ )
-    {
-        ui->artistAlbumsContainerLayout->addWidget(new AlbumEntry((*it), m_, actions));
-    }
-}
 
 QString toTextLabel( unsigned int sec )
 {
@@ -271,25 +203,19 @@ void MainWindow::progressUpdate()
     ui->progressBar->setValue( progress_ );
 }
 
-void MainWindow::enqueue()
+void MainWindow::enqueueTrack( std::string link )
 {
-    QAction* origin = (QAction*)sender();
-    QString data = origin->data().toString();
-    m_.enqueue(data.toStdString(), this, NULL);
+    m_.enqueue(link, this, NULL);
 }
 
 void MainWindow::browseArtist( std::string link )
 {
-    m_.getArtist( link, this, NULL );
-    m_.getImage( link, this, ui->artistPageImage );
-    ui->stackedWidget->setCurrentWidget( ui->artistPage );
+    newPage(  new ArtistPage( link, m_, actions, this ) );
 }
 
 void MainWindow::browseAlbum( std::string link )
 {
-    m_.getAlbum( link, this, NULL);
-    m_.getImage( link, this, ui->albumPageImage );
-    ui->stackedWidget->setCurrentWidget( ui->albumPage );
+    newPage( new AlbumPage( link, m_, actions, this ) );
 }
 
 
@@ -339,11 +265,7 @@ void MainWindow::getPlaylistsResponse( const Folder& rootfolder, void* userData 
     QTreeWidgetItem *parentItem = ui->playlistsTree->invisibleRootItem();
     addFolder( parentItem, rootfolder );
 }
-void MainWindow::getTracksResponse( const std::deque<Track>& tracks, void* userData )
-{
-    tracksModel.setTrackList(tracks);
 
-}
 void MainWindow::getImageResponse( const void* data, size_t dataSize, void* userData )
 {
     QImage img = QImage::fromData( (const uchar*)data, (int)dataSize );
@@ -354,19 +276,9 @@ void MainWindow::getImageResponse( const void* data, size_t dataSize, void* user
     QPixmap pm = QPixmap::fromImage(img.copy( x, y, s, s ) );
     origin->setPixmap( pm );
 }
-void MainWindow::getAlbumResponse( const Album& album, void* userData )
-{
-    ui->albumPageTitle->setText( QString::fromStdString( album.getName() ) );
-    ui->albumPageArtist->setText( QString::fromStdString( album.getArtist().getName() ) );
-    ui->albumPageYear->setText( QString::number( album.getYear() ) );
-    ui->albumPageReview->setText( QString::fromStdString( album.getReview() ) );
-    albumTracksModel.setTrackList( album.getTracks() );
-}
+
 void MainWindow::getArtistResponse( const Artist& artist, void* userData )
 {
-    if ( artist_ ) delete artist_;
-    artist_ = new Artist(artist);
-    QMetaObject::invokeMethod( this, "updateArtistPage", Qt::QueuedConnection );
 }
 void MainWindow::genericSearchCallback( const std::deque<Track>& listOfTracks, const std::string& didYouMean, void* userData )
 {
@@ -406,25 +318,6 @@ void MainWindow::getStatusResponse( PlaybackState_t state, bool repeatStatus, bo
 
 void MainWindow::getCurrentAudioEndpointsResponse( const std::set<std::string>& endpoints, void* userData )
 {
-}
-
-void MainWindow::renameEndpointResponse( void* userData ) {}
-void MainWindow::getEndpointsResponse( const EndpointInfoList& endpoints, void* userData )
-{
-}
-
-void MainWindow::getAudioEndpointsResponse( const AudioEndpointInfoList& endpoints, void* userData )
-{
-    endpoints_ = endpoints;
-    QMetaObject::invokeMethod( this, "updateEndpointsGui", Qt::QueuedConnection );
-}
-
-void MainWindow::audioEndpointsUpdatedNtf()
-{
-    if ( ui->stackedWidget->currentWidget() == ui->endpointsPage )
-    {
-        epMgr_.getAudioEndpoints( this, NULL );
-    }
 }
 
 

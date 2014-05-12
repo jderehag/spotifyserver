@@ -24,7 +24,6 @@ protected:
 
 public slots:
     void updateAlbum();
-    void enqueue();
 
 private slots:
     void on_albumTracksTable_customContextMenuRequested(const QPoint &pos);

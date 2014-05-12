@@ -482,40 +482,69 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
                 if (link)
                 {
                     const byte* imgRef = NULL;
-                    if(sp_link_type(link) == SP_LINKTYPE_ALBUM)
+                    switch ( sp_link_type(link) )
                     {
-                        sp_album* album = sp_link_as_album(link);
+                        case SP_LINKTYPE_ALBUM:
+                        {
+                            sp_album* album = sp_link_as_album(link);
 
-                        if ( sp_album_is_loaded(album) )
-                        {
-                            imgRef = sp_album_cover( album, SP_IMAGE_SIZE_NORMAL ); //todo image size should be in remote interface
-                            loadAndSendImage( imgRef, reqEvent );
+                            if ( sp_album_is_loaded(album) )
+                            {
+                                imgRef = sp_album_cover( album, SP_IMAGE_SIZE_NORMAL ); //todo image size should be in remote interface
+                                loadAndSendImage( imgRef, reqEvent );
+                            }
+                            else
+                            {
+                                log(LOG_WARN) << "No metadata for album";
+                                sp_albumbrowse_create( spotifySession_, album, &LibSpotifyIfCallbackWrapper::albumLoadedCallback, new QueryReqEventItem( *reqEvent ));
+                            }
                         }
-                        else
+                        break;
+                    
+                        case SP_LINKTYPE_ARTIST:
                         {
-                            log(LOG_WARN) << "No metadata for album";
-                            sp_albumbrowse_create( spotifySession_, album, &LibSpotifyIfCallbackWrapper::albumLoadedCallback, new QueryReqEventItem( *reqEvent ));
+                            sp_artist* artist = sp_link_as_artist(link);
+                            /* -- sp_artist_portrait seems broken, always gets null here
+                            if ( sp_artist_is_loaded( artist ) )
+                            {
+                                imgRef = sp_artist_portrait( artist, SP_IMAGE_SIZE_NORMAL );
+                                loadAndSendImage( imgRef, reqEvent );
+                            }
+                            else*/
+                            {
+                                sp_artistbrowse_create( spotifySession_, artist, SP_ARTISTBROWSE_NO_ALBUMS, &LibSpotifyIfCallbackWrapper::artistLoadedCallback, new QueryReqEventItem( *reqEvent ));
+                            }
                         }
-                    }
-                    else if(sp_link_type(link) == SP_LINKTYPE_ARTIST)
-                    {
-                        sp_artist* artist = sp_link_as_artist(link);
-                        /* -- sp_artist_portrait seems broken, always gets null here
-                        if ( sp_artist_is_loaded( artist ) )
+                        break;
+
+                        case SP_LINKTYPE_PLAYLIST:
                         {
-                            imgRef = sp_artist_portrait( artist, SP_IMAGE_SIZE_NORMAL );
-                            loadAndSendImage( imgRef, reqEvent );
+                            sp_playlist* playlist = sp_playlist_create( spotifySession_, link );
+                            if ( sp_playlist_is_loaded( playlist ) )
+                            {
+                                byte img[20];
+                                if ( sp_playlist_get_image( playlist, img ) )
+                                {
+                                    loadAndSendImage( img, reqEvent );
+                                }
+                                else
+                                {
+                                    loadAndSendImage( NULL, reqEvent );
+                                }
+                            }
+                            else
+                            {
+                                pendingMetadata.push( new QueryReqEventItem( *reqEvent ) );
+                            }
                         }
-                        else*/
+                        break;
+
+                        default:
                         {
-                            sp_artistbrowse_create( spotifySession_, artist, SP_ARTISTBROWSE_NO_ALBUMS, &LibSpotifyIfCallbackWrapper::artistLoadedCallback, new QueryReqEventItem( *reqEvent ));
+                            /*not supported yet*/
+                            PendingMediaRequestData reqData = reqEvent->reqData;
+                            reqData.first->getImageResponse( NULL, 0, reqData.second );
                         }
-                    }
-                    else
-                    {
-                        /*not supported yet*/
-                        PendingMediaRequestData reqData = reqEvent->reqData;
-                        reqData.first->getImageResponse( NULL, 0, reqData.second );
                     }
 
                     sp_link_release(link);

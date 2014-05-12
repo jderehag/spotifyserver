@@ -22,13 +22,21 @@ SOURCES += \
     mainwindow.cpp \
     TrackListModel.cpp \
     AlbumEntry.cpp \
-    GlobalActionInterface.cpp
+    GlobalActionInterface.cpp \
+    AlbumPage.cpp \
+    ArtistPage.cpp \
+    PlaylistPage.cpp \
+    EndpointsPage.cpp
 
 HEADERS += \
     mainwindow.h \
     TrackListModel.h \
     AlbumEntry.h \
-    GlobalActionInterface.h
+    GlobalActionInterface.h \
+    AlbumPage.h \
+    ArtistPage.h \
+    PlaylistPage.h \
+    EndpointsPage.h
 unix {
     target.path = /usr/lib
     INSTALLS += target
@@ -36,4 +44,8 @@ unix {
 
 FORMS += \
     mainwindow.ui \
-    AlbumEntry.ui
+    AlbumEntry.ui \
+    AlbumPage.ui \
+    ArtistPage.ui \
+    PlaylistPage.ui \
+    EndpointsPage.ui

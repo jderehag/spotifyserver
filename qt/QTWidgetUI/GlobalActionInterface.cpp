@@ -17,3 +17,9 @@ void GlobalActionSlots::browseAlbum()
     cb.browseAlbum( origin->data().toString().toStdString() );
 }
 
+void GlobalActionSlots::enqueueTrack()
+{
+    QAction* origin = (QAction*)sender();
+    cb.enqueueTrack( origin->data().toString().toStdString() );
+}
+
