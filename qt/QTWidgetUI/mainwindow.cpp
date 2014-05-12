@@ -19,6 +19,7 @@ MainWindow::MainWindow( QString& title, MediaInterface& m, EndpointCtrlInterface
         QMainWindow(parent),
         ui(new Ui::MainWindow),
         m_(m), epMgr_(epMgr), artist_(NULL),
+        actions(*this),
         progress_(0), isPlaying(false)
 {
     ui->setupUi(this);
@@ -121,10 +122,10 @@ void MainWindow::on_tableView_customContextMenuRequested(const QPoint &pos)
                 connect( act, SIGNAL(triggered()), this, SLOT(enqueue()));
                 break;
             case TrackListModel::ContextMenuItem::BROWSE_ALBUM:
-                connect( act, SIGNAL(triggered()), this, SLOT(albumbrowse()));
+                connect( act, SIGNAL(triggered()), &actions, SLOT(browseAlbum()));
                 break;
             case TrackListModel::ContextMenuItem::BROWSE_ARTIST:
-                connect( act, SIGNAL(triggered()), this, SLOT(artistbrowse()));
+                connect( act, SIGNAL(triggered()), &actions, SLOT(browseArtist()));
                 break;
             }
 
@@ -161,7 +162,7 @@ void MainWindow::on_albumTracksTable_customContextMenuRequested(const QPoint &po
                 connect( act, SIGNAL(triggered()), this, SLOT(enqueue()));
                 break;
             case TrackListModel::ContextMenuItem::BROWSE_ARTIST:
-                connect( act, SIGNAL(triggered()), this, SLOT(artistbrowse()));
+                connect( act, SIGNAL(triggered()), &actions, SLOT(browseArtist()));
                 break;
             }
 
@@ -250,7 +251,7 @@ void MainWindow::updateArtistPage()
     AlbumContainer::const_iterator it = artist_->getAlbums().begin();
     for ( ; it != artist_->getAlbums().end(); it++ )
     {
-        ui->artistAlbumsContainerLayout->addWidget(new AlbumEntry((*it), m_));
+        ui->artistAlbumsContainerLayout->addWidget(new AlbumEntry((*it), m_, actions));
     }
 }
 
@@ -277,21 +278,17 @@ void MainWindow::enqueue()
     m_.enqueue(data.toStdString(), this, NULL);
 }
 
-void MainWindow::artistbrowse()
+void MainWindow::browseArtist( std::string link )
 {
-    QAction* origin = (QAction*)sender();
-    QString data = origin->data().toString();
-    m_.getArtist( data.toStdString(), this, NULL );
-    m_.getImage( data.toStdString(), this, ui->artistPageImage );
+    m_.getArtist( link, this, NULL );
+    m_.getImage( link, this, ui->artistPageImage );
     ui->stackedWidget->setCurrentWidget( ui->artistPage );
 }
 
-void MainWindow::albumbrowse()
+void MainWindow::browseAlbum( std::string link )
 {
-    QAction* origin = (QAction*)sender();
-    QString data = origin->data().toString();
-    m_.getAlbum( data.toStdString(), this, NULL);
-    m_.getImage( data.toStdString(), this, ui->albumPageImage );
+    m_.getAlbum( link, this, NULL);
+    m_.getImage( link, this, ui->albumPageImage );
     ui->stackedWidget->setCurrentWidget( ui->albumPage );
 }
 

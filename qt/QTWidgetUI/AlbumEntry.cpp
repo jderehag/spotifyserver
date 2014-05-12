@@ -2,18 +2,30 @@
 #include "ui_AlbumEntry.h"
 #include <QMenu>
 
-AlbumEntry::AlbumEntry(const LibSpotify::Album& album_, MediaInterface& m_, QWidget *parent) :
+AlbumEntry::AlbumEntry(const LibSpotify::Album& album_, MediaInterface& m_, GlobalActionSlots& actions_, QWidget *parent) :
+    QWidget(parent),
+    ui(new Ui::AlbumEntry),
     album(album_),
     m(m_),
-    QWidget(parent),
-    ui(new Ui::AlbumEntry)
+    actions(actions_),
+    loaded(false)
 {
     ui->setupUi(this);
-    m_.getAlbum( album_.getLink(), this, NULL );
-    m_.getImage( album_.getLink(), this, NULL );
 
     ui->titleLabel->setText( album_.getName().c_str() );
     ui->yearLabel->setText( QString::number( album_.getYear() ) );
+}
+
+void AlbumEntry::paintEvent( QPaintEvent  * event )
+{
+    QWidget::paintEvent ( event );
+
+    if ( loaded == false )
+    {
+        loaded = true;
+        m.getAlbum( album.getLink(), this, NULL );
+        m.getImage( album.getLink(), this, NULL );
+    }
 }
 
 AlbumEntry::~AlbumEntry()
@@ -49,14 +61,15 @@ void AlbumEntry::on_albumTracksTable_customContextMenuRequested(const QPoint &po
         {
             if ( (*it).type == TrackListModel::ContextMenuItem::BROWSE_ARTIST )
                 continue;
-            if ( (*it).type == TrackListModel::ContextMenuItem::BROWSE_ALBUM ) //todo!
-                continue;
 
             QAction* act = new QAction(this);
             switch( (*it).type )
             {
             case TrackListModel::ContextMenuItem::ENQUEUE:
                 connect( act, SIGNAL(triggered()), this, SLOT(enqueue()));
+                break;
+            case TrackListModel::ContextMenuItem::BROWSE_ALBUM:
+                connect( act, SIGNAL(triggered()), &actions, SLOT(browseAlbum()));
                 break;
             }
 

@@ -4,6 +4,7 @@
 #include "MediaContainers/Album.h"
 #include "MediaInterface/MediaInterface.h"
 #include "TrackListModel.h"
+#include "GlobalActionInterface.h"
 #include <QWidget>
 
 namespace Ui {
@@ -15,14 +16,18 @@ class AlbumEntry : public QWidget, IMediaInterfaceCallbackSubscriber
     Q_OBJECT
 
 public:
-    explicit AlbumEntry(const LibSpotify::Album& album_, MediaInterface& m_, QWidget *parent = 0);
+    explicit AlbumEntry(const LibSpotify::Album& album_, MediaInterface& m_, GlobalActionSlots& actions_, QWidget *parent = 0);
     ~AlbumEntry();
+
+protected:
+    virtual void paintEvent(QPaintEvent *event );
+
 public slots:
     void updateAlbum();
     void enqueue();
+
 private slots:
     void on_albumTracksTable_customContextMenuRequested(const QPoint &pos);
-
     void on_albumTracksTable_doubleClicked(const QModelIndex &index);
 
 private:
@@ -33,7 +38,9 @@ private:
 
     Album album;
     MediaInterface& m;
+    GlobalActionSlots& actions;
     TrackListModel tracksModel;
+    bool loaded;
 
 };
 

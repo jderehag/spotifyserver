@@ -21,12 +21,14 @@ DEPENDPATH += $$PWD/../../common += $$PWD/../../src
 SOURCES += \
     mainwindow.cpp \
     TrackListModel.cpp \
-    AlbumEntry.cpp
+    AlbumEntry.cpp \
+    GlobalActionInterface.cpp
 
 HEADERS += \
     mainwindow.h \
     TrackListModel.h \
-    AlbumEntry.h
+    AlbumEntry.h \
+    GlobalActionInterface.h
 unix {
     target.path = /usr/lib
     INSTALLS += target

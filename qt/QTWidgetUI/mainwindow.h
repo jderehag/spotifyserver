@@ -4,6 +4,7 @@
 #include <QTreeWidgetItem>
 #include <QMainWindow>
 #include <QTimer>
+#include "GlobalActionInterface.h"
 #include "TrackListModel.h"
 #include "MediaInterface/MediaInterface.h"
 #include "EndpointManager/EndpointManagerCtrlInterface.h"
@@ -13,7 +14,7 @@ class MainWindow;
 }
 
 
-class MainWindow : public QMainWindow, public IMediaInterfaceCallbackSubscriber, public IEndpointCtrlCallbackSubscriber
+class MainWindow : public QMainWindow, public IMediaInterfaceCallbackSubscriber, public IEndpointCtrlCallbackSubscriber, public IGlobalActionCallbacks
 {
     Q_OBJECT
 
@@ -47,39 +48,30 @@ public:
     virtual void getAudioEndpointsResponse( const AudioEndpointInfoList& endpoints, void* userData );
     virtual void audioEndpointsUpdatedNtf();
 
+    /* Implements IGlobalActionCallbacks */
+    virtual void browseAlbum( std::string link );
+    virtual void browseArtist( std::string link );
+
 public slots:
     void updateGui();
     void updateArtistPage();
     void updateEndpointsGui();
     void progressUpdate();
     void enqueue();
-    void albumbrowse();
-    void artistbrowse();
     void endpointCheckbox_clicked(bool checked);
 
 private slots:
     void on_tableView_doubleClicked(const QModelIndex &index);
-
     void on_playButton_clicked();
-
     void on_prevButton_clicked();
-
     void on_nextButton_clicked();
-
     void on_playlistsTree_itemClicked(QTreeWidgetItem *item, int column);
-
     void on_playlistsTree_itemDoubleClicked(QTreeWidgetItem *item, int column);
-
     void on_actionShowEndpoints_triggered();
-
     void on_repeatButton_clicked(bool checked);
-
     void on_shuffleButton_clicked(bool checked);
-
     void on_tableView_customContextMenuRequested(const QPoint &pos);
-
     void on_albumTracksTable_doubleClicked(const QModelIndex &index);
-
     void on_albumTracksTable_customContextMenuRequested(const QPoint &pos);
 
 private:
@@ -91,6 +83,8 @@ private:
     TrackListModel albumTracksModel;
     AudioEndpointInfoList endpoints_;
     const Artist* artist_;
+
+    GlobalActionSlots actions;
 
     unsigned int progress_;
     QTimer progressTimer;
