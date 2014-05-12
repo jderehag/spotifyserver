@@ -1,5 +1,6 @@
 #include "TrackListModel.h"
 
+
 TrackListModel::TrackListModel()
 {
 }
@@ -9,6 +10,29 @@ void TrackListModel::setTrackList( const std::deque<LibSpotify::Track>& tracks_ 
     beginResetModel();
     tracks = tracks_;
     endResetModel();
+}
+
+std::deque<TrackListModel::ContextMenuItem> TrackListModel::constructContextMenu( const QModelIndex & index )
+{
+    std::deque<ContextMenuItem> res;
+    if ( index.isValid() && index.row() < tracks.size() )
+    {
+        LibSpotify::Track& t = tracks[index.row()];
+        res.push_back(ContextMenuItem(ContextMenuItem::ENQUEUE, QString("Enqueue"), t.getLink()));
+        res.push_back(ContextMenuItem(ContextMenuItem::BROWSE_ALBUM, QString("Browse album"), t.getAlbumLink()));
+        int nartists = t.getArtists().size();
+        if ( nartists == 1 )
+            res.push_back(ContextMenuItem(ContextMenuItem::BROWSE_ARTIST, QString("Browse artist"), t.getArtists().front().getLink()));
+        else if ( nartists > 1 )
+        {
+            std::vector<LibSpotify::MediaBaseInfo>::const_iterator it = t.getArtists().begin();
+            for ( ; it != t.getArtists().end(); it++ )
+            {
+                res.push_back(ContextMenuItem(ContextMenuItem::BROWSE_ARTIST, QString("Browse ").append((*it).getName().c_str()), (*it).getLink()));
+            }
+        }
+    }
+    return res;
 }
 
 int TrackListModel::columnCount( const QModelIndex & parent ) const

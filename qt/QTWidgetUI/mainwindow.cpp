@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "AlbumEntry.h"
 #include "Logger/applog.h"
 #include <QCheckBox>
 
@@ -17,20 +18,21 @@ public:
 MainWindow::MainWindow( QString& title, MediaInterface& m, EndpointCtrlInterface& epMgr, QWidget *parent ) :
         QMainWindow(parent),
         ui(new Ui::MainWindow),
-        m_(m), epMgr_(epMgr),
+        m_(m), epMgr_(epMgr), artist_(NULL),
         progress_(0), isPlaying(false)
 {
     ui->setupUi(this);
     setWindowTitle( title );
     ui->playlistsTree->setColumnCount( 1 );
-    ui->playlistsTree->header()->hide();
-    tracksModel.setHeaderData( 0, Qt::Horizontal, QVariant(QString("Name")));
+
     ui->tableView->setModel( &tracksModel );
+    ui->albumTracksTable->setModel( &albumTracksModel );
 
     ui->endpointsScrollAreaLayout->setAlignment( Qt::AlignTop );
+    ui->albumPageLabelsLayout->setAlignment( Qt::AlignTop );
 
     ui->tableView->verticalHeader()->hide();
-    ui->label->setScaledContents( true );
+    ui->albumTracksTable->verticalHeader()->hide();
 
     ui->playButton->setToolTip(tr("Play"));
     ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
@@ -53,6 +55,7 @@ MainWindow::~MainWindow()
     m_.unRegisterForCallbacks( *this );
     epMgr_.unRegisterForCallbacks( *this );
     delete ui;
+    if ( artist_ ) delete artist_;
 }
 
 
@@ -101,6 +104,75 @@ void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
     Track* t = static_cast<Track*>(index.internalPointer());
     m_.play( item->getLink(), t->getIndex(), this, NULL );
 }
+
+void MainWindow::on_tableView_customContextMenuRequested(const QPoint &pos)
+{
+    std::deque<TrackListModel::ContextMenuItem> items = tracksModel.constructContextMenu( ui->tableView->indexAt( pos ) );
+    if ( items.size() > 0 )
+    {
+        QMenu* menu = new QMenu();
+        std::deque<TrackListModel::ContextMenuItem>::iterator it = items.begin();
+        for ( ; it != items.end(); it++ )
+        {
+            QAction* act = new QAction(this);
+            switch( (*it).type )
+            {
+            case TrackListModel::ContextMenuItem::ENQUEUE:
+                connect( act, SIGNAL(triggered()), this, SLOT(enqueue()));
+                break;
+            case TrackListModel::ContextMenuItem::BROWSE_ALBUM:
+                connect( act, SIGNAL(triggered()), this, SLOT(albumbrowse()));
+                break;
+            case TrackListModel::ContextMenuItem::BROWSE_ARTIST:
+                connect( act, SIGNAL(triggered()), this, SLOT(artistbrowse()));
+                break;
+            }
+
+            act->setText((*it).text);
+            act->setData(QVariant(QString( (*it).arg.c_str() )));
+            menu->addAction(act);
+        }
+        menu->popup(ui->tableView->viewport()->mapToGlobal(pos));
+    }
+}
+
+void MainWindow::on_albumTracksTable_doubleClicked(const QModelIndex &index)
+{
+    Track* t = static_cast<Track*>(index.internalPointer());
+    m_.play( t->getAlbumLink(), t->getIndex(), this, NULL );
+}
+
+void MainWindow::on_albumTracksTable_customContextMenuRequested(const QPoint &pos)
+{
+    std::deque<TrackListModel::ContextMenuItem> items = albumTracksModel.constructContextMenu( ui->albumTracksTable->indexAt( pos ) );
+    if ( items.size() > 0 )
+    {
+        QMenu* menu = new QMenu();
+        std::deque<TrackListModel::ContextMenuItem>::iterator it = items.begin();
+        for ( ; it != items.end(); it++ )
+        {
+            if ( (*it).type == TrackListModel::ContextMenuItem::BROWSE_ALBUM )
+                continue;
+
+            QAction* act = new QAction(this);
+            switch( (*it).type )
+            {
+            case TrackListModel::ContextMenuItem::ENQUEUE:
+                connect( act, SIGNAL(triggered()), this, SLOT(enqueue()));
+                break;
+            case TrackListModel::ContextMenuItem::BROWSE_ARTIST:
+                connect( act, SIGNAL(triggered()), this, SLOT(artistbrowse()));
+                break;
+            }
+
+            act->setText((*it).text);
+            act->setData(QVariant(QString( (*it).arg.c_str() )));
+            menu->addAction(act);
+        }
+        menu->popup(ui->albumTracksTable->viewport()->mapToGlobal(pos));
+    }
+}
+
 
 void MainWindow::on_actionShowEndpoints_triggered()
 {
@@ -164,6 +236,24 @@ void MainWindow::updateEndpointsGui()
     }
 }
 
+void MainWindow::updateArtistPage()
+{
+    ui->artistPageTitle->setText(QString::fromStdString( artist_->getName() ) );
+
+    QLayoutItem *child;
+    while ((child = ui->artistAlbumsContainerLayout->takeAt(0)) != 0)
+    {
+        delete child->widget();
+        delete child;
+    }
+
+    AlbumContainer::const_iterator it = artist_->getAlbums().begin();
+    for ( ; it != artist_->getAlbums().end(); it++ )
+    {
+        ui->artistAlbumsContainerLayout->addWidget(new AlbumEntry((*it), m_));
+    }
+}
+
 QString toTextLabel( unsigned int sec )
 {
     unsigned int minutes = sec / 60;
@@ -178,6 +268,31 @@ void MainWindow::progressUpdate()
     progress_++;
     ui->progressLabel->setText( toTextLabel(progress_) );
     ui->progressBar->setValue( progress_ );
+}
+
+void MainWindow::enqueue()
+{
+    QAction* origin = (QAction*)sender();
+    QString data = origin->data().toString();
+    m_.enqueue(data.toStdString(), this, NULL);
+}
+
+void MainWindow::artistbrowse()
+{
+    QAction* origin = (QAction*)sender();
+    QString data = origin->data().toString();
+    m_.getArtist( data.toStdString(), this, NULL );
+    m_.getImage( data.toStdString(), this, ui->artistPageImage );
+    ui->stackedWidget->setCurrentWidget( ui->artistPage );
+}
+
+void MainWindow::albumbrowse()
+{
+    QAction* origin = (QAction*)sender();
+    QString data = origin->data().toString();
+    m_.getAlbum( data.toStdString(), this, NULL);
+    m_.getImage( data.toStdString(), this, ui->albumPageImage );
+    ui->stackedWidget->setCurrentWidget( ui->albumPage );
 }
 
 
@@ -235,13 +350,26 @@ void MainWindow::getTracksResponse( const std::deque<Track>& tracks, void* userD
 void MainWindow::getImageResponse( const void* data, size_t dataSize, void* userData )
 {
     QImage img = QImage::fromData( (const uchar*)data, (int)dataSize );
-    ui->label->setPixmap( QPixmap::fromImage(img) );
+    QLabel* origin = (QLabel*)userData;
+    int s = img.width() < img.height() ? img.width() : img.height();
+    int x = (img.width()-s)/2;
+    int y = (img.height()-s)/2;
+    QPixmap pm = QPixmap::fromImage(img.copy( x, y, s, s ) );
+    origin->setPixmap( pm );
 }
 void MainWindow::getAlbumResponse( const Album& album, void* userData )
 {
+    ui->albumPageTitle->setText( QString::fromStdString( album.getName() ) );
+    ui->albumPageArtist->setText( QString::fromStdString( album.getArtist().getName() ) );
+    ui->albumPageYear->setText( QString::number( album.getYear() ) );
+    ui->albumPageReview->setText( QString::fromStdString( album.getReview() ) );
+    albumTracksModel.setTrackList( album.getTracks() );
 }
 void MainWindow::getArtistResponse( const Artist& artist, void* userData )
 {
+    if ( artist_ ) delete artist_;
+    artist_ = new Artist(artist);
+    QMetaObject::invokeMethod( this, "updateArtistPage", Qt::QueuedConnection );
 }
 void MainWindow::genericSearchCallback( const std::deque<Track>& listOfTracks, const std::string& didYouMean, void* userData )
 {
@@ -249,7 +377,7 @@ void MainWindow::genericSearchCallback( const std::deque<Track>& listOfTracks, c
 
 void MainWindow::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume, const Track& currentTrack, unsigned int progress )
 {
-    m_.getImage( currentTrack.getAlbumLink(), this, NULL );
+    m_.getImage( currentTrack.getAlbumLink(), this, ui->label );
     ui->currentTrackLabel->setText( QString( currentTrack.getName().c_str() ) );
     ui->currentArtistLabel->setText( QString( currentTrack.getArtists().front().getName().c_str() ) );
     progress_ = progress / 1000;
@@ -301,4 +429,6 @@ void MainWindow::audioEndpointsUpdatedNtf()
         epMgr_.getAudioEndpoints( this, NULL );
     }
 }
+
+
 

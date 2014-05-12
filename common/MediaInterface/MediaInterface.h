@@ -43,22 +43,22 @@ using namespace LibSpotify;
 class IMediaInterfaceCallbackSubscriber
 {
 public:
-    virtual void connectionState( bool up ) = 0;
-    virtual void rootFolderUpdatedInd() = 0;
-    virtual void playlistUpdatedInd( const std::string& link ) = 0;
-    virtual void statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume, const Track& currentTrack, unsigned int progress ) = 0;
-    virtual void statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume ) = 0;
+    virtual void connectionState( bool up ) {}
+    virtual void rootFolderUpdatedInd() {}
+    virtual void playlistUpdatedInd( const std::string& link ) {}
+    virtual void statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume, const Track& currentTrack, unsigned int progress ) {}
+    virtual void statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume ) {}
 
-    virtual void getPlaylistsResponse( const Folder& rootfolder, void* userData ) = 0;
-    virtual void getTracksResponse( const std::deque<Track>& tracks, void* userData ) = 0;
-    virtual void getImageResponse( const void* data, size_t dataSize, void* userData ) = 0;
-    virtual void getAlbumResponse( const Album& album, void* userData ) = 0;
-    virtual void getArtistResponse( const Artist& artist, void* userData ) = 0;
-    virtual void genericSearchCallback( const std::deque<Track>& listOfTracks, const std::string& didYouMean, void* userData ) = 0;
-    virtual void getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume, const Track& currentTrack, unsigned int progress, void* userData ) = 0;
-    virtual void getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume, void* userData ) = 0;
+    virtual void getPlaylistsResponse( const Folder& rootfolder, void* userData ) {}
+    virtual void getTracksResponse( const std::deque<Track>& tracks, void* userData ) {}
+    virtual void getImageResponse( const void* data, size_t dataSize, void* userData ) {}
+    virtual void getAlbumResponse( const Album& album, void* userData ) {}
+    virtual void getArtistResponse( const Artist& artist, void* userData ) {}
+    virtual void genericSearchCallback( const std::deque<Track>& listOfTracks, const std::string& didYouMean, void* userData ) {}
+    virtual void getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume, const Track& currentTrack, unsigned int progress, void* userData ) {}
+    virtual void getStatusResponse( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume, void* userData ) {}
 
-    virtual void getCurrentAudioEndpointsResponse( const std::set<std::string>& endpoints, void* userData ) = 0;
+    virtual void getCurrentAudioEndpointsResponse( const std::set<std::string>& endpoints, void* userData ) {}
 };
 
 

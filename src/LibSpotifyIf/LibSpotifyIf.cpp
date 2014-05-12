@@ -489,11 +489,26 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
                         if ( sp_album_is_loaded(album) )
                         {
                             imgRef = sp_album_cover( album, SP_IMAGE_SIZE_NORMAL ); //todo image size should be in remote interface
+                            loadAndSendImage( imgRef, reqEvent );
                         }
                         else
                         {
                             log(LOG_WARN) << "No metadata for album";
                             sp_albumbrowse_create( spotifySession_, album, &LibSpotifyIfCallbackWrapper::albumLoadedCallback, new QueryReqEventItem( *reqEvent ));
+                        }
+                    }
+                    else if(sp_link_type(link) == SP_LINKTYPE_ARTIST)
+                    {
+                        sp_artist* artist = sp_link_as_artist(link);
+                        /* -- sp_artist_portrait seems broken, always gets null here
+                        if ( sp_artist_is_loaded( artist ) )
+                        {
+                            imgRef = sp_artist_portrait( artist, SP_IMAGE_SIZE_NORMAL );
+                            loadAndSendImage( imgRef, reqEvent );
+                        }
+                        else*/
+                        {
+                            sp_artistbrowse_create( spotifySession_, artist, SP_ARTISTBROWSE_NO_ALBUMS, &LibSpotifyIfCallbackWrapper::artistLoadedCallback, new QueryReqEventItem( *reqEvent ));
                         }
                     }
                     else
@@ -503,32 +518,6 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
                         reqData.first->getImageResponse( NULL, 0, reqData.second );
                     }
 
-                    if (imgRef)
-                    {
-                        sp_image* img = sp_image_create(spotifySession_, imgRef);
-                        if ( img )
-                        {
-                            sp_error error;
-                            error = sp_image_error(img);
-
-                            if ( sp_image_is_loaded(img) )
-                            {
-                                sendGetImageRsp(img, reqEvent);
-                            }
-                            else if ( error == SP_ERROR_IS_LOADING )
-                            {
-                                log(LOG_DEBUG) << "waiting for image load";
-                                sp_image_add_load_callback(img, &LibSpotifyIfCallbackWrapper::imageLoadedCallback, new QueryReqEventItem(*reqEvent));
-                            }
-                            else
-                            {
-                                log(LOG_WARN) << "Image load error: " << sp_error_message(error);
-                                PendingMediaRequestData reqData = reqEvent->reqData;
-                                reqData.first->getImageResponse( NULL, 0, reqData.second );
-                                sp_image_release(img);
-                            }
-                        }
-                    }
                     sp_link_release(link);
                 }
                 else
@@ -975,6 +964,43 @@ void LibSpotifyIf::sendGetImageRsp( sp_image* img, QueryReqEventItem* reqEvent )
     reqData.first->getImageResponse( data, dataSize, reqData.second );
     sp_image_release(img);
 }
+
+void LibSpotifyIf::loadAndSendImage( const byte* imgRef, QueryReqEventItem* reqEvent )
+{
+    bool imgOk = false;
+    if ( imgRef )
+    {
+        sp_image* img = sp_image_create(spotifySession_, imgRef);
+        if ( img )
+        {
+            sp_error error;
+            error = sp_image_error(img);
+
+            if ( sp_image_is_loaded(img) )
+            {
+                sendGetImageRsp(img, reqEvent);
+                imgOk = true;
+            }
+            else if ( error == SP_ERROR_IS_LOADING )
+            {
+                log(LOG_DEBUG) << "waiting for image load";
+                sp_image_add_load_callback(img, &LibSpotifyIfCallbackWrapper::imageLoadedCallback, new QueryReqEventItem(*reqEvent));
+                imgOk = true;
+            }
+            else
+            {
+                log(LOG_WARN) << "Image load error: " << sp_error_message(error);
+                sp_image_release(img);
+            }
+        }
+    }
+
+    if ( imgOk == false )
+    {
+        PendingMediaRequestData reqData = reqEvent->reqData;
+        reqData.first->getImageResponse( NULL, 0, reqData.second );
+    }
+}
 /* * * * * * * * * * * * * * * * * * * * * * * * * * *
  * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
@@ -1109,7 +1135,6 @@ void LibSpotifyIf::albumLoadedCb(sp_albumbrowse* result, void *userdata)
                 PendingMediaRequestData reqData = msg->reqData;
                 reqData.first->getAlbumResponse( album, reqData.second );
             }
-            delete msg;
             break;
         }
         case EVENT_PLAY_REQ:
@@ -1122,7 +1147,6 @@ void LibSpotifyIf::albumLoadedCb(sp_albumbrowse* result, void *userdata)
                 log(LOG_NOTICE) << "Album \"" << album.getName() << "\" loaded";
                 playbackHandler_.playAlbum(album, msg->startIndex_);
             }
-            delete msg;
             break;
         }
         case EVENT_GET_IMAGE:
@@ -1130,7 +1154,9 @@ void LibSpotifyIf::albumLoadedCb(sp_albumbrowse* result, void *userdata)
             QueryReqEventItem* msg = static_cast<QueryReqEventItem*>(userdata);
             if ( sp_albumbrowse_error( result ) == SP_ERROR_OK )
             {
-                postToEventThread( msg );
+                sp_album* album = sp_albumbrowse_album( result );
+                const byte* imgRef = sp_album_cover( album, SP_IMAGE_SIZE_NORMAL );
+                loadAndSendImage( imgRef, msg );
             }
             else
             {
@@ -1144,6 +1170,7 @@ void LibSpotifyIf::albumLoadedCb(sp_albumbrowse* result, void *userdata)
             assert(0);
     }
 
+    delete ev;
     sp_albumbrowse_release(result);
 }
 
@@ -1165,13 +1192,29 @@ void LibSpotifyIf::artistLoadedCb(sp_artistbrowse* result, void *userdata)
                 PendingMediaRequestData reqData = msg->reqData;
                 reqData.first->getArtistResponse( artist, reqData.second );
             }
-            delete msg;
+            break;
+        }
+        case EVENT_GET_IMAGE:
+        {
+            QueryReqEventItem* msg = static_cast<QueryReqEventItem*>(userdata);
+            if ( sp_artistbrowse_error( result ) == SP_ERROR_OK && sp_artistbrowse_num_portraits( result ) )
+            {
+                sp_artist* artist = sp_artistbrowse_artist( result );
+                const byte* imgRef = sp_artist_portrait( artist, SP_IMAGE_SIZE_NORMAL ); //sp_artistbrowse_portrait( result, 0 ); 
+                loadAndSendImage( imgRef, msg );
+            }
+            else
+            {
+                PendingMediaRequestData reqData = msg->reqData;
+                reqData.first->getImageResponse( NULL, 0, reqData.second );
+            }
             break;
         }
         default:
             assert(0);
     }
 
+    delete ev;
     sp_artistbrowse_release(result);
 }
 /* *****************

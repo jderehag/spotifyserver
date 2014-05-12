@@ -17,8 +17,24 @@ private:
         NCOLUMNS
     };
 public:
+    class ContextMenuItem
+    {
+    public:
+        typedef enum
+        {
+            ENQUEUE,
+            BROWSE_ALBUM,
+            BROWSE_ARTIST,
+        }ContextMenuItemType;
+        ContextMenuItemType type;
+        const QString text;
+        const std::string arg;
+        ContextMenuItem( ContextMenuItemType type_, const QString& text_, const std::string& arg_) : type(type_), text(text_), arg(arg_) {}
+    };
+
     TrackListModel();
     void setTrackList( const std::deque<LibSpotify::Track>& tracks_ );
+    std::deque<ContextMenuItem> constructContextMenu( const QModelIndex & index );
     virtual int columnCount ( const QModelIndex & parent = QModelIndex() ) const;
     virtual int rowCount ( const QModelIndex & parent = QModelIndex() ) const;
     virtual QVariant data ( const QModelIndex & index, int role = Qt::DisplayRole ) const;

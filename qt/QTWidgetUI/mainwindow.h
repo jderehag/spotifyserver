@@ -49,8 +49,12 @@ public:
 
 public slots:
     void updateGui();
+    void updateArtistPage();
     void updateEndpointsGui();
     void progressUpdate();
+    void enqueue();
+    void albumbrowse();
+    void artistbrowse();
     void endpointCheckbox_clicked(bool checked);
 
 private slots:
@@ -72,13 +76,21 @@ private slots:
 
     void on_shuffleButton_clicked(bool checked);
 
+    void on_tableView_customContextMenuRequested(const QPoint &pos);
+
+    void on_albumTracksTable_doubleClicked(const QModelIndex &index);
+
+    void on_albumTracksTable_customContextMenuRequested(const QPoint &pos);
+
 private:
     Ui::MainWindow *ui;
 
     MediaInterface& m_;
     EndpointCtrlInterface& epMgr_;
     TrackListModel tracksModel;
+    TrackListModel albumTracksModel;
     AudioEndpointInfoList endpoints_;
+    const Artist* artist_;
 
     unsigned int progress_;
     QTimer progressTimer;

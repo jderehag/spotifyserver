@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
     ch.parseConfigFile();
 
     ConfigHandling::LoggerConfig cfg = ch.getLoggerConfig();
-    cfg.setLogTo(ConfigHandling::LoggerConfig::STDOUT);
+    //cfg.setLogTo(ConfigHandling::LoggerConfig::STDOUT);
     Logger::LoggerImpl l(cfg);
 
     EndpointId clientId( ch.getGeneralConfig() );

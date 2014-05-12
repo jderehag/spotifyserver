@@ -47,6 +47,7 @@ private:
 
     void RemoveTimer( Timer* t );
 
+    //make non-copyable
     TimerThread( const TimerThread& );
     TimerThread& operator=( const TimerThread& );
 

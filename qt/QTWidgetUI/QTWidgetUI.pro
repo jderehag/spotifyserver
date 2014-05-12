@@ -20,15 +20,18 @@ DEPENDPATH += $$PWD/../../common += $$PWD/../../src
 
 SOURCES += \
     mainwindow.cpp \
-    TrackListModel.cpp
+    TrackListModel.cpp \
+    AlbumEntry.cpp
 
 HEADERS += \
     mainwindow.h \
-    TrackListModel.h
+    TrackListModel.h \
+    AlbumEntry.h
 unix {
     target.path = /usr/lib
     INSTALLS += target
 }
 
 FORMS += \
-    mainwindow.ui
+    mainwindow.ui \
+    AlbumEntry.ui
