@@ -25,6 +25,8 @@ private slots:
 private:
     Ui::PlaylistPage *ui;
 
+    /* implaments IMediaInterfaceCallbackSubscriber */
+    virtual void playlistUpdatedInd( const std::string& link );
     virtual void getImageResponse( const void* data, size_t dataSize, void* userData );
     virtual void getTracksResponse( const std::deque<Track>& tracks, void* userData );
 

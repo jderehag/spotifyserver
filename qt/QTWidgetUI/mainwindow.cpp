@@ -223,14 +223,7 @@ void MainWindow::rootFolderUpdatedInd()
 {
     m_.getPlaylists( this, NULL );
 }
-void MainWindow::playlistUpdatedInd( const std::string& link )
-{
-    PlaylistsModelItem* item = (PlaylistsModelItem*)ui->playlistsTree->currentItem();
-    if ( item && item->getLink().compare( link ) == 0 )
-    {
-        m_.getTracks( link, this, NULL );
-    }
-}
+
 
 void MainWindow::connectionState( bool up )
 {

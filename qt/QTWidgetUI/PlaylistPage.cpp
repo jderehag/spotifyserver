@@ -24,7 +24,13 @@ PlaylistPage::~PlaylistPage()
     delete ui;
 }
 
-
+void PlaylistPage::playlistUpdatedInd( const std::string& link )
+{
+    if ( this->link.compare( link ) == 0 )
+    {
+        m.getTracks( link, this, NULL );
+    }
+}
 void PlaylistPage::getTracksResponse( const std::deque<Track>& tracks, void* userData )
 {
     tracksModel.setTrackList(tracks);
@@ -33,11 +39,21 @@ void PlaylistPage::getTracksResponse( const std::deque<Track>& tracks, void* use
 void PlaylistPage::getImageResponse( const void* data, size_t dataSize, void* userData )
 {
     QImage img = QImage::fromData( (const uchar*)data, (int)dataSize );
-    // the size/width ratio can be anything so we crop it into square first
-    int s = img.width() < img.height() ? img.width() : img.height();
-    int x = (img.width()-s)/2;
-    int y = (img.height()-s)/2;
-    QPixmap pm = QPixmap::fromImage(img.copy( x, y, s, s ) );
+    QPixmap pm;
+    if ( img.width() != img.height() )
+    {
+        /* the height/width ratio can be anything so we crop it into square first */
+        int s = img.width() < img.height() ? img.width() : img.height();
+        int x = (img.width()-s)/2;
+        int y = (img.height()-s)/2;
+        pm = QPixmap::fromImage(img.copy( x, y, s, s ) );
+    }
+    else
+    {
+        /* image is already square */
+        pm = QPixmap::fromImage(img);
+    }
+    // and now apply it to the image, it has the scale property set so it will resize the image
     ui->playlistImage->setPixmap( pm );
 }
 
