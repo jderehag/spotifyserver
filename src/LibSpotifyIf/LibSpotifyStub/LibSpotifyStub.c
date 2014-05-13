@@ -42,6 +42,7 @@ static sp_artist artist_array_1[] =
         {
                 .name ="Oasis",
                 .url = "spotify:artist:Oasis",
+                .imgRef = "PrettyPicture",
         },
 };
 
@@ -50,10 +51,12 @@ static sp_artist artist_array_2[] =
         {
                 .name ="Oasis",
                 .url = "spotify:artist:Oasis",
+                .imgRef = "PrettyPicture",
         },
         {
                 .name ="Bon Jovi",
                 .url = "spotify:artist:BonJovi",
+                .imgRef = "AnotherPrettyPicture",
         }
 
 };
@@ -364,6 +367,11 @@ bool sp_playlist_is_loaded(sp_playlist *playlist)
 	return 1;
 }
 
+bool sp_playlist_get_image(sp_playlist *playlist, byte image[20])
+{
+    return 0;
+}
+
 sp_error sp_playlist_add_callbacks(sp_playlist *playlist, sp_playlist_callbacks *callbacks, void *userdata) { return SP_ERROR_OK; }
 sp_error sp_playlist_remove_callbacks(sp_playlist *playlist, sp_playlist_callbacks *callbacks, void *userdata) { return SP_ERROR_OK; }
 
@@ -437,6 +445,10 @@ const char* sp_artist_name(sp_artist *artist)
     return artist->name;
 }
 
+const byte* sp_artist_portrait(sp_artist *artist, sp_image_size size)
+{
+    return artist->imgRef;
+}
 /* ************************************
  * Album stubs
  * * *********************************/
@@ -539,6 +551,11 @@ int sp_artistbrowse_num_albums(sp_artistbrowse *arb)
 sp_album * sp_artistbrowse_album(sp_artistbrowse *arb, int index)
 {
     return &arb->album_array[index];
+}
+
+int sp_artistbrowse_num_portraits(sp_artistbrowse *arb)
+{
+    return 1;
 }
 
 sp_error sp_artistbrowse_release(sp_artistbrowse *artist)

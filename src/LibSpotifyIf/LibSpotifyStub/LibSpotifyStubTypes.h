@@ -51,6 +51,7 @@ struct sp_artist
 {
     char name[256];
     char url[256];
+    char imgRef[20];
 };
 
 struct sp_album
