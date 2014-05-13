@@ -2,10 +2,11 @@
 #include "ui_AlbumEntry.h"
 #include <QMenu>
 
-AlbumEntry::AlbumEntry(const LibSpotify::Album& album_, MediaInterface& m_, GlobalActionSlots& actions_, QWidget *parent) :
+AlbumEntry::AlbumEntry(const LibSpotify::Album& album_, const LibSpotify::MediaBaseInfo& owner_, MediaInterface& m_, GlobalActionSlots& actions_, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::AlbumEntry),
     album(album_),
+    owner(owner_),
     m(m_),
     actions(actions_),
     loaded(false)
@@ -48,6 +49,7 @@ void AlbumEntry::updateAlbum()
 {
     tracksModel.setTrackList( album.getTracks() );
     ui->albumTracksTable->setModel( &tracksModel );
+    ui->albumTracksTable->hideColumn( TrackListModel::COLUMN_ALBUM );
 }
 
 void AlbumEntry::on_albumTracksTable_customContextMenuRequested(const QPoint &pos)
@@ -59,11 +61,12 @@ void AlbumEntry::on_albumTracksTable_customContextMenuRequested(const QPoint &po
         std::deque<TrackListModel::ContextMenuItem>::iterator it = items.begin();
         for ( ; it != items.end(); it++ )
         {
-            if ( (*it).type == TrackListModel::ContextMenuItem::BROWSE_ARTIST )
+            TrackListModel::ContextMenuItem& item = (*it);
+            if ( item.type == TrackListModel::ContextMenuItem::BROWSE_ARTIST && item.arg == owner )
                 continue;
 
             QAction* act = new QAction(this);
-            switch( (*it).type )
+            switch( item.type )
             {
             case TrackListModel::ContextMenuItem::ENQUEUE:
                 connect( act, SIGNAL(triggered()), &actions, SLOT(enqueueTrack()));
@@ -71,10 +74,13 @@ void AlbumEntry::on_albumTracksTable_customContextMenuRequested(const QPoint &po
             case TrackListModel::ContextMenuItem::BROWSE_ALBUM:
                 connect( act, SIGNAL(triggered()), &actions, SLOT(browseAlbum()));
                 break;
+            case TrackListModel::ContextMenuItem::BROWSE_ARTIST:
+                connect( act, SIGNAL(triggered()), &actions, SLOT(browseArtist()));
+                break;
             }
 
-            act->setText((*it).text);
-            act->setData(QVariant(QString( (*it).arg.c_str() )));
+            act->setText(item.text);
+            act->setData( QVariant::fromValue( item.arg ) );
             menu->addAction(act);
         }
         menu->popup(ui->albumTracksTable->viewport()->mapToGlobal(pos));

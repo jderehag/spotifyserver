@@ -1,6 +1,5 @@
 #include "TrackListModel.h"
 
-
 TrackListModel::TrackListModel()
 {
 }
@@ -18,17 +17,17 @@ std::deque<TrackListModel::ContextMenuItem> TrackListModel::constructContextMenu
     if ( index.isValid() && index.row() < tracks.size() )
     {
         LibSpotify::Track& t = tracks[index.row()];
-        res.push_back(ContextMenuItem(ContextMenuItem::ENQUEUE, QString("Enqueue"), t.getLink()));
-        res.push_back(ContextMenuItem(ContextMenuItem::BROWSE_ALBUM, QString("Browse album"), t.getAlbumLink()));
+        res.push_back(ContextMenuItem(ContextMenuItem::ENQUEUE, QString("Enqueue"), t));
+        res.push_back(ContextMenuItem(ContextMenuItem::BROWSE_ALBUM, QString("Browse album"), LibSpotify::MediaBaseInfo(t.getAlbum(),t.getAlbumLink())));
         int nartists = t.getArtists().size();
         if ( nartists == 1 )
-            res.push_back(ContextMenuItem(ContextMenuItem::BROWSE_ARTIST, QString("Browse artist"), t.getArtists().front().getLink()));
+            res.push_back(ContextMenuItem(ContextMenuItem::BROWSE_ARTIST, QString("Browse artist"), t.getArtists().front()));
         else if ( nartists > 1 )
         {
             std::vector<LibSpotify::MediaBaseInfo>::const_iterator it = t.getArtists().begin();
             for ( ; it != t.getArtists().end(); it++ )
             {
-                res.push_back(ContextMenuItem(ContextMenuItem::BROWSE_ARTIST, QString("Browse ").append((*it).getName().c_str()), (*it).getLink()));
+                res.push_back(ContextMenuItem(ContextMenuItem::BROWSE_ARTIST, QString("Browse ").append((*it).getName().c_str()), *it ));
             }
         }
     }
@@ -56,7 +55,7 @@ QVariant TrackListModel::data( const QModelIndex & index, int role ) const
         case COLUMN_NAME:
             return QVariant( tracks[index.row()].getName().c_str() );
         case COLUMN_ARTIST:
-            return QVariant( tracks[index.row()].getArtists().front().getName().c_str() );
+            return QVariant( tracks[index.row()].getArtistsPrettyString().c_str() );
         case COLUMN_ALBUM:
             return QVariant( tracks[index.row()].getAlbum().c_str() );
         }
@@ -78,9 +77,9 @@ QModelIndex TrackListModel::parent( const QModelIndex & index ) const
 
 QVariant TrackListModel::headerData( int section, Qt::Orientation orientation, int role ) const
 {
-    if ( section >= NCOLUMNS || orientation != Qt::Horizontal || role != Qt::DisplayRole)
+    if ( role != Qt::DisplayRole )
         return QVariant();
-    else
+    else if ( orientation == Qt::Horizontal && section < NCOLUMNS )
     {
         switch (section)
         {
@@ -92,4 +91,10 @@ QVariant TrackListModel::headerData( int section, Qt::Orientation orientation, i
             return QVariant(QString("Album"));
         }
     }
+    else if ( orientation == Qt::Vertical )
+    {
+        return QVariant(QString::number(section+1));
+    }
+
+    return QVariant();
 }

@@ -72,8 +72,9 @@ void PlaylistPage::on_tableView_customContextMenuRequested(const QPoint &pos)
         std::deque<TrackListModel::ContextMenuItem>::iterator it = items.begin();
         for ( ; it != items.end(); it++ )
         {
+            TrackListModel::ContextMenuItem& item = (*it);
             QAction* act = new QAction(this);
-            switch( (*it).type )
+            switch( item.type )
             {
             case TrackListModel::ContextMenuItem::ENQUEUE:
                 connect( act, SIGNAL(triggered()), &actions, SLOT(enqueueTrack()));
@@ -86,8 +87,8 @@ void PlaylistPage::on_tableView_customContextMenuRequested(const QPoint &pos)
                 break;
             }
 
-            act->setText( (*it).text );
-            act->setData( QVariant( QString( (*it).arg.c_str() ) ) );
+            act->setText( item.text );
+            act->setData( QVariant::fromValue( item.arg ) );
             menu->addAction(act);
         }
         menu->popup(ui->tableView->viewport()->mapToGlobal(pos));

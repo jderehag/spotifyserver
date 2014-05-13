@@ -56,6 +56,7 @@ public:
 
 	const std::vector<MediaBaseInfo>& getArtists() const;
 	void addArtist(MediaBaseInfo& artist);
+    const std::string getArtistsPrettyString() const;
 	const std::string& getAlbum() const;
 	void setAlbum(const std::string& name, const std::string& link);
     const std::string& getAlbumLink() const;

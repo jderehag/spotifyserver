@@ -30,6 +30,8 @@
 namespace LibSpotify
 {
 
+MediaBaseInfo::MediaBaseInfo() {}
+
 MediaBaseInfo::MediaBaseInfo( const std::string& name, const std::string& link ) : name_(name), link_(link)
 {
 }
@@ -58,6 +60,16 @@ TlvContainer* MediaBaseInfo::createTlv(TlvType_t type) const
     container->addTlv(TLV_LINK, link_);
 
     return container;
+}
+
+bool MediaBaseInfo::operator==(const MediaBaseInfo& rhs) const
+{
+    return (name_ == rhs.name_) &&
+           (link_ == rhs.link_);
+}
+bool MediaBaseInfo::operator!=(const MediaBaseInfo& rhs) const
+{
+    return !(*this == rhs);
 }
 
 } /* namespace LibSpotify */

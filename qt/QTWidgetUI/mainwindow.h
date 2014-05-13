@@ -40,8 +40,8 @@ public:
 
 
     /* Implements IGlobalActionCallbacks */
-    virtual void browseAlbum( std::string link );
-    virtual void browseArtist( std::string link );
+    virtual void browseArtist( const MediaBaseInfo& artist );
+    virtual void browseAlbum( const MediaBaseInfo& album );
     virtual void enqueueTrack( std::string link );
 
 public slots:

@@ -9,6 +9,7 @@ class TrackListModel : public QAbstractItemModel
 {
 private:
     std::deque<LibSpotify::Track> tracks;
+public:
     enum
     {
         COLUMN_NAME,
@@ -16,7 +17,7 @@ private:
         COLUMN_ALBUM,
         NCOLUMNS
     };
-public:
+
     class ContextMenuItem
     {
     public:
@@ -28,8 +29,8 @@ public:
         }ContextMenuItemType;
         ContextMenuItemType type;
         const QString text;
-        const std::string arg;
-        ContextMenuItem( ContextMenuItemType type_, const QString& text_, const std::string& arg_) : type(type_), text(text_), arg(arg_) {}
+        const LibSpotify::MediaBaseInfo arg;
+        ContextMenuItem( ContextMenuItemType type_, const QString& text_, const LibSpotify::MediaBaseInfo& arg_) : type(type_), text(text_), arg(arg_) {}
     };
 
     TrackListModel();

@@ -14,7 +14,7 @@ class ArtistPage : public QWidget, IMediaInterfaceCallbackSubscriber
     Q_OBJECT
 
 public:
-    explicit ArtistPage( const std::string& link_, MediaInterface& m_, GlobalActionSlots& actions_, QWidget *parent = 0);
+    explicit ArtistPage( const LibSpotify::MediaBaseInfo& artist_, MediaInterface& m_, GlobalActionSlots& actions_, QWidget *parent = 0);
     ~ArtistPage();
 
 public slots:
@@ -26,7 +26,7 @@ private:
     virtual void getImageResponse( const void* data, size_t dataSize, void* userData );
     virtual void getArtistResponse( const Artist& artist, void* userData );
 
-    LibSpotify::Artist* artist;
+    LibSpotify::Artist artist;
     MediaInterface& m;
     GlobalActionSlots& actions;
 

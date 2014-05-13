@@ -41,15 +41,18 @@ protected:
     std::string link_;
 
 public:
-    //MediaBaseInfo(const char* name, const char* link);
+    MediaBaseInfo();
     MediaBaseInfo( const std::string& name, const std::string& link );
-    MediaBaseInfo(const TlvContainer* tlv);
+    MediaBaseInfo( const TlvContainer* tlv );
     virtual ~MediaBaseInfo();
 
     const std::string& getName() const;
     const std::string& getLink() const;
 
     TlvContainer* createTlv(TlvType_t type) const;
+
+    bool operator==(const MediaBaseInfo& rhs) const;
+    bool operator!=(const MediaBaseInfo& rhs) const;
 };
 
 } /* namespace LibSpotify */

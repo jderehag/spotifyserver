@@ -142,6 +142,9 @@
        <attribute name="horizontalHeaderHighlightSections">
         <bool>false</bool>
        </attribute>
+       <attribute name="verticalHeaderHighlightSections">
+        <bool>false</bool>
+       </attribute>
       </widget>
      </item>
     </layout>

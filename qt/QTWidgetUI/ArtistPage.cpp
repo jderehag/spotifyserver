@@ -2,17 +2,19 @@
 #include "AlbumEntry.h"
 #include "ui_ArtistPage.h"
 
-ArtistPage::ArtistPage( const std::string& link_, MediaInterface &m_, GlobalActionSlots &actions_, QWidget *parent ) :
+ArtistPage::ArtistPage( const LibSpotify::MediaBaseInfo& artist_, MediaInterface &m_, GlobalActionSlots &actions_, QWidget *parent ) :
     QWidget(parent),
     ui(new Ui::ArtistPage),
-    artist(NULL),
+    artist(artist_.getName(), artist_.getLink()),
     m(m_),
     actions(actions_)
 {
     ui->setupUi(this);
 
-    m.getArtist( link_, this, NULL);
-    m.getImage( link_, this, NULL );
+    ui->artistPageTitle->setText(QString::fromStdString( artist.getName() ) );
+
+    m.getArtist( artist.getLink(), this, NULL);
+    m.getImage( artist.getLink(), this, NULL );
 }
 
 ArtistPage::~ArtistPage()
@@ -42,17 +44,17 @@ void ArtistPage::getImageResponse( const void* data, size_t dataSize, void* user
 }
 void ArtistPage::getArtistResponse( const Artist& artist, void* userData )
 {
-    this->artist = new Artist(artist);
+    this->artist = artist;
     QMetaObject::invokeMethod( this, "updateArtist", Qt::QueuedConnection );
 }
 
 void ArtistPage::updateArtist()
 {
-    ui->artistPageTitle->setText(QString::fromStdString( artist->getName() ) );
+    ui->artistPageTitle->setText(QString::fromStdString( artist.getName() ) );
 
-    AlbumContainer::const_iterator it = artist->getAlbums().begin();
-    for ( ; it != artist->getAlbums().end(); it++ )
+    AlbumContainer::const_iterator it = artist.getAlbums().begin();
+    for ( ; it != artist.getAlbums().end(); it++ )
     {
-        ui->artistAlbumsContainerLayout->addWidget(new AlbumEntry((*it), m, actions));
+        ui->artistAlbumsContainerLayout->addWidget(new AlbumEntry((*it), artist, m, actions));
     }
 }

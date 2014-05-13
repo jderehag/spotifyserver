@@ -16,7 +16,7 @@ class AlbumEntry : public QWidget, IMediaInterfaceCallbackSubscriber
     Q_OBJECT
 
 public:
-    explicit AlbumEntry(const LibSpotify::Album& album_, MediaInterface& m_, GlobalActionSlots& actions_, QWidget *parent = 0);
+    explicit AlbumEntry(const LibSpotify::Album& album_, const LibSpotify::MediaBaseInfo& owner_, MediaInterface& m_, GlobalActionSlots& actions_, QWidget *parent = 0);
     ~AlbumEntry();
 
 protected:
@@ -36,6 +36,7 @@ private:
     virtual void getAlbumResponse( const Album& album, void* userData );
 
     Album album;
+    MediaBaseInfo owner;
     MediaInterface& m;
     GlobalActionSlots& actions;
     TrackListModel tracksModel;

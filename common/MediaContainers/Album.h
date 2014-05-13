@@ -43,7 +43,7 @@ private:
     MediaBaseInfo artist_;
 
 public:
-    Album(const char* name, const char* link);
+    Album(const std::string& name, const std::string& link);
     Album(const TlvContainer* tlv);
     virtual ~Album();
 

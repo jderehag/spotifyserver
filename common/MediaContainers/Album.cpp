@@ -32,11 +32,11 @@ namespace LibSpotify
 {
 
 
-Album::Album(const char* name, const char* link) : Playlist(name, link), 
-                                                   year_(0), 
-                                                   review_(""),
-                                                   isAvailable_(false), 
-                                                   artist_(Artist("", ""))
+Album::Album(const std::string& name, const std::string& link) : Playlist(name, link), 
+                                                                 year_(0), 
+                                                                 review_(""),
+                                                                 isAvailable_(false), 
+                                                                 artist_(Artist("", ""))
 { }
 Album::Album(const TlvContainer* tlv) : Playlist(tlv), artist_(Artist("", ""))
 {

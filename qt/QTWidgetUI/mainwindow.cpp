@@ -208,14 +208,14 @@ void MainWindow::enqueueTrack( std::string link )
     m_.enqueue(link, this, NULL);
 }
 
-void MainWindow::browseArtist( std::string link )
+void MainWindow::browseArtist(const MediaBaseInfo& artist )
 {
-    newPage(  new ArtistPage( link, m_, actions, this ) );
+    newPage(  new ArtistPage( artist, m_, actions, this ) );
 }
 
-void MainWindow::browseAlbum( std::string link )
+void MainWindow::browseAlbum( const MediaBaseInfo& album )
 {
-    newPage( new AlbumPage( link, m_, actions, this ) );
+    newPage( new AlbumPage( album, m_, actions, this ) );
 }
 
 

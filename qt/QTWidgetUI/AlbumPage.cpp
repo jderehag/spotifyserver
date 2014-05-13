@@ -2,26 +2,26 @@
 #include "ui_AlbumPage.h"
 #include <QMenu>
 
-AlbumPage::AlbumPage(const std::string& link_, MediaInterface& m_, GlobalActionSlots &actions_, QWidget *parent ) :
+AlbumPage::AlbumPage( const LibSpotify::MediaBaseInfo& album_, MediaInterface& m_, GlobalActionSlots &actions_, QWidget *parent ) :
     QWidget(parent),
     ui(new Ui::AlbumPage),
-    album(NULL),
+    album(album_.getName(), album_.getLink()),
     m(m_),
     actions(actions_)
 {
     ui->setupUi(this);
 
-    ui->albumPageLabelsLayout->setAlignment( Qt::AlignTop );
-    ui->albumTracksTable->verticalHeader()->hide();
+    ui->albumPageTitle->setText( QString::fromStdString( album.getName() ) );
 
-    m.getAlbum( link_, this, NULL);
-    m.getImage( link_, this, ui->albumPageImage );
+    ui->albumPageLabelsLayout->setAlignment( Qt::AlignTop );
+
+    m.getAlbum( album.getLink(), this, NULL);
+    m.getImage( album.getLink(), this, ui->albumPageImage );
 }
 
 AlbumPage::~AlbumPage()
 {
     delete ui;
-    if ( album ) delete album;
 }
 
 void AlbumPage::getImageResponse( const void* data, size_t dataSize, void* userData )
@@ -31,18 +31,19 @@ void AlbumPage::getImageResponse( const void* data, size_t dataSize, void* userD
 }
 void AlbumPage::getAlbumResponse( const Album& album, void* userData )
 {
-    this->album = new Album(album);
+    this->album = album;
     QMetaObject::invokeMethod( this, "updateAlbum", Qt::QueuedConnection );
 }
 
 void AlbumPage::updateAlbum()
 {
-    ui->albumPageTitle->setText( QString::fromStdString( album->getName() ) );
-    ui->albumPageArtist->setText( QString::fromStdString( album->getArtist().getName() ) );
-    ui->albumPageYear->setText( QString::number( album->getYear() ) );
+    ui->albumPageTitle->setText( QString::fromStdString( album.getName() ) );
+    ui->albumPageArtist->setText( QString::fromStdString( album.getArtist().getName() ) );
+    ui->albumPageYear->setText( QString::number( album.getYear() ) );
 
-    albumTracksModel.setTrackList( album->getTracks() );
+    albumTracksModel.setTrackList( album.getTracks() );
     ui->albumTracksTable->setModel( &albumTracksModel );
+    ui->albumTracksTable->hideColumn( TrackListModel::COLUMN_ALBUM );
 }
 
 void AlbumPage::on_albumTracksTable_doubleClicked(const QModelIndex &index)
@@ -75,7 +76,7 @@ void AlbumPage::on_albumTracksTable_customContextMenuRequested(const QPoint &pos
             }
 
             act->setText((*it).text);
-            act->setData(QVariant(QString( (*it).arg.c_str() )));
+            act->setData( QVariant::fromValue( (*it).arg ));
             menu->addAction(act);
         }
         menu->popup(ui->albumTracksTable->viewport()->mapToGlobal(pos));

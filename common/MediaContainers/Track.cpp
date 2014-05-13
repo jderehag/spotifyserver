@@ -28,6 +28,7 @@
 #include "Track.h"
 #include "MessageFactory/Tlvs.h"
 #include "Artist.h"
+#include <sstream>
 
 namespace LibSpotify
 {
@@ -63,7 +64,19 @@ Track::~Track() { }
 
 const std::vector<MediaBaseInfo>& Track::getArtists() const { return artistList_; }
 void Track::addArtist(MediaBaseInfo& artist) {artistList_.push_back(artist); }
-
+const std::string Track::getArtistsPrettyString() const
+{
+    std::stringstream out;
+    if ( artistList_.size() > 0 )
+    {
+        std::vector<MediaBaseInfo>::const_iterator it = artistList_.begin();
+        out << (*it).getName();
+        it++;
+        for( ; it != artistList_.end(); it++ )
+            out << ", " << (*it).getName();
+    }
+    return out.str();
+}
 void Track::setAlbum(const std::string& name, const std::string& link){ album_ = MediaBaseInfo(name, link); }
 const std::string& Track::getAlbum() const { return album_.getName(); }
 const std::string& Track::getAlbumLink() const { return album_.getLink(); }
