@@ -407,7 +407,7 @@ void RemoteMediaInterface::playlistAddTracks( const std::string& playlistlink, c
     Message* msg = new Message( PLAYLIST_ADD_TRACKS_REQ );
     msg->addTlv( TLV_LINK, playlistlink );
     msg->addTlv( TLV_TRACK_INDEX, index );
-    std::list<const std::string>::const_iterator it = tracklinks.begin();
+    std::list<std::string>::const_iterator it = tracklinks.begin();
     for ( ; it != tracklinks.end(); it++ )
     {
         TlvContainer* track = new TlvContainer( TLV_TRACK );
