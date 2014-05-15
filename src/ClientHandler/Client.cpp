@@ -97,6 +97,10 @@ void Client::processMessage(const Message* msg)
         case GET_ALBUM_REQ:      handleGetAlbumReq(msg);      break;
         case GET_ARTIST_REQ:     handleGetArtistReq(msg);     break;
 
+        case PLAYLIST_ADD_TRACKS_REQ:    handlePlaylistAddTracksReq(msg);      break;
+        case PLAYLIST_MOVE_TRACKS_REQ:   handlePlaylistMoveTracksReq(msg);     break;
+        case PLAYLIST_REMOVE_TRACKS_REQ: handlePlaylistRemoveTracksReq(msg);   break;
+
         case GET_ENDPOINTS_REQ:           handleGetEndpointsReq(msg);          break;
         case RENAME_ENDPOINT_REQ:         handleRenameEndpointReq(msg);        break;
 
@@ -495,6 +499,86 @@ void Client::handleGetArtistReq(const Message* msg)
     Message* rsp = msg->createResponse();
     spotify_.getArtist( link ? link->getString() : std::string(""), this, rsp );
 }
+
+void Client::handlePlaylistAddTracksReq(const Message* msg)
+{
+    std::list<const std::string> tracks;
+    const StringTlv* playlist = (const StringTlv*)msg->getTlv( TLV_LINK );
+    const IntTlv* index = (const IntTlv*)msg->getTlv( TLV_TRACK_INDEX );
+
+    for (TlvContainer::const_iterator it = msg->getTlvRoot()->begin() ; it != msg->getTlvRoot()->end() ; it++)
+    {
+        Tlv* tlv = (*it);
+
+        if ( tlv->getType() == TLV_TRACK )
+        {
+            const TlvContainer* track = (const TlvContainer*)tlv;
+            const StringTlv* link = (const StringTlv*)track->getTlv( TLV_LINK );
+            if ( link ) tracks.push_back( link->getString() );
+        }
+    }
+
+    if ( playlist && tracks.size() > 0 )
+    {
+        spotify_.playlistAddTracks( playlist->getString(), tracks, index ? index->getVal() : -1, this, NULL );
+    }
+
+    Message* rsp = msg->createResponse();
+    queueMessage( rsp );
+}
+void Client::handlePlaylistMoveTracksReq(const Message* msg)
+{
+    std::set<int> indexes;
+    const StringTlv* playlist = (const StringTlv*)msg->getTlv( TLV_LINK );
+    const IntTlv* toIndex = (const IntTlv*)msg->getTlv( TLV_TRACK_INDEX );
+
+    for (TlvContainer::const_iterator it = msg->getTlvRoot()->begin() ; it != msg->getTlvRoot()->end() ; it++)
+    {
+        Tlv* tlv = (*it);
+
+        if ( tlv->getType() == TLV_TRACK )
+        {
+            const TlvContainer* track = (const TlvContainer*)tlv;
+            const IntTlv* index = (const IntTlv*)track->getTlv( TLV_TRACK_INDEX );
+            if ( index ) indexes.insert( index->getVal() );
+        }
+    }
+
+    if ( playlist && toIndex && indexes.size() > 0 )
+    {
+        spotify_.playlistMoveTracks( playlist->getString(), indexes, toIndex->getVal(), this, NULL );
+    }
+
+    Message* rsp = msg->createResponse();
+    queueMessage( rsp );
+}
+void Client::handlePlaylistRemoveTracksReq(const Message* msg)
+{
+    std::set<int> indexes;
+    const StringTlv* playlist = (const StringTlv*)msg->getTlv( TLV_LINK );
+
+    for (TlvContainer::const_iterator it = msg->getTlvRoot()->begin() ; it != msg->getTlvRoot()->end() ; it++)
+    {
+        Tlv* tlv = (*it);
+
+        if ( tlv->getType() == TLV_TRACK )
+        {
+            const TlvContainer* track = (const TlvContainer*)tlv;
+            const IntTlv* index = (const IntTlv*)track->getTlv( TLV_TRACK_INDEX );
+            if ( index ) indexes.insert( index->getVal() );
+        }
+    }
+
+    if ( playlist && indexes.size() > 0 )
+    {
+        spotify_.playlistRemoveTracks( playlist->getString(), indexes, this, NULL );
+    }
+
+    Message* rsp = msg->createResponse();
+    queueMessage( rsp );
+}
+
+
 
 void Client::handleRenameEndpointReq( const Message* msg )
 {

@@ -11,26 +11,13 @@ void TrackListModel::setTrackList( const std::deque<LibSpotify::Track>& tracks_ 
     endResetModel();
 }
 
-std::deque<TrackListModel::ContextMenuItem> TrackListModel::constructContextMenu( const QModelIndex & index )
+const std::deque<const LibSpotify::Track> TrackListModel::getTracks( const QModelIndexList & indexes ) const
 {
-    std::deque<ContextMenuItem> res;
-    if ( index.isValid() && index.row() < tracks.size() )
-    {
-        LibSpotify::Track& t = tracks[index.row()];
-        res.push_back(ContextMenuItem(ContextMenuItem::ENQUEUE, QString("Enqueue"), t));
-        res.push_back(ContextMenuItem(ContextMenuItem::BROWSE_ALBUM, QString("Browse album"), LibSpotify::MediaBaseInfo(t.getAlbum(),t.getAlbumLink())));
-        int nartists = t.getArtists().size();
-        if ( nartists == 1 )
-            res.push_back(ContextMenuItem(ContextMenuItem::BROWSE_ARTIST, QString("Browse artist"), t.getArtists().front()));
-        else if ( nartists > 1 )
-        {
-            std::vector<LibSpotify::MediaBaseInfo>::const_iterator it = t.getArtists().begin();
-            for ( ; it != t.getArtists().end(); it++ )
-            {
-                res.push_back(ContextMenuItem(ContextMenuItem::BROWSE_ARTIST, QString("Browse ").append((*it).getName().c_str()), *it ));
-            }
-        }
-    }
+    std::deque<const LibSpotify::Track> res;
+    QModelIndexList::const_iterator it = indexes.begin();
+    for ( ; it != indexes.end(); it++ )
+        if( (*it).isValid() && (*it).column() == 0 )
+            res.push_back( tracks[(*it).row()]);
     return res;
 }
 
@@ -60,6 +47,7 @@ QVariant TrackListModel::data( const QModelIndex & index, int role ) const
             return QVariant( tracks[index.row()].getAlbum().c_str() );
         }
     }
+    return QVariant();
 }
 
 QModelIndex TrackListModel::index( int row, int column, const QModelIndex & parent ) const

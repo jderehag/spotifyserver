@@ -21,6 +21,7 @@ public:
 private slots:
     void on_tableView_doubleClicked(const QModelIndex &index);
     void on_tableView_customContextMenuRequested(const QPoint &pos);
+    void removeTracks();
 
 private:
     Ui::PlaylistPage *ui;

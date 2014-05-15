@@ -13,7 +13,6 @@ namespace Ui {
 class MainWindow;
 }
 
-
 class MainWindow : public QMainWindow, public IMediaInterfaceCallbackSubscriber, public IGlobalActionCallbacks
 {
     Q_OBJECT
@@ -42,7 +41,8 @@ public:
     /* Implements IGlobalActionCallbacks */
     virtual void browseArtist( const MediaBaseInfo& artist );
     virtual void browseAlbum( const MediaBaseInfo& album );
-    virtual void enqueueTrack( std::string link );
+    virtual void enqueueTrack( const std::string& link );
+    virtual void addTracks( const std::string& playlist, const std::deque<const LibSpotify::Track>& tracks );
 
 public slots:
     void updateGui();

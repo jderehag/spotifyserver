@@ -4,16 +4,8 @@
 #include "ArtistPage.h"
 #include "AlbumPage.h"
 #include "EndpointsPage.h"
+#include "PlaylistModel.h"
 #include "Logger/applog.h"
-
-class PlaylistsModelItem : public QTreeWidgetItem
-{
-public:
-    MediaBaseInfo m;
-    PlaylistsModelItem( const MediaBaseInfo& m_ ) : m(m_) {}
-    const std::string& getLink() { return m.getLink(); }
-    virtual QVariant data ( int column, int role ) const { if ( role != Qt::DisplayRole || column != 0 ) return QVariant(); else return QVariant( m.getName().c_str() ); }
-};
 
 
 MainWindow::MainWindow( QString& title, MediaInterface& m, EndpointCtrlInterface& epMgr, QWidget *parent ) :
@@ -112,11 +104,14 @@ void MainWindow::newPage( QWidget* page )
 
 void MainWindow::on_playlistsTree_currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous)
 {
-    PlaylistsModelItem* pitem = (PlaylistsModelItem*)current;
-    const std::string& link = pitem->getLink();
-    if ( !link.empty() )
+    if ( current )
     {
-        newPage( new PlaylistPage( pitem->m, m_, actions, this ) );
+        PlaylistsModelItem* pitem = (PlaylistsModelItem*)current;
+        const std::string& link = pitem->getLink();
+        if ( !link.empty() )
+        {
+            newPage( new PlaylistPage( pitem->m, m_, actions, this ) );
+        }
     }
 }
 
@@ -203,11 +198,6 @@ void MainWindow::progressUpdate()
     ui->progressBar->setValue( progress_ );
 }
 
-void MainWindow::enqueueTrack( std::string link )
-{
-    m_.enqueue(link, this, NULL);
-}
-
 void MainWindow::browseArtist(const MediaBaseInfo& artist )
 {
     newPage(  new ArtistPage( artist, m_, actions, this ) );
@@ -218,6 +208,20 @@ void MainWindow::browseAlbum( const MediaBaseInfo& album )
     newPage( new AlbumPage( album, m_, actions, this ) );
 }
 
+void MainWindow::enqueueTrack( const std::string& link )
+{
+    m_.enqueue(link, this, NULL);
+}
+
+void MainWindow::addTracks( const std::string& playlist, const std::deque<const LibSpotify::Track>& tracks )
+{
+    std::list<const std::string> tracklinks;
+
+    std::deque<const LibSpotify::Track>::const_iterator it = tracks.begin();
+    for( ; it != tracks.end(); it++ )
+        tracklinks.push_back( (*it).getLink() );
+    m_.playlistAddTracks( playlist, tracklinks, -1, this, NULL );
+}
 
 void MainWindow::rootFolderUpdatedInd()
 {
@@ -254,9 +258,12 @@ static void addFolder( QTreeWidgetItem* parent, const Folder& folder )
 
 void MainWindow::getPlaylistsResponse( const Folder& rootfolder, void* userData )
 {
+    /* todo this isn't safe*/
     ui->playlistsTree->clear();
-    QTreeWidgetItem *parentItem = ui->playlistsTree->invisibleRootItem();
+    QTreeWidgetItem* parentItem = ui->playlistsTree->invisibleRootItem();
     addFolder( parentItem, rootfolder );
+
+    actions.playlistsUpdated( parentItem );
 }
 
 void MainWindow::getImageResponse( const void* data, size_t dataSize, void* userData )

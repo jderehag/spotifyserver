@@ -36,7 +36,8 @@ HEADERS += \
     AlbumPage.h \
     ArtistPage.h \
     PlaylistPage.h \
-    EndpointsPage.h
+    EndpointsPage.h \
+    PlaylistModel.h
 unix {
     target.path = /usr/lib
     INSTALLS += target

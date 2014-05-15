@@ -97,6 +97,9 @@ private:
     void handleGetAlbumReq(const Message* msg);
     void handleGetArtistReq(const Message* msg);
     void handleGetCurrentAudioEpReq(const Message* msg);
+    void handlePlaylistAddTracksReq(const Message* msg);
+    void handlePlaylistMoveTracksReq(const Message* msg);
+    void handlePlaylistRemoveTracksReq(const Message* msg);
 
 
     /* implements IEndpointCtrlCallbackSubscriber */

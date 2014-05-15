@@ -102,6 +102,19 @@ void LibSpotifyIf::getTracks( const std::string& link, IMediaInterfaceCallbackSu
     postToEventThread( new QueryReqEventItem( EVENT_GET_TRACKS, subscriber, userData, link ) );
 }
 
+void LibSpotifyIf::playlistAddTracks( const std::string& playlistlink, const std::list<const std::string>& tracklinks, int index, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
+{
+    postToEventThread( new AddToPlaylistEventItem( subscriber, userData, playlistlink, tracklinks, index ) );
+}
+void LibSpotifyIf::playlistRemoveTracks( const std::string& playlistlink, const std::set<int>& indexes, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
+{
+    postToEventThread( new ModifyPlaylistEventItem( EVENT_REMOVE_FROM_PLAYLIST, subscriber, userData, playlistlink, indexes ) );
+}
+void LibSpotifyIf::playlistMoveTracks( const std::string& playlistlink, const std::set<int>& indexes, int toIndex, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
+{
+    postToEventThread( new MoveTracksEventItem( subscriber, userData, playlistlink, indexes, toIndex ) );
+}
+
 void LibSpotifyIf::search( const std::string& query, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
     postToEventThread( new QueryReqEventItem( EVENT_GENERIC_SEARCH, subscriber, userData, query ) );
@@ -354,11 +367,11 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
 
         case EVENT_GET_TRACKS:
             {
-                QueryReqEventItem* reqEvent = static_cast<QueryReqEventItem*>( event );
-
-                const char* playlist_uri = reqEvent->query_.c_str();
                 if ( state_ == STATE_LOGGED_IN )
                 {
+                    QueryReqEventItem* reqEvent = static_cast<QueryReqEventItem*>( event );
+
+                    const char* playlist_uri = reqEvent->query_.c_str();
                     sp_link* link = sp_link_create_from_string( playlist_uri );
                     if ( link )
                     {
@@ -793,8 +806,108 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
                 
             break;
 
-        /* Session Handling*/
+        case EVENT_ADD_TO_PLAYLIST:
+            {
+                AddToPlaylistEventItem* addEvent = static_cast<AddToPlaylistEventItem*>(event);
+                const char* playlist_uri = addEvent->query_.c_str();
+                sp_link* link = sp_link_create_from_string( playlist_uri );
+                if ( link )
+                {
+                    if( sp_link_type( link ) == SP_LINKTYPE_PLAYLIST )
+                    {
+                        sp_playlist* playlist = sp_playlist_create(spotifySession_, link);
+                        sp_track** tracks = (sp_track**)malloc( sizeof(sp_track*) * addEvent->tracks_.size() );
+                        int i = 0;
+                        std::list<const std::string>::const_iterator it = addEvent->tracks_.begin();
+                        for( ; it != addEvent->tracks_.end(); it++ )
+                        {
+                            sp_link* tlink = sp_link_create_from_string( (*it).c_str() );
+                            if ( tlink )
+                            {
+                                if( sp_link_type( tlink ) == SP_LINKTYPE_TRACK || sp_link_type( tlink ) == SP_LINKTYPE_LOCALTRACK )
+                                {
+                                    tracks[i] = sp_link_as_track(tlink);
+                                    i++;
+                                }
+                            }
+                        }
 
+                        if ( i > 0 )
+                        {
+                            int index = addEvent->index_;
+                            if ( index < 0 )
+                                index = sp_playlist_num_tracks( playlist );
+                            sp_error err = sp_playlist_add_tracks( playlist, tracks, i, index, spotifySession_ );
+                            if ( err != SP_ERROR_OK )
+                                log(LOG_DEBUG) << sp_error_message(err);
+                        }
+                        free( tracks );
+                    }
+                }
+            }
+            break;
+
+        case EVENT_REMOVE_FROM_PLAYLIST:
+            {
+                ModifyPlaylistEventItem* removeEvent = static_cast<ModifyPlaylistEventItem*>(event);
+                const char* playlist_uri = removeEvent->query_.c_str();
+                sp_link* link = sp_link_create_from_string( playlist_uri );
+                if ( link )
+                {
+                    if( sp_link_type( link ) == SP_LINKTYPE_PLAYLIST )
+                    {
+                        sp_playlist* playlist = sp_playlist_create(spotifySession_, link);
+                        int* tracks = (int*)malloc( sizeof(int) * removeEvent->tracks_.size() );
+                        int i = 0;
+                        for( std::set<int>::const_iterator it = removeEvent->tracks_.begin() ; it != removeEvent->tracks_.end(); it++ )
+                        {
+                            tracks[i] = (*it);
+                            i++;
+                        }
+
+                        if ( i > 0 )
+                        {
+                            sp_error err = sp_playlist_remove_tracks( playlist, tracks, i );
+                            if ( err != SP_ERROR_OK )
+                                log(LOG_DEBUG) << sp_error_message(err);
+                        }
+                        free( tracks );
+                    }
+                }
+            }
+            break;
+
+        case EVENT_MOVE_TRACKS:
+            {
+                MoveTracksEventItem* moveEvent = static_cast<MoveTracksEventItem*>(event);
+                const char* playlist_uri = moveEvent->query_.c_str();
+                sp_link* link = sp_link_create_from_string( playlist_uri );
+                if ( link )
+                {
+                    if( sp_link_type( link ) == SP_LINKTYPE_PLAYLIST )
+                    {
+                        sp_playlist* playlist = sp_playlist_create(spotifySession_, link);
+                        int* tracks = (int*)malloc( sizeof(int) * moveEvent->tracks_.size() );
+                        int i = 0;
+                        for( std::set<int>::const_iterator it = moveEvent->tracks_.begin() ; it != moveEvent->tracks_.end(); it++ )
+                        {
+                            tracks[i] = (*it);
+                            i++;
+                        }
+
+                        if ( i > 0 )
+                        {
+                            sp_error err = sp_playlist_reorder_tracks( playlist, tracks, i, moveEvent->toIndex_ );
+                            if ( err != SP_ERROR_OK )
+                                log(LOG_DEBUG) << sp_error_message(err);
+                        }
+                        free( tracks );
+                    }
+                }
+            }
+            break;
+
+        /* Session Handling*/
         case EVENT_LOGGING_IN:
             state_ = STATE_LOGGING_IN;
             log(LOG_NOTICE) << "Logging in as " << config_.getUsername();

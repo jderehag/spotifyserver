@@ -45,7 +45,7 @@
        <property name="frameShape">
         <enum>QFrame::NoFrame</enum>
        </property>
-       <layout class="QVBoxLayout" name="leftFrameLayout">
+       <layout class="QVBoxLayout" name="leftFrameLayout" stretch="1,0,0,0">
         <property name="leftMargin">
          <number>0</number>
         </property>

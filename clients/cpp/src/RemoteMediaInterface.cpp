@@ -402,6 +402,48 @@ void RemoteMediaInterface::search( const std::string& query, IMediaInterfaceCall
     messenger_.queueRequest( msg, this, new PendingMediaRequestData(subscriber, userData) );
 }
 
+void RemoteMediaInterface::playlistAddTracks( const std::string& playlistlink, const std::list<const std::string>& tracklinks, int index, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
+{
+    Message* msg = new Message( PLAYLIST_ADD_TRACKS_REQ );
+    msg->addTlv( TLV_LINK, playlistlink );
+    msg->addTlv( TLV_TRACK_INDEX, index );
+    std::list<const std::string>::const_iterator it = tracklinks.begin();
+    for ( ; it != tracklinks.end(); it++ )
+    {
+        TlvContainer* track = new TlvContainer( TLV_TRACK );
+        track->addTlv( TLV_LINK, (*it) );
+        msg->addTlv( track );
+    }
+    messenger_.queueRequest( msg, this, new PendingMediaRequestData(subscriber, userData) );
+}
+void RemoteMediaInterface::playlistRemoveTracks( const std::string& playlistlink, const std::set<int>& indexes, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
+{
+    Message* msg = new Message( PLAYLIST_REMOVE_TRACKS_REQ );
+    msg->addTlv( TLV_LINK, playlistlink );
+    std::set<int>::const_iterator it = indexes.begin();
+    for ( ; it != indexes.end(); it++ )
+    {
+        TlvContainer* track = new TlvContainer( TLV_TRACK );
+        track->addTlv( TLV_TRACK_INDEX, (*it) );
+        msg->addTlv( track );
+    }
+    messenger_.queueRequest( msg, this, new PendingMediaRequestData(subscriber, userData) );
+}
+void RemoteMediaInterface::playlistMoveTracks( const std::string& playlistlink, const std::set<int>& indexes, int toIndex, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
+{
+    Message* msg = new Message( PLAYLIST_MOVE_TRACKS_REQ );
+    msg->addTlv( TLV_LINK, playlistlink );
+    msg->addTlv( TLV_TRACK_INDEX, toIndex );
+    std::set<int>::const_iterator it = indexes.begin();
+    for ( ; it != indexes.end(); it++ )
+    {
+        TlvContainer* track = new TlvContainer( TLV_TRACK );
+        track->addTlv( TLV_TRACK_INDEX, (*it) );
+        msg->addTlv( track );
+    }
+    messenger_.queueRequest( msg, this, new PendingMediaRequestData(subscriber, userData) );
+}
+
 void RemoteMediaInterface::getCurrentAudioEndpoints( IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
     Message* msg = new Message( GET_CURRENT_AUDIO_ENDPOINTS_REQ );

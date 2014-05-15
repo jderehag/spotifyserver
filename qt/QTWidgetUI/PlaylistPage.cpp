@@ -15,14 +15,40 @@ PlaylistPage::PlaylistPage( const LibSpotify::MediaBaseInfo& playlist, MediaInte
     ui->tableView->verticalHeader()->hide();
 
     ui->playlistTitle->setText( QString::fromStdString(playlist.getName()));
+
+    m.registerForCallbacks( *this );
+
     m.getTracks( playlist.getLink(), this, NULL );
-    m.getImage( link, this, NULL );
+    m.getImage( link, this, NULL );    
 }
 
 PlaylistPage::~PlaylistPage()
 {
+    m.unRegisterForCallbacks( *this );
     delete ui;
 }
+
+void PlaylistPage::removeTracks()
+{
+    QAction* origin = (QAction*)sender();
+    QVariant v = origin->data();
+    if ( v.canConvert<std::deque<const LibSpotify::Track>>() )
+    {
+        std::deque<const LibSpotify::Track> tracks = v.value<std::deque<const LibSpotify::Track>>();
+        //todo validate that the tracks are still at the same indexes
+        std::set<int> indexes;
+        std::deque<const LibSpotify::Track>::iterator it = tracks.begin();
+        for( ; it != tracks.end(); it++ )
+        {
+            int index = (*it).getIndex();
+            if ( index >= 0 )
+                indexes.insert( index );
+        }
+
+        m.playlistRemoveTracks( link, indexes, this, NULL );
+    }
+}
+
 
 void PlaylistPage::playlistUpdatedInd( const std::string& link )
 {
@@ -65,32 +91,55 @@ void PlaylistPage::on_tableView_doubleClicked(const QModelIndex &index)
 
 void PlaylistPage::on_tableView_customContextMenuRequested(const QPoint &pos)
 {
-    std::deque<TrackListModel::ContextMenuItem> items = tracksModel.constructContextMenu( ui->tableView->indexAt( pos ) );
+    QModelIndexList list = ui->tableView->selectionModel()->selectedIndexes();
+
+    const std::deque<const Track> items = tracksModel.getTracks( list );
+
     if ( items.size() > 0 )
     {
-        QMenu* menu = new QMenu();
-        std::deque<TrackListModel::ContextMenuItem>::iterator it = items.begin();
-        for ( ; it != items.end(); it++ )
+        QMenu menu;
+
         {
-            TrackListModel::ContextMenuItem& item = (*it);
-            QAction* act = new QAction(this);
-            switch( item.type )
+            QAction* act = menu.addAction( "Enqueue", &actions, SLOT(enqueueTracks()) );
+            act->setData( QVariant::fromValue( items ) );
+        }
+
+        QMenu* addMenu = menu.addMenu( "Add to" );
+        actions.populateAddTracksMenu( addMenu, items );
+
+        {
+            QAction* act = menu.addAction( "Remove", this, SLOT(removeTracks()) );
+            act->setData( QVariant::fromValue( items ) );
+        }
+
+        /* only show browse artist/album if it's a single selection */
+        if ( items.size() == 1 )
+        {
+            const Track& t = items.front();
+
             {
-            case TrackListModel::ContextMenuItem::ENQUEUE:
-                connect( act, SIGNAL(triggered()), &actions, SLOT(enqueueTrack()));
-                break;
-            case TrackListModel::ContextMenuItem::BROWSE_ALBUM:
-                connect( act, SIGNAL(triggered()), &actions, SLOT(browseAlbum()));
-                break;
-            case TrackListModel::ContextMenuItem::BROWSE_ARTIST:
-                connect( act, SIGNAL(triggered()), &actions, SLOT(browseArtist()));
-                break;
+                QAction* act = menu.addAction( "Browse Album", &actions, SLOT(browseAlbum()) );
+                act->setData( QVariant::fromValue( LibSpotify::MediaBaseInfo(t.getAlbum(),t.getAlbumLink())) );
             }
 
-            act->setText( item.text );
-            act->setData( QVariant::fromValue( item.arg ) );
-            menu->addAction(act);
+            int nartists = t.getArtists().size();
+            if ( nartists == 1 )
+            {
+                QAction* act = menu.addAction( "Browse Artist", &actions, SLOT(browseArtist()) );
+                act->setData( QVariant::fromValue( t.getArtists().front() ) );
+            }
+            else if ( nartists > 1 )
+            {
+                QMenu* submenu = menu.addMenu("Browse Artist");
+                std::vector<LibSpotify::MediaBaseInfo>::const_iterator it = t.getArtists().begin();
+                for ( ; it != t.getArtists().end(); it++ )
+                {
+                    QAction* act = submenu->addAction((*it).getName().c_str(), &actions, SLOT(browseArtist()));
+                    act->setData( QVariant::fromValue( *it ) );
+                }
+            }
         }
-        menu->popup(ui->tableView->viewport()->mapToGlobal(pos));
+
+        menu.exec(ui->tableView->viewport()->mapToGlobal(pos));
     }
 }

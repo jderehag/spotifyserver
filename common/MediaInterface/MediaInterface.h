@@ -105,6 +105,9 @@ public:
     virtual void getAlbum( const std::string& link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData ) = 0;
     virtual void getArtist( const std::string& link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData ) = 0;
     virtual void search( const std::string& query, IMediaInterfaceCallbackSubscriber* subscriber, void* userData ) = 0;
+    virtual void playlistAddTracks( const std::string& playlistlink, const std::list<const std::string>& tracklinks, int index, IMediaInterfaceCallbackSubscriber* subscriber, void* userData ) = 0;
+    virtual void playlistRemoveTracks( const std::string& playlistlink, const std::set<int>& indexes, IMediaInterfaceCallbackSubscriber* subscriber, void* userData ) = 0;
+    virtual void playlistMoveTracks( const std::string& playlistlink, const std::set<int>& indexes, int toIndex, IMediaInterfaceCallbackSubscriber* subscriber, void* userData ) = 0;
 
     /* todo move to AudioEndpointManager? */
     virtual void getCurrentAudioEndpoints( IMediaInterfaceCallbackSubscriber* subscriber, void* userData ) = 0;

@@ -168,6 +168,24 @@ void UIConsole::run()
             continue;
         }
 
+        if ( argv[0] == "addTracks" )
+        {
+            /*todo*/
+            continue;
+        }
+
+        if ( argv[0] == "removeTracks" )
+        {
+            /*todo*/
+            continue;
+        }
+
+        if ( argv[0] == "moveTracks" )
+        {
+            /*todo*/
+            continue;
+        }
+
         //handle the old commands the old way for now..
         c = argv[0][0];
         switch(c)

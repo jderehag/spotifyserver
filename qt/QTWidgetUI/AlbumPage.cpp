@@ -54,32 +54,46 @@ void AlbumPage::on_albumTracksTable_doubleClicked(const QModelIndex &index)
 
 void AlbumPage::on_albumTracksTable_customContextMenuRequested(const QPoint &pos)
 {
-    std::deque<TrackListModel::ContextMenuItem> items = albumTracksModel.constructContextMenu( ui->albumTracksTable->indexAt( pos ) );
+    QModelIndexList list = ui->albumTracksTable->selectionModel()->selectedIndexes();
+
+    const std::deque<const Track> items = albumTracksModel.getTracks( list );
+
     if ( items.size() > 0 )
     {
-        QMenu* menu = new QMenu();
-        std::deque<TrackListModel::ContextMenuItem>::iterator it = items.begin();
-        for ( ; it != items.end(); it++ )
+        QMenu menu;
+
         {
-            if ( (*it).type == TrackListModel::ContextMenuItem::BROWSE_ALBUM )
-                continue;
-
-            QAction* act = new QAction(this);
-            switch( (*it).type )
-            {
-            case TrackListModel::ContextMenuItem::ENQUEUE:
-                connect( act, SIGNAL(triggered()), &actions, SLOT(enqueueTrack()));
-                break;
-            case TrackListModel::ContextMenuItem::BROWSE_ARTIST:
-                connect( act, SIGNAL(triggered()), &actions, SLOT(browseArtist()));
-                break;
-            }
-
-            act->setText((*it).text);
-            act->setData( QVariant::fromValue( (*it).arg ));
-            menu->addAction(act);
+            QAction* act = menu.addAction( "Enqueue", &actions, SLOT(enqueueTracks()) );
+            act->setData( QVariant::fromValue( items ) );
         }
-        menu->popup(ui->albumTracksTable->viewport()->mapToGlobal(pos));
+
+        QMenu* addMenu = menu.addMenu( "Add to" );
+        actions.populateAddTracksMenu( addMenu, items );
+
+        /* only show browse artist if it's a single selection */
+        if ( items.size() == 1 )
+        {
+            const Track& t = items.front();
+
+            int nartists = t.getArtists().size();
+            if ( nartists == 1 )
+            {
+                QAction* act = menu.addAction( "Browse Artist", &actions, SLOT(browseArtist()) );
+                act->setData( QVariant::fromValue( t.getArtists().front() ) );
+            }
+            else if ( nartists > 1 )
+            {
+                QMenu* submenu = menu.addMenu("Browse Artist");
+                std::vector<LibSpotify::MediaBaseInfo>::const_iterator it = t.getArtists().begin();
+                for ( ; it != t.getArtists().end(); it++ )
+                {
+                    QAction* act = submenu->addAction((*it).getName().c_str(), &actions, SLOT(browseArtist()));
+                    act->setData( QVariant::fromValue( *it ) );
+                }
+            }
+        }
+
+        menu.exec(ui->albumTracksTable->viewport()->mapToGlobal(pos));
     }
 }
 

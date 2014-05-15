@@ -74,6 +74,10 @@ public:
         EVENT_GET_ALBUM,
         EVENT_GET_ARTIST,
 
+        EVENT_ADD_TO_PLAYLIST,
+        EVENT_REMOVE_FROM_PLAYLIST,
+        EVENT_MOVE_TRACKS,
+
         /* Playback Handling */
         EVENT_PLAY_REQ,
         EVENT_STOP_REQ,
@@ -136,6 +140,28 @@ public:
     public:
         int startIndex_;
         PlayReqEventItem( IMediaInterfaceCallbackSubscriber* callbackSubscriber, void* subscriberData, const std::string& uri, int startIndex) : QueryReqEventItem(EVENT_PLAY_REQ, callbackSubscriber, subscriberData, uri), startIndex_(startIndex) {}
+    };
+
+    class AddToPlaylistEventItem : public QueryReqEventItem
+    {
+    public:
+        std::list<const std::string> tracks_;
+        int index_;
+        AddToPlaylistEventItem( IMediaInterfaceCallbackSubscriber* callbackSubscriber, void* subscriberData, const std::string& playlist, const std::list<const std::string>& tracks, int index ) : QueryReqEventItem(EVENT_ADD_TO_PLAYLIST, callbackSubscriber, subscriberData, playlist), tracks_(tracks), index_(index) {}
+    };
+
+    class ModifyPlaylistEventItem : public QueryReqEventItem
+    {
+    public:
+        std::set<int> tracks_;
+        ModifyPlaylistEventItem( Event event, IMediaInterfaceCallbackSubscriber* callbackSubscriber, void* subscriberData, const std::string& playlist, const std::set<int>& tracks ) : QueryReqEventItem(event, callbackSubscriber, subscriberData, playlist), tracks_(tracks) {}
+    };
+
+    class MoveTracksEventItem : public ModifyPlaylistEventItem
+    {
+    public:
+        int toIndex_;
+        MoveTracksEventItem( IMediaInterfaceCallbackSubscriber* callbackSubscriber, void* subscriberData, const std::string& playlist, const std::set<int>& tracks, int toIndex ) : ModifyPlaylistEventItem(EVENT_MOVE_TRACKS, callbackSubscriber, subscriberData, playlist, tracks), toIndex_(toIndex) {}
     };
 
     enum LibSpotifyTrackStates
@@ -276,6 +302,9 @@ public:
     virtual void getAlbum( const std::string& link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
     virtual void getArtist( const std::string& link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
     virtual void search( const std::string& query, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
+    virtual void playlistAddTracks( const std::string& playlistlink, const std::list<const std::string>& tracklinks, int index, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
+    virtual void playlistRemoveTracks( const std::string& playlistlink, const std::set<int>& indexes, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
+    virtual void playlistMoveTracks( const std::string& playlistlink, const std::set<int>& indexes, int toIndex, IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
 
     virtual void getCurrentAudioEndpoints( IMediaInterfaceCallbackSubscriber* subscriber, void* userData );
 

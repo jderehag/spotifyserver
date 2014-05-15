@@ -66,6 +66,10 @@ typedef enum
     IND( ROOT_FOLDER_UPDATED, 0x210 )
     IND( PLAYLIST_UPDATED,    0x211 )
 
+    REQ( PLAYLIST_ADD_TRACKS,    0x221 )
+    REQ( PLAYLIST_MOVE_TRACKS,   0x222 )
+    REQ( PLAYLIST_REMOVE_TRACKS, 0x223 )
+
     /* Playback */
     REQ( PLAY_TRACK,       0x301 ) /* obsolete, use PLAY_REQ */
     REQ( PLAY,             0x302 )
