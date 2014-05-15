@@ -502,7 +502,7 @@ void Client::handleGetArtistReq(const Message* msg)
 
 void Client::handlePlaylistAddTracksReq(const Message* msg)
 {
-    std::list<const std::string> tracks;
+    std::list<std::string> tracks;
     const StringTlv* playlist = (const StringTlv*)msg->getTlv( TLV_LINK );
     const IntTlv* index = (const IntTlv*)msg->getTlv( TLV_TRACK_INDEX );
 

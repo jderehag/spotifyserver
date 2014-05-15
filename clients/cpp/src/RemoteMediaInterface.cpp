@@ -402,7 +402,7 @@ void RemoteMediaInterface::search( const std::string& query, IMediaInterfaceCall
     messenger_.queueRequest( msg, this, new PendingMediaRequestData(subscriber, userData) );
 }
 
-void RemoteMediaInterface::playlistAddTracks( const std::string& playlistlink, const std::list<const std::string>& tracklinks, int index, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
+void RemoteMediaInterface::playlistAddTracks( const std::string& playlistlink, const std::list<std::string>& tracklinks, int index, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
     Message* msg = new Message( PLAYLIST_ADD_TRACKS_REQ );
     msg->addTlv( TLV_LINK, playlistlink );

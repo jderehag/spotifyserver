@@ -372,6 +372,19 @@ bool sp_playlist_get_image(sp_playlist *playlist, byte image[20])
     return 0;
 }
 
+sp_error sp_playlist_add_tracks(sp_playlist *playlist, sp_track *const*tracks, int num_tracks, int position, sp_session *session)
+{
+    return SP_ERROR_OK;
+}
+sp_error sp_playlist_remove_tracks(sp_playlist *playlist, const int *tracks, int num_tracks)
+{
+    return SP_ERROR_OK;
+}
+sp_error sp_playlist_reorder_tracks(sp_playlist *playlist, const int *tracks, int num_tracks, int new_position)
+{
+    return SP_ERROR_OK;
+}
+
 sp_error sp_playlist_add_callbacks(sp_playlist *playlist, sp_playlist_callbacks *callbacks, void *userdata) { return SP_ERROR_OK; }
 sp_error sp_playlist_remove_callbacks(sp_playlist *playlist, sp_playlist_callbacks *callbacks, void *userdata) { return SP_ERROR_OK; }
 

@@ -102,7 +102,7 @@ void LibSpotifyIf::getTracks( const std::string& link, IMediaInterfaceCallbackSu
     postToEventThread( new QueryReqEventItem( EVENT_GET_TRACKS, subscriber, userData, link ) );
 }
 
-void LibSpotifyIf::playlistAddTracks( const std::string& playlistlink, const std::list<const std::string>& tracklinks, int index, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
+void LibSpotifyIf::playlistAddTracks( const std::string& playlistlink, const std::list<std::string>& tracklinks, int index, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
     postToEventThread( new AddToPlaylistEventItem( subscriber, userData, playlistlink, tracklinks, index ) );
 }
@@ -818,7 +818,7 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
                         sp_playlist* playlist = sp_playlist_create(spotifySession_, link);
                         sp_track** tracks = (sp_track**)malloc( sizeof(sp_track*) * addEvent->tracks_.size() );
                         int i = 0;
-                        std::list<const std::string>::const_iterator it = addEvent->tracks_.begin();
+                        std::list<std::string>::iterator it = addEvent->tracks_.begin();
                         for( ; it != addEvent->tracks_.end(); it++ )
                         {
                             sp_link* tlink = sp_link_create_from_string( (*it).c_str() );
@@ -1391,6 +1391,13 @@ const char* getEventName(LibSpotifyIf::EventItem* event)
             return "EVENT_GET_ALBUM";
         case LibSpotifyIf::EVENT_GET_ARTIST:
             return "EVENT_GET_ARTIST";
+
+        case LibSpotifyIf::EVENT_ADD_TO_PLAYLIST:
+            return "EVENT_ADD_TO_PLAYLIST";
+        case LibSpotifyIf::EVENT_MOVE_TRACKS:
+            return "EVENT_MOVE_TRACKS";
+        case LibSpotifyIf::EVENT_REMOVE_FROM_PLAYLIST:
+            return "EVENT_REMOVE_FROM_PLAYLIST";
 
             /* Playback handling */
         case LibSpotifyIf::EVENT_PLAY_REQ:

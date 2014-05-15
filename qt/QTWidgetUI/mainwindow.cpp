@@ -215,7 +215,7 @@ void MainWindow::enqueueTrack( const std::string& link )
 
 void MainWindow::addTracks( const std::string& playlist, const std::deque<const LibSpotify::Track>& tracks )
 {
-    std::list<const std::string> tracklinks;
+    std::list<std::string> tracklinks;
 
     std::deque<const LibSpotify::Track>::const_iterator it = tracks.begin();
     for( ; it != tracks.end(); it++ )
