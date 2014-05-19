@@ -39,8 +39,6 @@ private:
     MediaInterface& m_;
     EndpointCtrlInterface& epMgr_;
 
-    LibSpotify::PlaylistContainer playlists;
-    LibSpotify::PlaylistContainer::iterator itPlaylists_;
     bool isShuffle;
     bool isRepeat;
 public:

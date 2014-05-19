@@ -240,18 +240,21 @@ void MainWindow::connectionState( bool up )
 
 static void addFolder( QTreeWidgetItem* parent, const Folder& folder )
 {
-    FolderContainer::const_iterator fit = folder.getFolders().begin();
-    for ( ; fit != folder.getFolders().end(); fit++ )
+    FolderItemContainer::const_iterator fit = folder.getItems().begin();
+    for ( ; fit != folder.getItems().end(); fit++ )
     {
-        PlaylistsModelItem *item = new PlaylistsModelItem(*fit);
-        addFolder( item, *fit );
-        parent->addChild( item );
-    }
-
-    PlaylistContainer::const_iterator pit = folder.getPlaylists().begin();
-    for ( ; pit != folder.getPlaylists().end(); pit++ )
-    {
-        PlaylistsModelItem *item = new PlaylistsModelItem(*pit);
+        PlaylistsModelItem* item;
+        if ( (*fit)->isFolder )
+        {
+            const Folder* f = dynamic_cast<const Folder*>(*fit);
+            item = new PlaylistsModelItem(*f);
+            addFolder( item, *f );
+        }
+        else
+        {
+            const Playlist* p = dynamic_cast<const Playlist*>(*fit);
+            item = new PlaylistsModelItem(*p);
+        }
         parent->addChild( item );
     }
 }

@@ -53,7 +53,7 @@ void volumeCb( void* arg, uint32_t volume );
  * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
 LibSpotifyIf::LibSpotifyIf(const ConfigHandling::SpotifyConfig& config) :config_(config),
-                                                                         rootFolder_("root", 0, 0),
+                                                                         rootFolder_(NULL),
                                                                          state_(STATE_INVALID),
                                                                          nextTimeoutForLibSpotify(0),
                                                                          playbackHandler_(*this),
@@ -94,7 +94,10 @@ void LibSpotifyIf::logOut()
 
 void LibSpotifyIf::getPlaylists( IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
 {
-    subscriber->getPlaylistsResponse( rootFolder_, userData );
+    if ( rootFolder_ )
+        subscriber->getPlaylistsResponse( *rootFolder_, userData );
+    else
+        subscriber->getPlaylistsResponse( Folder("root",0, NULL), userData );
 }
 
 void LibSpotifyIf::getTracks( const std::string& link, IMediaInterfaceCallbackSubscriber* subscriber, void* userData )
@@ -1045,9 +1048,9 @@ void LibSpotifyIf::refreshRootFolder()
     if(numberOfPlaylists < 0)return;
 
     /* create the root folder */
-    Folder tmpRootFolder("root", 0, 0);
+    Folder* tmpRootFolder = new Folder("root", 0, 0);
 
-    Folder* currentFolder = &tmpRootFolder;
+    Folder* currentFolder = tmpRootFolder;
 
     for (int playlistIndex = 0; playlistIndex < numberOfPlaylists; ++playlistIndex)
     {
@@ -1056,7 +1059,7 @@ void LibSpotifyIf::refreshRootFolder()
             case SP_PLAYLIST_TYPE_PLAYLIST:
             {
                 sp_playlist* pl = sp_playlistcontainer_playlist(plContainer, playlistIndex);
-                Playlist playlist(spotifyGetPlaylist(pl, spotifySession_));
+                Playlist* playlist = new Playlist(spotifyGetPlaylist(pl, spotifySession_));
                 currentFolder->addPlaylist(playlist);
                 break;
             }
@@ -1065,9 +1068,9 @@ void LibSpotifyIf::refreshRootFolder()
                 char folderName[200];
                 sp_playlistcontainer_playlist_folder_name(plContainer, playlistIndex, folderName, sizeof(folderName));
                 unsigned long long id = sp_playlistcontainer_playlist_folder_id(plContainer, playlistIndex);
-                Folder folder(folderName, id, currentFolder);
+                Folder* folder = new Folder(folderName, id, currentFolder);
                 currentFolder->addFolder(folder);
-                currentFolder = &currentFolder->getFolders().back();
+                currentFolder = folder;
                 break;
             }
             case SP_PLAYLIST_TYPE_END_FOLDER:
@@ -1081,9 +1084,11 @@ void LibSpotifyIf::refreshRootFolder()
         }
     }
 
-    if(rootFolder_ != tmpRootFolder)
+    if( rootFolder_ == NULL || *rootFolder_ != *tmpRootFolder )
     {
         log(LOG_DEBUG) << "Root folder updated!";
+        if ( rootFolder_ )
+            delete rootFolder_;
         rootFolder_ = tmpRootFolder;
         callbackSubscriberMtx_.lock();
         /* Tell all subscribers that the rootFolder has been updated */
@@ -1094,6 +1099,8 @@ void LibSpotifyIf::refreshRootFolder()
         }
         callbackSubscriberMtx_.unlock();
     }
+    else
+        delete tmpRootFolder;
 }
 
 

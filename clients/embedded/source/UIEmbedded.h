@@ -44,12 +44,14 @@ private:
 
     PlaybackState_t playbackState;
 
-    PlaylistContainer::iterator itPlaylists_;
-    PlaylistContainer playlists;
+    std::vector<Playlist>::iterator itPlaylists_;
+    std::vector<Playlist> playlists;
 
     xTimerHandle progressTimer;
     unsigned int progress_;
     unsigned int currentTrackDuration_;
+
+    void addPlaylists( const Folder& folder );
 
     void drawDefault();
     void drawProgress();

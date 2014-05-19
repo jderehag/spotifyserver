@@ -80,6 +80,7 @@
     <ClInclude Include="..\..\..\common\MediaContainers\Folder.h" />
     <ClInclude Include="..\..\..\common\MediaContainers\MediaBaseInfo.h" />
     <ClInclude Include="..\..\..\common\MediaContainers\Playlist.h" />
+    <ClInclude Include="..\..\..\common\MediaContainers\FolderItem.h" />
     <ClInclude Include="..\..\..\common\MediaContainers\Track.h" />
     <ClInclude Include="..\..\..\common\MessageFactory\Message.h" />
     <ClInclude Include="..\..\..\common\MessageFactory\MessageDecoder.h" />

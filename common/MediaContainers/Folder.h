@@ -28,6 +28,8 @@
 #ifndef FOLDER_H_
 #define FOLDER_H_
 
+#include "MediaBaseInfo.h"
+#include "FolderItem.h"
 #include "Playlist.h"
 #include "MessageFactory/Tlvs.h"
 #include <string>
@@ -37,39 +39,42 @@
 namespace LibSpotify
 {
 
-typedef std::vector<class Folder> FolderContainer;  //can't be deque since it's incomplete type and the template mumbojumbo can't handle that, 
-                                                    //it's undefined behaviour according to C++ std and doesn't compile in VS. For some reason vector is ok.
-typedef std::deque<Playlist> PlaylistContainer;
+typedef std::vector<FolderItem*> FolderItemContainer;
 
-class Folder : public MediaBaseInfo
+class Folder : public MediaBaseInfo, public FolderItem
 {
 private:
 	unsigned long long id_;
-	PlaylistContainer playlists_;
-	FolderContainer folders_;
+	FolderItemContainer children_;
 	Folder* parentFolder_;
+
+private:
+    Folder( const Folder& from );
+    Folder();
+    Folder& operator=(const Folder&);
 
 public:
 	Folder(const std::string& name, unsigned long long id, Folder* parentFolder);
     Folder( const TlvContainer* tlv );
+
 	virtual ~Folder();
 
-	void addFolder(Folder& folder);
-	void addPlaylist(Playlist& playlist);
+	void addFolder(Folder* folder);
+	void addPlaylist(Playlist* playlist);
 	Folder* getParentFolder();
 
 	bool findPlaylist(const std::string& playlist , Playlist& pl);
 
-    PlaylistContainer& getPlaylists();
-    const PlaylistContainer& getPlaylists() const;
-    FolderContainer& getFolders();
-    const FolderContainer& getFolders() const;
+    FolderItemContainer& getItems();
+    const FolderItemContainer& getItems() const;
 	void getAllTracks(std::deque<Track>& allTracks) const;
 
     Tlv* toTlv() const;
 
 	bool operator!=(const Folder& rhs) const;
 	bool operator==(const Folder& rhs) const;
+    bool operator==(const FolderItem& rhs) const;
+    bool operator!=(const FolderItem& rhs) const;
 	friend std::ostream& operator <<(std::ostream& os, const Folder& rhs);
 
 };

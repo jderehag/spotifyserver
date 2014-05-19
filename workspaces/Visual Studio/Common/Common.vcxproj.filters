@@ -175,6 +175,9 @@
     <ClInclude Include="..\..\..\common\EndpointId\EndpointIdIf.h">
       <Filter>EndpointId</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\common\MediaContainers\FolderItem.h">
+      <Filter>MediaContainers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\common\Platform\Socket\Windows\WindowsSocket.cpp">

@@ -36,8 +36,8 @@ namespace LibSpotify
 {
 static void insertTabs(std::ostream& os, unsigned short numberOfTabs);
 
-Folder::Folder(const std::string& name, unsigned long long id, Folder* parentFolder) : MediaBaseInfo(name, ""), id_(id), parentFolder_(parentFolder) { }
-Folder::Folder( const TlvContainer* tlv ) : MediaBaseInfo(tlv)
+Folder::Folder(const std::string& name, unsigned long long id, Folder* parentFolder) : MediaBaseInfo(name, ""), FolderItem(true), id_(id), parentFolder_(parentFolder) { }
+Folder::Folder( const TlvContainer* tlv ) : MediaBaseInfo(tlv), FolderItem(true)
 {
     parentFolder_ = NULL;
 
@@ -47,13 +47,13 @@ Folder::Folder( const TlvContainer* tlv ) : MediaBaseInfo(tlv)
         {
             case TLV_FOLDER:
             {
-                Folder subfolder( (TlvContainer*) (*it) );
+                Folder* subfolder = new Folder( (TlvContainer*) (*it) );
                 addFolder( subfolder );
             }
             break;
             case TLV_PLAYLIST:
             {
-                Playlist playlist( (TlvContainer*) (*it) );
+                Playlist* playlist = new Playlist( (TlvContainer*) (*it) );
                 addPlaylist( playlist );
             }
             break;
@@ -62,16 +62,24 @@ Folder::Folder( const TlvContainer* tlv ) : MediaBaseInfo(tlv)
         }
     }
 }
-Folder::~Folder(){ }
 
-void Folder::addFolder(Folder& folder)
+Folder::~Folder()
 {
-    folder.parentFolder_ = this;
-	folders_.push_back(folder);
+    for (FolderItemContainer::iterator it = children_.begin(); it != children_.end(); it++)
+    {
+        delete *it;
+    }
+    children_.clear();
 }
-void Folder::addPlaylist(Playlist& playlist)
+
+void Folder::addFolder(Folder* folder)
 {
-	playlists_.push_back(playlist);
+    folder->parentFolder_ = this;
+	children_.push_back(folder);
+}
+void Folder::addPlaylist(Playlist* playlist)
+{
+	children_.push_back(playlist);
 }
 
 Folder* Folder::getParentFolder()
@@ -81,52 +89,52 @@ Folder* Folder::getParentFolder()
 
 bool Folder::findPlaylist(const std::string& playlist, Playlist& pl)
 {
-    for (std::deque<LibSpotify::Playlist>::iterator p = playlists_.begin(); p != playlists_.end(); *p++)
+    for (FolderItemContainer::iterator it = children_.begin(); it != children_.end(); it++)
     {
-        if((*p).getLink().compare(playlist) == 0)
+        if ( (*it)->isFolder )
         {
-            pl = *p;
-            return true;
+            Folder* f = dynamic_cast<Folder*>(*it);
+            if ( f->findPlaylist( playlist,pl ) == true )
+                return true;
         }
-    }
-
-    for (std::vector<Folder>::iterator f = folders_.begin(); f != folders_.end(); *f++)
-    {
-        if (f->findPlaylist(playlist,pl)==true)
-            return true;
+        else
+        {
+            Playlist* p = dynamic_cast<Playlist*>(*it);
+            if ( p->getLink().compare(playlist) == 0 )
+            {
+                pl = *p;
+                return true;
+            }
+        }
     }
 
     return false; /*nope, not in here*/
 }
 
-const PlaylistContainer& Folder::getPlaylists() const
-{
-    return playlists_;
-}
-PlaylistContainer& Folder::getPlaylists()
-{
-    return playlists_;
-}
 
-const FolderContainer& Folder::getFolders() const
+const FolderItemContainer& Folder::getItems() const
 {
-    return folders_;
+    return children_;
 }
-FolderContainer& Folder::getFolders()
+FolderItemContainer& Folder::getItems()
 {
-    return folders_;
+    return children_;
 }
 
 void Folder::getAllTracks(std::deque<Track>& trackList) const
 {
-    for(std::vector<Folder>::const_iterator it = folders_.begin(); it != folders_.end(); it++)
+    for (FolderItemContainer::const_iterator it = children_.begin(); it != children_.end(); it++)
     {
-        (*it).getAllTracks(trackList);
-    }
-
-    for(std::deque<Playlist>::const_iterator it = playlists_.begin(); it != playlists_.end(); it++)
-    {
-        trackList.insert(trackList.end(), (*it).getTracks().begin(), (*it).getTracks().end());
+        if ( (*it)->isFolder )
+        {
+            const Folder* f = dynamic_cast<const Folder*>(*it);
+            f->getAllTracks(trackList);
+        }
+        else
+        {
+            const Playlist* p = dynamic_cast<const Playlist*>(*it);
+            trackList.insert(trackList.end(), p->getTracks().begin(), p->getTracks().end());
+        }
     }
 }
 
@@ -136,14 +144,9 @@ Tlv* Folder::toTlv() const
 
     folder->addTlv(TLV_NAME, name_);
 
-    for (std::vector<Folder>::const_iterator f = folders_.begin(); f != folders_.end(); *f++)
+    for (FolderItemContainer::const_iterator it = children_.begin(); it != children_.end(); it++)
     {
-        folder->addTlv( (*f).toTlv() );
-    }
-
-    for (std::deque<Playlist>::const_iterator p = playlists_.begin(); p != playlists_.end(); *p++)
-    {
-        folder->addTlv( (*p).toTlv() );
+        folder->addTlv( (*it)->toTlv() );
     }
 
     return folder;
@@ -152,16 +155,36 @@ Tlv* Folder::toTlv() const
 
 bool Folder::operator==(const Folder& rhs) const
 {
+    bool contentsEqual = true;
+    if ( children_.size() != rhs.children_.size() )
+        contentsEqual = false;
+    else
+    {
+        FolderItemContainer::const_iterator it1 = children_.begin();
+        FolderItemContainer::const_iterator it2 = rhs.children_.begin();
+        for (; it1 != children_.end() && contentsEqual; it1++, it2++)
+        {
+            if ( (*it1)->isFolder != (*it2)->isFolder )
+                contentsEqual = false;
+            else
+            {
+                if ( (*it1)->isFolder )
+                    contentsEqual = (*dynamic_cast<const Folder*>(*it1) == *dynamic_cast<const Folder*>(*it2));
+                else
+                    contentsEqual = (*dynamic_cast<const Playlist*>(*it1) == *dynamic_cast<const Playlist*>(*it2));
+            }
+        }
+    }
 	return (name_ == rhs.name_ ) &&
 			(id_ == rhs.id_) &&
-			(playlists_ == rhs.playlists_) &&
-			(folders_ == rhs.folders_);
+            (contentsEqual);
 }
 
 bool Folder::operator!=(const Folder& rhs) const
 {
 	return !(*this == rhs);
 }
+
 
 std::ostream &operator <<(std::ostream& os, const Folder& rhs)
 {
@@ -179,23 +202,28 @@ std::ostream &operator <<(std::ostream& os, const Folder& rhs)
 
 	/* Then print all the subfolders and playlists */
 	os << rhs.name_ << std::endl;
-	for(std::vector<Folder>::const_iterator it = rhs.folders_.begin(); it != rhs.folders_.end(); it++)
-	{
-		if(it == rhs.folders_.begin())
-		{
-			insertTabs(os, tabSpaces);
-			os << "Folder:" << std::endl;
-		}
-		insertTabs(os, tabSpaces+1);
-		os << *it;
-	}
+    for (FolderItemContainer::const_iterator it = rhs.children_.begin(); it != rhs.children_.end(); it++)
+    {
+        if ( (*it)->isFolder )
+        {
+            const Folder* f = dynamic_cast<const Folder*>(*it);
+            if ( it == rhs.children_.begin() )
+            {
+                insertTabs(os, tabSpaces);
+                os << "Folder:" << std::endl;
+            }
+            insertTabs(os, tabSpaces+1);
+            os << f;
+        }
+        else
+        {
+            const Playlist* p = dynamic_cast<const Playlist*>(*it);
+            insertTabs(os, tabSpaces+1);
+            os << *p << std::endl;
+        }
+    }
 
-	for(std::deque<Playlist>::const_iterator it = rhs.playlists_.begin(); it != rhs.playlists_.end(); it++)
-	{
-		insertTabs(os, tabSpaces+1);
-		os << *it << std::endl;
-	}
-	return os;
+    return os;
 }
 
 static void insertTabs(std::ostream& os, unsigned short numberOfTabs)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Jesper Derehag
+ * Copyright (c) 2014, Jens Nielsen
  * All rights reserved.
 
  * Redistribution and use in source and binary forms, with or without
@@ -25,44 +25,23 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef PLAYLIST_H_
-#define PLAYLIST_H_
+#ifndef FOLDERITEM_H_
+#define FOLDERITEM_H_
 
-#include "MediaBaseInfo.h"
-#include "FolderItem.h"
 #include "MessageFactory/Tlvs.h"
-
-#include "Track.h"
-#include <list>
-#include <deque>
-#include <string>
 
 namespace LibSpotify
 {
 
-class Playlist : public MediaBaseInfo, public FolderItem
+class FolderItem
 {
-protected:
-	std::deque<Track> tracks_;
-	bool isCollaborative_;
-	bool isStarred_;
 public:
-	Playlist(const std::string& name, const std::string& link);
-	Playlist(const TlvContainer* tlv);
-	virtual ~Playlist();
+    bool isFolder;
+    FolderItem( bool isFolder_ ) : isFolder(isFolder_) {}
+    virtual ~FolderItem() {}
 
-	bool isCollaborative();
-	void setIsCollaborative(bool isCollaborative);
-	void addTrack(Track& track);
-	const std::deque<Track>& getTracks() const;
-
-    Tlv* toTlv() const;
-
-    bool operator==(const Playlist& rhs) const;
-	bool operator!=(const Playlist& rhs) const;
-	friend std::ostream& operator <<(std::ostream& os, const Playlist& rhs);
+    virtual Tlv* toTlv() const = 0;
 };
 
 }
-
-#endif /* PLAYLIST_H_ */
+#endif

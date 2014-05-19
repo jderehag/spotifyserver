@@ -191,7 +191,7 @@ private:
 private:
     const ConfigHandling::SpotifyConfig& config_;
 
-	Folder rootFolder_;
+	Folder* rootFolder_;
 
 	/*********************
 	 * Synchronization

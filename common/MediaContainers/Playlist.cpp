@@ -35,8 +35,8 @@
 namespace LibSpotify
 {
 
-Playlist::Playlist(const std::string& name, const std::string& link) : MediaBaseInfo(name, link) { }
-Playlist::Playlist(const TlvContainer* tlv) : MediaBaseInfo(tlv)
+Playlist::Playlist(const std::string& name, const std::string& link) : MediaBaseInfo(name, link), FolderItem(false) { }
+Playlist::Playlist(const TlvContainer* tlv) : MediaBaseInfo(tlv), FolderItem(false)
 {
     isStarred_ = false;
     isCollaborative_ = false;
@@ -91,7 +91,6 @@ bool Playlist::operator!=(const Playlist& rhs) const
 {
 	return !(*this == rhs);
 }
-
 
 std::ostream& operator <<(std::ostream &os, const Playlist& rhs)
 {

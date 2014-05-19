@@ -121,14 +121,29 @@ void UIEmbedded::connectionState( bool up )
     }
 }
 
+void UIEmbedded::addPlaylists( const Folder& folder )
+{
+    for( LibSpotify::FolderItemContainer::const_iterator it = folder.getItems().begin();
+            it != folder.getItems().end(); it++ )
+    {
+        if ( (*it)->isFolder )
+        {
+            const Folder* f = dynamic_cast<const Folder*>(*it);
+            addPlaylists( *f );
+        }
+        else
+        {
+            const Playlist* p = dynamic_cast<const Playlist*>(*it);
+            playlists.push_back( *p );
+        }
+    }
+}
+
 void UIEmbedded::getPlaylistsResponse( const Folder& rootfolder, void* userData )
 {
     playlists.clear();
 
-    for( LibSpotify::FolderContainer::const_iterator it = rootfolder.getFolders().begin(); it != rootfolder.getFolders().end() ; it++)
-        playlists.insert( playlists.end(), (*it).getPlaylists().begin(), (*it).getPlaylists().end());
-
-    playlists.insert( playlists.end(), rootfolder.getPlaylists().begin(), rootfolder.getPlaylists().end());
+    addPlaylists( rootfolder );
 
     itPlaylists_ = playlists.begin();
 }

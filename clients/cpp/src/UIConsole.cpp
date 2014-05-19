@@ -33,7 +33,6 @@ static void printTracks( const std::deque<Track>& tracks );
 
 
 UIConsole::UIConsole( MediaInterface& m, EndpointCtrlInterface& epMgr ) : m_(m), epMgr_(epMgr),
-                                            itPlaylists_(playlists.begin()),
                                             isShuffle(false),
                                             isRepeat(false)
 {
@@ -354,13 +353,6 @@ void UIConsole::connectionState( bool up )
 void UIConsole::getPlaylistsResponse( const Folder& rootfolder, void* userData )
 {
     printFolder( rootfolder, 2 );
-
-    for( LibSpotify::FolderContainer::const_iterator it = rootfolder.getFolders().begin(); it != rootfolder.getFolders().end() ; it++)
-        playlists.insert( playlists.end(), (*it).getPlaylists().begin(), (*it).getPlaylists().end());
-
-    playlists.insert( playlists.end(), rootfolder.getPlaylists().begin(), rootfolder.getPlaylists().end());
-
-    itPlaylists_ = playlists.begin();
 }
 void UIConsole::getTracksResponse( const std::deque<Track>& tracks, void* userData )
 {
@@ -465,15 +457,23 @@ void UIConsole::audioEndpointsUpdatedNtf()
 {
 }
 
-void printFolder( const Folder& f, int indent )
+void printFolder( const Folder& folder, int indent )
 {
-    std::cout << std::string( indent, ' ') << f.getName() << std::endl;
+    std::cout << std::string( indent, ' ') << folder.getName() << std::endl;
 
-    for( LibSpotify::FolderContainer::const_iterator it = f.getFolders().begin(); it != f.getFolders().end() ; it++)
-        printFolder( (*it), indent+2 );
-
-    for( LibSpotify::PlaylistContainer::const_iterator it = f.getPlaylists().begin(); it != f.getPlaylists().end() ; it++)
-        std::cout << std::string( indent+2, ' ') << (*it).getName() << "  -  " << (*it).getLink() << std::endl;
+    for( LibSpotify::FolderItemContainer::const_iterator it = folder.getItems().begin(); it != folder.getItems().end() ; it++)
+    {
+        if ( (*it)->isFolder )
+        {
+            const Folder* f = dynamic_cast<const Folder*>(*it);
+            printFolder( *f, indent+2 );
+        }
+        else
+        {
+            const Playlist* p = dynamic_cast<const Playlist*>(*it);
+            std::cout << std::string( indent+2, ' ') << p->getName() << "  -  " << p->getLink() << std::endl;
+        }
+    }
 }
 
 void printTracks( const std::deque<Track>& tracks )
