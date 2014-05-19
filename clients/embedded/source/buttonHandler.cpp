@@ -56,22 +56,25 @@ void buttonHandler_action( uint8_t pressed )
 {
     portBASE_TYPE higherPrioTaskWoken = pdFALSE;
     static xTimerHandle tmr = xTimerCreate( (const char *)"btn",1000/portTICK_RATE_MS,pdFALSE, NULL, timerCb );
+    uint32_t now = xTaskGetTickCountFromISR();
 
     pwrKeepAlive();
 
     if ( pressed )
     {
-        portBASE_TYPE higherPrioTaskWoken2 = 0;
-        pressTime = xTaskGetTickCountFromISR();
+        if ( pressTime == 0 ) // this is to avoid resetting timer on bounce at release
+        {
+            portBASE_TYPE higherPrioTaskWoken2 = 0;
+            pressTime = now;
 
-        /*launch timer for long press detection*/
-        xTimerStopFromISR( tmr, &higherPrioTaskWoken );
-        xTimerStartFromISR( tmr, &higherPrioTaskWoken2 );
-        higherPrioTaskWoken |= higherPrioTaskWoken2;
+            /*launch timer for long press detection*/
+            xTimerResetFromISR( tmr, &higherPrioTaskWoken );
+            higherPrioTaskWoken |= higherPrioTaskWoken2;
+        }
     }
     else if ( pressTime != 0 ) /*handle release if we have caught a press*/
     {
-        portTickType totalTime = xTaskGetTickCountFromISR() - pressTime;
+        portTickType totalTime = now - pressTime;
         pressTime = 0;
         xTimerStopFromISR( tmr, &higherPrioTaskWoken );
 
