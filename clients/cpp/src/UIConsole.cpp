@@ -170,19 +170,63 @@ void UIConsole::run()
 
         if ( argv[0] == "addTracks" )
         {
-            /*todo*/
+            if ( argc >= 3 )
+            {
+                std::string& playlist = argv[1];
+                std::list<std::string> tracks;
+                int index;
+                char* endptr;
+                for ( int i = 2; i < argc-1; i++ )
+                    tracks.push_back(argv[i]);
+                index = strtol(argv[argc-1].c_str(), &endptr, 10);
+                if ( *endptr != '\0')
+                {
+                    index = -1;
+                    tracks.push_back(argv[argc-1]);
+                }
+                if ( tracks.size() > 0 )
+                    m_.playlistAddTracks( playlist, tracks, index, this, NULL );
+            }
             continue;
         }
 
         if ( argv[0] == "removeTracks" )
         {
-            /*todo*/
+            if ( argc >= 3 )
+            {
+                std::string& playlist = argv[1];
+                std::set<int> tracks;
+                char* endptr;
+                for ( int i = 2; i < argc; i++ )
+                {
+                    int index = strtol(argv[i].c_str(), &endptr, 10);
+                    if ( *endptr == '\0')
+                        tracks.insert(index);
+                }
+                if ( tracks.size() > 0 )
+                    m_.playlistRemoveTracks( playlist, tracks, this, NULL );
+            }
             continue;
         }
 
         if ( argv[0] == "moveTracks" )
         {
-            /*todo*/
+            if ( argc >= 4 )
+            {
+                std::string& playlist = argv[1];
+                std::set<int> tracks;
+                int toIndex;
+                char* endptr;
+                for ( int i = 2; i < argc-1; i++ )
+                {
+                    int index = strtol(argv[i].c_str(), &endptr, 10);
+                    if ( *endptr == '\0')
+                        tracks.insert(index);
+                }
+                toIndex = strtol(argv[argc-1].c_str(), &endptr, 10);
+                if ( *endptr == '\0' && tracks.size() > 0 )
+                    m_.playlistMoveTracks( playlist, tracks, toIndex, this, NULL );
+            }
             continue;
         }
 

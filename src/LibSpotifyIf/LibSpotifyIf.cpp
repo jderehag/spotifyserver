@@ -835,7 +835,7 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
                         if ( i > 0 )
                         {
                             int index = addEvent->index_;
-                            if ( index < 0 )
+                            if ( index < 0 || index > sp_playlist_num_tracks( playlist ) )
                                 index = sp_playlist_num_tracks( playlist );
                             sp_error err = sp_playlist_add_tracks( playlist, tracks, i, index, spotifySession_ );
                             if ( err != SP_ERROR_OK )
