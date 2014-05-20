@@ -15,6 +15,8 @@ MainWindow::MainWindow( QString& title, MediaInterface& m, EndpointCtrlInterface
         actions(*this),
         progress_(0), isPlaying(false)
 {
+    Q_INIT_RESOURCE(QTResources);
+
     ui->setupUi(this);
     setWindowTitle( title );
     ui->playlistsTree->setColumnCount( 1 );

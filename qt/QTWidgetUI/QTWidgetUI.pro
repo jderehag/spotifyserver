@@ -50,3 +50,6 @@ FORMS += \
     ArtistPage.ui \
     PlaylistPage.ui \
     EndpointsPage.ui
+
+RESOURCES += \
+    ../../resources/QTResources.qrc
