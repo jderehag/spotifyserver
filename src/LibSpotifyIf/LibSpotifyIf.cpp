@@ -52,7 +52,10 @@ void volumeCb( void* arg, uint32_t volume );
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
-LibSpotifyIf::LibSpotifyIf(const ConfigHandling::SpotifyConfig& config) :config_(config),
+LibSpotifyIf::LibSpotifyIf( ConfigHandling::SpotifyConfig& config ) :
+                                                                         config_(config),
+                                                                         loginui_(NULL),
+                                                                         currentUser(config.getUsername()),
                                                                          rootFolder_(NULL),
                                                                          state_(STATE_INVALID),
                                                                          nextTimeoutForLibSpotify(0),
@@ -80,6 +83,11 @@ void LibSpotifyIf::destroy()
 	cancelThread();
     cond_.signal();
 	joinThread();
+}
+
+void LibSpotifyIf::setLoginInterface(ILibSpotifyLoginUI* loginui)
+{
+    loginui_ = loginui;
 }
 
 void LibSpotifyIf::logIn()
@@ -912,9 +920,32 @@ void LibSpotifyIf::stateMachineEventHandler(EventItem* event)
 
         /* Session Handling*/
         case EVENT_LOGGING_IN:
-            state_ = STATE_LOGGING_IN;
-            log(LOG_NOTICE) << "Logging in as " << config_.getUsername();
-            sp_session_login(spotifySession_, config_.getUsername().c_str(), config_.getPassword().c_str(), 0, NULL);
+            {
+                state_ = STATE_LOGGING_IN;
+
+                {
+                    char rememberedUser[256];
+                    if ( sp_session_remembered_user( spotifySession_, rememberedUser, sizeof(rememberedUser) ) != -1 && 
+                         config_.getUsername().compare(rememberedUser) != 0 )
+                    {
+                        sp_session_forget_me( spotifySession_ );
+                    }
+                }
+
+                if ( sp_session_relogin( spotifySession_ ) != SP_ERROR_OK )
+                {
+                    if ( config_.getUsername().empty() || config_.getPassword().empty() )
+                    {
+                        std::string empty = "";
+                        getCredentialsAndLogin( empty );
+                    }
+                    else
+                    {
+                        log(LOG_NOTICE) << "Logging in as " << config_.getUsername();
+                        sp_session_login(spotifySession_, config_.getUsername().c_str(), NULL, 1, config_.getPassword().c_str());
+                    }
+                }
+            }
             break;
 
         case EVENT_LOGGED_IN:
@@ -1150,6 +1181,29 @@ void LibSpotifyIf::loadAndSendImage( const byte* imgRef, QueryReqEventItem* reqE
         reqData.first->getImageResponse( NULL, 0, reqData.second );
     }
 }
+
+
+void LibSpotifyIf::getCredentialsAndLogin( const std::string& message )
+{
+    assert(loginui_);
+    LibSpotifyLoginParams params = loginui_->getLoginParams( message, currentUser, config_.getRememberMe() );
+
+    currentUser = params.username;
+
+    if ( params.rememberMe != config_.getRememberMe() )
+        config_.setRememberMe( params.rememberMe );
+
+    if ( currentUser != config_.getUsername() )
+        config_.setUsername(currentUser);
+
+    if ( params.rememberMe == false )
+    {
+        std::string empty = "";
+        config_.setPassword(empty);
+    }
+    sp_session_login( spotifySession_, currentUser.c_str(), params.password.c_str(), params.rememberMe, NULL );
+    params.password = "";
+}
 /* * * * * * * * * * * * * * * * * * * * * * * * * * *
  * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
@@ -1162,23 +1216,42 @@ void LibSpotifyIf::loadAndSendImage( const byte* imgRef, QueryReqEventItem* reqE
 */
 void LibSpotifyIf::loggedInCb(sp_session *session, sp_error error)
 {
-	sp_user *me;
-	const char *my_name;
-	int cc;
+    sp_user *me;
+    const char *my_name;
+    int cc;
 
 
-	if (SP_ERROR_OK != error) {
-		std::cerr << "failed to log in to Spotify: " << sp_error_message(error) << std::endl;
-		sp_session_release(session);
-		exit(4);
-	}
+    if (SP_ERROR_OK != error)
+    {
+        if ( error == SP_ERROR_BAD_USERNAME_OR_PASSWORD || error == SP_ERROR_USER_BANNED || error == SP_ERROR_USER_NEEDS_PREMIUM ||
+             error == SP_ERROR_UNABLE_TO_CONTACT_SERVER /* this happens for some reason when credentialblob is incorrect */)
+        {
+            std::string message = "";
+            switch( error )
+            {
+                case SP_ERROR_UNABLE_TO_CONTACT_SERVER: message = "Error logging in"; break;
+                case SP_ERROR_BAD_USERNAME_OR_PASSWORD: message = "Wrong username or password. Please try again.\nFor help, visit Spotify.com"; break;
+                case SP_ERROR_USER_BANNED: message = "This Spotify account has been blocked.\nPlease contact customer support on www.spotify.com"; break;
+                case SP_ERROR_USER_NEEDS_PREMIUM: message = "Spotify Premium is required for this application.\nPlease purchase a Premium subscription on www.spotify.com."; break;
+            }
 
-	// Let us print the nice message...
-	me = sp_session_user(session);
-	my_name = (sp_user_is_loaded(me) ? sp_user_display_name(me) : sp_user_canonical_name(me));
-	cc = sp_session_user_country(session);
-	log(LOG_NOTICE) << "Logged in to Spotify as user " << my_name << "(registered in country: " <<
-													(cc >> 8) << (cc & 0xff) << ")";
+            getCredentialsAndLogin( message );
+            return;
+        }
+        else
+        {
+            std::cerr << "failed to log in to Spotify: " << sp_error_message(error) << std::endl;
+            sp_session_release(session);
+            exit(4);
+        }
+    }
+
+    // Let us print the nice message...
+    me = sp_session_user(session);
+    my_name = (sp_user_is_loaded(me) ? sp_user_display_name(me) : sp_user_canonical_name(me));
+    cc = sp_session_user_country(session);
+    log(LOG_NOTICE) << "Logged in to Spotify as user " << my_name << "(registered in country: " <<
+        (cc >> 8) << (cc & 0xff) << ")";
 
 
     postToEventThread( new EventItem( EVENT_LOGGED_IN ) );
@@ -1217,6 +1290,15 @@ void LibSpotifyIf::connectionErrorCb(sp_session *session, sp_error error)
 void LibSpotifyIf::notifyLibSpotifyMainThreadCb(sp_session *session)
 {
 	postToEventThread( new EventItem( EVENT_ITERATE_MAIN_LOOP ) );
+}
+
+void LibSpotifyIf::credentialsBlobUpdatedCb(sp_session *session, const char *blob)
+{
+    if ( config_.getRememberMe() )
+    {
+        std::string blobstring = blob;
+        config_.setPassword( blobstring );
+    }
 }
 
 int LibSpotifyIf::musicDeliveryCb(sp_session *sess, const sp_audioformat *format,

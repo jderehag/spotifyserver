@@ -33,7 +33,8 @@ namespace ConfigHandling
 SpotifyConfig::SpotifyConfig() : username_(""),
                                  password_(""),
                                  cacheLocation_("./tmp/"),
-                                 settingsLocation_("./tmp/")
+                                 settingsLocation_("./tmp/"),
+                                 rememberMe_(false)
 { }
 
 const std::string& SpotifyConfig::getCacheLocation() const
@@ -56,6 +57,16 @@ const std::string& SpotifyConfig::getUsername() const
     return username_;
 }
 
+bool SpotifyConfig::getRememberMe() const
+{
+    return rememberMe_;
+}
+
+const std::string SpotifyConfig::getRememberMeString() const
+{
+    return rememberMe_ ? "1" : "0";
+}
+
 void SpotifyConfig::setCacheLocation(std::string& cacheLocation)
 {
     if(!cacheLocation.empty())cacheLocation_ = cacheLocation;
@@ -63,7 +74,8 @@ void SpotifyConfig::setCacheLocation(std::string& cacheLocation)
 
 void SpotifyConfig::setPassword(std::string& password)
 {
-    if(!password.empty())password_ = password;
+    password_ = password;
+    if(writer) writer->writeConfigFile();
 }
 
 void SpotifyConfig::setSettingsLocation(std::string& settingsLocation)
@@ -73,6 +85,20 @@ void SpotifyConfig::setSettingsLocation(std::string& settingsLocation)
 
 void SpotifyConfig::setUsername(std::string& username)
 {
-    if(!username.empty())username_ = username;
+    username_ = username;
+    if(writer) writer->writeConfigFile();
 }
+
+void SpotifyConfig::setRememberMe(bool rememberMe)
+{
+    rememberMe_ = rememberMe;
+    if(writer) writer->writeConfigFile();
+}
+
+void SpotifyConfig::setRememberMe(std::string& rememberMe)
+{
+    if(!rememberMe.empty())
+        rememberMe_ = rememberMe.compare("0") != 0 && rememberMe.compare("FALSE") != 0 && rememberMe.compare("false") != 0;
+}
+
 } /* namespace ConfigHandling */

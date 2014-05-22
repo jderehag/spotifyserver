@@ -144,23 +144,28 @@ private:
 };
 
 
-class SpotifyConfig
+class SpotifyConfig : public ConfigBase
 {
 private:
     std::string username_;
     std::string password_;
     std::string cacheLocation_;
     std::string settingsLocation_;
+    bool rememberMe_;
 public:
     SpotifyConfig();
     const std::string& getCacheLocation() const;
     const std::string& getPassword() const;
     const std::string& getSettingsLocation() const;
     const std::string& getUsername() const;
+    bool getRememberMe() const;
+    const std::string getRememberMeString() const;
     void setCacheLocation(std::string& cacheLocation);
     void setPassword(std::string& password);
     void setSettingsLocation(std::string& settingsLocation);
     void setUsername(std::string& username);
+    void setRememberMe( bool rememberMe );
+    void setRememberMe(std::string& rememberMe);
 };
 
 class ConfigHandler : IConfigWriter
@@ -184,6 +189,7 @@ private:
     std::string spotifyPassword;
     std::string spotifyCacheLocation;
     std::string spotifySettingsLocation;
+    std::string spotifyRememberMe;
     /* Network Section*/
     std::string networkBindType;
     std::string networkIp;
@@ -206,7 +212,7 @@ public:
     const AudioEndpointConfig& getAudioEndpointConfig() const;
     const LoggerConfig& getLoggerConfig() const;
     const NetworkConfig& getNetworkConfig() const;
-    const SpotifyConfig& getSpotifyConfig() const;
+    SpotifyConfig& getSpotifyConfig();
     const std::string& getConfigFilePath() const;
 };
 

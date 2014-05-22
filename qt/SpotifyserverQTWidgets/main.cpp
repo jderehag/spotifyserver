@@ -7,6 +7,7 @@
 #include "ConfigHandling/ConfigHandler.h"
 #include "Platform/Utils/Utils.h"
 #include "Platform/Timers/TimerFramework.h"
+#include "SpotifyLoginDialog/SpotifyLoginDialog.h"
 
 #include "Logger/applog.h"
 #include "Logger/LoggerImpl.h"
@@ -25,11 +26,13 @@ int main(int argc, char *argv[])
 
     Logger::LoggerImpl l(ch.getLoggerConfig());
 
-    ConfigHandling::SpotifyConfig spConfig = ch.getSpotifyConfig();
+    ConfigHandling::SpotifyConfig& spConfig = ch.getSpotifyConfig();
 
 
 
     LibSpotify::LibSpotifyIf libspotifyif(spConfig);
+    SpotifyLoginDialog loginui;
+    libspotifyif.setLoginInterface(&loginui);
     libspotifyif.logIn();
 
     EndpointId serverId( ch.getGeneralConfig() );

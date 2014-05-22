@@ -25,23 +25,21 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef FOLDERITEM_H_
-#define FOLDERITEM_H_
+#ifndef ILIBSPOTIFYLOGINUI_H_
+#define ILIBSPOTIFYLOGINUI_H_
 
-#include "MessageFactory/Tlvs.h"
+#include <string>
 
-namespace LibSpotify
+struct LibSpotifyLoginParams
 {
-
-class FolderItem
-{
-public:
-    bool isFolder;
-    FolderItem( bool isFolder_ ) : isFolder(isFolder_) {}
-    virtual ~FolderItem() {}
-
-    virtual Tlv* toTlv() const = 0;
+    std::string username;
+    std::string password;
+    bool rememberMe;
 };
 
-}
+class ILibSpotifyLoginUI
+{
+public:
+    virtual LibSpotifyLoginParams getLoginParams( const std::string& message, const std::string& oldUsername, bool oldRememberMe ) = 0;
+};
 #endif

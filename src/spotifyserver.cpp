@@ -86,33 +86,9 @@ int main(int argc, char *argv[])
 
     Logger::LoggerImpl l(ch.getLoggerConfig());
 
-    ConfigHandling::SpotifyConfig spConfig = ch.getSpotifyConfig();
-    if (spConfig.getUsername().empty())
-    {
-        std::string username;
-        std::cout << "Enter username: ";
-        std::cin >> username;
-        spConfig.setUsername(username);
-    }
-    else
-    {
-        std::cout << "User " << spConfig.getUsername() << std::endl;
-    }
-
-    if (spConfig.getPassword().empty())
-    {
-        std::string pwd;
-        std::cout << "Enter password: ";
-        disableStdinEcho();
-        std::cin >> pwd;
-        enableStdinEcho();
-        std::cout << std::endl;
-        spConfig.setPassword(pwd);
-    }
-
+    ConfigHandling::SpotifyConfig& spConfig = ch.getSpotifyConfig();
 
     LibSpotify::LibSpotifyIf libspotifyif(spConfig);
-    libspotifyif.logIn();
 
     EndpointId serverId( ch.getGeneralConfig() );
     Platform::AudioEndpointLocal audioEndpoint( ch.getAudioEndpointConfig(), serverId );
@@ -124,6 +100,9 @@ int main(int argc, char *argv[])
     ClientHandler clienthandler(ch.getNetworkConfig(), libspotifyif, epMgr );
 
     UIConsole ui( libspotifyif, epMgr );
+    libspotifyif.setLoginInterface(&ui);
+
+    libspotifyif.logIn();
     ui.joinThread();
 
     libspotifyif.logOut();

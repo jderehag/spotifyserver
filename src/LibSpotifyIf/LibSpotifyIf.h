@@ -30,6 +30,7 @@
 
 #include "LibSpotifyIfCallbackWrapper.h"
 #include "LibSpotifyPlaybackHandler.h"
+#include "ILibSpotifyLoginUI.h"
 
 #include "ConfigHandling/ConfigHandler.h"
 #include "MediaContainers/Folder.h"
@@ -189,7 +190,9 @@ private:
  *
  ***********************/
 private:
-    const ConfigHandling::SpotifyConfig& config_;
+    ConfigHandling::SpotifyConfig& config_;
+    ILibSpotifyLoginUI* loginui_;
+    std::string currentUser;
 
 	Folder* rootFolder_;
 
@@ -232,7 +235,8 @@ private:
 	/**************************
 	 * libspotify interactions
 	 **************************/
-	void libSpotifySessionCreate();
+    void getCredentialsAndLogin( const std::string& message );
+    void libSpotifySessionCreate();
     void refreshRootFolder();
 
    	/************************
@@ -253,6 +257,7 @@ private:
 	void loggedOutCb(sp_session *session);
 	void connectionErrorCb(sp_session *session, sp_error error);
 	void notifyLibSpotifyMainThreadCb(sp_session *session);
+    void credentialsBlobUpdatedCb(sp_session *session, const char *blob);
 	/* playback callbacks */
 	void metadataUpdatedCb(sp_session *session);
 	int musicDeliveryCb(sp_session *sess, const sp_audioformat *format, const void *frames, int num_frames);
@@ -277,8 +282,10 @@ private:
     void sendGetImageRsp( sp_image* img, QueryReqEventItem* reqEvent );
     void loadAndSendImage( const byte* imgRef, QueryReqEventItem* reqEvent );
 public:
-	LibSpotifyIf(const ConfigHandling::SpotifyConfig& config );
-	virtual ~LibSpotifyIf();
+    LibSpotifyIf( ConfigHandling::SpotifyConfig& config );
+    virtual ~LibSpotifyIf();
+
+    void setLoginInterface(ILibSpotifyLoginUI* loginui);
 
 	void logIn();
 	void logOut();

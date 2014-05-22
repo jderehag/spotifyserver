@@ -7,7 +7,6 @@
 #include "PlaylistModel.h"
 #include "Logger/applog.h"
 
-
 MainWindow::MainWindow( QString& title, MediaInterface& m, EndpointCtrlInterface& epMgr, QWidget *parent ) :
         QMainWindow(parent),
         ui(new Ui::MainWindow),

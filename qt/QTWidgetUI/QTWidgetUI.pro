@@ -26,7 +26,8 @@ SOURCES += \
     AlbumPage.cpp \
     ArtistPage.cpp \
     PlaylistPage.cpp \
-    EndpointsPage.cpp
+    EndpointsPage.cpp \
+    SpotifyLoginDialog/SpotifyLoginDialog.cpp
 
 HEADERS += \
     mainwindow.h \
@@ -37,7 +38,8 @@ HEADERS += \
     ArtistPage.h \
     PlaylistPage.h \
     EndpointsPage.h \
-    PlaylistModel.h
+    PlaylistModel.h \
+    SpotifyLoginDialog/SpotifyLoginDialog.h
 unix {
     target.path = /usr/lib
     INSTALLS += target
@@ -49,7 +51,8 @@ FORMS += \
     AlbumPage.ui \
     ArtistPage.ui \
     PlaylistPage.ui \
-    EndpointsPage.ui
+    EndpointsPage.ui \
+    SpotifyLoginDialog/SpotifyLoginDialog.ui
 
 RESOURCES += \
     ../../resources/QTResources.qrc

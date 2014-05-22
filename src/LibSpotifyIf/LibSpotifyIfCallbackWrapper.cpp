@@ -62,7 +62,7 @@ static sp_session_callbacks libSpotifySessioncallbacks =
 	NULL,														//.get_audio_buffer_stats
 	NULL,														//.offline_status_updated
     NULL,                                                       //.offline_error
-    NULL,                                                       //.credentials_blob_updated
+    &LibSpotifyIfCallbackWrapper::credentialsBlobUpdated,       //.credentials_blob_updated
     NULL,                                                       //.connectionstate_updated
     NULL,                                                       //.scrobble_error
     NULL,                                                       //.private_session_mode_changed
@@ -163,6 +163,10 @@ void SP_CALLCONV LibSpotifyIfCallbackWrapper::logMessageCb(sp_session *session, 
 	libSpotifyIfSingleton->logMessageCb(session, data);
 }
 
+void SP_CALLCONV LibSpotifyIfCallbackWrapper::credentialsBlobUpdated(sp_session *session, const char *blob)
+{
+    libSpotifyIfSingleton->credentialsBlobUpdatedCb( session, blob );
+}
 
 /* **************************
  * Playlist Container Callbacks

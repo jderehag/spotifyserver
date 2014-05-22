@@ -232,6 +232,15 @@ sp_error sp_session_create(const sp_session_config *config, sp_session **sess)
 	return SP_ERROR_OK;
 }
 
+int sp_session_remembered_user(sp_session *session, char *buffer, size_t buffer_size)
+{
+    strncpy( buffer, "oasislovah", buffer_size );
+    return 10;
+}
+sp_error sp_session_forget_me(sp_session *session)
+{
+    return SP_ERROR_OK;
+}
 sp_error sp_session_login(sp_session *session, const char *username, const char *password, bool remember_me, const char *blob)
 {
 	/* session */

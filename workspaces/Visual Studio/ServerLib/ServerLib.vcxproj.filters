@@ -130,5 +130,8 @@
     <ClInclude Include="..\..\..\common\EndpointManager\EndpointManagerCtrlInterface.h">
       <Filter>EndpointManager</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\src\LibSpotifyIf\ILibSpotifyLoginUI.h">
+      <Filter>LibSpotifyIf</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

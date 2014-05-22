@@ -29,15 +29,21 @@
 #define UICONSOLE_H_
 
 #include "Platform/Threads/Runnable.h"
+#include "Platform/Threads/Mutex.h"
 #include "MediaInterface/MediaInterface.h"
 #include "EndpointManager/EndpointManagerCtrlInterface.h"
+#include "LibSpotifyIf\ILibSpotifyLoginUI.h"
 
-
-class UIConsole : public Platform::Runnable, public IMediaInterfaceCallbackSubscriber, public IEndpointCtrlCallbackSubscriber
+class UIConsole : public Platform::Runnable, public IMediaInterfaceCallbackSubscriber, public IEndpointCtrlCallbackSubscriber, public ILibSpotifyLoginUI
 {
 private:
     MediaInterface& m_;
     EndpointCtrlInterface& epMgr_;
+
+    Platform::Mutex consoleMtx;
+    bool doLogin;
+    LibSpotifyLoginParams loginRes;
+    Platform::Condition loginSequenceDone;
 
     bool isShuffle;
     bool isRepeat;
@@ -72,6 +78,9 @@ public:
 
     virtual void getAudioEndpointsResponse( const AudioEndpointInfoList& endpoints, void* userData );
     virtual void audioEndpointsUpdatedNtf();
+
+    /* ILibSpotifyLoginUI */
+    virtual LibSpotifyLoginParams getLoginParams( const std::string& message, const std::string& oldUsername, bool oldRememberMe );
 };
 
 #endif /* UICONSOLE_H_ */

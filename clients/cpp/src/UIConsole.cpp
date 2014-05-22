@@ -27,12 +27,17 @@
 
 #include "UIConsole.h"
 #include "applog.h"
+#include "Platform\Utils\Utils.h"
+#include <limits.h>
 
 static void printFolder( const Folder& f, int indent );
 static void printTracks( const std::deque<Track>& tracks );
 
 
-UIConsole::UIConsole( MediaInterface& m, EndpointCtrlInterface& epMgr ) : m_(m), epMgr_(epMgr),
+UIConsole::UIConsole( MediaInterface& m, EndpointCtrlInterface& epMgr) : 
+                                            m_(m),
+                                            epMgr_(epMgr),
+                                            doLogin(false),
                                             isShuffle(false),
                                             isRepeat(false)
 {
@@ -59,10 +64,13 @@ void UIConsole::run()
     char c;
     std::string cmd;
 
+    consoleMtx.lock();
+
     while(isCancellationPending() == false)
     {
         std::vector<std::string> argv;
         std::string arg;
+
 
         std::cout << "'g' get playlists\n"
                      "'t' get tracks\n"
@@ -76,7 +84,26 @@ void UIConsole::run()
                      "'v' next\n"
                      "'e' toggle shuffle\n" << std::endl;
 
+        consoleMtx.unlock();
         getline( std::cin, cmd );
+        consoleMtx.lock();
+
+        if ( doLogin )
+        {
+            loginRes.username = cmd;
+
+            std::cout << "Enter password: ";
+            disableStdinEcho();
+            std::cin >> loginRes.password;
+            enableStdinEcho();
+            std::cout << std::endl;
+
+            loginRes.rememberMe = true;
+
+            loginSequenceDone.signal();
+            doLogin = false;
+            continue;
+        }
         std::istringstream iss(cmd);
 
         while( iss >> arg )
@@ -343,6 +370,26 @@ void UIConsole::run()
     log(LOG_NOTICE) << "Exiting UI";
 }
 
+
+LibSpotifyLoginParams UIConsole::getLoginParams( const std::string& message, const std::string& oldUsername, bool oldRememberMe )
+{
+    LibSpotifyLoginParams res;
+    
+    std::cout << std::endl;
+    if ( !message.empty() )
+        std::cout << message << std::endl << std::endl;
+
+    // wait for console to become available (in case the user is doing something)
+    consoleMtx.lock();
+    doLogin = true;
+    std::cout << "Enter username: ";
+    //wait for user to enter details
+    loginSequenceDone.wait(consoleMtx);
+    res = loginRes;
+    loginRes.password.clear(); //wipe evidence, don't leave password in memory..
+    consoleMtx.unlock();
+    return res;
+}
 
 void UIConsole::rootFolderUpdatedInd()
 {}

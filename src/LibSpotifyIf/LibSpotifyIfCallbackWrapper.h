@@ -56,6 +56,7 @@ public:
 	                          const void *frames, int num_frames);
     static void SP_CALLCONV playTokenLostCb(sp_session *session);
 	static void SP_CALLCONV endOfTrackCb(sp_session *session);
+    static void SP_CALLCONV credentialsBlobUpdated(sp_session *session, const char *blob);
 
 	/* Playlist callbacks */
 	static void SP_CALLCONV playlistAdded(sp_playlistcontainer *pc, sp_playlist *playlist, int position, void *userdata);

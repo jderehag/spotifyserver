@@ -51,6 +51,7 @@ void ConfigHandler::writeConfigFile()
     spotifyPassword = spotifyConfig_.getPassword();
     spotifyCacheLocation = spotifyConfig_.getCacheLocation();
     spotifySettingsLocation = spotifyConfig_.getSettingsLocation();
+    spotifyRememberMe = spotifyConfig_.getRememberMeString();
     /* Network Section*/
     networkBindType = networkConfig_.getBindTypeString();
     networkIp = networkConfig_.getIp();
@@ -97,6 +98,7 @@ std::list<SectionAttributes> ConfigHandler::getConfigAttributes()
     listOfSectionAttributes.push_back(SectionAttributes ( 0,  TYPE_SECTION,      "Spotify"));
     listOfSectionAttributes.push_back(SectionAttributes ( 1,  TYPE_ATTRIBUTE,    "Username",          &spotifyUsername            ));
     listOfSectionAttributes.push_back(SectionAttributes ( 1,  TYPE_ATTRIBUTE,    "Password",          &spotifyPassword            ));
+    listOfSectionAttributes.push_back(SectionAttributes ( 1,  TYPE_ATTRIBUTE,    "RememberMe",        &spotifyRememberMe          ));
     listOfSectionAttributes.push_back(SectionAttributes ( 1,  TYPE_ATTRIBUTE,    "CacheLocation",     &spotifyCacheLocation       ));
     listOfSectionAttributes.push_back(SectionAttributes ( 1,  TYPE_ATTRIBUTE,    "SettingsLocation",  &spotifySettingsLocation    ));
 
@@ -138,6 +140,7 @@ void ConfigHandler::parseConfigFile()
     spotifyConfig_.setPassword(spotifyPassword);
     spotifyConfig_.setCacheLocation(spotifyCacheLocation);
     spotifyConfig_.setSettingsLocation(spotifySettingsLocation);
+    spotifyConfig_.setRememberMe(spotifyRememberMe);
 
     /* Network */
     networkConfig_.setBindType(networkBindType);
@@ -156,6 +159,7 @@ void ConfigHandler::parseConfigFile()
     loggerConfig_.setLogFile(loggerLogFile);
 
     generalConfig_.setWriteIf( this );
+    spotifyConfig_.setWriteIf( this );
 }
 
 void ConfigHandler::readFromFile()
@@ -206,7 +210,7 @@ const NetworkConfig& ConfigHandler::getNetworkConfig() const
     return networkConfig_;
 }
 
-const SpotifyConfig& ConfigHandler::getSpotifyConfig() const
+SpotifyConfig& ConfigHandler::getSpotifyConfig()
 {
     return spotifyConfig_;
 }

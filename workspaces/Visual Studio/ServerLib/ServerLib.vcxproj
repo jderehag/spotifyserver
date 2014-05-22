@@ -96,6 +96,7 @@
     <ClInclude Include="..\..\..\src\ConfigHandling\ConfigParser.h" />
     <ClInclude Include="..\..\..\src\ConfigHandling\ConfigGenerator.h" />
     <ClInclude Include="..\..\..\src\LibSpotifyIf\ILibSpotifyIfCallbackSubscriber.h" />
+    <ClInclude Include="..\..\..\src\LibSpotifyIf\ILibSpotifyLoginUI.h" />
     <ClInclude Include="..\..\..\src\LibSpotifyIf\LibSpotifyIf.h" />
     <ClInclude Include="..\..\..\src\LibSpotifyIf\LibSpotifyIfCallbackWrapper.h" />
     <ClInclude Include="..\..\..\src\LibSpotifyIf\LibSpotifyIfHelpers.h" />
