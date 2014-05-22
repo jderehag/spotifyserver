@@ -27,7 +27,7 @@
 
 #include "UIConsole.h"
 #include "applog.h"
-#include "Platform\Utils\Utils.h"
+#include "Platform/Utils/Utils.h"
 #include <limits.h>
 
 static void printFolder( const Folder& f, int indent );
@@ -448,6 +448,8 @@ void UIConsole::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool 
 }
 void UIConsole::statusUpdateInd( PlaybackState_t state, bool repeatStatus, bool shuffleStatus, uint8_t volume )
 {
+    isRepeat = repeatStatus;
+    isShuffle = shuffleStatus;
     switch( state )
     {
         case PLAYBACK_IDLE:    std::cout << "  Playback stopped "; break;

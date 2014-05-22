@@ -66,6 +66,8 @@ LibSpotifyIf::LibSpotifyIf( ConfigHandling::SpotifyConfig& config ) :
                                                                          trackState_(TRACK_STATE_NOT_LOADED),
                                                                          currentTrack_("","")
 {
+    playbackHandler_.setRepeat(config.getRepeat());
+    playbackHandler_.setShuffle(config.getShuffle());
     libSpotifySessionCreate();
     startThread();
 }
@@ -295,6 +297,9 @@ void LibSpotifyIf::setShuffle( bool shuffleOn )
         playbackHandler_.setShuffle( shuffleOn );
         doStatusNtf();
     }
+
+    if ( config_.getShuffle() != shuffleOn )
+        config_.setShuffle( shuffleOn );
 }
 
 void LibSpotifyIf::setRepeat( bool repeatOn )
@@ -304,6 +309,9 @@ void LibSpotifyIf::setRepeat( bool repeatOn )
         playbackHandler_.setRepeat( repeatOn );
         doStatusNtf();
     }
+
+    if ( config_.getRepeat() != repeatOn )
+        config_.setRepeat( repeatOn );
 }
 
 void LibSpotifyIf::setVolume( uint8_t volume )

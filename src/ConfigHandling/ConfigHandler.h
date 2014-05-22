@@ -152,6 +152,8 @@ private:
     std::string cacheLocation_;
     std::string settingsLocation_;
     bool rememberMe_;
+    bool repeat_;
+    bool shuffle_;
 public:
     SpotifyConfig();
     const std::string& getCacheLocation() const;
@@ -160,12 +162,20 @@ public:
     const std::string& getUsername() const;
     bool getRememberMe() const;
     const std::string getRememberMeString() const;
+    bool getRepeat() const;
+    const std::string getRepeatString() const;
+    bool getShuffle() const;
+    const std::string getShuffleString() const;
     void setCacheLocation(std::string& cacheLocation);
     void setPassword(std::string& password);
     void setSettingsLocation(std::string& settingsLocation);
     void setUsername(std::string& username);
     void setRememberMe( bool rememberMe );
-    void setRememberMe(std::string& rememberMe);
+    void setRememberMe( std::string& rememberMe );
+    void setRepeat( bool repeat );
+    void setRepeat( std::string& repeat );
+    void setShuffle( bool shuffle );
+    void setShuffle( std::string& shuffle );
 };
 
 class ConfigHandler : IConfigWriter
@@ -190,6 +200,8 @@ private:
     std::string spotifyCacheLocation;
     std::string spotifySettingsLocation;
     std::string spotifyRememberMe;
+    std::string spotifyRepeat;
+    std::string spotifyShuffle;
     /* Network Section*/
     std::string networkBindType;
     std::string networkIp;

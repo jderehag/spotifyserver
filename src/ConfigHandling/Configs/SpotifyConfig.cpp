@@ -34,7 +34,9 @@ SpotifyConfig::SpotifyConfig() : username_(""),
                                  password_(""),
                                  cacheLocation_("./tmp/"),
                                  settingsLocation_("./tmp/"),
-                                 rememberMe_(false)
+                                 rememberMe_(false),
+                                 repeat_(false),
+                                 shuffle_(false)
 { }
 
 const std::string& SpotifyConfig::getCacheLocation() const
@@ -65,6 +67,26 @@ bool SpotifyConfig::getRememberMe() const
 const std::string SpotifyConfig::getRememberMeString() const
 {
     return rememberMe_ ? "1" : "0";
+}
+
+bool SpotifyConfig::getRepeat() const
+{
+    return repeat_;
+}
+
+const std::string SpotifyConfig::getRepeatString() const
+{
+    return repeat_ ? "1" : "0";
+}
+
+bool SpotifyConfig::getShuffle() const
+{
+    return shuffle_;
+}
+
+const std::string SpotifyConfig::getShuffleString() const
+{
+    return shuffle_ ? "1" : "0";
 }
 
 void SpotifyConfig::setCacheLocation(std::string& cacheLocation)
@@ -101,4 +123,27 @@ void SpotifyConfig::setRememberMe(std::string& rememberMe)
         rememberMe_ = rememberMe.compare("0") != 0 && rememberMe.compare("FALSE") != 0 && rememberMe.compare("false") != 0;
 }
 
+void SpotifyConfig::setRepeat(bool repeat)
+{
+    repeat_ = repeat;
+    if(writer) writer->writeConfigFile();
+}
+
+void SpotifyConfig::setRepeat(std::string& repeat)
+{
+    if(!repeat.empty())
+        repeat_ = repeat.compare("0") != 0 && repeat.compare("FALSE") != 0 && repeat.compare("false") != 0;
+}
+
+void SpotifyConfig::setShuffle(bool shuffle)
+{
+    shuffle_ = shuffle;
+    if(writer) writer->writeConfigFile();
+}
+
+void SpotifyConfig::setShuffle(std::string& shuffle)
+{
+    if(!shuffle.empty())
+        shuffle_ = shuffle.compare("0") != 0 && shuffle.compare("FALSE") != 0 && shuffle.compare("false") != 0;
+}
 } /* namespace ConfigHandling */

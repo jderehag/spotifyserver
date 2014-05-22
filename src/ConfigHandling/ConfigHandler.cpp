@@ -52,6 +52,8 @@ void ConfigHandler::writeConfigFile()
     spotifyCacheLocation = spotifyConfig_.getCacheLocation();
     spotifySettingsLocation = spotifyConfig_.getSettingsLocation();
     spotifyRememberMe = spotifyConfig_.getRememberMeString();
+    spotifyRepeat = spotifyConfig_.getRepeatString();
+    spotifyShuffle = spotifyConfig_.getShuffleString();
     /* Network Section*/
     networkBindType = networkConfig_.getBindTypeString();
     networkIp = networkConfig_.getIp();
@@ -99,6 +101,8 @@ std::list<SectionAttributes> ConfigHandler::getConfigAttributes()
     listOfSectionAttributes.push_back(SectionAttributes ( 1,  TYPE_ATTRIBUTE,    "Username",          &spotifyUsername            ));
     listOfSectionAttributes.push_back(SectionAttributes ( 1,  TYPE_ATTRIBUTE,    "Password",          &spotifyPassword            ));
     listOfSectionAttributes.push_back(SectionAttributes ( 1,  TYPE_ATTRIBUTE,    "RememberMe",        &spotifyRememberMe          ));
+    listOfSectionAttributes.push_back(SectionAttributes ( 1,  TYPE_ATTRIBUTE,    "Repeat",            &spotifyRepeat              ));
+    listOfSectionAttributes.push_back(SectionAttributes ( 1,  TYPE_ATTRIBUTE,    "Shuffle",           &spotifyShuffle             ));
     listOfSectionAttributes.push_back(SectionAttributes ( 1,  TYPE_ATTRIBUTE,    "CacheLocation",     &spotifyCacheLocation       ));
     listOfSectionAttributes.push_back(SectionAttributes ( 1,  TYPE_ATTRIBUTE,    "SettingsLocation",  &spotifySettingsLocation    ));
 
@@ -141,6 +145,8 @@ void ConfigHandler::parseConfigFile()
     spotifyConfig_.setCacheLocation(spotifyCacheLocation);
     spotifyConfig_.setSettingsLocation(spotifySettingsLocation);
     spotifyConfig_.setRememberMe(spotifyRememberMe);
+    spotifyConfig_.setRepeat(spotifyRepeat);
+    spotifyConfig_.setShuffle(spotifyShuffle);
 
     /* Network */
     networkConfig_.setBindType(networkBindType);

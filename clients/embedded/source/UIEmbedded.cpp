@@ -113,11 +113,6 @@ void UIEmbedded::connectionState( bool up )
         /*new connection, check status and get playlists*/
         m_.getStatus( this, NULL );
         //m_.getPlaylists( this, NULL);
-
-        /*make sure we shuffle (should be controlled by button though..)*/
-        m_.setShuffle(true);
-
-        //addAudio();
     }
 }
 
