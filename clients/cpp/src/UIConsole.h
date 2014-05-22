@@ -32,7 +32,7 @@
 #include "Platform/Threads/Mutex.h"
 #include "MediaInterface/MediaInterface.h"
 #include "EndpointManager/EndpointManagerCtrlInterface.h"
-#include "LibSpotifyIf\ILibSpotifyLoginUI.h"
+#include "LibSpotifyIf/ILibSpotifyLoginUI.h"
 
 class UIConsole : public Platform::Runnable, public IMediaInterfaceCallbackSubscriber, public IEndpointCtrlCallbackSubscriber, public ILibSpotifyLoginUI
 {
