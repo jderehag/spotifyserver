@@ -80,18 +80,18 @@ void MainWindow::newPage( QWidget* page )
 
         while( currentIndex+1 < ui->stackedWidget->count() )
         {
-            QWidget* page = ui->stackedWidget->widget(currentIndex+1);
-            ui->stackedWidget->removeWidget(page);
-            delete page;
+            QWidget* p = ui->stackedWidget->widget(currentIndex+1);
+            ui->stackedWidget->removeWidget(p);
+            delete p;
         }
     }
 
     //keep maximum 30 pages
     if ( ui->stackedWidget->count() >= 30 )
     {
-        QWidget* page = ui->stackedWidget->widget(0);
-        ui->stackedWidget->removeWidget(page);
-        delete page;
+        QWidget* p = ui->stackedWidget->widget(0);
+        ui->stackedWidget->removeWidget(p);
+        delete p;
     }
 
     //and finally insert new page

@@ -92,7 +92,7 @@ void UIConsole::run()
         {
             loginRes.username = cmd;
 
-            std::cout << "Enter password: ";
+            std::cout << "Enter password: " << std::endl;
             disableStdinEcho();
             std::cin >> loginRes.password;
             enableStdinEcho();
@@ -382,7 +382,7 @@ LibSpotifyLoginParams UIConsole::getLoginParams( const std::string& message, con
     // wait for console to become available (in case the user is doing something)
     consoleMtx.lock();
     doLogin = true;
-    std::cout << "Enter username: ";
+    std::cout << "Enter username: " << std::endl;
     //wait for user to enter details
     loginSequenceDone.wait(consoleMtx);
     res = loginRes;
