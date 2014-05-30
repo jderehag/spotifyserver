@@ -29,10 +29,15 @@
 #include "MessageFactory/Message.h"
 #include "MessageFactory/MessageDecoder.h"
 #include "Platform/Utils/Utils.h"
+#include "Platform/Encryption/Encryption.h"
 #include "ClockSync/ClockSyncClient.h"
 #include "applog.h"
 #include <stdint.h>
 #include <string.h>
+
+
+extern "C" const uint8_t g_appkey[];
+
 
 // some debug counters...
 #ifdef DEBUG_COUNTERS
@@ -54,7 +59,6 @@ extern uint16_t AUDIO_SAMPLE[];
 extern const uint32_t audio_sample_size;
 }*/
 AudioEndpointRemoteSocketServer::AudioEndpointRemoteSocketServer(Platform::AudioEndpoint& endpoint) : Platform::Runnable(true, SIZE_MEDIUM, PRIO_HIGH),
-                                                                                                      /*sock_(SOCKTYPE_DATAGRAM),*/
                                                                                                       ep_(endpoint),
                                                                                                       isPlaying_(false)
 {
@@ -67,10 +71,11 @@ AudioEndpointRemoteSocketServer::~AudioEndpointRemoteSocketServer()
 void AudioEndpointRemoteSocketServer::run()
 {
     int rc;
-    uint8_t buf[2000];
+    uint8_t buf[1500];
     ClockSyncClient cs;
     std::string addr = "";
     std::string port = "";
+    uint32_t drops = 0;
 
     while( !isCancellationPending() )
     {
@@ -159,6 +164,8 @@ void AudioEndpointRemoteSocketServer::run()
                     uint32_t servertimestamp = 0;
                     bool hasservertimestamp = false;
                     int16_t* psamples = NULL;
+                    uint32_t datasize = 0;
+                    uint8_t* iv = NULL;
 
                     while( n < len )
                     {
@@ -201,6 +208,13 @@ void AudioEndpointRemoteSocketServer::run()
                             case TLV_AUDIO_DATA:
                             {
                                 psamples = (int16_t*)&buf[n+sizeof(tlvheader_t)];
+                                datasize = Ntohl(tlvhdr->len);
+                                break;
+                            }
+
+                            case TLV_ENCRYPTION_IV:
+                            {
+                                iv = (uint8_t*)&buf[n+sizeof(tlvheader_t)];
                                 break;
                             }
                         }
@@ -209,37 +223,53 @@ void AudioEndpointRemoteSocketServer::run()
 
                     }
 
-                    if ( haschannels && hasrate && hasnsamples && psamples )
+                    if ( haschannels && hasrate && hasnsamples && psamples && iv )
                     {
                         uint32_t clienttimestamp = 0;
+                        uint32_t length = nsamples*channels*sizeof(int16_t);
+                        AudioFifoData* afd = ep_.getFifoDataBuffer( length );
 
-                        for ( uint32_t i = 0; i < (nsamples*channels); i++ )
-                            psamples[i] = Ntohs(psamples[i]);
-
-                        /* only do timestamp stuff if server sends it */
-                        if ( hasservertimestamp && cs.hasValidSync() )
+                        if ( afd != NULL && Decrypt( g_appkey, iv, (uint8_t*)psamples, datasize, (uint8_t*)afd->samples, afd->bufferSize ) >= 0 )
                         {
-                            // todo we should make sure clock sync is up to date
+                            for ( uint32_t i = 0; i < (nsamples*channels); i++ )
+                                afd->samples[i] = Ntohs(afd->samples[i]);
 
-                            clienttimestamp = cs.convertToLocalTime( servertimestamp );
+                            /* only do timestamp stuff if server sends it */
+                            if ( hasservertimestamp && cs.hasValidSync() )
+                            {
+                                // todo we should make sure clock sync is up to date
 
-                            //debug counters
+                                clienttimestamp = cs.convertToLocalTime( servertimestamp );
+
+                                //debug counters
 #ifdef DEBUG_COUNTERS
-                            if ( firstpacketclienttime == 0 ) firstpacketclienttime = clienttimestamp;
-                            if ( firstpacketservertime == 0 ) firstpacketservertime = servertimestamp;
-                            servertimeplay = servertimestamp - firstpacketservertime;
-                            clienttimeplay = now - firstpacketclienttime;
-                        }
-                        totalrecsamples += nsamples;
+                                if ( firstpacketclienttime == 0 ) firstpacketclienttime = clienttimestamp;
+                                if ( firstpacketservertime == 0 ) firstpacketservertime = servertimestamp;
+                                servertimeplay = servertimestamp - firstpacketservertime;
+                                clienttimeplay = now - firstpacketclienttime;
+                            }
+                            totalrecsamples += nsamples;
 #else
-                        }
+                            }
 #endif
 
-                        ep_.enqueueAudioData( clienttimestamp, channels, rate, nsamples, psamples);
+                            afd->timestamp = clienttimestamp;
+                            afd->nsamples = nsamples;
+                            afd->rate = rate;
+                            afd->channels = channels;
 
-                        isPlaying_ = true;
-                        /*while( ep_.enqueueAudioData( clienttimestamp, channels, rate, nsamples, psamples) == 0 )
-                            vTaskDelay(2);*/
+                            if ( ep_.enqueueAudioData( afd ) == 0 )
+                                drops++;
+
+                            isPlaying_ = true;
+                            /*while( ep_.enqueueAudioData( clienttimestamp, channels, rate, nsamples, psamples) == 0 )
+                                vTaskDelay(2);*/
+                        }
+                        else
+                        {
+                            drops++;
+                            ep_.returnFifoDataBuffer( afd );
+                        }
                     }
                 }
             }

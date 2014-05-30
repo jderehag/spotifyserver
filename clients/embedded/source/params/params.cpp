@@ -30,6 +30,10 @@
 #include "Platform/Threads/Mutex.h"
 #include "stm32f4xx_hal_flash.h"
 #include "applog.h"
+
+#include "FreeRTOS.h"
+#include "semphr.h"
+
 #include <assert.h>
 #include <string.h>
 
@@ -56,7 +60,7 @@ typedef struct
 static uint8_t currentPage = 0;
 static uint8_t sectors[] = { FLASH_SECTOR_1, FLASH_SECTOR_2 };
 static uint32_t sectorStart[] = { 0x08004000, 0x08008000 };
-static Platform::Mutex mtx;
+static xSemaphoreHandle mtx;
 
 static const ParamsHeader_t* getHeader( uint8_t page )
 {
@@ -167,6 +171,8 @@ void paramsInit()
     assert( sizeof(ParamsHeader_t) % 4 == 0 );
     assert( sizeof(ParamsEntryHeader_t) % 4 == 0 );
 
+    mtx = xSemaphoreCreateMutex();
+
     /* check which params page to use */
     if( header1->valid == PARAMS_VALID && header2->valid == PARAMS_VALID )
     {
@@ -227,7 +233,7 @@ void paramsInit()
 bool paramsGet( ParamId paramId, std::string& val )
 {
     bool ret = false;
-    mtx.lock();
+    xSemaphoreTake(mtx, portMAX_DELAY);
 
 #if 0 // maybe this is overkill, needs to be tested anyway
     const ParamsHeader_t* currentHdr = getHeader( currentPage );
@@ -241,7 +247,7 @@ bool paramsGet( ParamId paramId, std::string& val )
         if ( currentHdr->valid != PARAMS_VALID )
         {
             log(LOG_EMERG) << "Backup params flash page is also corrupt!";
-            mtx.unlock();
+            xSemaphoreGive(mtx);
             return false;
         }
     }
@@ -262,7 +268,7 @@ bool paramsGet( ParamId paramId, std::string& val )
         }
         entry = getNextEntry( entry );
     }
-    mtx.unlock();
+    xSemaphoreGive(mtx);
     return ret;
 }
 
@@ -283,7 +289,7 @@ bool paramsSet( ParamId paramId, const std::string& val )
 bool paramsSet( ParamId paramId, const uint8_t* data, const uint16_t length )
 {
     bool success = false;
-    mtx.lock();
+    xSemaphoreTake(mtx, portMAX_DELAY);
     uint8_t writePage = currentPage ^ 1; // we'll write to the page that is currently inactive
     const ParamsHeader_t* currentHdr = getHeader( currentPage );
     uint8_t newSeqNo = currentHdr->seqNo + 1;
@@ -341,7 +347,7 @@ bool paramsSet( ParamId paramId, const uint8_t* data, const uint16_t length )
     }
 
     HAL_FLASH_Lock();
-    mtx.unlock();
+    xSemaphoreGive(mtx);
 
     return success;
 }

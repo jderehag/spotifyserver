@@ -54,7 +54,10 @@ protected:
 public:
     AudioEndpoint(const EndpointIdIf& epId, uint8_t volume = 255, bool dynamicFifo = true) : epId_(epId), fifo_(dynamicFifo), paused_(false), relativeVolume_(volume), setVolumeFilter(100, setRelativeVolumeCb, this) {}
     virtual ~AudioEndpoint() {}
+    AudioFifoData* getFifoDataBuffer( size_t length ) { return fifo_.getFifoDataBuffer( length ); }
+    void returnFifoDataBuffer(AudioFifoData* afd) { fifo_.returnFifoDataBuffer(afd); }
     virtual int enqueueAudioData( unsigned int timestamp, unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples ) = 0;
+    int enqueueAudioData( AudioFifoData* afd ) { return fifo_.addFifoDataBlocking(afd); }
     virtual void flushAudioData() = 0;
 
     virtual unsigned int canAcceptSamples( unsigned int availableSamples, unsigned int rate ) { return fifo_.canAcceptSamples( availableSamples, rate ); }

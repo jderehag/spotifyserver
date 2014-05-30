@@ -91,6 +91,18 @@ int AudioFifo::addFifoDataBlocking( unsigned int timestamp, unsigned short chann
     return nsamples;
 }
 
+int AudioFifo::addFifoDataBlocking( AudioFifoData* afd )
+{
+    fifoMtx_.lock();
+    fifo_.push(afd);
+    queuedSamples_ += afd->nsamples;
+
+    cond_.signal();
+    fifoMtx_.unlock();
+
+    return afd->nsamples;
+}
+
 unsigned int AudioFifo::canAcceptSamples( unsigned int availableSamples, unsigned int rate )
 {
     if (queuedSamples_ >= (rate * bufferNSecs_))

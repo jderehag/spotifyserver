@@ -43,7 +43,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\..\..\common;..\..\..\..\..\common\Logger;..\..\..\..\..\src;..\..\..\..\..\..\spotifyserver_deps\lib\OpenAL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\..\..\..\spotifyserver_deps\lib\OpenSSL\OpenSSL-Win32\include;..\..\..\src;..\..\..\..\..\common;..\..\..\..\..\common\Logger;..\..\..\..\..\src;..\..\..\..\..\..\spotifyserver_deps\lib\OpenAL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -55,7 +55,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\..\..\common;..\..\..\..\..\common\Logger;..\..\..\..\..\src;..\..\..\..\..\..\spotifyserver_deps\lib\OpenAL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\..\spotifyserver_deps\lib\OpenSSL\OpenSSL-Win32\include;..\..\..\src;..\..\..\..\..\common;..\..\..\..\..\common\Logger;..\..\..\..\..\src;..\..\..\..\..\..\spotifyserver_deps\lib\OpenAL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>

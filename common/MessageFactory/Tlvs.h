@@ -117,12 +117,14 @@ private:
 
 public:
     BinaryTlv(TlvType_t type, const uint8_t* data, uint32_t len);
+    BinaryTlv(TlvType_t type, uint32_t len);
     BinaryTlv(const BinaryTlv& from);
     Tlv* clone() const;
 
     //std::vector<uint8_t> getVal() const { return data_; }
     uint8_t* getData() const;
     uint32_t getLen() const;
+    void setLen( uint32_t len );
 
     void encode(MessageEncoder* msg) const;
 

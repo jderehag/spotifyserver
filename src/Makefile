@@ -55,7 +55,7 @@ EXTRAINCDIRS += ../clients/cpp/src
 #    Each library-name must be seperated by a space.
 #    i.e. to link with libxyz.a, libabc.a and libefsl.a: 
 #    EXTRA_LIBS = xyz abc efsl
-EXTRA_LIBS += pthread rt spotify
+EXTRA_LIBS += pthread rt spotify crypto
 
 
 # List any extra directories to look for library files here.

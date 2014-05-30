@@ -53,6 +53,9 @@
     <Filter Include="EndpointId">
       <UniqueIdentifier>{3da9a813-4dd7-48c6-9f75-93b8c6debae0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Platform\Encryption">
+      <UniqueIdentifier>{c7b4e42a-38bf-4b5f-b6e3-6e6e0c6ce31d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\common\Platform\Socket\Socket.h">
@@ -178,6 +181,9 @@
     <ClInclude Include="..\..\..\common\MediaContainers\FolderItem.h">
       <Filter>MediaContainers</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\common\Platform\Encryption\Encryption.h">
+      <Filter>Platform\Encryption</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\common\Platform\Socket\Windows\WindowsSocket.cpp">
@@ -279,5 +285,9 @@
     <ClCompile Include="..\..\..\common\Utils\ActionFilter.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\common\Platform\Encryption\OpenSSL\OpenSSLEncryption.cpp">
+      <Filter>Platform\Encryption</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\spotifyserver_deps\appkey.c" />
   </ItemGroup>
 </Project>

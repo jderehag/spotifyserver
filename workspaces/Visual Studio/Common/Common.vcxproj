@@ -48,7 +48,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\common;..\..\..\common\Logger;..\..\..\src\Utils;..\..\..\..\spotifyserver_deps\lib\OpenAL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\..\spotifyserver_deps\lib\OpenSSL\OpenSSL-Win32\include;..\..\..\src;..\..\..\common;..\..\..\common\Logger;..\..\..\src\Utils;..\..\..\..\spotifyserver_deps\lib\OpenAL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -60,7 +60,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\common;..\..\..\common\Logger;..\..\..\src\Utils;..\..\..\..\spotifyserver_deps\lib\OpenAL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\..\spotifyserver_deps\lib\OpenSSL\OpenSSL-Win32\include;..\..\..\src;..\..\..\common;..\..\..\common\Logger;..\..\..\src\Utils;..\..\..\..\spotifyserver_deps\lib\OpenAL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -94,6 +94,7 @@
     <ClInclude Include="..\..\..\common\Platform\AudioEndpoints\AudioEndpointLocal.h" />
     <ClInclude Include="..\..\..\common\Platform\AudioEndpoints\AudioEndpointRemote.h" />
     <ClInclude Include="..\..\..\common\Platform\AudioEndpoints\AudioFifo.h" />
+    <ClInclude Include="..\..\..\common\Platform\Encryption\Encryption.h" />
     <ClInclude Include="..\..\..\common\Platform\Socket\Socket.h" />
     <ClInclude Include="..\..\..\common\Platform\Threads\Condition.h" />
     <ClInclude Include="..\..\..\common\Platform\Threads\Mutex.h" />
@@ -112,6 +113,7 @@
     <ClInclude Include="..\..\..\src\Utils\FixedQueue.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\spotifyserver_deps\appkey.c" />
     <ClCompile Include="..\..\..\common\Logger\Logger.cpp" />
     <ClCompile Include="..\..\..\common\Logger\LoggerImpl.cpp" />
     <ClCompile Include="..\..\..\common\MediaContainers\Album.cpp" />
@@ -132,6 +134,7 @@
     <ClCompile Include="..\..\..\common\Platform\AudioEndpoints\AudioEndpointRemote.cpp" />
     <ClCompile Include="..\..\..\common\Platform\AudioEndpoints\AudioFifo.cpp" />
     <ClCompile Include="..\..\..\common\Platform\AudioEndpoints\Endpoints\AudioEndpoint-Wasapi.cpp" />
+    <ClCompile Include="..\..\..\common\Platform\Encryption\OpenSSL\OpenSSLEncryption.cpp" />
     <ClCompile Include="..\..\..\common\Platform\Socket\Windows\WindowsSocket.cpp" />
     <ClCompile Include="..\..\..\common\Platform\Threads\Windows\WindowsCondition.cpp" />
     <ClCompile Include="..\..\..\common\Platform\Threads\Windows\WindowsMessagebox.cpp" />

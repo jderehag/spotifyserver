@@ -39,21 +39,24 @@ TARGET = spotifyclient_rom
 
 EXECUTABLE_EXT = elf
 
+DEPS_PATH ?= ../../../spotifyserver_deps
+
 # root directories to look for source files in
-VPATH += ../../src/ ../../common/ ./source/ ../cpp/src
+VPATH += ../../src/ ../../common/ ./source/ ../cpp/src $(DEPS_PATH)
 
 # List C source files here. (C dependencies are automatically generated.)
 # use file-extension c for "c-only"-files
 
 FREERTOS = FreeRTOS-8.0.0
 
-SRC  =	syscalls.c powerHandler.c
+SRC  = syscalls.c powerHandler.c
 
 #FreeRTOS
 SRC +=	$(addprefix $(FREERTOS)/, list.c queue.c tasks.c timers.c event_groups.c ) \
 		$(addprefix $(FREERTOS)/portable/GCC/ARM_CM4F/, port.c) \
 		$(FREERTOS)/portable/MemMang/heap_3.c \
 		hooks.c
+
 
 #ST drivers and libraries
 SRC +=	BSP/STM32F4-Discovery/stm32f4_discovery.c \
@@ -70,6 +73,7 @@ SRC +=	$(addprefix BSP/STM32F4-DIS-LCD/, stm32f4_discovery_lcd.c fonts.c ) \
 CDEFS += -DWITH_LCD
 endif
 
+
 #lwIP		
 SRC +=	$(addprefix lwip-1.4.1/src/core/, init.c tcp_out.c memp.c netif.c pbuf.c raw.c stats.c sys.c tcp.c tcp_in.c udp.c dhcp.c def.c timers.c dns.c ipv4/ip.c ipv4/ip_addr.c ipv4/icmp.c ipv4/ip_frag.c ipv4/inet.c ipv4/inet_chksum.c ipv4/autoip.c) \
 		$(addprefix lwip-1.4.1/src/api/, tcpip.c api_msg.c err.c api_lib.c netbuf.c sockets.c netdb.c ) \
@@ -78,6 +82,9 @@ SRC +=	$(addprefix lwip-1.4.1/src/core/, init.c tcp_out.c memp.c netif.c pbuf.c 
 
 LWIP_MEM = $(addprefix lwip-1.4.1/src/core/, mem.c)
 SRC += $(LWIP_MEM)
+
+SRC += appkey.c Platform/Encryption/Generic/aes.c
+
 
 # List C++ source files here.
 # use file-extension .cpp for C++-files (not .C)
@@ -93,8 +100,10 @@ CPPSRC = main.cpp buttonHandler.cpp UIEmbedded.cpp heapWrap.cpp LoggerEmbedded.c
 		Platform/Socket/LwIP/Select.cpp \
 		Platform/Timers/FreeRTOS/FreeRTOSTimer.cpp \
 		Platform/Utils/FreeRTOS/FreeRTOSUtils.cpp \
+		Platform/Encryption/Generic/Encryption.cpp \
 		$(addprefix Platform/Threads/FreeRTOS/, FreeRTOSMessagebox.cpp FreeRTOSMutex.cpp FreeRTOSCondition.cpp FreeRTOSRunnable.cpp) \
 		Utils/ActionFilter.cpp \
+
 
 #AUDIOSRC =	STM32F4XX/stm32f4_discovery_audio_codec.c
 AUDIOSRC =	STM32F4XX/audio_driver.c

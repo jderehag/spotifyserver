@@ -50,7 +50,8 @@
 #include <string.h>
 #endif
 
-#include "Platform/Threads/Runnable.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 class LedFlasher : public Platform::Runnable
 {
@@ -138,22 +139,8 @@ public:
     ConfigHandling::GeneralConfig& getGeneralConfig() { return generalConfig; }
 };
 
-class Main : public Platform::Runnable
-{
-public:
-    Main();
-    virtual ~Main();
 
-    virtual void run();
-    virtual void destroy();
-};
-
-Main::Main() : Platform::Runnable(false, SIZE_SMALL, PRIO_VERY_HIGH)
-{
-    startThread();
-}
-
-void Main::run()
+static void initTask( void* arg )
 {
     clockInit();
 
@@ -199,19 +186,14 @@ void Main::run()
     buttonHandler_setUI(ui);
 
     /* now die */
+    vTaskDelete( NULL );
 }
 
-Main::~Main()
-{
-}
 
-void Main::destroy()
-{
-}
 extern "C" void InitializeAudio();
 int main(void)
 {
-    Main* m = new Main();
+    xTaskCreate( initTask, "init", 400, NULL, configMAX_PRIORITIES-1, NULL );
     BSP_PB_Init(BUTTON_KEY, BUTTON_MODE_EXTI);
     BSP_LED_Init(LED4);
 

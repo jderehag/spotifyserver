@@ -51,13 +51,13 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\..\..\spotifyserver_deps\lib\libspotify-12.1.51-win32-release\include;..\..\..\src;..\..\..\common;..\..\..\common\Logger;..\..\..\clients\cpp\src;..\..\..\src\Utils;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\code\spotifyserver_deps\lib\OpenSSL\OpenSSL-Win32\include;..\..\..\..\spotifyserver_deps\lib\libspotify-12.1.51-win32-release\include;..\..\..\src;..\..\..\common;..\..\..\common\Logger;..\..\..\clients\cpp\src;..\..\..\src\Utils;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FunctionLevelLinking>true</FunctionLevelLinking>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\..\..\..\spotifyserver_deps\lib\libspotify-12.1.51-win32-release\lib;..\..\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Mfplat.lib;Mfuuid.lib;libspotify.lib;Ws2_32.lib;Winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\..\..\spotifyserver_deps\lib\OpenSSL\OpenSSL-Win32\lib\VC;..\..\..\..\spotifyserver_deps\lib\libspotify-12.1.51-win32-release\lib;..\..\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libeay32MD.lib;ssleay32MD.lib;Mfplat.lib;Mfuuid.lib;libspotify.lib;Ws2_32.lib;Winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y "$(ProjectDir)\..\..\..\..\spotifyserver_deps\lib\libspotify-12.1.51-win32-release\lib\libspotify.dll" "$(OutDir)"</Command>
@@ -69,15 +69,15 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>..\..\..\..\spotifyserver_deps\lib\libspotify-12.1.51-win32-release\include;..\..\..\src;..\..\..\common;..\..\..\common\Logger;..\..\..\clients\cpp\src;..\..\..\src\Utils;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\code\spotifyserver_deps\lib\OpenSSL\OpenSSL-Win32\include;..\..\..\..\spotifyserver_deps\lib\libspotify-12.1.51-win32-release\include;..\..\..\src;..\..\..\common;..\..\..\common\Logger;..\..\..\clients\cpp\src;..\..\..\src\Utils;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Mfplat.lib;Mfuuid.lib;libspotify.lib;Ws2_32.lib;Winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\..\..\spotifyserver_deps\lib\libspotify-12.1.51-win32-release\lib;..\..\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libeay32MD.lib;ssleay32MD.lib;Mfplat.lib;Mfuuid.lib;libspotify.lib;Ws2_32.lib;Winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\..\..\spotifyserver_deps\lib\OpenSSL\OpenSSL-Win32\lib\VC;..\..\..\..\spotifyserver_deps\lib\libspotify-12.1.51-win32-release\lib;..\..\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y "$(ProjectDir)\..\..\..\..\spotifyserver_deps\lib\libspotify-12.1.51-win32-release\lib\libspotify.dll" "$(OutDir)"</Command>

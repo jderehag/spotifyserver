@@ -30,11 +30,19 @@
 #include "MessageFactory/MessageDecoder.h"
 #include "ClockSync/ClockSyncServer.h"
 #include "Platform/Utils/Utils.h"
+#include "Platform/Encryption/Encryption.h"
 #include "applog.h"
 #include <stdlib.h>
 
 #include <iostream>
 #include <errno.h>
+#include <assert.h>
+#include <ctime>
+#include <random>
+
+
+
+extern "C" const uint8_t g_appkey[];
 
 extern bool simPacketDrop;
 
@@ -172,8 +180,22 @@ void AudioEndpointRemote::run()
             msg->addTlv( TLV_AUDIO_TIMESTAMP, afd->timestamp );
         }
 
-        msg->addTlv( new BinaryTlv( TLV_AUDIO_DATA, (const uint8_t*) afd->samples, afd->nsamples * sizeof(int16_t) * afd->channels ) );
+        uint8_t iv[16];
+        static std::default_random_engine rng(time(0));
+        for ( int i = 0; i < 16; i++ )
+            iv[i] = rng();
 
+        msg->addTlv( new BinaryTlv( TLV_ENCRYPTION_IV, iv, sizeof(iv) ) );
+#if 1
+        uint32_t indatalen = afd->nsamples * sizeof(int16_t) * afd->channels;
+        uint32_t outdatalen = indatalen + 16;
+        BinaryTlv* data = new BinaryTlv( TLV_AUDIO_DATA, outdatalen );
+        assert( (outdatalen = Encrypt( g_appkey, iv, (const uint8_t*) afd->samples, indatalen, data->getData(), outdatalen)) > 0 );
+        data->setLen( outdatalen );
+        msg->addTlv( data );
+#else
+        msg->addTlv( new BinaryTlv( TLV_AUDIO_DATA, (const uint8_t*)afd->samples, afd->nsamples * sizeof(int16_t) * afd->channels ) );
+#endif
         MessageEncoder* enc = msg->encode();
         delete msg;
 

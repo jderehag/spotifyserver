@@ -79,8 +79,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Mfplat.lib;Mfuuid.lib;Ws2_32.lib;Winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\..\..\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libeay32MD.lib;ssleay32MD.lib;Mfplat.lib;Mfuuid.lib;Ws2_32.lib;Winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\..\..\..\..\spotifyserver_deps\lib\OpenSSL\OpenSSL-Win32\lib\VC;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y "$(ProjectDir)\..\..\..\..\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32\OpenAL32.dll" "$(OutDir)"
@@ -105,8 +105,8 @@ xcopy /y "$(ProjectDir)\..\..\..\..\..\..\spotifyserver_deps\lib\OpenAL\libs\Win
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Mfplat.lib;Mfuuid.lib;Ws2_32.lib;Winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\..\..\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libeay32MD.lib;ssleay32MD.lib;Mfplat.lib;Mfuuid.lib;Ws2_32.lib;Winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\..\..\..\..\spotifyserver_deps\lib\OpenSSL\OpenSSL-Win32\lib\VC;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y "$(ProjectDir)\..\..\..\..\..\..\spotifyserver_deps\lib\OpenAL\libs\Win32\OpenAL32.dll" "$(OutDir)"

@@ -21,6 +21,11 @@ FORMS    +=
 # system libraries
 win32: LIBS += -lMfplat -lMfuuid -lWs2_32 -lWinmm -lOle32
 
+#OpenSSL
+win32: LIBS += -llibeay32MD -lssleay32MD -L$$PWD/../../../spotifyserver_deps/lib/OpenSSL/OpenSSL-Win32/lib/VC
+win32:INCLUDEPATH += $$PWD/../../../spotifyserver_deps/lib/OpenSSL/include
+win32:DEPENDPATH += $$PWD/../../../spotifyserver_deps/lib/OpenSSL/include
+
 # UI
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../QTWidgetUI/release/ -lQTWidgetUI
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../QTWidgetUI/debug/ -lQTWidgetUI

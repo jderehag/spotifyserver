@@ -64,7 +64,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\spotifyserver_deps\appkey.c" />
     <ClCompile Include="..\..\..\common\ClockSync\ClockSyncServer.cpp" />
     <ClCompile Include="..\..\..\common\EndpointManager\EndpointManager.cpp" />
     <ClCompile Include="..\..\..\common\EndpointManager\EndpointManagerCtrlInterface.cpp" />

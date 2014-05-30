@@ -7,16 +7,18 @@ TARGET=spotifyclient
 #we need specific name for this since we still have dependencies between client and server
 OUTDIR = .spotifyclient.output
 
+DEPS_PATH ?= ../../../spotifyserver_deps
+
 # root directories to look for source files in
 VPATH +=  ./src ./../../common/ 
 
-VPATH +=  ./../../src/ 
+VPATH +=  ./../../src/ $(DEPS_PATH)
 
 
 # List C source files here. (C dependencies are automatically generated.)
 # use file-extension c for "c-only"-files
 
-SRC  =
+SRC  = appkey.c
 
 # List C++ source files here.
 # use file-extension .cpp for C++-files (not .C)
@@ -57,7 +59,7 @@ EXTRAINCDIRS += ../../src
 #    Each library-name must be seperated by a space.
 #    i.e. to link with libxyz.a, libabc.a and libefsl.a: 
 #    EXTRA_LIBS = xyz abc efsl
-EXTRA_LIBS = pthread rt
+EXTRA_LIBS = pthread rt crypto
 
 
 # List any extra directories to look for library files here.

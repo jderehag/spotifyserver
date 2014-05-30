@@ -60,11 +60,12 @@ private:
     unsigned int bufferNSecs_;
     const bool isDynamic_;
 
-    AudioFifoData* getFifoDataBuffer(size_t length);
 public:
     AudioFifo(unsigned int bufferNSecs = 1, bool isDynamic = true);
     AudioFifo(bool isDynamic);
     virtual ~AudioFifo();
+    AudioFifoData* getFifoDataBuffer( size_t length );
+    int addFifoDataBlocking( AudioFifoData* afd );
     int addFifoDataBlocking( unsigned int timestamp, unsigned short channels, unsigned int rate, unsigned int nsamples, const int16_t* samples );
     AudioFifoData* getFifoDataBlocking();
     AudioFifoData* getFifoDataTimedWait(unsigned int milliSeconds);

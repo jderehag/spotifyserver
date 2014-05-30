@@ -163,6 +163,12 @@ BinaryTlv::BinaryTlv(TlvType_t type, const uint8_t* data, uint32_t len) : Tlv(ty
     len_ = len;
 }
 
+BinaryTlv::BinaryTlv(TlvType_t type, uint32_t len) : Tlv(type)
+{
+    data_ = new uint8_t[len];
+    len_ = len;
+}
+
 BinaryTlv::BinaryTlv(const BinaryTlv& from) : Tlv(from)
 {
     len_ = from.getLen();
@@ -192,6 +198,11 @@ uint8_t* BinaryTlv::getData() const
 uint32_t BinaryTlv::getLen() const
 {
     return len_;
+}
+
+void BinaryTlv::setLen( uint32_t len )
+{
+    len_ = len;
 }
 
 void BinaryTlv::encode(MessageEncoder* msg) const

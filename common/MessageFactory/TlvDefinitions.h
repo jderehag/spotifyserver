@@ -158,6 +158,7 @@ typedef enum
     TLV_SERVER_CLOCK = 0x705,
     TLV_CLIENT_CLOCK = 0x706,
     TLV_IS_AVAILABLE = 0x707,
+    TLV_ENCRYPTION_IV = 0x711,
 
     /* Image TLV's */
     TLV_IMAGE_FORMAT = 0x801, /* ImageFormat_t */
