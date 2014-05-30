@@ -31,7 +31,6 @@
 #include "ClockSync/ClockSyncServer.h"
 #include "Platform/Utils/Utils.h"
 #include "Platform/Encryption/Encryption.h"
-#include "applog.h"
 #include <stdlib.h>
 
 #include <iostream>
@@ -40,6 +39,7 @@
 #include <ctime>
 #include <random>
 
+#include "applog.h"
 
 
 extern "C" const uint8_t g_appkey[];
