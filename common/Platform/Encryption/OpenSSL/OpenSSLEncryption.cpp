@@ -69,12 +69,14 @@ int Encrypt( const uint8_t* key,
         return -1;
 
     // last block and padding:
-    res = EVP_EncryptFinal(
+    res = EVP_EncryptFinal_ex(
         &ctx,
         outdata + len,
         &len);
 
     outdatalen += len;
+
+    EVP_CIPHER_CTX_cleanup( &ctx );
 
     if ( res != 1 )
         return -1;
@@ -116,12 +118,14 @@ int Decrypt( const uint8_t* key,
         return -1;
 
     // last block and padding:
-    res = EVP_DecryptFinal(
+    res = EVP_DecryptFinal_ex(
         &ctx,
         outdata + len,
         &len );
 
     decodedLen += len;
+
+    EVP_CIPHER_CTX_cleanup( &ctx );
 
     if ( res != 1 )
         return -1;

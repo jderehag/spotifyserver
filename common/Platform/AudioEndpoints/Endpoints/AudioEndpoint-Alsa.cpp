@@ -70,7 +70,7 @@ void AudioEndpointLocal::run()
             //alsaSetVolume( actualVolume_ );
             lastVolume = actualVolume_;
         }
-        if((afd = fifo_.getFifoDataTimedWait(1)) != 0)
+        if((afd = fifo_.getFifoDataTimedWait(25)) != 0)
         {
             /* First set up the alsa device with correct parameters (rate & channels) */
             if ( !devFd || reset || currentRate != afd->rate || currentChannels != afd->channels)

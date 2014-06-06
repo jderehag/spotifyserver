@@ -80,6 +80,8 @@ void AudioEndpointRemote::run()
     uint32_t lastTime = getTick_ms();
     uint32_t count = 0;
     uint32_t highestdiff = 0;
+    uint8_t iv[16];
+    std::default_random_engine rng(time(0));
     ClockSyncServer cs;
 
     while ( isCancellationPending() == false )
@@ -180,8 +182,6 @@ void AudioEndpointRemote::run()
             msg->addTlv( TLV_AUDIO_TIMESTAMP, afd->timestamp );
         }
 
-        uint8_t iv[16];
-        static std::default_random_engine rng(time(0));
         for ( int i = 0; i < 16; i++ )
             iv[i] = rng();
 
