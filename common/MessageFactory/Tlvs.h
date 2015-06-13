@@ -140,8 +140,9 @@ public:
 class TlvContainer : public Tlv
 {
 public:
-    typedef std::list<Tlv*>::iterator iterator;
-    typedef std::list<Tlv*>::const_iterator const_iterator;
+    typedef std::list<Tlv*> TlvList;
+    typedef TlvList::iterator iterator;
+    typedef TlvList::const_iterator const_iterator;
 
 protected:
     std::list<Tlv*> tlvs;

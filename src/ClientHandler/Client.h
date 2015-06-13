@@ -97,6 +97,7 @@ private:
     void handleGetAlbumReq(const Message* msg);
     void handleGetArtistReq(const Message* msg);
     void handleGetCurrentAudioEpReq(const Message* msg);
+    void handleGetAudioStats( const Message* msg );
     void handlePlaylistAddTracksReq(const Message* msg);
     void handlePlaylistMoveTracksReq(const Message* msg);
     void handlePlaylistRemoveTracksReq(const Message* msg);
@@ -108,6 +109,9 @@ private:
 
     virtual void getAudioEndpointsResponse( const AudioEndpointInfoList& endpoints, void* userData );
     virtual void audioEndpointsUpdatedNtf();
+
+    virtual void getStatisticsResponse( const std::string& id, const CounterList& counters, void* userData );
+
 
     /* endpoint control message handlers */
     void handleRenameEndpointReq(const Message* msg);

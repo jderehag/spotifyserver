@@ -107,6 +107,7 @@ void Client::processMessage(const Message* msg)
         case ADD_AUDIO_ENDPOINTS_REQ:         handleAddAudioEpReq(msg);        break;
         case REM_AUDIO_ENDPOINTS_REQ:         handleRemAudioEpReq(msg);        break;
         case GET_CURRENT_AUDIO_ENDPOINTS_REQ: handleGetCurrentAudioEpReq(msg); break;
+        case GET_AUDIO_STATISTICS_REQ:        handleGetAudioStats(msg);        break;
 
         case CREATE_AUDIO_ENDPOINT_REQ: handleCreateAudioEpReq(msg); break;
         case DELETE_AUDIO_ENDPOINT_REQ: handleDeleteAudioEpReq(msg); break;
@@ -656,6 +657,38 @@ void Client::handleGetCurrentAudioEpReq( const Message* msg )
 {
     Message* rsp = msg->createResponse();
     spotify_.getCurrentAudioEndpoints( this, rsp );
+}
+
+void Client::handleGetAudioStats( const Message* msg )
+{
+    Message* rsp = msg->createResponse();
+    const StringTlv* idTlv = (const StringTlv*) msg->getTlv( TLV_LINK );
+    if ( idTlv )
+    {
+        epCtrl_.getStatistics( idTlv->getString(), this, rsp );
+    }
+    else
+    {
+        rsp->addTlv(TLV_FAILURE, FAIL_MISSING_TLV);
+        queueMessage( rsp );
+    }
+}
+
+void Client::getStatisticsResponse( const std::string& id, const CounterList& counters, void* userData )
+{
+    Message* rsp = (Message*) userData;
+
+    TlvContainer* tlv = new TlvContainer(TLV_CLIENT);
+    tlv->addTlv( TLV_LINK, id );
+    for (CounterList::const_iterator it = counters.begin(); it != counters.end(); it++)
+    {
+        TlvContainer* counter = new TlvContainer(TLV_COUNTER);
+        counter->addTlv( TLV_LINK, (*it).first );
+        counter->addTlv( TLV_COUNTER_VALUE, (*it).second );
+        tlv->addTlv( counter );
+    }
+    rsp->addTlv( tlv );
+    queueMessage( rsp );
 }
 
 void Client::getCurrentAudioEndpointsResponse( const std::set<std::string>& endpoints, void* userData )

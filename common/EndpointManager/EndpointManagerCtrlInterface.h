@@ -47,6 +47,8 @@ public:
 
 typedef std::list<AudioEndpointInfo> AudioEndpointInfoList;
 typedef std::list<std::string> EndpointInfoList;
+typedef std::pair<std::string, uint32_t> CounterListItem;
+typedef std::list<CounterListItem> CounterList;
 
 class IEndpointCtrlCallbackSubscriber
 {
@@ -58,6 +60,8 @@ public:
 
     virtual void getAudioEndpointsResponse( const AudioEndpointInfoList& endpoints, void* userData ) {}
     virtual void audioEndpointsUpdatedNtf() {}
+
+    virtual void getStatisticsResponse( const std::string& id, const CounterList& counters, void* userData ) {}
 };
 
 
@@ -92,11 +96,13 @@ public:
 
     virtual void createAudioEndpoint( Platform::AudioEndpoint& ep, IEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
     virtual void deleteAudioEndpoint( Platform::AudioEndpoint& ep, IEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
-    virtual void addAudioEndpoint( std::string id, IEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
-    virtual void removeAudioEndpoint( std::string id, IEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
+    virtual void addAudioEndpoint( const std::string& id, IEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
+    virtual void removeAudioEndpoint( const std::string& id, IEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
     virtual void getAudioEndpoints( IEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
 
-    virtual void setRelativeVolume( std::string id, uint8_t volume ) = 0;
+    virtual void setRelativeVolume( const std::string& id, uint8_t volume ) = 0;
+
+    virtual void getStatistics( const std::string& id, IEndpointCtrlCallbackSubscriber* subscriber, void* userData ) = 0;
 
 };
 

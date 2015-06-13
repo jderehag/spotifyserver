@@ -144,7 +144,7 @@ void EndpointManager::deleteAudioEndpoint( Platform::AudioEndpoint& ep, IEndpoin
     //todo: subscriber->deleteEndpointResponse();
 }
 
-void EndpointManager::addAudioEndpoint( std::string id, IEndpointCtrlCallbackSubscriber* subscriber, void* userData )
+void EndpointManager::addAudioEndpoint( const std::string& id, IEndpointCtrlCallbackSubscriber* subscriber, void* userData )
 {
     EndpointContainer::iterator it = find( id );
     if ( it != endpoints.end() && (*it).audioEp != NULL )
@@ -157,7 +157,7 @@ void EndpointManager::addAudioEndpoint( std::string id, IEndpointCtrlCallbackSub
     //todo: subscriber->addEndpointResponse();
 }
 
-void EndpointManager::removeAudioEndpoint( std::string id, IEndpointCtrlCallbackSubscriber* subscriber, void* userData )
+void EndpointManager::removeAudioEndpoint( const std::string& id, IEndpointCtrlCallbackSubscriber* subscriber, void* userData )
 {
     EndpointContainer::iterator it = find( id );
     if ( it != endpoints.end() && (*it).audioEp != NULL )
@@ -211,7 +211,7 @@ EndpointManager::EndpointContainer::iterator EndpointManager::find( const std::s
     return it;
 }
 
-void EndpointManager::setRelativeVolume( std::string id, uint8_t volume )
+void EndpointManager::setRelativeVolume( const std::string& id, uint8_t volume )
 {
     Platform::AudioEndpoint* ep = getAudioEndpoint( id );
     if ( ep && volume != ep->getRelativeVolume() )
@@ -222,4 +222,19 @@ void EndpointManager::setRelativeVolume( std::string id, uint8_t volume )
     }
 }
 
+void EndpointManager::getStatistics( const std::string& id, IEndpointCtrlCallbackSubscriber* subscriber, void* userData )
+{
+    Platform::AudioEndpoint* ep = getAudioEndpoint( id );
+    if ( ep )
+    {
+        const Counters& c = ep->getStatistics();
+        CounterList stats;
+        for ( uint8_t i = 0; i < c.getNrofCounters(); i++ )
+        {
+            stats.push_back(CounterListItem(c.getCounterName(i), c.getCounterValue(i)));
+        }
+
+        subscriber->getStatisticsResponse( id, stats, userData );
+    }
+}
 

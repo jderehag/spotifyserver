@@ -117,9 +117,16 @@ TlvContainer* MessageDecoder::decodeGroupTlv()
             case TLV_AUDIO_EP_PROTOCOL:
             case TLV_STATE:
             case TLV_VOLUME:
+            case TLV_COUNTER_VALUE:
             {
                 groupTlv->addTlv(getCurrentTlv(), getTlvIntData());
                 nextTlv();
+            }
+            break;
+
+            case TLV_COUNTER:
+            {
+                groupTlv->addTlv(decodeGroupTlv());
             }
             break;
 
@@ -563,6 +570,7 @@ void MessageDecoder::decodeTlvs(TlvContainer* parent, uint32_t len)
             break;
 
             case TLV_CLIENT:
+            case TLV_COUNTER:
             {
                 parent->addTlv(decodeGroupTlv());
             }

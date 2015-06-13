@@ -64,12 +64,13 @@ public:
 
     virtual void createAudioEndpoint( Platform::AudioEndpoint& ep, IEndpointCtrlCallbackSubscriber* subscriber, void* userData );
     virtual void deleteAudioEndpoint( Platform::AudioEndpoint& ep, IEndpointCtrlCallbackSubscriber* subscriber, void* userData );
-    virtual void addAudioEndpoint( std::string ep, IEndpointCtrlCallbackSubscriber* subscriber, void* userData );
-    virtual void removeAudioEndpoint( std::string ep, IEndpointCtrlCallbackSubscriber* subscriber, void* userData );
+    virtual void addAudioEndpoint( const std::string& id, IEndpointCtrlCallbackSubscriber* subscriber, void* userData );
+    virtual void removeAudioEndpoint( const std::string& id, IEndpointCtrlCallbackSubscriber* subscriber, void* userData );
     virtual void getAudioEndpoints( IEndpointCtrlCallbackSubscriber* subscriber, void* userData );
 
-    virtual void setRelativeVolume( std::string id, uint8_t volume );
+    virtual void setRelativeVolume( const std::string& id, uint8_t volume );
 
+    virtual void getStatistics( const std::string& id, IEndpointCtrlCallbackSubscriber* subscriber, void* userData );
 };
 
 #endif /* ENDPOINTMANAGER_H_ */

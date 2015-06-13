@@ -78,6 +78,8 @@ const char* messageTypeToString(const MessageType_t type)
         STR(GET_ENDPOINTS_RSP);
         STR(RENAME_ENDPOINT_REQ);
         STR(RENAME_ENDPOINT_RSP);
+        STR(GET_AUDIO_STATISTICS_REQ);
+        STR(GET_AUDIO_STATISTICS_RSP);
 
         STR(ADD_AUDIO_ENDPOINTS_REQ);
         STR(ADD_AUDIO_ENDPOINTS_RSP);
@@ -113,9 +115,10 @@ const char* tlvTypeToString(const TlvType_t type)
         STR(TLV_ARTIST);
         STR(TLV_ALBUM);
         STR(TLV_CLIENT);
+        STR(TLV_COUNTER);
 
         STR(TLV_TRACK_DURATION);
-        STR(TLV_TRACK_INDEX );
+        STR(TLV_TRACK_INDEX);
         
         STR(TLV_SEARCH_QUERY);
         STR(TLV_STATE);
@@ -131,6 +134,7 @@ const char* tlvTypeToString(const TlvType_t type)
         STR(TLV_IP_ADDRESS);
         STR(TLV_PORT);
         STR(TLV_IS_AVAILABLE);
+        STR(TLV_COUNTER_VALUE);
 
         STR(TLV_IMAGE);
         STR(TLV_IMAGE_FORMAT);

@@ -51,17 +51,21 @@ public:
     virtual void registerId( EndpointIdIf& appId );
     virtual void unregisterId( EndpointIdIf& appId );
 
+    /* Implements EndpointCtrlInterface */
     virtual void getEndpoints( IEndpointCtrlCallbackSubscriber* subscriber, void* userData );
     virtual void renameEndpoint( const std::string& from, const std::string& to, IEndpointCtrlCallbackSubscriber* subscriber, void* userData );
 
     virtual void createAudioEndpoint( Platform::AudioEndpoint& ep, IEndpointCtrlCallbackSubscriber* subscriber, void* userData );
     virtual void deleteAudioEndpoint( Platform::AudioEndpoint& ep, IEndpointCtrlCallbackSubscriber* subscriber, void* userData );
-    virtual void addAudioEndpoint( std::string id, IEndpointCtrlCallbackSubscriber* subscriber, void* userData );
-    virtual void removeAudioEndpoint( std::string id, IEndpointCtrlCallbackSubscriber* subscriber, void* userData );
+    virtual void addAudioEndpoint( const std::string& id, IEndpointCtrlCallbackSubscriber* subscriber, void* userData );
+    virtual void removeAudioEndpoint( const std::string& id, IEndpointCtrlCallbackSubscriber* subscriber, void* userData );
     virtual void getAudioEndpoints( IEndpointCtrlCallbackSubscriber* subscriber, void* userData );
 
-    virtual void setRelativeVolume( std::string id, uint8_t volume );
+    virtual void setRelativeVolume( const std::string& id, uint8_t volume );
 
+    virtual void getStatistics( const std::string& id, IEndpointCtrlCallbackSubscriber* subscriber, void* userData );
+
+    /* Implements IMessageSubscriber */
     virtual void connectionState( bool up );
     virtual void receivedMessage( const Message* msg );
     virtual void receivedResponse( const Message* rsp, const Message* req, void* userData );

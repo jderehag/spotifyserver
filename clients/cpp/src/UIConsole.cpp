@@ -166,6 +166,13 @@ void UIConsole::run()
             continue;
         }
 
+        if ( argv[0] == "getAudioStats")
+        {
+            if ( argc == 2 )
+                epMgr_.getStatistics( argv[1], this, NULL );
+            continue;
+        }
+
         if ( argv[0] == "seek")
         {
             if ( argc == 2 )
@@ -498,6 +505,16 @@ void UIConsole::getAudioEndpointsResponse( const AudioEndpointInfoList& endpoint
     for (AudioEndpointInfoList::const_iterator it = endpoints.begin(); it != endpoints.end(); it++)
     {
         std::cout << "  " << (*it).id << ": " << ((*it).active ? "active" : "inactive") << ", vol " << (uint32_t)(*it).relativeVolume << std::endl;
+    }
+    std::cout << std::endl;
+}
+
+void UIConsole::getStatisticsResponse( const std::string& id, const CounterList& counters, void* userData )
+{
+    std::cout << "Statistics for " << id << std::endl;
+    for (CounterList::const_iterator it = counters.begin(); it != counters.end(); it++)
+    {
+        std::cout << "  " << (*it).first << ": " << (*it).second << std::endl;
     }
     std::cout << std::endl;
 }

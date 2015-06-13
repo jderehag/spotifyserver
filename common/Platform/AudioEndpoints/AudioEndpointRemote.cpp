@@ -46,6 +46,10 @@ extern "C" const uint8_t g_appkey[];
 
 extern bool simPacketDrop;
 
+
+
+
+
 namespace Platform {
 
 AudioEndpointRemote::AudioEndpointRemote( IAudioEndpointRemoteCtrlInterface* ctrlIf,
@@ -129,10 +133,12 @@ void AudioEndpointRemote::run()
 
             if ( afd->timestamp != 0 )
             {
-                if ( afd->timestamp > currentTime && 
+                bool packetLate = ((afd->timestamp - currentTime) > 0x7FFFFFFF);
+                if ( packetLate == false && 
                     (afd->timestamp - currentTime) > BUCKET_INITIAL_VALUE * 1000 / afd->rate )
                 {
                     /* too early to send this packet, wait a while */
+                    counters.increment(AudioEndpointRemoteCounters::TOO_EARLY);
                     continue;
                 }
             }
@@ -156,6 +162,7 @@ void AudioEndpointRemote::run()
                 if ( bucket < afd->nsamples )
                 {
                     /* not allowed to send this packet yet, wait a while */
+                    counters.increment(AudioEndpointRemoteCounters::BUCKET_EMPTY);
                     continue;
                 }
             }
@@ -200,10 +207,13 @@ void AudioEndpointRemote::run()
         delete msg;
 
         if ( !simPacketDrop || count % 100 != 0)
+        {
+        counters.increment(AudioEndpointRemoteCounters::PACKETS_SENT);
         if((rc = sock_.Send(enc->getBuffer(), enc->getLength()) < 0))
         {
             /* TODO: its probably NOT ok to use errno here, doubt its valid on WIN */
             std::cout << "JESPER: rc=" << rc << " perror=" << errno;
+        }
         }
 
         delete enc;
@@ -266,4 +276,10 @@ void AudioEndpointRemote::doSetRelativeVolume( uint8_t volume )
     relativeVolume_ = volume;
     ctrlIf_->setRelativeVolume(volume);
 }
+
+const Counters& AudioEndpointRemote::getStatistics()
+{
+    return counters;
+}
+
 }

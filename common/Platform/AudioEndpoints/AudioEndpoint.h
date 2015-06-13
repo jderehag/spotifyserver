@@ -33,6 +33,15 @@
 #include "Utils/ActionFilter.h"
 #include <string>
 
+class Counters
+{
+public:
+    virtual uint8_t getNrofCounters() const = 0;
+    virtual std::string getCounterName(uint8_t counter) const = 0;
+    virtual uint32_t getCounterValue(uint8_t counter) const = 0;
+};
+
+
 namespace Platform {
 static void setRelativeVolumeCb( void* arg, uint32_t volume );
 
@@ -68,6 +77,8 @@ public:
     virtual void doSetRelativeVolume( uint8_t volume ) = 0;
     uint8_t getRelativeVolume() { return relativeVolume_; }
     const std::string& getId() const { return epId_.getId(); };
+
+    virtual const Counters& getStatistics() = 0;
 
     /*todo do something proper with these...*/
     void pause() { paused_ = true; }

@@ -31,6 +31,7 @@
 #include "AudioEndpoint.h"
 #include "ConfigHandling/ConfigHandler.h"
 #include "../Threads/Runnable.h"
+#include <map>
 
 namespace Platform {
 
@@ -44,6 +45,25 @@ private:
 
     uint8_t actualVolume_;
 
+    class AudioEndpointCounters : public Counters
+    {
+        typedef enum
+        {
+            PACKETS_RECEIVED,
+            NROF_COUNTERS,
+        } AudioEndpointCounterTypes;
+        std::map<AudioEndpointCounterTypes, uint32_t> counters;
+        void increment(AudioEndpointCounterTypes counter) { counters[counter]++; }
+
+        virtual uint8_t getNrofCounters() const { return NROF_COUNTERS; }
+        virtual std::string getCounterName(uint8_t counter) const { return ""; }
+        virtual uint32_t getCounterValue(uint8_t counter) const { return counters.at((AudioEndpointCounterTypes)counter); }
+    public:
+        AudioEndpointCounters() { for(uint8_t i = 0; i < NROF_COUNTERS; i++) counters[(AudioEndpointCounterTypes)i] = 0; }
+    };
+
+    class AudioEndpointCounters counters;
+
 public:
     AudioEndpointLocal(const ConfigHandling::AudioEndpointConfig& config, const EndpointIdIf& epId );
     virtual ~AudioEndpointLocal();
@@ -55,6 +75,8 @@ public:
 
     virtual void setMasterVolume( uint8_t volume );
     virtual void doSetRelativeVolume( uint8_t volume );
+
+    virtual const Counters& getStatistics();
 
     virtual void run();
     virtual void destroy();

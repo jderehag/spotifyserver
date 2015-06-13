@@ -32,6 +32,7 @@
 #include "Platform/Threads/Runnable.h"
 #include "Platform/Socket/Socket.h"
 #include <string>
+#include <map>
 
 class IAudioEndpointRemoteCtrlInterface
 {
@@ -40,6 +41,9 @@ public:
     virtual void setMasterVolume( uint8_t volume ) = 0;
     virtual void setRelativeVolume( uint8_t volume ) = 0;
 };
+
+
+class AudioEndpointRemoteCounters;
 
 namespace Platform
 {
@@ -50,6 +54,34 @@ private:
     Socket sock_;
     uint32_t remoteBufferSize;
     IAudioEndpointRemoteCtrlInterface* ctrlIf_;
+
+    class AudioEndpointRemoteCounters : public Counters
+    {
+    public:
+        typedef enum
+        {
+            PACKETS_RECEIVED,
+            PACKETS_SENT,
+            TOO_EARLY,
+            BUCKET_EMPTY,
+            NROF_COUNTERS,
+        } AudioEndpointRemoteCounterTypes;
+        std::map<AudioEndpointRemoteCounterTypes, uint32_t> counters;
+
+        AudioEndpointRemoteCounters() { for(uint8_t i = 0; i < NROF_COUNTERS; i++) counters[(AudioEndpointRemoteCounterTypes)i] = 0; }
+
+        void increment(AudioEndpointRemoteCounterTypes counter) { counters[counter]++; }
+        virtual uint8_t getNrofCounters() const { return NROF_COUNTERS; }
+        virtual std::string getCounterName(uint8_t counter) const { switch(counter) {
+                                                                        case PACKETS_RECEIVED: return "Packets received";
+                                                                        case PACKETS_SENT: return "Packets sent";
+                                                                        case TOO_EARLY: return "Data too early";
+                                                                        case BUCKET_EMPTY: return "Bucket empty";
+                                                                        } return ""; }
+        virtual uint32_t getCounterValue(uint8_t counter) const { return counters.at((AudioEndpointRemoteCounterTypes)counter); }
+    };
+
+    class AudioEndpointRemoteCounters counters;
 
 public:
     AudioEndpointRemote(IAudioEndpointRemoteCtrlInterface* ctrlIf, const EndpointIdIf& epId, const std::string& serveraddr, const std::string& serverport, uint8_t volume, unsigned int bufferNSecs);
@@ -62,6 +94,8 @@ public:
 
     virtual void setMasterVolume( uint8_t volume );
     virtual void doSetRelativeVolume( uint8_t volume );
+
+    virtual const Counters& getStatistics();
 
     virtual bool isLocal() const {return false;};
 

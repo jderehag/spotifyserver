@@ -99,4 +99,9 @@ void AudioEndpointLocal::doSetRelativeVolume( uint8_t volume )
     actualVolume_ = (uint8_t) newVolume;
 }
 
+const Counters& AudioEndpointLocal::getStatistics()
+{
+    return counters;
+}
+
 }

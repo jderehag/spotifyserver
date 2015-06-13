@@ -185,8 +185,6 @@ void AudioEndpointLocal::run()
 
         while ( isCancellationPending() == false && reset == false )
         {
-            Sleep(1);
-
             if ( lastVolume != actualVolume_ )
             {
                 float vol = (float)actualVolume_ / 255;
@@ -195,7 +193,7 @@ void AudioEndpointLocal::run()
             }
 
             /* check if there's more audio available */
-            if ( afd == NULL && ( afd = fifo_.getFifoDataTimedWait(10) ) == NULL )
+            if ( afd == NULL && ( afd = fifo_.getFifoDataTimedWait(25) ) == NULL )
                 continue;
 
             /** Set up resampler if necessary */

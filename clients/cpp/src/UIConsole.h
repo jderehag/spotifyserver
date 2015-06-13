@@ -79,6 +79,8 @@ public:
     virtual void getAudioEndpointsResponse( const AudioEndpointInfoList& endpoints, void* userData );
     virtual void audioEndpointsUpdatedNtf();
 
+    virtual void getStatisticsResponse( const std::string& id, const CounterList& counters, void* userData );
+
     /* ILibSpotifyLoginUI */
     virtual LibSpotifyLoginParams getLoginParams( const std::string& message, const std::string& oldUsername, bool oldRememberMe );
 };

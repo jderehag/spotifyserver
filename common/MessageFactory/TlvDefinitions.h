@@ -85,6 +85,8 @@ typedef enum
     REQ( GET_ENDPOINTS,    0xF01 )
     REQ( RENAME_ENDPOINT,  0xF02 )
 
+    REQ( GET_AUDIO_STATISTICS, 0xF11 )
+
     /* Remote Audio */
     REQ( CREATE_AUDIO_ENDPOINT,   0x1001 )
     REQ( DELETE_AUDIO_ENDPOINT,   0x1002 )
@@ -98,6 +100,7 @@ typedef enum
     REQ( REM_AUDIO_ENDPOINTS,    0x1022 )
     //REQ( SET_AUDIO_ENDPOINTS,    0x1023 ) <-todo
     REQ( GET_CURRENT_AUDIO_ENDPOINTS, 0x1024 )
+
 }MessageType_t;
 
 /* TLV header */
@@ -119,6 +122,8 @@ typedef enum
 
 
     TLV_CLIENT   = 0x21,
+
+    TLV_COUNTER  = 0x31,
 
     /*Folder TLV's*/
     /* TLV_FOLDER_NAME = 0x101, deprecated */
@@ -159,6 +164,7 @@ typedef enum
     TLV_CLIENT_CLOCK = 0x706,
     TLV_IS_AVAILABLE = 0x707,
     TLV_ENCRYPTION_IV = 0x711,
+    TLV_COUNTER_VALUE = 0x721,
 
     /* Image TLV's */
     TLV_IMAGE_FORMAT = 0x801, /* ImageFormat_t */

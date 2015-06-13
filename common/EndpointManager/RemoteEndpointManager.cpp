@@ -109,7 +109,7 @@ void RemoteEndpointManager::getAudioEndpoints( IEndpointCtrlCallbackSubscriber* 
     messenger_.queueRequest( msg, this, new PendingEndpointCtrlRequestData(subscriber, userData) );
 }
 
-void RemoteEndpointManager::addAudioEndpoint( std::string id, IEndpointCtrlCallbackSubscriber* subscriber, void* userData )
+void RemoteEndpointManager::addAudioEndpoint( const std::string& id, IEndpointCtrlCallbackSubscriber* subscriber, void* userData )
 {
     Message* msg = new Message( ADD_AUDIO_ENDPOINTS_REQ );
     /*todo: should allow multiple endpoints*/
@@ -117,7 +117,7 @@ void RemoteEndpointManager::addAudioEndpoint( std::string id, IEndpointCtrlCallb
         msg->addTlv( TLV_LINK, id );
     messenger_.queueRequest( msg, this, new PendingEndpointCtrlRequestData(subscriber, userData) );
 }
-void RemoteEndpointManager::removeAudioEndpoint( std::string id, IEndpointCtrlCallbackSubscriber* subscriber, void* userData )
+void RemoteEndpointManager::removeAudioEndpoint( const std::string& id, IEndpointCtrlCallbackSubscriber* subscriber, void* userData )
 {
     Message* msg = new Message( REM_AUDIO_ENDPOINTS_REQ );
     /*todo: should allow multiple endpoints*/
@@ -126,7 +126,7 @@ void RemoteEndpointManager::removeAudioEndpoint( std::string id, IEndpointCtrlCa
     messenger_.queueRequest( msg, this, new PendingEndpointCtrlRequestData(subscriber, userData) );
 }
 
-void RemoteEndpointManager::setRelativeVolume( std::string id, uint8_t volume )
+void RemoteEndpointManager::setRelativeVolume( const std::string& id, uint8_t volume )
 {
     Message* msg = new Message( SET_VOLUME_REQ );
     TlvContainer* tlv = new TlvContainer( TLV_CLIENT );
@@ -135,6 +135,13 @@ void RemoteEndpointManager::setRelativeVolume( std::string id, uint8_t volume )
     tlv->addTlv( TLV_VOLUME, volume );
     msg->addTlv( tlv );
     messenger_.queueRequest( msg, this, NULL );
+}
+
+void RemoteEndpointManager::getStatistics( const std::string& id, IEndpointCtrlCallbackSubscriber* subscriber, void* userData )
+{
+    Message* msg = new Message( GET_AUDIO_STATISTICS_REQ );
+    msg->addTlv( TLV_LINK, id );
+    messenger_.queueRequest( msg, this, new PendingEndpointCtrlRequestData(subscriber, userData) );
 }
 
 void RemoteEndpointManager::connectionState( bool up )
@@ -263,6 +270,29 @@ void RemoteEndpointManager::receivedResponse( const Message* rsp, const Message*
     case RENAME_ENDPOINT_RSP:
         {
             subscriber->renameEndpointResponse( subscriberData );
+        }
+        break;
+    case GET_AUDIO_STATISTICS_RSP:
+        {
+            CounterList stats;
+            TlvContainer* client = (TlvContainer*)rsp->getTlv( TLV_CLIENT );
+            StringTlv* id;
+            if ( client && ( id = (StringTlv*)client->getTlv( TLV_LINK ) ) )
+            {
+                for ( TlvContainer::const_iterator it = client->begin();
+                    it != client->end(); it++ )
+                {
+                    if ( (*it)->getType() == TLV_COUNTER )
+                    {
+                        TlvContainer* tlv = (TlvContainer*)(*it);
+                        StringTlv* name = (StringTlv*)tlv->getTlv( TLV_LINK );
+                        IntTlv* value = (IntTlv*)tlv->getTlv( TLV_COUNTER_VALUE );
+                        if ( name && value )
+                            stats.push_back( CounterListItem(name->getString(), value->getVal()) );
+                    }
+                }
+                subscriber->getStatisticsResponse( id->getString(), stats, subscriberData );
+            }
         }
         break;
     default:
