@@ -62,7 +62,7 @@ SRC +=	$(addprefix $(FREERTOS)/, list.c queue.c tasks.c timers.c event_groups.c 
 SRC +=	BSP/STM32F4-Discovery/stm32f4_discovery.c \
 		$(addprefix STM32F4XX/, system_stm32f4xx.c stm32f4xx_it.c netconf.c) \
 		$(addprefix STM32F4XX/STM32F4xx_HAL_Driver/src/, stm32f4xx_hal.c stm32f4xx_hal_dma.c stm32f4xx_hal_gpio.c stm32f4xx_hal_rcc.c stm32f4xx_hal_pwr.c stm32f4xx_hal_rtc.c) \
-		$(addprefix STM32F4XX/STM32F4xx_HAL_Driver/src/, stm32f4xx_hal_cortex.c stm32f4xx_hal_eth.c stm32f4xx_hal_flash.c stm32f4xx_hal_flash_ex.c  ) \
+		$(addprefix STM32F4XX/STM32F4xx_HAL_Driver/src/, stm32f4xx_hal_cortex.c stm32f4xx_hal_eth.c stm32f4xx_hal_flash.c stm32f4xx_hal_flash_ex.c stm32f4xx_hal_rng.c ) \
 		$(addprefix BSP/STM32F4-DIS-BB/, stm32f4_discovery_eth.c )
 
 #LCD display output
@@ -74,13 +74,16 @@ CDEFS += -DWITH_LCD
 endif
 
 
-#lwIP		
-SRC +=	$(addprefix lwip-1.4.1/src/core/, init.c tcp_out.c memp.c netif.c pbuf.c raw.c stats.c sys.c tcp.c tcp_in.c udp.c dhcp.c def.c timers.c dns.c ipv4/ip.c ipv4/ip_addr.c ipv4/icmp.c ipv4/ip_frag.c ipv4/inet.c ipv4/inet_chksum.c ipv4/autoip.c) \
-		$(addprefix lwip-1.4.1/src/api/, tcpip.c api_msg.c err.c api_lib.c netbuf.c sockets.c netdb.c ) \
-		$(addprefix lwip-1.4.1/src/netif/, etharp.c ) \
-		$(addprefix lwip-1.4.1/port/STM32F4x7/FreeRTOS/, sys_arch.c ethernetif.c)
+#lwIP
+LWIP_PATH ?= lwip/lwip-git-head
+SRC +=	$(addprefix $(LWIP_PATH)/src/core/, inet_chksum.c init.c tcp_out.c memp.c netif.c pbuf.c raw.c stats.c sys.c tcp.c tcp_in.c udp.c dhcp.c def.c timers.c dns.c ipv4/ip4.c ipv4/ip4_addr.c ipv4/icmp.c ipv4/ip_frag.c ipv4/autoip.c)
+#LWIP_PATH ?= lwip/lwip-1.4.1
+#SRC +=	$(addprefix $(LWIP_PATH)/src/core/, init.c tcp_out.c memp.c netif.c pbuf.c raw.c stats.c sys.c tcp.c tcp_in.c udp.c dhcp.c def.c timers.c dns.c ipv4/ip.c ipv4/ip_addr.c ipv4/icmp.c ipv4/ip_frag.c ipv4/inet.c ipv4/inet_chksum.c ipv4/autoip.c)
+SRC +=	$(addprefix $(LWIP_PATH)/src/api/, tcpip.c api_msg.c err.c api_lib.c netbuf.c sockets.c netdb.c ) \
+		$(addprefix $(LWIP_PATH)/src/netif/, etharp.c ) \
+		$(addprefix lwip/port/STM32F4x7/FreeRTOS/, sys_arch.c ethernetif.c)
 
-LWIP_MEM = $(addprefix lwip-1.4.1/src/core/, mem.c)
+LWIP_MEM = $(addprefix $(LWIP_PATH)/src/core/, mem.c)
 SRC += $(LWIP_MEM)
 
 SRC += appkey.c Platform/Encryption/Generic/aes.c
@@ -149,10 +152,11 @@ EXTRAINCDIRS  += ./source/$(FREERTOS)/include \
 		  ./../../src \
 		  ./../../common \
 		  ./../../common/Logger \
-		  ./source/lwip-1.4.1/src/include \
-		  ./source/lwip-1.4.1/src/include/ipv4 \
-		  ./source/lwip-1.4.1/port/STM32F4x7/FreeRTOS \
-		  ./source/lwip-1.4.1/port/STM32F4x7
+		  ./source/lwip/port/STM32F4x7/FreeRTOS \
+		  ./source/lwip/port/STM32F4x7 
+
+EXTRAINCDIRS += ./source/$(LWIP_PATH)/src/include \
+		  ./source/$(LWIP_PATH)/src/include/ipv4
 
 EXTRAINCDIRS += ./source/STM32F4XX/STM32F4DIS_LCD_Driver/inc
 

@@ -34,6 +34,8 @@
 
 #include "cpu.h"
 #include "applog.h"
+#include "stm32f4xx_hal_rng.h"
+#include "stm32f4xx_hal_rcc.h"
 
 typedef unsigned   char    u8_t;
 typedef signed     char    s8_t;
@@ -92,4 +94,19 @@ typedef int sys_prot_t;
 #define LWIP_PLATFORM_ASSERT(x) do { APP_LOG(LOG_EMERG, x); while(1); } while(0)
 
 #define LWIP_PLATFORM_DIAG(x) do { LogAppendSimpleCBinder x; } while(0)
+#define LWIP_RAND my_LWIP_RAND
+static inline u32_t my_LWIP_RAND()
+{
+  static RNG_HandleTypeDef RngHandle;
+  static u8_t initialized = 0;
+  if(initialized == 0)
+  {
+    __RNG_CLK_ENABLE();
+    RngHandle.Instance = RNG;
+    HAL_RNG_Init(&RngHandle);
+    initialized = 1;
+  }
+  u32_t rnd = (u32_t) HAL_RNG_GetRandomNumber(&RngHandle);
+  return rnd;
+}
 #endif /* __CC_H__ */

@@ -1,0 +1,3 @@
+[submodule "clients/embedded/source/lwip/lwip-git-head"]
+	path = clients/embedded/source/lwip/lwip-git-head
+	url = git://git.savannah.nongnu.org/lwip.git

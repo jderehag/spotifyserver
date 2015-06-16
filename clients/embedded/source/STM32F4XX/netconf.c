@@ -77,9 +77,9 @@ struct netif xnetif; /* network interface structure */
   */
 void LwIP_Init(void)
 {
-  struct ip_addr ipaddr;
-  struct ip_addr netmask;
-  struct ip_addr gw;
+  ip4_addr_t ipaddr;
+  ip4_addr_t netmask;
+  ip4_addr_t gw;
 #ifndef USE_DHCP 
   uint8_t iptab[4];
   uint8_t iptxt[20];
@@ -126,131 +126,12 @@ void LwIP_Init(void)
 
  /*  Registers the default network interface. */
   netif_set_default(&xnetif);
-
-#ifdef USE_DHCP
-  /* dhcp should call netif_set_up once an address is obtained */
-  dhcp_start(&xnetif);
-#else
- /*  When the netif is fully configured this function must be called.*/
   netif_set_up(&xnetif);
-#endif
-}
 
 #ifdef USE_DHCP
-/**
-  * @brief  LwIP_DHCP_Process_Handle
-  * @param  None
-  * @retval None
-  */
-void LwIP_DHCP_task(void * pvParameters)
-{
-  struct ip_addr ipaddr;
-  struct ip_addr netmask;
-  struct ip_addr gw;
-  uint32_t IPaddress;
-  uint8_t iptab[4];
-  uint8_t iptxt[20];
-  uint8_t DHCP_state;  
-  DHCP_state = DHCP_START;
-
-  for (;;)
-  {
-    switch (DHCP_state)
-    {
-      case DHCP_START:
-      {
-        dhcp_start(&xnetif);
-        IPaddress = 0;
-        DHCP_state = DHCP_WAIT_ADDRESS;
-#ifdef USE_LCD
-        LCD_DisplayStringLine(Line4, (uint8_t*)"     Looking for    ");
-        LCD_DisplayStringLine(Line5, (uint8_t*)"     DHCP server    ");
-        LCD_DisplayStringLine(Line6, (uint8_t*)"     please wait... ");
+  dhcp_start(&xnetif);
 #endif
-      }
-      break;
-
-      case DHCP_WAIT_ADDRESS:
-      {
-        /* Read the new IP address */
-        IPaddress = xnetif.ip_addr.addr;
-
-        if (IPaddress!=0) 
-        {
-          DHCP_state = DHCP_ADDRESS_ASSIGNED;	
-          
-          /* Stop DHCP */
-          dhcp_stop(&xnetif);
-
-#ifdef USE_LCD      
-          iptab[0] = (uint8_t)(IPaddress >> 24);
-          iptab[1] = (uint8_t)(IPaddress >> 16);
-          iptab[2] = (uint8_t)(IPaddress >> 8);
-          iptab[3] = (uint8_t)(IPaddress);
-
-          sprintf((char*)iptxt, "  %d.%d.%d.%d", iptab[3], iptab[2], iptab[1], iptab[0]);  
-
-          LCD_ClearLine(Line4);
-          LCD_ClearLine(Line5);
-          LCD_ClearLine(Line6);
-          /* Display the IP address */
-          LCD_DisplayStringLine(Line7, (uint8_t*)"IP address assigned ");
-          LCD_DisplayStringLine(Line8, (uint8_t*)"  by a DHCP server  ");
-          LCD_DisplayStringLine(Line9, iptxt);
-#endif  
-          /* end of DHCP process: LED1 stays ON*/
-          //STM_EVAL_LEDOn(LED1);
-          vTaskDelete(NULL);
-        }
-        else
-        {
-          /* DHCP timeout */
-          if (xnetif.dhcp->tries > MAX_DHCP_TRIES)
-          {
-            DHCP_state = DHCP_TIMEOUT;
-
-            /* Stop DHCP */
-            dhcp_stop(&xnetif);
-
-            /* Static address used */
-            IP4_ADDR(&ipaddr, IP_ADDR0 ,IP_ADDR1 , IP_ADDR2 , IP_ADDR3 );
-            IP4_ADDR(&netmask, NETMASK_ADDR0, NETMASK_ADDR1, NETMASK_ADDR2, NETMASK_ADDR3);
-            IP4_ADDR(&gw, GW_ADDR0, GW_ADDR1, GW_ADDR2, GW_ADDR3);
-            netif_set_addr(&xnetif, &ipaddr , &netmask, &gw);
-
-#ifdef USE_LCD   
-            LCD_DisplayStringLine(Line7, (uint8_t*)"    DHCP timeout    ");
-
-            iptab[0] = IP_ADDR3;
-            iptab[1] = IP_ADDR2;
-            iptab[2] = IP_ADDR1;
-            iptab[3] = IP_ADDR0;
-
-            sprintf((char*)iptxt, "  %d.%d.%d.%d", iptab[3], iptab[2], iptab[1], iptab[0]); 
-
-            LCD_ClearLine(Line4);
-            LCD_ClearLine(Line5);
-            LCD_ClearLine(Line6);
-            LCD_DisplayStringLine(Line8, (uint8_t*)"  Static IP address   ");
-            LCD_DisplayStringLine(Line9, iptxt);
-#endif
-            /* end of DHCP process: LED1 stays ON*/
-            //STM_EVAL_LEDOn(LED1);
-            vTaskDelete(NULL);
-          }
-        }
-      }
-      break;
-
-      default: break;
-    }
-
-    /* Toggle LED1 */
-    //STM_EVAL_LEDToggle(LED1);
-    /* wait 250 ms */
-    vTaskDelay(250);
-  }   
 }
-#endif  /* USE_DHCP */
+
 
 /******************* (C) COPYRIGHT 2011 STMicroelectronics *****END OF FILE****/
