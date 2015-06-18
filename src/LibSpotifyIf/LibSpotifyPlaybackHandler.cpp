@@ -28,8 +28,6 @@
 #include "LibSpotifyPlaybackHandler.h"
 #include "LibSpotifyIf.h"
 #include <algorithm>
-#include <ctime>
-#include <random>
 #include <cassert>
 #include "applog.h"
 
@@ -40,8 +38,7 @@ LibSpotifyPlaybackHandler::LibSpotifyPlaybackHandler(LibSpotifyIf& libspotify) :
                                                                                  historyQueue_(HISTORY_QUEUE_DEPTH),
                                                                                  isPlayingQueuedTrack(false),
                                                                                  isShuffle(false),
-                                                                                 isRepeat(false),
-                                                                                 shuffleGenerator((unsigned int)time(0))
+                                                                                 isRepeat(false)
 {
     playQueueIter_ = playQueue_.end();
 }

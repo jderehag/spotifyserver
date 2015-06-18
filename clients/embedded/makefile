@@ -104,6 +104,8 @@ CPPSRC = main.cpp buttonHandler.cpp UIEmbedded.cpp heapWrap.cpp LoggerEmbedded.c
 		Platform/Timers/FreeRTOS/FreeRTOSTimer.cpp \
 		Platform/Utils/FreeRTOS/FreeRTOSUtils.cpp \
 		Platform/Encryption/Generic/Encryption.cpp \
+		Platform/Random/STM32F4/STM32F4RandomNumberGenerator.cpp \
+		Platform/Random/Random.cpp \
 		$(addprefix Platform/Threads/FreeRTOS/, FreeRTOSMessagebox.cpp FreeRTOSMutex.cpp FreeRTOSCondition.cpp FreeRTOSRunnable.cpp) \
 		Utils/ActionFilter.cpp \
 
@@ -249,11 +251,11 @@ endif
 #    -adhlns...: create assembler listing
 #
 # Flags for C and C++ (arm-elf-gcc/arm-elf-g++)
-CFLAGS += -mcpu=$(MCU) $(THUMB_IW) 
+CFLAGS += -mcpu=$(MCU) $(THUMB) 
 CFLAGS += -mfpu=fpv4-sp-d16 -mfloat-abi=softfp
 CFLAGS += -mlong-calls
 CFLAGS += -ffunction-sections -fdata-sections
-CFLAGS += -fpromote-loop-indices
+#CFLAGS += -fpromote-loop-indices
 
 # flags only for C
 CONLYFLAGS += -Wimplicit -Wnested-externs 
@@ -269,7 +271,7 @@ CPPFLAGS =
 #  -Wa,...:    tell GCC to pass this to the assembler.
 #  -ahlns:     create listing
 #  -g$(DEBUG): have the assembler create line number information
-ASFLAGS += -mcpu=$(MCU) $(THUMB_IW) -I. -x assembler-with-cpp
+ASFLAGS += -mcpu=$(MCU) $(THUMB) -I. -x assembler-with-cpp
 
 MATH_LIB = -lm
 

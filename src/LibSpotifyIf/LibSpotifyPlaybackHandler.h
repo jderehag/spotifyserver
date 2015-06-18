@@ -34,7 +34,7 @@
 #include "MediaContainers/Album.h"
 #include "Platform/Threads/Mutex.h"
 #include <deque>
-#include <random>
+#include "Platform/Random/RandomNumberGenerator.h"
 #include "Utils/CircularQueue.h"
 
 
@@ -76,7 +76,7 @@ private:
     bool isShuffle;
     bool isRepeat;
 
-    std::default_random_engine shuffleGenerator;
+    Platform::RandomNumberGenerator shuffleGenerator;
 
     void doPlayTrack(TrackQueue::iterator t);
     void loadPlaylist(const Playlist& playlist, int startIndex);

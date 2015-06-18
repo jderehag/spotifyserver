@@ -95,6 +95,7 @@
     <ClInclude Include="..\..\..\common\Platform\AudioEndpoints\AudioEndpointRemote.h" />
     <ClInclude Include="..\..\..\common\Platform\AudioEndpoints\AudioFifo.h" />
     <ClInclude Include="..\..\..\common\Platform\Encryption\Encryption.h" />
+    <ClInclude Include="..\..\..\common\Platform\Random\RandomNumberGenerator.h" />
     <ClInclude Include="..\..\..\common\Platform\Socket\Socket.h" />
     <ClInclude Include="..\..\..\common\Platform\Threads\Condition.h" />
     <ClInclude Include="..\..\..\common\Platform\Threads\Mutex.h" />
@@ -135,6 +136,7 @@
     <ClCompile Include="..\..\..\common\Platform\AudioEndpoints\AudioFifo.cpp" />
     <ClCompile Include="..\..\..\common\Platform\AudioEndpoints\Endpoints\AudioEndpoint-Wasapi.cpp" />
     <ClCompile Include="..\..\..\common\Platform\Encryption\OpenSSL\OpenSSLEncryption.cpp" />
+    <ClCompile Include="..\..\..\common\Platform\Random\Generic\GenericRandomNumberGenerator.cpp" />
     <ClCompile Include="..\..\..\common\Platform\Socket\Windows\WindowsSocket.cpp" />
     <ClCompile Include="..\..\..\common\Platform\Threads\Windows\WindowsCondition.cpp" />
     <ClCompile Include="..\..\..\common\Platform\Threads\Windows\WindowsMessagebox.cpp" />

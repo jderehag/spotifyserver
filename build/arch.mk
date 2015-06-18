@@ -11,7 +11,8 @@ ifeq ($(ARCH),Windows_whatever)
 				Platform/Socket/Windows/WindowsSocket.cpp \
 				Platform/Timers/Generic/GenericTimer.cpp \
 				Platform/Timers/Generic/TimerThread.cpp \
-				Platform/Utils/Windows/WindowsUtils.cpp
+				Platform/Utils/Windows/WindowsUtils.cpp \
+				Platform/Random/Generic/GenericRandomNumberGenerator.cpp
 	LIBSPOTIFY = $(DEPS_PATH)/lib/libspotify-Windows-
 
 else ifeq ($(ARCH),Linux_x86_64)
@@ -21,7 +22,8 @@ else ifeq ($(ARCH),Linux_x86_64)
 				Platform/Timers/Generic/GenericTimer.cpp \
 				Platform/Timers/Generic/TimerThread.cpp \
 				Platform/Utils/Linux/LinuxUtils.cpp \
-				Platform/Encryption/OpenSSL/OpenSSLEncryption.cpp
+				Platform/Encryption/OpenSSL/OpenSSLEncryption.cpp \
+				Platform/Random/Generic/GenericRandomNumberGenerator.cpp
 	LIBSPOTIFY = $(DEPS_PATH)/lib/libspotify-12.1.51-Linux-x86_64-release
 	AUDIO_DRIVER=alsa
 
@@ -32,7 +34,8 @@ else ifeq ($(ARCH),Linux_i686)
 				Platform/Timers/Generic/GenericTimer.cpp \
 				Platform/Timers/Generic/TimerThread.cpp \
 				Platform/Utils/Linux/LinuxUtils.cpp \
-				Platform/Encryption/OpenSSL/OpenSSLEncryption.cpp
+				Platform/Encryption/OpenSSL/OpenSSLEncryption.cpp \
+				Platform/Random/Generic/GenericRandomNumberGenerator.cpp
 	LIBSPOTIFY = $(DEPS_PATH)/lib/libspotify-12.1.51-Linux-i686-release
 	AUDIO_DRIVER=alsa
 
@@ -45,7 +48,8 @@ else ifeq ($(ARCH),Linux_armv6l)
 				Platform/Timers/Generic/GenericTimer.cpp \
 				Platform/Timers/Generic/TimerThread.cpp \
 				Platform/Utils/Linux/LinuxUtils.cpp \
-				Platform/Encryption/OpenSSL/OpenSSLEncryption.cpp
+				Platform/Encryption/OpenSSL/OpenSSLEncryption.cpp \
+				Platform/Random/Generic/GenericRandomNumberGenerator.cpp
 
 	LIBSPOTIFY = $(DEPS_PATH)/lib/libspotify-12.1.103-Linux-armv6-bcm2708hardfp-release
 	AUDIO_DRIVER=alsa
@@ -59,40 +63,21 @@ else ifeq ($(ARCH),RaspberryPi)
 				Platform/Timers/Generic/GenericTimer.cpp \
 				Platform/Timers/Generic/TimerThread.cpp \
 				Platform/Utils/Linux/LinuxUtils.cpp \
-				Platform/Encryption/OpenSSL/OpenSSLEncryption.cpp
+				Platform/Encryption/OpenSSL/OpenSSLEncryption.cpp \
+				Platform/Random/Generic/GenericRandomNumberGenerator.cpp
 
 	LIBSPOTIFY = $(DEPS_PATH)/lib/libspotify-12.1.103-Linux-armv6-bcm2708hardfp-release
 	AUDIO_DRIVER=stub
 
-else ifeq ($(ARCH),CYGWIN_NT-6.1_i686)
-
-ifdef NO_CYGWIN
-	ARCH_SRC = 	$(addprefix Platform/Threads/Windows/, WindowsRunnable.cpp WindowsMutex.cpp WindowsCondition.cpp WindowsMessagebox.cpp) \
-				Platform/Socket/Windows/WindowsSocket.cpp \
-				Platform/Utils/Windows/WindowsUtils.cpp
-	LIBSPOTIFY = $(DEPS_PATH)/lib/libspotify-Linux-i686-release
-	CFLAGS += -mno-cygwin
-else
-	ARCH_SRC = 	$(addprefix Platform/Threads/Linux/, LinuxRunnable.cpp LinuxMutex.cpp LinuxCondition.cpp LinuxMessagebox.cpp) \
-				Platform/Socket/Linux/LinuxSocket.cpp \
-				Platform/Utils/Linux/LinuxUtils.cpp \
-				Platform/Encryption/OpenSSL/OpenSSLEncryption.cpp
-	LIBSPOTIFY = $(DEPS_PATH)/lib/libspotify-12.1.51-win32-release
-endif
-	ARCH_SRC +=	Platform/Timers/Generic/GenericTimer.cpp \
-				Platform/Timers/Generic/TimerThread.cpp
-	EXECUTABLE_EXT = exe
-	AUDIO_DRIVER=stub
-	CFLAGS += -maccumulate-outgoing-args -fomit-frame-pointer
-
-else ifeq ($(ARCH),CYGWIN_NT-6.2-WOW64_i686)
+else ifneq (,$(findstring CYGWIN_NT,$(ARCH)))
 
 	ARCH_SRC = 	$(addprefix Platform/Threads/Linux/, LinuxRunnable.cpp LinuxMutex.cpp LinuxCondition.cpp LinuxMessagebox.cpp) \
 				Platform/Socket/Linux/LinuxSocket.cpp \
 				Platform/Timers/Generic/GenericTimer.cpp \
 				Platform/Timers/Generic/TimerThread.cpp \
 				Platform/Utils/Linux/LinuxUtils.cpp \
-				Platform/Encryption/OpenSSL/OpenSSLEncryption.cpp
+				Platform/Encryption/OpenSSL/OpenSSLEncryption.cpp \
+				Platform/Random/Generic/GenericRandomNumberGenerator.cpp
 
 	LIBSPOTIFY = $(DEPS_PATH)/lib/libspotify-12.1.51-win32-release
 	EXECUTABLE_EXT = exe

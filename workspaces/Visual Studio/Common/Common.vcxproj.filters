@@ -56,6 +56,9 @@
     <Filter Include="Platform\Encryption">
       <UniqueIdentifier>{c7b4e42a-38bf-4b5f-b6e3-6e6e0c6ce31d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Platform\Random">
+      <UniqueIdentifier>{708b6ffe-1836-468f-bd8c-530e657176a6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\common\Platform\Socket\Socket.h">
@@ -184,6 +187,9 @@
     <ClInclude Include="..\..\..\common\Platform\Encryption\Encryption.h">
       <Filter>Platform\Encryption</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\common\Platform\Random\RandomNumberGenerator.h">
+      <Filter>Platform\Random</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\common\Platform\Socket\Windows\WindowsSocket.cpp">
@@ -289,5 +295,8 @@
       <Filter>Platform\Encryption</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\spotifyserver_deps\appkey.c" />
+    <ClCompile Include="..\..\..\common\Platform\Random\Generic\GenericRandomNumberGenerator.cpp">
+      <Filter>Platform\Random</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
